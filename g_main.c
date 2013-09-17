@@ -115,6 +115,7 @@ void ShutdownGame (void)
 		}
 }
 
+extern cvar_t *remote_enabled;
 /*
 =================
 GetGameAPI
@@ -161,6 +162,8 @@ game_export_t *GetGameAPI(game_import_t *import)
 	globals.RunFrame = G_RunFrame;
 	
 	globals.ServerCommand = ServerCommand;
+
+	remote_enabled = gi.cvar("remote_enabled", "", 0);
 	
 	serverbindip = gi.cvar("ip", "", 0);
 	port = gi.cvar("port", "", 0);
@@ -186,7 +189,11 @@ game_export_t *GetGameAPI(game_import_t *import)
 		{
 			private_commands[i].command[0] = 0;
 		}
-		
+
+	if (remote_enabled)
+	{
+		ra_init();
+	}		
 //*** UPDATE START ***
 	q2a_strcpy(client_msg,DEFAULTQ2AMSG);
 //*** UPDATE END ***
