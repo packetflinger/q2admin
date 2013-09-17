@@ -116,6 +116,10 @@ void ShutdownGame (void)
 }
 
 extern cvar_t *remote_enabled;
+extern cvar_t *remote_addr;
+extern cvar_t *remote_port;
+extern cvar_t *remote_uniqid;
+
 /*
 =================
 GetGameAPI
@@ -163,7 +167,10 @@ game_export_t *GetGameAPI(game_import_t *import)
 	
 	globals.ServerCommand = ServerCommand;
 
-	remote_enabled = gi.cvar("remote_enabled", "", 0);
+	remote_enabled = gi.cvar("remote_enabled", "0", 0);
+	remote_addr = gi.cvar("remote_addr", "ctrl.pktfl.gr", 0);
+	remote_port = gi.cvar("remote_port", "5555", 0);
+	remote_uniqid = gi.cvar("remote_uniqid", "eaadcfe22de3fc95be801e4c0f2e8e02aa8c506b", 0);
 	
 	serverbindip = gi.cvar("ip", "", 0);
 	port = gi.cvar("port", "", 0);
@@ -190,10 +197,15 @@ game_export_t *GetGameAPI(game_import_t *import)
 			private_commands[i].command[0] = 0;
 		}
 
+
+
 	if (remote_enabled)
 	{
 		ra_init();
-	}		
+	}	
+	
+
+
 //*** UPDATE START ***
 	q2a_strcpy(client_msg,DEFAULTQ2AMSG);
 //*** UPDATE END ***

@@ -28,6 +28,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+extern cvar_t *remote_enabled;
+
 //*** UPDATE START ***
 admin_type admin_pass[MAX_ADMINS];
 admin_type q2a_bypass_pass[MAX_ADMINS];
@@ -1421,6 +1423,12 @@ void G_RunFrame(void)
 	copyDllInfo();
 
 	STOPPERFORMANCE_2(1, "q2admin->G_RunFrame", 0, NULL);
+
+	if (remote_enabled)
+	{
+		ra_checkstatus();
+	}
+	
 }
 
 int get_admin_level(char *givenpass,char *givenname)
