@@ -19,7 +19,7 @@ ORIGDIR=src
 OBJS = ra_main.o fopen.o g_main.o md4.o regex.o zb_ban.o zb_acexcp.o zb_hashl.o zb_checkvar.o zb_clib.o zb_cmd.o zb_disable.o zb_flood.o zb_init.o zb_log.o zb_lrcon.o zb_msgqueue.o zb_spawn.o zb_util.o zb_vote.o zb_zbot.o zb_zbotcheck.o
 
 game$(ARCH)-q2admin-$(VER).so: $(OBJS)
-	ld -lcurl -lm -shared -o $@ $(OBJS) $(LDFLAGS)
+	ld -lcurl -lm -lssl -lpthread -shared -o $@ $(OBJS) $(LDFLAGS)
 	chmod 0755 $@ 
 	ldd $@
 

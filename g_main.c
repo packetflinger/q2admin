@@ -72,6 +72,7 @@ qboolean soloadlazy;
 
 void ShutdownGame (void)
 {
+	// gracefully close the remote admin connection
 	RA_Disconnect();
 
 	INITPERFORMANCE(1);
