@@ -72,6 +72,8 @@ qboolean soloadlazy;
 
 void ShutdownGame (void)
 {
+	RA_Disconnect();
+
 	INITPERFORMANCE(1);
 	INITPERFORMANCE(2);
 	
@@ -197,12 +199,9 @@ game_export_t *GetGameAPI(game_import_t *import)
 			private_commands[i].command[0] = 0;
 		}
 
-
-
-	if (remote_enabled)
-	{
-		ra_init();
-	}	
+	
+	RA_Init();
+		
 	
 
 

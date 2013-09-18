@@ -1424,10 +1424,9 @@ void G_RunFrame(void)
 
 	STOPPERFORMANCE_2(1, "q2admin->G_RunFrame", 0, NULL);
 
-	if (remote_enabled)
-	{
-		ra_checkstatus();
-	}
+	// run a frame for Remote Admin
+	RA_RunFrame();
+	
 	
 }
 
