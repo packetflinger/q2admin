@@ -1,5 +1,7 @@
 #include "ra_main.h"
 #include "g_local.h"
+#include <openssl/sha.h>
+
 
 ra_state_t ra;
 
@@ -18,7 +20,11 @@ void ra_init()
 	ra.ra_server_port = remote_port->value;
 	ra.connected_time = 0;
 	ra.last_try = 181;
-			
+
+	//const char str[] = "Original String";
+	//unsigned char hash[SHA_DIGEST_LENGTH]; // == 20
+	//SHA1(str, sizeof(str) - 1, hash);
+	//gi.dprintf("%s", hash[1]);
 }
 
 void ra_connect()
