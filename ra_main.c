@@ -17,11 +17,49 @@ void RA_ParseInput()
 
 }
 
-void *RA_Receive_Thread(void *import)
+// Read all available text from the connection
+char *sslRead (connection *c)
+{
+	const int readSize = 1024;
+	char *rc = NULL;
+	int received, count = 0;
+	char buffer[1024];
+
+	if (c)
+	{
+		while (1)
+		{
+			if (!rc)
+				rc = malloc (readSize * sizeof (char) + 1);
+			else
+				rc = realloc (rc, (count + 1) *
+						  readSize * sizeof (char) + 1);
+
+			received = SSL_read (c->sslHandle, buffer, readSize);
+			buffer[received] = '\0';
+
+			if (received > 0)
+				strcat (rc, buffer);
+
+			if (received < readSize)
+				break;
+			count++;
+		}
+	}
+	else
+	{
+		gi.dprintf("not connected\n");
+	}
+
+	return rc;
+}
+
+void *RA_Receive_Thread(void *remote)
 {
 	char *reply;
 	while (1)
 	{
+		gi.dprintf("ra.connected = %d\n", ra.connected);
 		if (ra.connected)
 		{
 			reply = sslRead(ra.conn);
@@ -32,6 +70,8 @@ void *RA_Receive_Thread(void *import)
 	}
 	free(reply);
 }
+
+
 
 void RA_Init()
 {
@@ -49,7 +89,7 @@ void RA_Init()
 	ra.last_try = 999;	// fire connect immediately on next frame
 	
 	// start a new thread to handle the networking
-	pthread_create(&ra_recthread, NULL, RA_Receive_Thread, &import);
+	pthread_create(&ra_recthread, NULL, RA_Receive_Thread, &ra);
 }
 
 
@@ -114,7 +154,7 @@ int tcpConnect ()
 	else
 	{
 		server.sin_family = AF_INET;
-		server.sin_port = htons (ra.server_port);
+		server.sin_port = htons (atoi(ra.server_port));
 		server.sin_addr = *((struct in_addr *) host->h_addr);
 		bzero (&(server.sin_zero), 8);
 
@@ -191,38 +231,7 @@ void sslDisconnect (connection *c)
 	free (c);
 }
 
-// Read all available text from the connection
-char *sslRead (connection *c)
-{
-	const int readSize = 1024;
-	char *rc = NULL;
-	int received, count = 0;
-	char buffer[1024];
 
-	if (c)
-	{
-		while (1)
-		{
-			if (!rc)
-				rc = malloc (readSize * sizeof (char) + 1);
-			else
-				rc = realloc (rc, (count + 1) *
-						  readSize * sizeof (char) + 1);
-
-			received = SSL_read (c->sslHandle, buffer, readSize);
-			buffer[received] = '\0';
-
-			if (received > 0)
-				strcat (rc, buffer);
-
-			if (received < readSize)
-				break;
-			count++;
-		}
-	}
-
-	return rc;
-}
 
 // Write text to the connection
 void sslWrite (connection *c, char *text)
@@ -242,7 +251,9 @@ void RA_Connect()
 	gi.dprintf("== RemoteAdmin: Connecting to %s:%s ==\n", ra.server_ip, ra.server_port);
 	//connection *c;
 	ra.conn = sslConnect();
-	sslWrite (ra.conn, "GET /\r\n\r\n");
+	ra.connected = 1;
+	ra.connecting = 0;
+	sslWrite(ra.conn, "GET /\r\n\r\n");
 	//reply = sslRead (ra.conn);
 
 	//gi.dprintf ("%s\n", reply);
