@@ -12,6 +12,27 @@ cvar_t	*remote_uniqid;
 
 pthread_t ra_recthread;
 
+void RA_ParseInput()
+{
+
+}
+
+void *RA_Receive_Thread(void *import)
+{
+	char *reply;
+	while (1)
+	{
+		if (ra.connected)
+		{
+			reply = sslRead(ra.conn);
+			ra.current_msg = reply;
+			gi.dprintf ("%s\n", reply);
+			RA_ParseInput();
+		}
+	}
+	free(reply);
+}
+
 void RA_Init()
 {
 	if (Cvar_Match(remote_enabled->string, "0"))
@@ -22,20 +43,18 @@ void RA_Init()
 	gi.dprintf("==== InitRemoteAdmin ====\n");
 	ra.connected = 0;
 	ra.connecting = 0;
-	ra.ra_server_ip = remote_addr->string;
-	ra.ra_server_port = remote_port->string;
+	ra.server_ip = remote_addr->string;
+	ra.server_port = remote_port->string;
 	ra.connected_time = 0;
 	ra.last_try = 999;	// fire connect immediately on next frame
+	
+	// start a new thread to handle the networking
+	pthread_create(&ra_recthread, NULL, RA_Receive_Thread, &import);
 }
 
 
 
-void RA_Disconnect()
-{
-	ra.connected = 0;
-	ra.connecting = 0;
-	gi.dprintf("== RemoteAdmin: Disconnecting... ==\n");
-}
+
 
 
 
@@ -85,7 +104,7 @@ int tcpConnect ()
 	struct hostent *host;
 	struct sockaddr_in server;
 
-	host = gethostbyname (ra.ra_server_ip);
+	host = gethostbyname (ra.server_ip);
 	handle = socket (AF_INET, SOCK_STREAM, 0);
 	if (handle == -1)
 	{
@@ -95,7 +114,7 @@ int tcpConnect ()
 	else
 	{
 		server.sin_family = AF_INET;
-		server.sin_port = htons (ra.ra_server_port);
+		server.sin_port = htons (ra.server_port);
 		server.sin_addr = *((struct in_addr *) host->h_addr);
 		bzero (&(server.sin_zero), 8);
 
@@ -209,24 +228,34 @@ char *sslRead (connection *c)
 void sslWrite (connection *c, char *text)
 {
 	if (c)
+	{
 		SSL_write (c->sslHandle, text, strlen (text));
+	}
 }
 
 void RA_Connect()
 {
-	char *reply;
+	//char *reply;
 
 	ra.connecting = 1;
 	ra.last_try = 0;
-	gi.dprintf("== RemoteAdmin: Connecting to %s:%s ==\n", ra.ra_server_ip, ra.ra_server_port);
+	gi.dprintf("== RemoteAdmin: Connecting to %s:%s ==\n", ra.server_ip, ra.server_port);
 	//connection *c;
 	ra.conn = sslConnect();
 	sslWrite (ra.conn, "GET /\r\n\r\n");
-	reply = sslRead (ra.conn);
+	//reply = sslRead (ra.conn);
 
-	gi.dprintf ("%s\n", reply);
+	//gi.dprintf ("%s\n", reply);
 
+	
+	//free (reply);
+
+}
+
+void RA_Disconnect()
+{
+	ra.connected = 0;
+	ra.connecting = 0;
+	gi.dprintf("== RemoteAdmin: Disconnecting... ==\n");
 	sslDisconnect (ra.conn);
-	free (reply);
-
 }
