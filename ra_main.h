@@ -13,6 +13,23 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
+#define	PROTO_REGISTER	100;
+#define PROTO_NOTAUTH	101;
+#define PROTO_PING		102;
+#define PROTO_PONG		103;
+
+#define PROTO_JOIN		200;
+#define PROTO_PART		201;
+#define PROTO_FRAG		202;
+#define PROTO_CHAT		203;
+
+#define PROTO_MUTE		300;
+#define PROTO_KICK		301;
+#define PROTO_BAN		302;
+#define PROTO_BLACKHOLE	303;
+
+
+
 typedef struct {
     int		socket;
     SSL		*sslHandle;
