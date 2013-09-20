@@ -11,7 +11,7 @@ cvar_t		*remote_port;
 cvar_t		*remote_uniqid;
 
 pthread_t	ra_recthread;
-fd_set		fds;
+
 
 void RA_ParseInput()
 {
