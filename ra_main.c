@@ -5,12 +5,13 @@
 ra_state_t ra;
 
 // remote admin specific cvars
-cvar_t	*remote_enabled;
-cvar_t	*remote_addr;
-cvar_t	*remote_port;
-cvar_t	*remote_uniqid;
+cvar_t		*remote_enabled;
+cvar_t		*remote_addr;
+cvar_t		*remote_port;
+cvar_t		*remote_uniqid;
 
-pthread_t ra_recthread;
+pthread_t	ra_recthread;
+fd_set		fds;
 
 void RA_ParseInput()
 {
@@ -59,12 +60,12 @@ void *RA_Receive_Thread(void *remote)
 	char *reply;
 	while (1)
 	{
-		gi.dprintf("ra.connected = %d\n", ra.connected);
+		//gi.dprintf("ra.connected = %d\n", ra.connected);
 		if (ra.connected)
 		{
 			reply = sslRead(ra.conn);
 			ra.current_msg = reply;
-			gi.dprintf ("%s\n", reply);
+			//gi.dprintf ("%s\n", reply);
 			RA_ParseInput();
 		}
 	}
@@ -86,10 +87,16 @@ void RA_Init()
 	ra.server_ip = remote_addr->string;
 	ra.server_port = remote_port->string;
 	ra.connected_time = 0;
-	ra.last_try = 999;	// fire connect immediately on next frame
+	ra.last_try = 999;			// fire connect immediately on next frame
+
+	// setup the socket 
+	ra.timeout.tv_sec	= 0;		// don't wait to return
+	ra.timeout.tv_usec	= 0;		// ""
+	//ra.socket_ready		= 0;
+	FD_ZERO(&ra.fds);
 	
 	// start a new thread to handle the networking
-	pthread_create(&ra_recthread, NULL, RA_Receive_Thread, &ra);
+	//pthread_create(&ra_recthread, NULL, RA_Receive_Thread, &ra);
 }
 
 
@@ -110,10 +117,31 @@ void RA_CheckStatus()
 		}
 		ra.last_try += 0.1f;
 	}
+	//gi.dprintf("checkstatus\n");
 }
 
 
-
+void RA_ReadPackets()
+{
+	if (ra.connected || ra.connecting)
+	{
+		
+		FD_SET(ra.conn->socket, &ra.fds);
+		//gi.dprintf("readpacketes\n");
+		if (select(sizeof(ra.fds)*8, &ra.fds, NULL, NULL, &ra.timeout) > 0)
+		{
+			char *reply;
+	
+			//gi.dprintf("ra.connected = %d\n", ra.connected);
+	
+			reply = sslRead(ra.conn);
+			ra.current_msg = reply;
+			gi.dprintf ("%s\n", reply);
+			//RA_ParseInput();
+			free(reply);
+		}
+	}
+}
 
 // run every frame (1/10 second)
 void RA_RunFrame()
@@ -121,6 +149,7 @@ void RA_RunFrame()
 	if (Cvar_Match(remote_enabled->string, "1"))
 	{
 		//gi.dprintf("running frame\n");
+		RA_ReadPackets();
 		RA_CheckStatus();
 	}
 }
@@ -148,6 +177,7 @@ int tcpConnect ()
 	handle = socket (AF_INET, SOCK_STREAM, 0);
 	if (handle == -1)
 	{
+		gi.dprintf("* RA: couldn't create socket\n");
 		perror ("Socket");
 		handle = 0;
 	}
@@ -162,6 +192,7 @@ int tcpConnect ()
 					   sizeof (struct sockaddr));
 		if (error == -1)
 		{
+			gi.dprintf("* RA: couldn't connect using created socket\n");
 			perror ("Connect");
 			handle = 0;
 		}
@@ -208,6 +239,7 @@ connection *sslConnect (void)
 	}
 	else
 	{
+		gi.dprintf("* RA: SSL connection failed\n");
 		perror ("Connect failed");
 	}
 
