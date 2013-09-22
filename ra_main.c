@@ -13,12 +13,39 @@ cvar_t		*remote_uniqid;
 pthread_t	ra_recthread;
 
 
-void RA_ParseInput()
-{
 
+
+void RA_Send(char *txt)
+{
 }
 
-// Read all available text from the connection
+void RA_ParseInput()
+{
+	GetCode();
+
+	// check for ping, if found, send pong
+	if (ra.current_code == '1' &&
+		ra.current_code + 1 == '0' &&
+		ra.current_code + 2 == '3')
+	{
+		sslWrite(ra.conn, "104\n");
+	}
+	//gi.dprintf("current code: %d\n", ra.current_code);
+	//char s[256];
+	//strcpy(s, ra.current_msg + 4); // don't bother with the code
+	//char *token = strtok(s, " ");
+	//while (token)
+	//{
+		
+	//}
+
+	// idle keepalive...
+	//if (ra.current_code == PROTO_PING)
+	//{
+	//	sslWrite(ra.conn, va("%d\n", PROTO_PONG));
+	//}
+}
+
 char *sslRead (connection *c)
 {
 	const int readSize = 1024;
@@ -31,19 +58,41 @@ char *sslRead (connection *c)
 		while (1)
 		{
 			if (!rc)
+			{
 				rc = malloc (readSize * sizeof (char) + 1);
+			}
 			else
-				rc = realloc (rc, (count + 1) *
-						  readSize * sizeof (char) + 1);
+			{
+				rc = realloc (rc, (count + 1) * readSize * sizeof (char) + 1);
+			}
 
 			received = SSL_read (c->sslHandle, buffer, readSize);
 			buffer[received] = '\0';
 
 			if (received > 0)
+			{
 				strcat (rc, buffer);
+			}
 
+			if (received == 0)
+			{
+				switch (SSL_get_error(c->sslHandle, received))
+				{
+					case SSL_ERROR_ZERO_RETURN:
+						RA_Disconnect();
+						break;
+					case SSL_ERROR_SSL:
+						RA_Disconnect();
+						break;
+					default:
+						gi.dprintf("Error in SSL_read(), but not serious\n");
+				}
+			}
+		
 			if (received < readSize)
+			{
 				break;
+			}
 			count++;
 		}
 	}
@@ -54,6 +103,20 @@ char *sslRead (connection *c)
 
 	return rc;
 }
+
+void GetCode()
+{
+	/*
+	ra.current_code = 0;
+	char s[256];
+	strcpy(s, ra.current_msg);
+	char *token = strtok(s, " ");
+	ra.current_code = atoi(token);
+	*/
+}
+
+// Read all available text from the connection
+
 
 void *RA_Receive_Thread(void *remote)
 {
@@ -111,7 +174,7 @@ void RA_CheckStatus()
 	if (!ra.connected)
 	{
 		// try reconnecting every 2 minutes
-		if (ra.last_try > 180)
+		if (ra.last_try > 15)
 		{
 			RA_Connect();
 		}
@@ -137,7 +200,7 @@ void RA_ReadPackets()
 			reply = sslRead(ra.conn);
 			ra.current_msg = reply;
 			gi.dprintf ("%s\n", reply);
-			//RA_ParseInput();
+			RA_ParseInput();
 			free(reply);
 		}
 	}
@@ -240,7 +303,7 @@ connection *sslConnect (void)
 	else
 	{
 		gi.dprintf("* RA: SSL connection failed\n");
-		perror ("Connect failed");
+		//perror ("Connect failed");
 	}
 
 	return c;
@@ -276,22 +339,19 @@ void sslWrite (connection *c, char *text)
 
 void RA_Connect()
 {
-	//char *reply;
-
 	ra.connecting = 1;
-	ra.last_try = 0;
-	gi.dprintf("== RemoteAdmin: Connecting to %s:%s ==\n", ra.server_ip, ra.server_port);
-	//connection *c;
+	ra.last_try = 0.0f;
+	gi.dprintf(pfva("== RemoteAdmin: Connecting to %s:%s ==\n", ra.server_ip, ra.server_port));
 	ra.conn = sslConnect();
-	ra.connected = 1;
-	ra.connecting = 0;
-	sslWrite(ra.conn, "GET /\r\n\r\n");
-	//reply = sslRead (ra.conn);
-
-	//gi.dprintf ("%s\n", reply);
-
-	
-	//free (reply);
+	if (ra.conn)
+	{
+		ra.connected = 1;
+		ra.connecting = 0;
+		gi.bprintf(PRINT_HIGH, "RemoteAdmin connection established\n");
+		gi.dprintf("About to register\n");
+		sslWrite(ra.conn, pfva("100 %s\n",remote_uniqid->string));
+		gi.dprintf("Just sent registration\n");
+	}
 
 }
 
@@ -299,6 +359,22 @@ void RA_Disconnect()
 {
 	ra.connected = 0;
 	ra.connecting = 0;
-	gi.dprintf("== RemoteAdmin: Disconnecting... ==\n");
+	//gi.dprintf("== RemoteAdmin: Disconnecting... ==\n");
+	gi.bprintf(PRINT_HIGH, "RemoteAdmin connection lost\n");
 	sslDisconnect (ra.conn);
+}
+
+char *pfva(const char *format, ...) {
+	static char strings[8][MAX_STRING_CHARS];
+	static uint16_t index;
+
+	char *string = strings[index++ % 8];
+
+	va_list args;
+
+	va_start(args, format);
+	vsnprintf(string, MAX_STRING_CHARS, format, args);
+	va_end(args);
+
+	return string;
 }

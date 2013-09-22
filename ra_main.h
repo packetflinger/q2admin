@@ -15,8 +15,9 @@
 
 #define	PROTO_REGISTER	100;
 #define PROTO_NOTAUTH	101;
-#define PROTO_PING		102;
-#define PROTO_PONG		103;
+#define PROTO_AUTHED	102
+#define PROTO_PING		103;
+#define PROTO_PONG		104;
 
 #define PROTO_JOIN		200;
 #define PROTO_PART		201;
@@ -28,6 +29,25 @@
 #define PROTO_BAN		302;
 #define PROTO_BLACKHOLE	303;
 
+char *pfva(const char *format, ...) __attribute__((format(printf, 1, 2)));
+
+
+void	RA_Send(char*);
+void	RA_ParseInput(void);
+char		*sslRead(connection);
+void	GetCode(void);
+void	*RA_Receive_Thread(void*);
+void	RA_Init(void);
+void	RA_CheckStatus(void);
+void	RA_ReadPackets(void);
+void	RA_RunFrame(void);
+int		Cvar_Match(char*, char*);
+int			tcpConnect(void);
+//connection	*sslConnect(void);
+//void		sslDisconnect(connection*);
+//void		sslWrite(connection*, char*);
+void	RA_Connect(void);
+void	RA_Disconnect(void);
 
 
 typedef struct {
@@ -48,6 +68,7 @@ typedef struct {
 	float		last_msg;			// how long since our last msg from server?
 	float		last_sent;			// when was the last time we sent a msg?
 	char		*current_msg;		// the last msg sent from the server
+	int			current_code;		// the current protocol code (the begining of each msg)
 	connection	*conn;				// the ssl network connection
 	fd_set		fds;				// the file descriptors for the socket to monitor
 	struct		timeval	timeout;	// the timeout for select
