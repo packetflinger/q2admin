@@ -24,9 +24,7 @@ void RA_ParseInput()
 	GetCode();
 
 	// check for ping, if found, send pong
-	if (ra.current_code == '1' &&
-		ra.current_code + 1 == '0' &&
-		ra.current_code + 2 == '3')
+	if (strncmp("103", ra.current_msg, 3) == 0)
 	{
 		sslWrite(ra.conn, "104\n");
 	}
@@ -48,7 +46,7 @@ void RA_ParseInput()
 
 char *sslRead (connection *c)
 {
-	const int readSize = 1024;
+	const int readSize = 256;	// was 1024
 	char *rc = NULL;
 	int received, count = 0;
 	char buffer[1024];
@@ -69,11 +67,13 @@ char *sslRead (connection *c)
 			received = SSL_read (c->sslHandle, buffer, readSize);
 			buffer[received] = '\0';
 
+			// stuff in the buffer
 			if (received > 0)
 			{
-				strcat (rc, buffer);
+				strcat(rc, buffer);
 			}
 
+			// an error occurred
 			if (received == 0)
 			{
 				switch (SSL_get_error(c->sslHandle, received))
@@ -89,6 +89,7 @@ char *sslRead (connection *c)
 				}
 			}
 		
+			// we read the entire buffer
 			if (received < readSize)
 			{
 				break;
@@ -189,8 +190,7 @@ void RA_ReadPackets()
 	if (ra.connected || ra.connecting)
 	{
 		
-		FD_SET(ra.conn->socket, &ra.fds);
-		//gi.dprintf("readpacketes\n");
+		FD_SET(ra.conn->socket, &ra.fds); // move this?
 		if (select(sizeof(ra.fds)*8, &ra.fds, NULL, NULL, &ra.timeout) > 0)
 		{
 			char *reply;
@@ -199,7 +199,8 @@ void RA_ReadPackets()
 	
 			reply = sslRead(ra.conn);
 			ra.current_msg = reply;
-			gi.dprintf ("%s\n", reply);
+			//gi.dprintf ("(%d)\"%s\"\n", strlen(reply), reply);
+			gi.dprintf(":input: %s\n", printableLine(reply));
 			RA_ParseInput();
 			free(reply);
 		}
@@ -348,9 +349,7 @@ void RA_Connect()
 		ra.connected = 1;
 		ra.connecting = 0;
 		gi.bprintf(PRINT_HIGH, "RemoteAdmin connection established\n");
-		gi.dprintf("About to register\n");
-		sslWrite(ra.conn, pfva("100 %s\n",remote_uniqid->string));
-		gi.dprintf("Just sent registration\n");
+		sslWrite(ra.conn, pfva("%d %s\n", PROTO_REGISTER, remote_uniqid->string));
 	}
 
 }
@@ -377,4 +376,74 @@ char *pfva(const char *format, ...) {
 	va_end(args);
 
 	return string;
+}
+
+
+ssize_t sslReadLine(int fd, void *buffer, size_t n)
+{
+    ssize_t numRead;                    /* # of bytes fetched by last read() */
+    size_t totRead;                     /* Total bytes read so far */
+    char *buf;
+    char ch;
+
+    if (n <= 0 || buffer == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    buf = buffer;                       /* No pointer arithmetic on "void *" */
+
+    totRead = 0;
+    for (;;) {
+        numRead = read(fd, &ch, 1);
+
+        if (numRead == -1) {
+            if (errno == EINTR)         /* Interrupted --> restart read() */
+                continue;
+            else
+                return -1;              /* Some other error */
+
+        } else if (numRead == 0) {      /* EOF */
+            if (totRead == 0)           /* No bytes read; return 0 */
+                return 0;
+            else                        /* Some bytes read; add '\0' */
+                break;
+
+        } else {                        /* 'numRead' must be 1 if we get here */
+            if (totRead < n - 1) {      /* Discard > (n - 1) bytes */
+                totRead++;
+                *buf++ = ch;
+            }
+
+            if (ch == '\n')
+                break;
+        }
+    }
+
+    *buf = '\0';
+    return totRead;
+}
+
+// strip out all but printable characters and stop at a newline
+char *printableLine(char *input)
+{
+	char out[256];
+	int i,j;
+	for (i=0,j=0; i<sizeof(input); i++ )
+	{
+		// printable chars only
+		if (input[i] >= 32 && input[i] <= 127 )
+		{
+			out[j] = input[i];
+			j++;
+		}
+
+		// if output buffer is full or we hit a new line in input
+		if (j == 255 || input[i] == '\n')
+		{
+			out[j] = "\0";
+			break;
+		}
+	}
+	return out;
 }

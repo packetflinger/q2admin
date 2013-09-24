@@ -1,3 +1,6 @@
+#ifndef RA_MAIN_H
+#define RA_MAIN_H
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -13,21 +16,21 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-#define	PROTO_REGISTER	100;
-#define PROTO_NOTAUTH	101;
+#define	PROTO_REGISTER	100
+#define PROTO_NOTAUTH	101
 #define PROTO_AUTHED	102
-#define PROTO_PING		103;
-#define PROTO_PONG		104;
+#define PROTO_PING		103
+#define PROTO_PONG		104
 
-#define PROTO_JOIN		200;
-#define PROTO_PART		201;
-#define PROTO_FRAG		202;
-#define PROTO_CHAT		203;
+#define PROTO_JOIN		200
+#define PROTO_PART		201
+#define PROTO_FRAG		202
+#define PROTO_CHAT		203
 
-#define PROTO_MUTE		300;
-#define PROTO_KICK		301;
-#define PROTO_BAN		302;
-#define PROTO_BLACKHOLE	303;
+#define PROTO_MUTE		300
+#define PROTO_KICK		301
+#define PROTO_BAN		302
+#define PROTO_BLACKHOLE	303
 
 char *pfva(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
@@ -48,6 +51,8 @@ int			tcpConnect(void);
 //void		sslWrite(connection*, char*);
 void	RA_Connect(void);
 void	RA_Disconnect(void);
+ssize_t readLine(int fd, void *buffer, size_t n);
+char	*printableLine(char*);
 
 
 typedef struct {
@@ -80,5 +85,4 @@ typedef struct {
 	//ra_msg_q_t	*next;
 } ra_msg_q_t;
 
-
-
+#endif
