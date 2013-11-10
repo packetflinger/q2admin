@@ -441,9 +441,10 @@ char *printableLine(char *input)
 		// if output buffer is full or we hit a new line in input
 		if (j == 255 || input[i] == '\n')
 		{
-			out[j] = "\0";
 			break;
 		}
 	}
+	
+	out[sizeof(out)] = '\0'; 
 	return out;
 }
