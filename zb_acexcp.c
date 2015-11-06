@@ -107,8 +107,8 @@ void loadexceptionlist(void)
         if ( cfgAnticheatList_enabled[0] == '1')
 	{
 	    // flush cache, which really sux
-            q2a_strcpy(buffer, "fsflushcache\n");
-	    gi.AddCommandString(buffer);
+            //q2a_strcpy(buffer, "fsflushcache\n");
+	    //gi.AddCommandString(buffer);
 	    getR1chExceptionList();
     	    // execute exception list even if the download was not succeeded, since there is probably an old version available.
             q2a_strcpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n");

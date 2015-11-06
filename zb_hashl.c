@@ -107,8 +107,8 @@ void loadhashlist(void)
         if ( cfgHashList_enabled[0] == '1')
 	{
 	    // flush cache, which really sux
-            q2a_strcpy(buffer, "fsflushcache\n");
-	    gi.AddCommandString(buffer);
+            //q2a_strcpy(buffer, "fsflushcache\n");
+	    //gi.AddCommandString(buffer);
 	    getR1chHashList("anticheat-cvars.txt");
 	    getR1chHashList("anticheat-hashes.txt");
 	    getR1chHashList("anticheat-tokens.txt");

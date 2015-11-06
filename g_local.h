@@ -431,9 +431,9 @@ struct chatflood_s
 	
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define BANLISTREMOTEFILE      "http://www.q2admin.net/server/q2adminban.txt"
-#define ANTICHEATEXCEPTIONREMOTEFILE      "http://www.q2admin.net/server/r1q2_ac.cfg"
-#define ANTICHEATEXCEPTIONLOCALFILE      "r1q2_ac.cfg"
+#define BANLISTREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
+#define ANTICHEATEXCEPTIONREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
+#define ANTICHEATEXCEPTIONLOCALFILE      "ac.cfg"
 #define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
 #define BANLISTFILE      "q2adminban.txt"
 #define CFGFILE       "q2admin.txt"
