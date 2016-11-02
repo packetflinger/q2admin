@@ -37,8 +37,6 @@ void RA_Send(const char *format, ...) {
 	}
 }
 
-void RA_ParseInput() {	
-}
 
 void RA_Init() {
 	
@@ -57,8 +55,8 @@ void RA_Init() {
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 	
-	hints.ai_family			= AF_UNSPEC;    // ipv6 then v4
-	//hints.ai_family         = AF_INET;   	// ipv4 only
+	//hints.ai_family			= AF_UNSPEC;    // ipv6 then v4
+	hints.ai_family         = AF_INET;   	// ipv4 only
 	hints.ai_socktype       = SOCK_DGRAM;	// UDP
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;

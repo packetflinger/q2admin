@@ -16,14 +16,10 @@
 
 char *pfva(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-
 void	RA_Send(const char *format, ...);
-void	RA_ParseInput(void);
 void	RA_Init(void);
 void	RA_Shutdown(void);
 void	RA_RunFrame(void);
-void	RA_Connect(void);
-void	RA_Disconnect(void);
 
 typedef struct {
 	int 	enabled;
@@ -31,6 +27,5 @@ typedef struct {
 	struct 	addrinfo *addr;
 	short 	key;
 } remote_t;
-
 
 #endif
