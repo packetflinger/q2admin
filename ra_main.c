@@ -24,19 +24,25 @@ void RA_Send(const char *format, ...) {
 	vsnprintf(string, MAX_STRING_CHARS, format, args);
 	va_end(args);
 
-	//gi.dprintf("RA: Debug: sending '%s'\n", string);
-	int r = sendto(
-				remote.socket, 
-				string, 
-				strlen(string)+1, 
-				MSG_DONTWAIT, 
-				remote.addr->ai_addr, 
-				remote.addr->ai_addrlen
-			);
-	if (r == -1) {
-		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
+	static char *laststring;
+	
+	// don't send repeats
+	if (g_strcmp0(laststring, string) != 0) {
+		int r = sendto(
+					remote.socket, 
+					string, 
+					strlen(string)+1, 
+					MSG_DONTWAIT, 
+					remote.addr->ai_addr, 
+					remote.addr->ai_addrlen
+				);
+		if (r == -1) {
+			gi.dprintf("RA: error sending data: %s\n", strerror(errno));
+		}
+		memset(&string, 0, sizeof(string));
 	}
-	memset(&string, 0, sizeof(string));
+	
+	laststring = string;
 }
 
 

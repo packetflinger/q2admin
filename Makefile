@@ -22,8 +22,9 @@ OBJS = ra_main.o fopen.o g_main.o md4.o regex.o zb_ban.o zb_acexcp.o zb_hashl.o 
 
 game$(ARCH)-q2admin-$(VER).so: $(OBJS)
 	ld -lcurl -lm -shared -o $@ $(OBJS) $(LDFLAGS)
-	chmod 0755 $@ 
-	ldd $@
+	chmod 0755 $@
+	cp $@ game$(ARCH).so
+	#ldd $@
 
 clean: 
 	/bin/rm -f $(OBJS) game*.so

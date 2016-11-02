@@ -1399,6 +1399,8 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
+	RA_Send("CPRINT %s", cbuffer);
+	
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
         return;
@@ -1492,6 +1494,8 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
+	RA_Send("PRINT %s", cbuffer);
+	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
         return;
@@ -3114,7 +3118,6 @@ void ClientCommand(edict_t *ent) {
 
     STARTPERFORMANCE(1);
 
-    //*** UPDATE START ***
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
@@ -3126,7 +3129,6 @@ void ClientCommand(edict_t *ent) {
             (stringContains(gi.argv(0), "roconnect")))) {
         return;
     }
-    //*** UPDATE END ***
 
     lastClientCmd = client;
     if (doClientCommand(ent, client, &checkforfloodafter)) {

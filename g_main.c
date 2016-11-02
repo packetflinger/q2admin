@@ -166,15 +166,15 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
     serverbindip = gi.cvar("ip", "", 0);
     port = gi.cvar("port", "", 0);
-    rcon_password = gi.cvar("rcon_password", "", 0); // UPDATE
+    rcon_password = gi.cvar("rcon_password", "", 0);
     q2admintxt = gi.cvar("q2admintxt", "", 0);
     q2adminbantxt = gi.cvar("q2adminbantxt", "", 0);
-    q2adminbanremotetxt_enable = gi.cvar("q2adminbanremotetxt_enable", "", 0); // addition by MDVz0r 9apr2007
-    q2adminbanremotetxt = gi.cvar("q2adminbanremotetxt_file", "", 0); // addition by MDVz0r 9apr2007
-    q2adminanticheat_enable = gi.cvar("q2adminanticheat_enable", "", 0); // addition by MDVz0r 9apr2007
-    q2adminanticheat_file = gi.cvar("q2adminanticheat_file", "", 0); // addition by MDVz0r 9apr2007
-    q2adminhashlist_enable = gi.cvar("q2adminhashlist_enable", "", 0); // addition by MDVz0r 28jan2008
-    q2adminhashlist_dir = gi.cvar("q2adminhashlist_dir", "", 0); // addition by MDVz0r 28jan2008
+    q2adminbanremotetxt_enable = gi.cvar("q2adminbanremotetxt_enable", "", 0);
+    q2adminbanremotetxt = gi.cvar("q2adminbanremotetxt_file", "", 0);
+    q2adminanticheat_enable = gi.cvar("q2adminanticheat_enable", "", 0);
+    q2adminanticheat_file = gi.cvar("q2adminanticheat_file", "", 0);
+    q2adminhashlist_enable = gi.cvar("q2adminhashlist_enable", "", 0);
+    q2adminhashlist_dir = gi.cvar("q2adminhashlist_dir", "", 0);
 
     gamedir = gi.cvar("game", "baseq2", 0);
     q2a_strcpy(moddir, gamedir->string);
@@ -188,9 +188,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
     }
 
 
-    //*** UPDATE START ***
     q2a_strcpy(client_msg, DEFAULTQ2AMSG);
-    //*** UPDATE END ***
     q2a_strcpy(zbotuserdisplay, DEFAULTUSERDISPLAY);
     q2a_strcpy(timescaleuserdisplay, DEFAULTTSDISPLAY);
     q2a_strcpy(hackuserdisplay, DEFAULTHACKDISPLAY);
