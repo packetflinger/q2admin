@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-*/
+ */
 
 //
 // q2admin
@@ -100,33 +100,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BODY_QUEUE_SIZE   8
 
-typedef enum
-{
-	DAMAGE_NO,
-	DAMAGE_YES,   // will take damage if hit
-	DAMAGE_AIM   // auto targeting recognizes this
+typedef enum {
+    DAMAGE_NO,
+    DAMAGE_YES, // will take damage if hit
+    DAMAGE_AIM // auto targeting recognizes this
 }
 
 damage_t;
 
-typedef enum
-{
-	WEAPON_READY,
-	WEAPON_ACTIVATING,
-	WEAPON_DROPPING,
-	WEAPON_FIRING
+typedef enum {
+    WEAPON_READY,
+    WEAPON_ACTIVATING,
+    WEAPON_DROPPING,
+    WEAPON_FIRING
 }
 
 weaponstate_t;
 
-typedef enum
-{
-	AMMO_BULLETS,
-	AMMO_SHELLS,
-	AMMO_ROCKETS,
-	AMMO_GRENADES,
-	AMMO_CELLS,
-	AMMO_SLUGS
+typedef enum {
+    AMMO_BULLETS,
+    AMMO_SHELLS,
+    AMMO_ROCKETS,
+    AMMO_GRENADES,
+    AMMO_CELLS,
+    AMMO_SLUGS
 }
 
 ammo_t;
@@ -204,19 +201,19 @@ ammo_t;
 #define PNOISE_IMPACT   2
 
 // edict->movetype values
-typedef enum
-{
-	MOVETYPE_NONE,   // never moves
-	MOVETYPE_NOCLIP,  // origin and angles change with no interaction
-	MOVETYPE_PUSH,   // no clip to world, push on box contact
-	MOVETYPE_STOP,   // no clip to world, stops on box contact
-    
-	MOVETYPE_WALK,   // gravity
-	MOVETYPE_STEP,   // gravity, special edge handling
-	MOVETYPE_FLY,
-	MOVETYPE_TOSS,   // gravity
-	MOVETYPE_FLYMISSILE, // extra size to monsters
-	MOVETYPE_BOUNCE
+
+typedef enum {
+    MOVETYPE_NONE, // never moves
+    MOVETYPE_NOCLIP, // origin and angles change with no interaction
+    MOVETYPE_PUSH, // no clip to world, push on box contact
+    MOVETYPE_STOP, // no clip to world, stops on box contact
+
+    MOVETYPE_WALK, // gravity
+    MOVETYPE_STEP, // gravity, special edge handling
+    MOVETYPE_FLY,
+    MOVETYPE_TOSS, // gravity
+    MOVETYPE_FLYMISSILE, // extra size to monsters
+    MOVETYPE_BOUNCE
 }
 
 movetype_t;
@@ -224,85 +221,85 @@ movetype_t;
 // this structure is left intact through an entire game
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames
-typedef struct
-	{
-		char  helpmessage1[512];
-		char  helpmessage2[512];
-		int   helpchanged; // flash F1 icon if non 0, play sound
-		// and increment only if 1, 2, or 3
-		gclient_t *clients;  // [maxclients]
-		
-		// can't store spawnpoint in level, because
-		// it would get overwritten by the savegame restore
-		char  spawnpoint[512]; // needed for coop respawns
-		
-		// store latched cvars here that we want to get at often
-		int   maxclients;
-		int   maxentities;
-		
-		// cross level triggers
-		int   serverflags;
-		
-		// items
-		int   num_items;
-		
-		qboolean autosaved;
-	}
-	
+
+typedef struct {
+    char helpmessage1[512];
+    char helpmessage2[512];
+    int helpchanged; // flash F1 icon if non 0, play sound
+    // and increment only if 1, 2, or 3
+    gclient_t *clients; // [maxclients]
+
+    // can't store spawnpoint in level, because
+    // it would get overwritten by the savegame restore
+    char spawnpoint[512]; // needed for coop respawns
+
+    // store latched cvars here that we want to get at often
+    int maxclients;
+    int maxentities;
+
+    // cross level triggers
+    int serverflags;
+
+    // items
+    int num_items;
+
+    qboolean autosaved;
+}
+
 game_locals_t;
 
 // this structure is cleared as each map is entered
 // it is read/written to the level.sav file for savegames
-typedef struct
-	{
-		int   framenum;
-		float  time;
-		
-		char  level_name[MAX_QPATH]; // the descriptive name (Outer Base, etc)
-		char  mapname[MAX_QPATH];  // the server name (base1, etc)
-		char  nextmap[MAX_QPATH];  // go here when fraglimit is hit
-		
-		// intermission state
-		float  intermissiontime;  // time the intermission was started
-		char  *changemap;
-		int   exitintermission;
-		vec3_t  intermission_origin;
-		vec3_t  intermission_angle;
-		
-		edict_t  *sight_client; // changed once each frame for coop games
-		
-		edict_t  *sight_entity;
-		int   sight_entity_framenum;
-		edict_t  *sound_entity;
-		int   sound_entity_framenum;
-		edict_t  *sound2_entity;
-		int   sound2_entity_framenum;
-		
-		int   pic_health;
-		
-		int   total_secrets;
-		int   found_secrets;
-		
-		int   total_goals;
-		int   found_goals;
-		
-		int   total_monsters;
-		int   killed_monsters;
-		
-		edict_t  *current_entity; // entity running from G_RunFrame
-		int   body_que;   // dead bodies
-		
-		int   power_cubes;  // ugly necessity for coop
-	}
-	
+
+typedef struct {
+    int framenum;
+    float time;
+
+    char level_name[MAX_QPATH]; // the descriptive name (Outer Base, etc)
+    char mapname[MAX_QPATH]; // the server name (base1, etc)
+    char nextmap[MAX_QPATH]; // go here when fraglimit is hit
+
+    // intermission state
+    float intermissiontime; // time the intermission was started
+    char *changemap;
+    int exitintermission;
+    vec3_t intermission_origin;
+    vec3_t intermission_angle;
+
+    edict_t *sight_client; // changed once each frame for coop games
+
+    edict_t *sight_entity;
+    int sight_entity_framenum;
+    edict_t *sound_entity;
+    int sound_entity_framenum;
+    edict_t *sound2_entity;
+    int sound2_entity_framenum;
+
+    int pic_health;
+
+    int total_secrets;
+    int found_secrets;
+
+    int total_goals;
+    int found_goals;
+
+    int total_monsters;
+    int killed_monsters;
+
+    edict_t *current_entity; // entity running from G_RunFrame
+    int body_que; // dead bodies
+
+    int power_cubes; // ugly necessity for coop
+}
+
 level_locals_t;
 
-extern game_locals_t   game;
-extern level_locals_t   level;
-extern game_import_t   gi;
-extern game_export_t   globals;
+extern game_locals_t game;
+extern level_locals_t level;
+extern game_import_t gi;
+extern game_export_t globals;
 
-extern edict_t     *g_edicts;
+extern edict_t *g_edicts;
 
 #define FOFS(x)     (int)&(((edict_t *)0)->x)
 #define STOFS(x)    (int)&(((spawn_temp_t *)0)->x)
@@ -328,28 +325,27 @@ extern edict_t     *g_edicts;
 #define FFL_SPAWNTEMP   1
 
 typedef enum {
-	F_INT,
-	F_FLOAT,
-	F_LSTRING,   // string on disk, pointer in memory, TAG_LEVEL
-	F_GSTRING,   // string on disk, pointer in memory, TAG_GAME
-	F_VECTOR,
-	F_ANGLEHACK,
-	F_EDICT,   // index on disk, pointer in memory
-	F_ITEM,    // index on disk, pointer in memory
-	F_CLIENT,   // index on disk, pointer in memory
-	F_IGNORE
+    F_INT,
+    F_FLOAT,
+    F_LSTRING, // string on disk, pointer in memory, TAG_LEVEL
+    F_GSTRING, // string on disk, pointer in memory, TAG_GAME
+    F_VECTOR,
+    F_ANGLEHACK,
+    F_EDICT, // index on disk, pointer in memory
+    F_ITEM, // index on disk, pointer in memory
+    F_CLIENT, // index on disk, pointer in memory
+    F_IGNORE
 }
 
 fieldtype_t;
 
-typedef struct
-	{
-		char *name;
-		int  ofs;
-		fieldtype_t type;
-		int  flags;
-	}
-	
+typedef struct {
+    char *name;
+    int ofs;
+    fieldtype_t type;
+    int flags;
+}
+
 field_t;
 
 // damage flags
@@ -379,56 +375,55 @@ field_t;
 
 // this structure is cleared on each PutClientInServer(),
 // except for 'client->pers'
-struct gclient_s
-	{
-		// known to server
-		player_state_t ps;    // communicated by server to clients
-		int     ping;
-	};
-	
-struct edict_s
-	{
-		entity_state_t  s;
-		struct gclient_s *client; // NULL if not a player
-		// the server expects the first part
-		// of gclient_s to be a player_state_t
-		// but the rest of it is opaque
-		qboolean inuse;
-		int   linkcount;
-		
-		// FIXME: move these fields to a server private sv_entity_t
-		link_t  area;    // linked to a division node or leaf
-		
-		int   num_clusters;  // if -1, use headnode instead
-		int   clusternums[MAX_ENT_CLUSTERS];
-		int   headnode;   // unused if num_clusters != -1
-		int   areanum, areanum2;
-		
-		//================================
-		
-		int   svflags;
-		vec3_t  mins, maxs;
-		vec3_t  absmin, absmax, size;
-		solid_t  solid;
-		int   clipmask;
-		edict_t  *owner;
-		
-		// DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER
-		// EXPECTS THE FIELDS IN THAT ORDER!
-		//================================
-	};
-	
+
+struct gclient_s {
+    // known to server
+    player_state_t ps; // communicated by server to clients
+    int ping;
+};
+
+struct edict_s {
+    entity_state_t s;
+    struct gclient_s *client; // NULL if not a player
+    // the server expects the first part
+    // of gclient_s to be a player_state_t
+    // but the rest of it is opaque
+    qboolean inuse;
+    int linkcount;
+
+    // FIXME: move these fields to a server private sv_entity_t
+    link_t area; // linked to a division node or leaf
+
+    int num_clusters; // if -1, use headnode instead
+    int clusternums[MAX_ENT_CLUSTERS];
+    int headnode; // unused if num_clusters != -1
+    int areanum, areanum2;
+
+    //================================
+
+    int svflags;
+    vec3_t mins, maxs;
+    vec3_t absmin, absmax, size;
+    solid_t solid;
+    int clipmask;
+    edict_t *owner;
+
+    // DO NOT MODIFY ANYTHING ABOVE THIS, THE SERVER
+    // EXPECTS THE FIELDS IN THAT ORDER!
+    //================================
+};
+
 // zbot detector global stuff
-struct chatflood_s
-	{
-		qboolean      chatFloodProtect;
-		int           chatFloodProtectNum;
-		int           chatFloodProtectSec;
-		int           chatFloodProtectSilence;
-	};
-	
+
+struct chatflood_s {
+    qboolean chatFloodProtect;
+    int chatFloodProtectNum;
+    int chatFloodProtectSec;
+    int chatFloodProtectSilence;
+};
+
 #define MAXIMPULSESTOTEST 256
-	
+
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
 #define BANLISTREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
@@ -437,10 +432,10 @@ struct chatflood_s
 #define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
 #define BANLISTFILE      "q2adminban.txt"
 #define CFGFILE       "q2admin.txt"
-	
+
 #define DEFAULTVOTECOMMAND    "vote"
 #define DEFAULTRECONNECTMSG    "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."
-	
+
 #define DEFAULTUSERDISPLAY    "%s is using a client side proxy."
 #define DEFAULTTSDISPLAY    "%s is using a speed cheat."
 #define DEFAULTHACKDISPLAY    "%s is using a modified client."
@@ -453,26 +448,25 @@ struct chatflood_s
 #define DEFAULTBANMSG     "You are banned from this server!"
 #define DEFAULTCHABANMSG    "Message banned."
 #define DEFAULTLOCKOUTMSG    "This server is currently locked."
-	
-typedef struct banstruct
-	{
-		regex_t    *r;
-		qboolean   exclude;
-		byte    type;
-		byte    loadType;
-		byte    ip[4];
-		byte    subnetmask;
-		char    nick[80];
-		char    password[80];
-		char    *msg;
-		long    maxnumberofconnects;
-		long    numberofconnects;
-		long    bannum;
-		float    timeout;
-		struct chatflood_s floodinfo;
-		struct banstruct *next;
-	}
-	
+
+typedef struct banstruct {
+    regex_t *r;
+    qboolean exclude;
+    byte type;
+    byte loadType;
+    byte ip[4];
+    byte subnetmask;
+    char nick[80];
+    char password[80];
+    char *msg;
+    long maxnumberofconnects;
+    long numberofconnects;
+    long bannum;
+    float timeout;
+    struct chatflood_s floodinfo;
+    struct banstruct *next;
+}
+
 baninfo_t;
 
 #define NOTUSED   0
@@ -485,145 +479,141 @@ baninfo_t;
 #define LT_PERM   1
 #define LT_TEMP   2
 
-typedef struct chatbanstruct
-	{
-		regex_t     *r;
-		byte     type;
-		byte     loadType;
-		long     bannum;
-		char     chat[256];
-		char     *msg;
-		struct chatbanstruct *next;
-	}
-	
+typedef struct chatbanstruct {
+    regex_t *r;
+    byte type;
+    byte loadType;
+    long bannum;
+    char chat[256];
+    char *msg;
+    struct chatbanstruct *next;
+}
+
 chatbaninfo_t;
 
 #define CNOTUSED  0
 #define CHATLIKE  1
 #define CHATRE   2
 
-typedef struct
-	{
-		byte     command;
-		float     timeout;
-		unsigned long   data;
-		char     *str;
-	}
-	
+typedef struct {
+    byte command;
+    float timeout;
+    unsigned long data;
+    char *str;
+}
+
 CMDQUEUE;
 
 //*** UPDATE START ***
-typedef struct
-	{
-		char   action[256];
-		int    start;
-	}
-	
+
+typedef struct {
+    char action[256];
+    int start;
+}
+
 timers_t;
 //*** UPDATE END ***
 
-typedef struct
-	{
-		qboolean  admin;
-		unsigned char retries;
-		unsigned char rbotretries;
-		CMDQUEUE  cmdQueue[ALLOWED_MAXCMDS]; // command queue - UPDATE
-		int    maxCmds;
-		unsigned long clientcommand; // internal proxy commands
-		char   teststr[9];
-		int    charindex;
-		//long   logfilereadpos;
-		int    logfilenum;
-		long   logfilecheckpos;
-		char   buffer[256]; // log buffer
-		char   ipaddress[40];
-		byte   ipaddressBinary[4];
-		byte   impulse;
-		byte   inuse;
-		char   name[16];
-		char   skin[40];  // skin/model information.
-		int    rate;
-		int    maxfps;
-		int    cl_pitchspeed;
-		float   cl_anglespeedkey;
-		baninfo_t  *baninfo;
-		long   namechangetimeout;
-		int    namechangecount;
-		long   skinchangetimeout;
-		int    skinchangecount;
-		long   chattimeout;
-		int    chatcount;
-		char   userinfo[MAX_INFO_STRING + 45];
-		FILE   *stuffFile;
-		int    impulsesgenerated;
-		char   lastcmd[8192];
-		struct   chatflood_s floodinfo;
-		short   zbc_angles[2][2];
-		int    zbc_tog;
-		int    zbc_jitter;
-		float   zbc_jitter_time;
-		float   zbc_jitter_last;
-		int    votescast;
-		int    votetimeout;
-		int    msg;
-		
-		// used to test the alias (and connect) command with random strings
-		char   hack_teststring1[RANDOM_STRING_LENGTH+1];
-		char   hack_teststring2[RANDOM_STRING_LENGTH+1];
-		char   hack_teststring3[RANDOM_STRING_LENGTH+1];
-		char   hack_timescale[RANDOM_STRING_LENGTH+1];
-		int    hacked_disconnect;
-		byte   hacked_disconnect_ip[4];
-		int    checked_hacked_exe;
-		
-		// used to test the variables check list
-		char   hack_checkvar[RANDOM_STRING_LENGTH+1];
-		int    checkvar_idx;
-		
-		//*** UPDATE START ***
-		char   gl_driver[256];
-		int    gl_driver_changes;
-		int    pmodver;
-		int    pmod;
-		int    pmod_noreply_count;
-		int    pcmd_noreply_count;
-		int    pver;
-		int    q2a_admin;
-		int    q2a_bypass;
-		int    msec_count;
-		int    msec_last;
-		int    frames_count;
-		int    msec_bad;
-		float   msec_start;
-		int    done_server_and_blocklist;
-		int    userinfo_changed_count;
-		int    userinfo_changed_start;
-		int    private_command;
-		int    timescale;
-		qboolean  show_fps;
-		qboolean  vid_restart;
-		qboolean  private_command_got[PRIVATE_COMMANDS];
-		char   serverip[16];
-		char   cmdlist_stored[256];
-		int    cmdlist;
-		int    cmdlist_timeout;
-		int    userid;
-		int    newcmd_timeout;
-		timers_t  timers[TIMERS_MAX];
-		int    blocklist;
-		int    speedfreeze;
-		int    enteredgame;
-		//*** UPDATE END ***
-	}
-	
+typedef struct {
+    qboolean admin;
+    unsigned char retries;
+    unsigned char rbotretries;
+    CMDQUEUE cmdQueue[ALLOWED_MAXCMDS]; // command queue - UPDATE
+    int maxCmds;
+    unsigned long clientcommand; // internal proxy commands
+    char teststr[9];
+    int charindex;
+    //long   logfilereadpos;
+    int logfilenum;
+    long logfilecheckpos;
+    char buffer[256]; // log buffer
+    char ipaddress[40];
+    byte ipaddressBinary[4];
+    byte impulse;
+    byte inuse;
+    char name[16];
+    char skin[40]; // skin/model information.
+    int rate;
+    int maxfps;
+    int cl_pitchspeed;
+    float cl_anglespeedkey;
+    baninfo_t *baninfo;
+    long namechangetimeout;
+    int namechangecount;
+    long skinchangetimeout;
+    int skinchangecount;
+    long chattimeout;
+    int chatcount;
+    char userinfo[MAX_INFO_STRING + 45];
+    FILE *stuffFile;
+    int impulsesgenerated;
+    char lastcmd[8192];
+    struct chatflood_s floodinfo;
+    short zbc_angles[2][2];
+    int zbc_tog;
+    int zbc_jitter;
+    float zbc_jitter_time;
+    float zbc_jitter_last;
+    int votescast;
+    int votetimeout;
+    int msg;
+
+    // used to test the alias (and connect) command with random strings
+    char hack_teststring1[RANDOM_STRING_LENGTH + 1];
+    char hack_teststring2[RANDOM_STRING_LENGTH + 1];
+    char hack_teststring3[RANDOM_STRING_LENGTH + 1];
+    char hack_timescale[RANDOM_STRING_LENGTH + 1];
+    int hacked_disconnect;
+    byte hacked_disconnect_ip[4];
+    int checked_hacked_exe;
+
+    // used to test the variables check list
+    char hack_checkvar[RANDOM_STRING_LENGTH + 1];
+    int checkvar_idx;
+
+    //*** UPDATE START ***
+    char gl_driver[256];
+    int gl_driver_changes;
+    int pmodver;
+    int pmod;
+    int pmod_noreply_count;
+    int pcmd_noreply_count;
+    int pver;
+    int q2a_admin;
+    int q2a_bypass;
+    int msec_count;
+    int msec_last;
+    int frames_count;
+    int msec_bad;
+    float msec_start;
+    int done_server_and_blocklist;
+    int userinfo_changed_count;
+    int userinfo_changed_start;
+    int private_command;
+    int timescale;
+    qboolean show_fps;
+    qboolean vid_restart;
+    qboolean private_command_got[PRIVATE_COMMANDS];
+    char serverip[16];
+    char cmdlist_stored[256];
+    int cmdlist;
+    int cmdlist_timeout;
+    int userid;
+    int newcmd_timeout;
+    timers_t timers[TIMERS_MAX];
+    int blocklist;
+    int speedfreeze;
+    int enteredgame;
+    //*** UPDATE END ***
+}
+
 proxyinfo_t;
 
-typedef struct
-	{
-		byte   inuse;
-		char   name[16];
-	}
-	
+typedef struct {
+    byte inuse;
+    char name[16];
+}
+
 proxyreconnectinfo_t;
 
 #define MAXDETECTRETRIES   3
@@ -656,107 +646,105 @@ proxyreconnectinfo_t;
 #define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
 #define BANCHECK     (CCMD_BANNED | CCMD_RECONNECT)
 
-enum _commands
-{
-	QCMD_STARTUP,
-	QCMD_STARTUPTEST,
-	QCMD_CLEAR,
-	QCMD_DISCONNECT,
-	QCMD_CUSTOM,
-	QCMD_ZPROXYCHECK1,
-	QCMD_ZPROXYCHECK2,
-	QCMD_DISPLOGFILE,
-	QCMD_DISPLOGFILELIST,
-	QCMD_DISPLOGEVENTLIST,
-	QCMD_CONNECTCMD,
-	QCMD_LOGTOFILE1,
-	QCMD_LOGTOFILE2,
-	QCMD_LOGTOFILE3,
-	QCMD_GETIPALT,
-	QCMD_RESTART,
-	QCMD_CLIPTOMAXRATE,
-	QCMD_CLIPTOMINRATE,
-	QCMD_SETUPMAXFPS,
-	QCMD_FORCEUDATAUPDATE,
-	QCMD_SETMAXFPS,
-	QCMD_SETMINFPS,
-	QCMD_DISPBANS,
-	QCMD_DISPLRCONS,
-	QCMD_DISPFLOOD,
-	QCMD_DISPSPAWN,
-	QCMD_DISPVOTE,
-	QCMD_DISPDISABLE,
-	QCMD_CHANGENAME,
-	QCMD_CHANGESKIN,
-	QCMD_BAN,
-	QCMD_DISPCHATBANS,
-	QCMD_STUFFCLIENT,
-	QCMD_TESTADMIN,
-	QCMD_TESTADMIN2,  // UPDATE
-	QCMD_TESTADMIN3,  // UPDATE
-	QCMD_RUNVOTECMD,
-	QCMD_TESTRATBOT,
-	QCMD_TESTRATBOT2,
-	QCMD_TESTRATBOT3,
-	QCMD_TESTRATBOT4,
-	QCMD_LETRATBOTQUIT,
-	QCMD_TESTTIMESCALE,
-	QCMD_TESTSTANDARDPROXY,
-	QCMD_TESTALIASCMD1,
-	QCMD_TESTALIASCMD2,
-	QCMD_SETUPCL_PITCHSPEED,
-	QCMD_FORCEUDATAUPDATEPS,
-	QCMD_SETUPCL_ANGLESPEEDKEY,
-	QCMD_FORCEUDATAUPDATEAS,
-	QCMD_RECONNECT,
-	QCMD_KICK,
-	QCMD_MSGDISCONNECT,
-	QCMD_DISPCHECKVAR,
-	QCMD_CHECKVARTESTS,
-	//*** UPDATE START ***
-	QCMD_AUTH,
-	QCMD_PMODVERTIMEOUT,
-	QCMD_PMODVERTIMEOUT_INGAME,
-	QCMD_SHOWMOTD,
-	QCMD_EXECMAPCFG,
-	QCMD_PRIVATECOMMAND,
-	QCMD_GL_CHECK,
-	QCMD_SETUPTIMESCALE,
-	QCMD_SETTIMESCALE,
-	QCMD_SPAMBYPASS,
-	QCMD_GETCMDQUEUE,
-	QCMD_TESTCMDQUEUE
-	//*** UPDATE END ***
+enum _commands {
+    QCMD_STARTUP,
+    QCMD_STARTUPTEST,
+    QCMD_CLEAR,
+    QCMD_DISCONNECT,
+    QCMD_CUSTOM,
+    QCMD_ZPROXYCHECK1,
+    QCMD_ZPROXYCHECK2,
+    QCMD_DISPLOGFILE,
+    QCMD_DISPLOGFILELIST,
+    QCMD_DISPLOGEVENTLIST,
+    QCMD_CONNECTCMD,
+    QCMD_LOGTOFILE1,
+    QCMD_LOGTOFILE2,
+    QCMD_LOGTOFILE3,
+    QCMD_GETIPALT,
+    QCMD_RESTART,
+    QCMD_CLIPTOMAXRATE,
+    QCMD_CLIPTOMINRATE,
+    QCMD_SETUPMAXFPS,
+    QCMD_FORCEUDATAUPDATE,
+    QCMD_SETMAXFPS,
+    QCMD_SETMINFPS,
+    QCMD_DISPBANS,
+    QCMD_DISPLRCONS,
+    QCMD_DISPFLOOD,
+    QCMD_DISPSPAWN,
+    QCMD_DISPVOTE,
+    QCMD_DISPDISABLE,
+    QCMD_CHANGENAME,
+    QCMD_CHANGESKIN,
+    QCMD_BAN,
+    QCMD_DISPCHATBANS,
+    QCMD_STUFFCLIENT,
+    QCMD_TESTADMIN,
+    QCMD_TESTADMIN2, // UPDATE
+    QCMD_TESTADMIN3, // UPDATE
+    QCMD_RUNVOTECMD,
+    QCMD_TESTRATBOT,
+    QCMD_TESTRATBOT2,
+    QCMD_TESTRATBOT3,
+    QCMD_TESTRATBOT4,
+    QCMD_LETRATBOTQUIT,
+    QCMD_TESTTIMESCALE,
+    QCMD_TESTSTANDARDPROXY,
+    QCMD_TESTALIASCMD1,
+    QCMD_TESTALIASCMD2,
+    QCMD_SETUPCL_PITCHSPEED,
+    QCMD_FORCEUDATAUPDATEPS,
+    QCMD_SETUPCL_ANGLESPEEDKEY,
+    QCMD_FORCEUDATAUPDATEAS,
+    QCMD_RECONNECT,
+    QCMD_KICK,
+    QCMD_MSGDISCONNECT,
+    QCMD_DISPCHECKVAR,
+    QCMD_CHECKVARTESTS,
+    //*** UPDATE START ***
+    QCMD_AUTH,
+    QCMD_PMODVERTIMEOUT,
+    QCMD_PMODVERTIMEOUT_INGAME,
+    QCMD_SHOWMOTD,
+    QCMD_EXECMAPCFG,
+    QCMD_PRIVATECOMMAND,
+    QCMD_GL_CHECK,
+    QCMD_SETUPTIMESCALE,
+    QCMD_SETTIMESCALE,
+    QCMD_SPAMBYPASS,
+    QCMD_GETCMDQUEUE,
+    QCMD_TESTCMDQUEUE
+    //*** UPDATE END ***
 };
 
-enum zb_logtypesenum
-{
-	LT_ZBOT,
-	LT_ZBOTIMPULSES,
-	LT_IMPULSES,
-	LT_NAMECHANGE,
-	LT_SKINCHANGE,
-	LT_CHATBAN,
-	LT_CLIENTCONNECT,
-	LT_CLIENTBEGIN,
-	LT_CLIENTDISCONNECT,
-	LT_CLIENTKICK,
-	LT_CLIENTCMDS,
-	LT_CLIENTLRCON,
-	LT_BAN,
-	LT_CHAT,
-	LT_SERVERSTART,
-	LT_SERVERINIT,
-	LT_SERVEREND,
-	LT_INTERNALWARN,
-	LT_PERFORMANCEMONITOR,
-	LT_DISABLECMD,
-	LT_ENTITYCREATE,
-	LT_ENTITYDELETE,
-	LT_INVALIDIP,
-	LT_ADMINLOG,  // UPDATE
-	LT_CLIENTUSERINFO, // UPDATE
-	LT_PRIVATELOG,  // UPDATE
+enum zb_logtypesenum {
+    LT_ZBOT,
+    LT_ZBOTIMPULSES,
+    LT_IMPULSES,
+    LT_NAMECHANGE,
+    LT_SKINCHANGE,
+    LT_CHATBAN,
+    LT_CLIENTCONNECT,
+    LT_CLIENTBEGIN,
+    LT_CLIENTDISCONNECT,
+    LT_CLIENTKICK,
+    LT_CLIENTCMDS,
+    LT_CLIENTLRCON,
+    LT_BAN,
+    LT_CHAT,
+    LT_SERVERSTART,
+    LT_SERVERINIT,
+    LT_SERVEREND,
+    LT_INTERNALWARN,
+    LT_PERFORMANCEMONITOR,
+    LT_DISABLECMD,
+    LT_ENTITYCREATE,
+    LT_ENTITYDELETE,
+    LT_INVALIDIP,
+    LT_ADMINLOG, // UPDATE
+    LT_CLIENTUSERINFO, // UPDATE
+    LT_PRIVATELOG, // UPDATE
 };
 
 #define IW_UNEXCEPTEDCMD  1
@@ -796,58 +784,57 @@ enum zb_logtypesenum
 #define CMDTYPE_NUMBER   2
 #define CMDTYPE_STRING   3
 
-typedef void     CMDRUNFUNC(int startarg, edict_t *ent, int client);
-typedef void     CMDINITFUNC(char *arg);
+typedef void CMDRUNFUNC(int startarg, edict_t *ent, int client);
+typedef void CMDINITFUNC(char *arg);
 
-typedef struct
-	{
-		char    *cmdname;
-		byte    cmdwhere;
-		byte    cmdtype;
-		void    *datapoint;
-		CMDRUNFUNC   *runfunc;
-		CMDINITFUNC   *initfunc;
-	}
-	
+typedef struct {
+    char *cmdname;
+    byte cmdwhere;
+    byte cmdtype;
+    void *datapoint;
+    CMDRUNFUNC *runfunc;
+    CMDINITFUNC *initfunc;
+}
+
 zbotcmd_t;
 
 extern game_import_t gi;
 extern game_export_t globals;
 extern game_export_t *dllglobals;
-extern cvar_t   *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt , *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
+extern cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
 
-extern char    dllname[256];
-extern char    zbotuserdisplay[256];
-extern char    timescaleuserdisplay[256];
-extern char    hackuserdisplay[256];
-extern char    skincrashmsg[256];
-extern char    defaultreconnectmessage[256];
-extern char    moddir[256];
+extern char dllname[256];
+extern char zbotuserdisplay[256];
+extern char timescaleuserdisplay[256];
+extern char hackuserdisplay[256];
+extern char skincrashmsg[256];
+extern char defaultreconnectmessage[256];
+extern char moddir[256];
 
-extern qboolean   soloadlazy;
-extern qboolean   dllloaded;
-extern qboolean   quake2dirsupport;
-extern qboolean   zbotdetect;
-extern qboolean   displayzbotuser;
-extern qboolean   displaynamechange;
-extern qboolean   dopversion;
-extern qboolean   disconnectuserimpulse;
-extern qboolean   disconnectuser;
-extern qboolean   mapcfgexec;
-extern qboolean   checkClientIpAddress;
-extern qboolean   votecountnovotes;
+extern qboolean soloadlazy;
+extern qboolean dllloaded;
+extern qboolean quake2dirsupport;
+extern qboolean zbotdetect;
+extern qboolean displayzbotuser;
+extern qboolean displaynamechange;
+extern qboolean dopversion;
+extern qboolean disconnectuserimpulse;
+extern qboolean disconnectuser;
+extern qboolean mapcfgexec;
+extern qboolean checkClientIpAddress;
+extern qboolean votecountnovotes;
 
-extern int    votepasspercent;
-extern int    voteminclients;
-extern int    clientMaxVoteTimeout;
-extern int    clientMaxVotes;
-extern int    numofdisplays;
-extern int    maximpulses;
+extern int votepasspercent;
+extern int voteminclients;
+extern int clientMaxVoteTimeout;
+extern int clientMaxVotes;
+extern int numofdisplays;
+extern int maximpulses;
 
-extern byte    impulsesToKickOn[MAXIMPULSESTOTEST];
-extern byte    maxImpulses;
+extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
+extern byte maxImpulses;
 
-extern qboolean   displayimpulses;
+extern qboolean displayimpulses;
 
 //r1ch 2005-01-26 disable hugely buggy commands BEGIN
 /*extern qboolean   play_team_enable;
@@ -855,39 +842,39 @@ extern qboolean   play_all_enable;
 extern qboolean   play_person_enable;*/
 //r1ch 2005-01-26 disable hugely buggy commands END
 
-extern qboolean   printmessageonplaycmds;
-extern qboolean   say_person_enable;
-extern qboolean   say_group_enable;
-extern qboolean   extendedsay_enable;
-extern qboolean   spawnentities_enable;
-extern qboolean   spawnentities_internal_enable;
-extern qboolean   vote_enable;
-extern qboolean   consolechat_disable;
-extern qboolean   gamemaptomap;
-extern qboolean   banOnConnect;
-extern qboolean   lockDownServer;
-extern qboolean   serverinfoenable;
+extern qboolean printmessageonplaycmds;
+extern qboolean say_person_enable;
+extern qboolean say_group_enable;
+extern qboolean extendedsay_enable;
+extern qboolean spawnentities_enable;
+extern qboolean spawnentities_internal_enable;
+extern qboolean vote_enable;
+extern qboolean consolechat_disable;
+extern qboolean gamemaptomap;
+extern qboolean banOnConnect;
+extern qboolean lockDownServer;
+extern qboolean serverinfoenable;
 
-extern int    clientVoteTimeout;
-extern int    clientRemindTimeout;
-extern int    randomwaitreporttime;
-extern int    proxy_bwproxy;
-extern int    proxy_nitro2;
-extern int    q2adminrunmode;
-extern int    maxMsgLevel;
+extern int clientVoteTimeout;
+extern int clientRemindTimeout;
+extern int randomwaitreporttime;
+extern int proxy_bwproxy;
+extern int proxy_nitro2;
+extern int q2adminrunmode;
+extern int maxMsgLevel;
 
-extern char    *zbotversion;
-extern char    zbotmotd[256];
-extern char    motd[4096];
-extern char    clientVoteCommand[256];
+extern char *zbotversion;
+extern char zbotmotd[256];
+extern char motd[4096];
+extern char clientVoteCommand[256];
 
-extern int    maxrateallowed;
-extern int    minrateallowed;
-extern int    maxfpsallowed;
-extern int    minfpsallowed;
-extern int    zbc_jittermax;
-extern int    zbc_jittertime;
-extern int    zbc_jittermove;
+extern int maxrateallowed;
+extern int minrateallowed;
+extern int maxfpsallowed;
+extern int minfpsallowed;
+extern int zbc_jittermax;
+extern int zbc_jittertime;
+extern int zbc_jittermove;
 
 #define ZBOT_TESTSTRING1   "q2startxx\n"
 
@@ -898,124 +885,122 @@ extern int    zbc_jittermove;
 #define ZBOT_TESTSTRING_TEST1_OLD "q2start"
 #define ZBOT_TESTSTRING_TEST2_OLD "q2e"
 
-extern char    zbot_teststring1[];
-extern char    zbot_teststring_test1[];
-extern char    zbot_teststring_test2[];
-extern char    zbot_teststring_test3[];
-extern char    zbot_testchar1;
-extern char    zbot_testchar2;
-extern char    testchars[];
+extern char zbot_teststring1[];
+extern char zbot_teststring_test1[];
+extern char zbot_teststring_test2[];
+extern char zbot_teststring_test3[];
+extern char zbot_testchar1;
+extern char zbot_testchar2;
+extern char testchars[];
 
-extern int    testcharslength;
-extern int    q2adminrunmode;
-extern int    maxclientsperframe;
-extern int    framesperprocess;
+extern int testcharslength;
+extern int q2adminrunmode;
+extern int maxclientsperframe;
+extern int framesperprocess;
 
-extern char    buffer[0x10000];
-extern char    buffer2[256];
-extern char    adminpassword[256];
-extern char    customServerCmd[256];
-extern char    customClientCmd[256];
-extern char    customClientCmdConnect[256];
-extern char    customServerCmdConnect[256];
+extern char buffer[0x10000];
+extern char buffer2[256];
+extern char adminpassword[256];
+extern char customServerCmd[256];
+extern char customClientCmd[256];
+extern char customClientCmdConnect[256];
+extern char customServerCmdConnect[256];
 
 //r1ch 2005-01-27 insecure lrcon fix BEGIN
-extern qboolean	rcon_insecure;
+extern qboolean rcon_insecure;
 //r1ch 2005-01-27 insecure lrcon fix END
 
-extern qboolean   rcon_random_password;
-extern qboolean   zbc_enable;
-extern qboolean   nameChangeFloodProtect;
-extern qboolean   skinChangeFloodProtect;
+extern qboolean rcon_random_password;
+extern qboolean zbc_enable;
+extern qboolean nameChangeFloodProtect;
+extern qboolean skinChangeFloodProtect;
 
-extern char    nameChangeFloodProtectMsg[256];
-extern char    skinChangeFloodProtectMsg[256];
-extern char    chatFloodProtectMsg[256];
+extern char nameChangeFloodProtectMsg[256];
+extern char skinChangeFloodProtectMsg[256];
+extern char chatFloodProtectMsg[256];
 
-extern int    maxlrcon_cmds;
-extern int    lrcon_timeout;
-extern int    logfilecheckcount;
-extern int    nameChangeFloodProtectNum;
-extern int    nameChangeFloodProtectSec;
-extern int    nameChangeFloodProtectSilence;
-extern int    skinChangeFloodProtectNum;
-extern int    skinChangeFloodProtectSec;
-extern int    skinChangeFloodProtectSilence;
+extern int maxlrcon_cmds;
+extern int lrcon_timeout;
+extern int logfilecheckcount;
+extern int nameChangeFloodProtectNum;
+extern int nameChangeFloodProtectSec;
+extern int nameChangeFloodProtectSilence;
+extern int skinChangeFloodProtectNum;
+extern int skinChangeFloodProtectSec;
+extern int skinChangeFloodProtectSilence;
 
-extern struct   chatflood_s floodinfo;
+extern struct chatflood_s floodinfo;
 
-extern baninfo_t  *banhead;
+extern baninfo_t *banhead;
 extern chatbaninfo_t *cbanhead;
 
-extern qboolean   IPBanning_Enable;
-extern qboolean   NickBanning_Enable;
-extern qboolean   ChatBanning_Enable;
-extern qboolean   kickOnNameChange;
-extern qboolean   disablecmds_enable;
-extern qboolean   checkvarcmds_enable;
-extern qboolean   swap_attack_use;
-extern qboolean   timescaledetect;
+extern qboolean IPBanning_Enable;
+extern qboolean NickBanning_Enable;
+extern qboolean ChatBanning_Enable;
+extern qboolean kickOnNameChange;
+extern qboolean disablecmds_enable;
+extern qboolean checkvarcmds_enable;
+extern qboolean swap_attack_use;
+extern qboolean timescaledetect;
 
-extern char    defaultBanMsg[256];
-extern char    defaultChatBanMsg[256];
-extern char    *currentBanMsg;
+extern char defaultBanMsg[256];
+extern char defaultChatBanMsg[256];
+extern char *currentBanMsg;
 
-extern proxyinfo_t   *proxyinfo;
-extern proxyinfo_t   *proxyinfoBase;
+extern proxyinfo_t *proxyinfo;
+extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
-extern zbotcmd_t   zbotCommands[];
+extern zbotcmd_t zbotCommands[];
 
-extern int    clientsidetimeout;
-extern int    zbotdetectactivetimeout;
-extern int    lframenum;
+extern int clientsidetimeout;
+extern int zbotdetectactivetimeout;
+extern int lframenum;
 
-extern float   ltime;
+extern float ltime;
 
-extern char    *impulsemessages[];
-extern char    cmdpassedvote[2048];
-extern char    cl_pitchspeed_kickmsg[256];
-extern char    cl_anglespeedkey_kickmsg[256];
+extern char *impulsemessages[];
+extern char cmdpassedvote[2048];
+extern char cl_pitchspeed_kickmsg[256];
+extern char cl_anglespeedkey_kickmsg[256];
 
-extern qboolean   cl_pitchspeed_enable;
-extern qboolean   cl_pitchspeed_kick;
-extern qboolean   cl_pitchspeed_display;
-extern qboolean   cl_anglespeedkey_enable;
-extern qboolean   cl_anglespeedkey_kick;
-extern qboolean   cl_anglespeedkey_display;
-extern qboolean   filternonprintabletext;
+extern qboolean cl_pitchspeed_enable;
+extern qboolean cl_pitchspeed_kick;
+extern qboolean cl_pitchspeed_display;
+extern qboolean cl_anglespeedkey_enable;
+extern qboolean cl_anglespeedkey_kick;
+extern qboolean cl_anglespeedkey_display;
+extern qboolean filternonprintabletext;
 
-extern char    lockoutmsg[256];
-extern char    gmapname[MAX_QPATH];
-extern char    reconnect_address[256];
-extern char    serverip[256];   // UPDATE
-extern char    lanip[256];    // UPDATE
+extern char lockoutmsg[256];
+extern char gmapname[MAX_QPATH];
+extern char reconnect_address[256];
+extern char serverip[256]; // UPDATE
+extern char lanip[256]; // UPDATE
 
-extern int    reconnect_time;
-extern int    reconnect_checklevel;
-extern int    entity_classname_offset;
-extern int    checkvar_poll_time;
+extern int reconnect_time;
+extern int reconnect_checklevel;
+extern int entity_classname_offset;
+extern int checkvar_poll_time;
 
-typedef struct
-	{
-		long    reconnecttimeout;
-		int     retrylistidx;
-		char    userinfo[MAX_INFO_STRING + 45];
-	}
-	
+typedef struct {
+    long reconnecttimeout;
+    int retrylistidx;
+    char userinfo[MAX_INFO_STRING + 45];
+}
+
 reconnect_info;
 
-typedef struct
-	{
-		long    retry;
-		char    ip[MAX_INFO_STRING + 45];
-	}
-	
+typedef struct {
+    long retry;
+    char ip[MAX_INFO_STRING + 45];
+}
+
 retrylist_info;
 
 extern reconnect_info* reconnectlist;
 extern retrylist_info* retrylist;
-extern int    maxReconnectList;
-extern int    maxretryList;
+extern int maxReconnectList;
+extern int maxretryList;
 
 #define FALSE   0
 #define TRUE   1
@@ -1075,21 +1060,21 @@ countperformancetimer##instance = 0; \
 // zb_clib.c
 #ifdef Q2ADMINCLIB
 
-char *q2a_strcpy( char *strDestination, const char *strSource );
-char *q2a_strncpy( char *strDest, const char *strSource, size_t count );
-char *q2a_strcat( char *strDestination, const char *strSource );
-char *q2a_strstr( const char *string, const char *strCharSet );
-char *q2a_strchr( const char *string, int c );
-int  q2a_strcmp( const char *string1, const char *string2 );
-size_t q2a_strlen( const char *string );
+char *q2a_strcpy(char *strDestination, const char *strSource);
+char *q2a_strncpy(char *strDest, const char *strSource, size_t count);
+char *q2a_strcat(char *strDestination, const char *strSource);
+char *q2a_strstr(const char *string, const char *strCharSet);
+char *q2a_strchr(const char *string, int c);
+int q2a_strcmp(const char *string1, const char *string2);
+size_t q2a_strlen(const char *string);
 
-int  q2a_atoi( const char *string );
-double q2a_atof( const char *string );
+int q2a_atoi(const char *string);
+double q2a_atof(const char *string);
 
-int  q2a_memcmp( const void *buf1, const void *buf2, size_t count );
-void *q2a_memcpy( void *dest, const void *src, size_t count );
-void *q2a_memmove( void *dest, const void *src, size_t count );
-void *q2a_memset( void *dest, int c, size_t count );
+int q2a_memcmp(const void *buf1, const void *buf2, size_t count);
+void *q2a_memcpy(void *dest, const void *src, size_t count);
+void *q2a_memmove(void *dest, const void *src, size_t count);
+void *q2a_memset(void *dest, int c, size_t count);
 
 #else
 
@@ -1112,193 +1097,192 @@ void *q2a_memset( void *dest, int c, size_t count );
 #endif
 
 // zb_cmd.c
-void  readCfgFiles(void);
-void  ClientCommand (edict_t *ent);
-void  ServerCommand (void);
-void  dprintf_internal (char *fmt, ...);
-void  cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...);
-void  bprintf_internal(int printlevel, char *fmt, ...);
-void  AddCommandString_internal(char *text);
-void  stuffNextLine(edict_t *ent, int client);
-char  *getArgs(void);
-int   getClientsFromArg(int client, edict_t *ent, char *cp, char **text);
-edict_t  *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text);
+void readCfgFiles(void);
+void ClientCommand(edict_t *ent);
+void ServerCommand(void);
+void dprintf_internal(char *fmt, ...);
+void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...);
+void bprintf_internal(int printlevel, char *fmt, ...);
+void AddCommandString_internal(char *text);
+void stuffNextLine(edict_t *ent, int client);
+char *getArgs(void);
+int getClientsFromArg(int client, edict_t *ent, char *cp, char **text);
+edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text);
 
 // zb_util.c
-void  stuffcmd(edict_t *e, char *s);
-int   Q_stricmp (char *s1, char *s2);
-char  *Info_ValueForKey (char *s, char *key);
-void  copyDllInfo(void);
-int   breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
-int   startContains(char *src, char *cmp);
-int   stringContains(char *buff1, char *buff2);
-int   isBlank(char *buff1);
-char  *processstring(char *output, char *input, int max, char end);
+void stuffcmd(edict_t *e, char *s);
+int Q_stricmp(char *s1, char *s2);
+char *Info_ValueForKey(char *s, char *key);
+void copyDllInfo(void);
+int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
+int startContains(char *src, char *cmp);
+int stringContains(char *buff1, char *buff2);
+int isBlank(char *buff1);
+char *processstring(char *output, char *input, int max, char end);
 qboolean getLogicalValue(char *arg);
-int   getLastLine(char *buffer, FILE *dumpfile, long *fpos);
-void  q_strupr(char *c);
+int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
+void q_strupr(char *c);
 
 // zb_ban.c
-void  banRun(int startarg, edict_t *ent, int client);
-void  reloadbanfileRun(int startarg, edict_t *ent, int client);
-void  reloadexceptionlistRun(int startarg, edict_t *ent, int client);
-void  reloadhashlistRun(int startarg, edict_t *ent, int client);
-void  loadexceptionlist(void);
-void  loadhashlist(void);
-void  readBanLists(void);
-int   checkCheckIfBanned(edict_t *ent, int client);
-void  listbansRun(int startarg, edict_t *ent, int client);
-void  displayNextBan(edict_t *ent, int client, long bannum);
-void  delbanRun(int startarg, edict_t *ent, int client);
-void  chatbanRun(int startarg, edict_t *ent, int client);
-int   checkCheckIfChatBanned(char *txt);
-void  listchatbansRun(int startarg, edict_t *ent, int client);
-void  displayNextChatBan(edict_t *ent, int client, long chatbannum);
-void  delchatbanRun(int startarg, edict_t *ent, int client);
-void  freeBanLists(void);
+void banRun(int startarg, edict_t *ent, int client);
+void reloadbanfileRun(int startarg, edict_t *ent, int client);
+void reloadexceptionlistRun(int startarg, edict_t *ent, int client);
+void reloadhashlistRun(int startarg, edict_t *ent, int client);
+void loadexceptionlist(void);
+void loadhashlist(void);
+void readBanLists(void);
+int checkCheckIfBanned(edict_t *ent, int client);
+void listbansRun(int startarg, edict_t *ent, int client);
+void displayNextBan(edict_t *ent, int client, long bannum);
+void delbanRun(int startarg, edict_t *ent, int client);
+void chatbanRun(int startarg, edict_t *ent, int client);
+int checkCheckIfChatBanned(char *txt);
+void listchatbansRun(int startarg, edict_t *ent, int client);
+void displayNextChatBan(edict_t *ent, int client, long chatbannum);
+void delchatbanRun(int startarg, edict_t *ent, int client);
+void freeBanLists(void);
 
 // zb_lrcon.c
-void  readLRconLists(void);
-void  reloadlrconfileRun(int startarg, edict_t *ent, int client);
-void  run_lrcon(edict_t *ent, int client);
-void  listlrconsRun(int startarg, edict_t *ent, int client);
-void  displayNextLRCon(edict_t *ent, int client, long lrconnum);
-void  lrconRun(int startarg, edict_t *ent, int client);
-void  lrconDelRun(int startarg, edict_t *ent, int client);
-void  freeLRconLists(void);
-void  lrcon_reset_rcon_password(int, edict_t *, int);
-void  check_lrcon_password(void);
+void readLRconLists(void);
+void reloadlrconfileRun(int startarg, edict_t *ent, int client);
+void run_lrcon(edict_t *ent, int client);
+void listlrconsRun(int startarg, edict_t *ent, int client);
+void displayNextLRCon(edict_t *ent, int client, long lrconnum);
+void lrconRun(int startarg, edict_t *ent, int client);
+void lrconDelRun(int startarg, edict_t *ent, int client);
+void freeLRconLists(void);
+void lrcon_reset_rcon_password(int, edict_t *, int);
+void check_lrcon_password(void);
 
 // zb_init.c
-void  InitGame (void);
-void  SpawnEntities (char *mapname, char *entities, char *spawnpoint);
-qboolean ClientConnect (edict_t *ent, char *userinfo);
-void  ClientUserinfoChanged (edict_t *ent, char *userinfo);
-void  ClientDisconnect (edict_t *ent);
-void  ClientBegin (edict_t *ent);
-void  WriteGame (char *filename, qboolean autosave);
-void  ReadGame (char *filename);
-void  WriteLevel (char *filename);
-void  ReadLevel (char *filename);
+void InitGame(void);
+void SpawnEntities(char *mapname, char *entities, char *spawnpoint);
+qboolean ClientConnect(edict_t *ent, char *userinfo);
+void ClientUserinfoChanged(edict_t *ent, char *userinfo);
+void ClientDisconnect(edict_t *ent);
+void ClientBegin(edict_t *ent);
+void WriteGame(char *filename, qboolean autosave);
+void ReadGame(char *filename);
+void WriteLevel(char *filename);
+void ReadLevel(char *filename);
 
 // zb_zbot.c
-int   checkForOverflows(edict_t *ent, int client);
-void  serverLogZBot(edict_t *ent, int client);
-void  ClientThink (edict_t *ent, usercmd_t *ucmd);
-void  G_RunFrame (void);
-void  Pmove_internal (pmove_t *pmove);
-void  generateRandomString(char *buffer, int length);
-void  reloadWhoisFileRun(int startarg, edict_t *ent, int client);	//UPDATE
-void  reloadLoginFileRun(int startarg, edict_t *ent, int client);	//UPDATE
+int checkForOverflows(edict_t *ent, int client);
+void serverLogZBot(edict_t *ent, int client);
+void ClientThink(edict_t *ent, usercmd_t *ucmd);
+void G_RunFrame(void);
+void Pmove_internal(pmove_t *pmove);
+void generateRandomString(char *buffer, int length);
+void reloadWhoisFileRun(int startarg, edict_t *ent, int client); //UPDATE
+void reloadLoginFileRun(int startarg, edict_t *ent, int client); //UPDATE
 
 // zb_msgqueue.c
-void  addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str);
+void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str);
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str);
-void  removeClientCommand(int client, byte command);
-void  removeClientCommands(int client);
+void removeClientCommand(int client, byte command);
+void removeClientCommands(int client);
 
 // zb_log.c
-void  loadLogList(void);
+void loadLogList(void);
 qboolean isLogEvent(enum zb_logtypesenum ltype);
-void  logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2);
-void  displaylogfileRun(int startarg, edict_t *ent, int client);
-void  displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
-void  clearlogfileRun(int startarg, edict_t *ent, int client);
-void  logfileRun(int startarg, edict_t *ent, int client);
-void  displayLogFileListCont(edict_t *ent, int client, long logfilenum);
-void  logeventRun(int startarg, edict_t *ent, int client);
-void  displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly);
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2);
+void displaylogfileRun(int startarg, edict_t *ent, int client);
+void displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
+void clearlogfileRun(int startarg, edict_t *ent, int client);
+void logfileRun(int startarg, edict_t *ent, int client);
+void displayLogFileListCont(edict_t *ent, int client, long logfilenum);
+void logeventRun(int startarg, edict_t *ent, int client);
+void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly);
 
 // zb_flood.c
-void  freeFloodLists(void);
-void  readFloodLists(void);
-void  reloadFloodFileRun(int startarg, edict_t *ent, int client);
-void  nameChangeFloodProtectInit(char *arg);
-void  nameChangeFloodProtectRun(int startarg, edict_t *ent, int client);
-void  chatFloodProtectInit(char *arg);
-void  chatFloodProtectRun(int startarg, edict_t *ent, int client);
-void  muteRun(int startarg, edict_t *ent, int client);
-void  clientchatfloodprotectRun(int startarg, edict_t *ent, int client);
+void freeFloodLists(void);
+void readFloodLists(void);
+void reloadFloodFileRun(int startarg, edict_t *ent, int client);
+void nameChangeFloodProtectInit(char *arg);
+void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client);
+void chatFloodProtectInit(char *arg);
+void chatFloodProtectRun(int startarg, edict_t *ent, int client);
+void muteRun(int startarg, edict_t *ent, int client);
+void clientchatfloodprotectRun(int startarg, edict_t *ent, int client);
 qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg);
 qboolean checkForFlood(int client);
 qboolean checkforfloodcmds(char *cp);
-void  listfloodsRun(int startarg, edict_t *ent, int client);
-void  displayNextFlood(edict_t *ent, int client, long floodcmd);
-void  floodcmdRun(int startarg, edict_t *ent, int client);
-void  floodDelRun(int startarg, edict_t *ent, int client);
-void  skinChangeFloodProtectInit(char *arg);
-void  skinChangeFloodProtectRun(int startarg, edict_t *ent, int client);
+void listfloodsRun(int startarg, edict_t *ent, int client);
+void displayNextFlood(edict_t *ent, int client, long floodcmd);
+void floodcmdRun(int startarg, edict_t *ent, int client);
+void floodDelRun(int startarg, edict_t *ent, int client);
+void skinChangeFloodProtectInit(char *arg);
+void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client);
 
 // zb_spawn.c
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
 qboolean checkDisabledEntities(char *classname);
-void  freeSpawnLists(void);
-void  freeOneLevelSpawnLists(void);
-void  readSpawnLists(void);
-void  reloadSpawnFileRun(int startarg, edict_t *ent, int client);
-void  listspawnsRun(int startarg, edict_t *ent, int client);
-void  displayNextSpawn(edict_t *ent, int client, long floodcmd);
-void  spawncmdRun(int startarg, edict_t *ent, int client);
-void  spawnDelRun(int startarg, edict_t *ent, int client);
-void  linkentity_internal(edict_t *ent);
-void  unlinkentity_internal(edict_t *ent);
+void freeSpawnLists(void);
+void freeOneLevelSpawnLists(void);
+void readSpawnLists(void);
+void reloadSpawnFileRun(int startarg, edict_t *ent, int client);
+void listspawnsRun(int startarg, edict_t *ent, int client);
+void displayNextSpawn(edict_t *ent, int client, long floodcmd);
+void spawncmdRun(int startarg, edict_t *ent, int client);
+void spawnDelRun(int startarg, edict_t *ent, int client);
+void linkentity_internal(edict_t *ent);
+void unlinkentity_internal(edict_t *ent);
 
 // zb_vote.c
-void  freeVoteLists(void);
-void  readVoteLists(void);
-void  reloadVoteFileRun(int startarg, edict_t *ent, int client);
-void  listvotesRun(int startarg, edict_t *ent, int client);
-void  displayNextVote(edict_t *ent, int client, long floodcmd);
-void  votecmdRun(int startarg, edict_t *ent, int client);
-void  voteDelRun(int startarg, edict_t *ent, int client);
+void freeVoteLists(void);
+void readVoteLists(void);
+void reloadVoteFileRun(int startarg, edict_t *ent, int client);
+void listvotesRun(int startarg, edict_t *ent, int client);
+void displayNextVote(edict_t *ent, int client, long floodcmd);
+void votecmdRun(int startarg, edict_t *ent, int client);
+void voteDelRun(int startarg, edict_t *ent, int client);
 qboolean checkVoteCommand(char *votecmd);
-void  run_vote(edict_t *ent, int client);
-void  checkOnVoting(void);
+void run_vote(edict_t *ent, int client);
+void checkOnVoting(void);
 
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
 
 // zb_disable.c
-void  freeDisableLists(void);
-void  readDisableLists(void);
-void  reloadDisableFileRun(int startarg, edict_t *ent, int client);
-void  listdisablesRun(int startarg, edict_t *ent, int client);
-void  displayNextDisable(edict_t *ent, int client, long floodcmd);
-void  disablecmdRun(int startarg, edict_t *ent, int client);
-void  disableDelRun(int startarg, edict_t *ent, int client);
+void freeDisableLists(void);
+void readDisableLists(void);
+void reloadDisableFileRun(int startarg, edict_t *ent, int client);
+void listdisablesRun(int startarg, edict_t *ent, int client);
+void displayNextDisable(edict_t *ent, int client, long floodcmd);
+void disablecmdRun(int startarg, edict_t *ent, int client);
+void disableDelRun(int startarg, edict_t *ent, int client);
 qboolean checkDisabledCommand(char *cmd);
 
 // zb_checkvar.c
-void  readCheckVarLists(void);
-void  reloadCheckVarFileRun(int startarg, edict_t *ent, int client);
-void  listcheckvarsRun(int startarg, edict_t *ent, int client);
-void  displayNextCheckvar(edict_t *ent, int client, long checkvarcmd);
-void  checkvarcmdRun(int startarg, edict_t *ent, int client);
-void  checkvarDelRun(int startarg, edict_t *ent, int client);
-void  checkVariableTest(edict_t *ent, int client, int idx);
-void  checkVariableValid(edict_t *ent, int client, char *value);
+void readCheckVarLists(void);
+void reloadCheckVarFileRun(int startarg, edict_t *ent, int client);
+void listcheckvarsRun(int startarg, edict_t *ent, int client);
+void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd);
+void checkvarcmdRun(int startarg, edict_t *ent, int client);
+void checkvarDelRun(int startarg, edict_t *ent, int client);
+void checkVariableTest(edict_t *ent, int client, int idx);
+void checkVariableValid(edict_t *ent, int client, char *value);
 
 //*** UPDATE START ***
 // md4.c
-unsigned Com_BlockChecksum (void *buffer, int length);
+unsigned Com_BlockChecksum(void *buffer, int length);
 
 // Pooy's shit
-extern char  client_msg[256];
+extern char client_msg[256];
 extern qboolean private_command_kick;
-extern int  msec_kick_on_bad;
-extern int  msec_max;
-extern int  speedbot_check_type;
-extern int  max_pmod_noreply;
-extern int  msec_int;
+extern int msec_kick_on_bad;
+extern int msec_max;
+extern int speedbot_check_type;
+extern int max_pmod_noreply;
+extern int msec_int;
 
-typedef struct
-	{
-		char  name[256];
-		char  password[256];
-		char  ip[256];
-		int   level;
-	}
-	
+typedef struct {
+    char name[256];
+    char password[256];
+    char ip[256];
+    int level;
+}
+
 admin_type;
 
 #define Q2ADMINVERSION   "1.17.52-pf"
@@ -1327,74 +1311,70 @@ extern int num_admins;
 extern int num_q2a_admins;
 
 void Read_Admin_cfg(void);
-void List_Admin_Commands(edict_t *ent,int client);
-int get_admin_level(char *givenpass,char *givenname);
-int get_bypass_level(char *givenpass,char *givenname);
+void List_Admin_Commands(edict_t *ent, int client);
+int get_admin_level(char *givenpass, char *givenname);
+int get_bypass_level(char *givenpass, char *givenname);
 
-void ADMIN_dumpuser(edict_t *ent,int client,int user,qboolean check);
-int  ADMIN_process_command(edict_t *ent,int client);
+void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check);
+int ADMIN_process_command(edict_t *ent, int client);
 
-extern int   client_map_cfg;
-extern qboolean  do_franck_check;
-extern qboolean  q2a_command_check;
-extern qboolean  do_vid_restart;
+extern int client_map_cfg;
+extern qboolean do_franck_check;
+extern qboolean q2a_command_check;
+extern qboolean do_vid_restart;
 
-extern int   gl_driver_check;
-extern int   USERINFOCHANGE_TIME;
-extern int   USERINFOCHANGE_COUNT;
-extern int   gl_driver_max_changes;
+extern int gl_driver_check;
+extern int USERINFOCHANGE_TIME;
+extern int USERINFOCHANGE_COUNT;
+extern int gl_driver_max_changes;
 
-typedef struct
-	{
-		char  command[256];
-	}
-	
+typedef struct {
+    char command[256];
+}
+
 priv_t;
 
-extern   priv_t private_commands[PRIVATE_COMMANDS];
-void   stuff_private_commands(int client,edict_t *ent);
+extern priv_t private_commands[PRIVATE_COMMANDS];
+void stuff_private_commands(int client, edict_t *ent);
 
-typedef struct
-	{
-		char  name[16];
-	}
-	
+typedef struct {
+    char name[16];
+}
+
 user_dyn;
 
-typedef struct
-	{
-		int   id;
-		char  ip[22];
-		char  seen[32];
-		user_dyn dyn[10];
-	}
-	
+typedef struct {
+    int id;
+    char ip[22];
+    char seen[32];
+    user_dyn dyn[10];
+}
+
 user_details;
 
-extern int   WHOIS_COUNT;
-extern int   whois_active;
+extern int WHOIS_COUNT;
+extern int whois_active;
 extern user_details* whois_details;
-extern qboolean  timers_active;
-extern int   timers_min_seconds;
-extern int   timers_max_seconds;
-qboolean   can_do_new_cmds(int client);
-void    whois_write_file(void);
-void    whois_read_file(void);
-void    whois_getid(int client,edict_t *ent);
-void    whois(int client,edict_t *ent);
-void    whois_adduser(int client,edict_t *ent);
-void    whois_newname(int client,edict_t *ent);
-void    whois_update_seen(int client,edict_t *ent);
-void    whois_dumpdetails(int client,edict_t *ent,int userid);
-void    timer_action(int client,edict_t *ent);
-void    timer_stop(int client,edict_t *ent);
-void    timer_start(int client,edict_t *ent);
+extern qboolean timers_active;
+extern int timers_min_seconds;
+extern int timers_max_seconds;
+qboolean can_do_new_cmds(int client);
+void whois_write_file(void);
+void whois_read_file(void);
+void whois_getid(int client, edict_t *ent);
+void whois(int client, edict_t *ent);
+void whois_adduser(int client, edict_t *ent);
+void whois_newname(int client, edict_t *ent);
+void whois_update_seen(int client, edict_t *ent);
+void whois_dumpdetails(int client, edict_t *ent, int userid);
+void timer_action(int client, edict_t *ent);
+void timer_stop(int client, edict_t *ent);
+void timer_start(int client, edict_t *ent);
 
-typedef struct
-	{
-		char   *model_name;
-	}
-	
+typedef struct {
+    char *model_name;
+}
+
 block_model;
 
 extern block_model block_models[MAX_BLOCK_MODELS];
