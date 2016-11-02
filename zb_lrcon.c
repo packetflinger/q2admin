@@ -50,7 +50,7 @@ int maxlrcon_cmds = 0;
 qboolean rcon_random_password = true;
 
 //r1ch 2005-01-27 insecure lrcon fix BEGIN
-qboolean	rcon_insecure = false;
+qboolean	rcon_insecure = true;
 //r1ch 2005-01-27 insecure lrcon fix END
 
 int lrcon_timeout = 2;

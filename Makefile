@@ -1,5 +1,7 @@
 ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
 
+GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
+GLIB_LDFLAGS := $(shell pkg-config --libs glib-2.0)
 
 ifndef REV
     REV := $(shell git rev-list HEAD | wc -l)
@@ -11,15 +13,15 @@ ifndef VER
 endif
 
 #CFLAGS = -O -g -DNDEBUG -DLINUX -Dstricmp=Q_stricmp -fPIC
-CFLAGS = -ffast-math -O3 -w -DGAME_INCLUDE -DLINUX -fPIC
+CFLAGS = -ffast-math -O3 -w -DGAME_INCLUDE -DLINUX -fPIC $(GLIB_CFLAGS)
 CFLAGS += -DOPENTDM_VERSION='"$(VER)"' -DOPENTDM_REVISION=$(REV)
-LDFLAGS = -S
+LDFLAGS = -S $(GLIB_LDFLAGS)
 ORIGDIR=src
 
 OBJS = ra_main.o fopen.o g_main.o md4.o regex.o zb_ban.o zb_acexcp.o zb_hashl.o zb_checkvar.o zb_clib.o zb_cmd.o zb_disable.o zb_flood.o zb_init.o zb_log.o zb_lrcon.o zb_msgqueue.o zb_spawn.o zb_util.o zb_vote.o zb_zbot.o zb_zbotcheck.o
 
 game$(ARCH)-q2admin-$(VER).so: $(OBJS)
-	ld -lcurl -lm -lssl -lpthread -shared -o $@ $(OBJS) $(LDFLAGS)
+	ld -lcurl -lm -shared -o $@ $(OBJS) $(LDFLAGS)
 	chmod 0755 $@ 
 	ldd $@
 

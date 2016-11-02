@@ -73,7 +73,7 @@ qboolean soloadlazy;
 void ShutdownGame (void)
 {
 	// gracefully close the remote admin connection
-	RA_Disconnect();
+	//RA_Disconnect();
 
 	INITPERFORMANCE(1);
 	INITPERFORMANCE(2);
@@ -119,9 +119,9 @@ void ShutdownGame (void)
 }
 
 extern cvar_t *remote_enabled;
-extern cvar_t *remote_addr;
+extern cvar_t *remote_server;
 extern cvar_t *remote_port;
-extern cvar_t *remote_uniqid;
+extern cvar_t *remote_key;
 
 /*
 =================
@@ -169,11 +169,6 @@ game_export_t *GetGameAPI(game_import_t *import)
 	globals.RunFrame = G_RunFrame;
 	
 	globals.ServerCommand = ServerCommand;
-
-	remote_enabled = gi.cvar("remote_enabled", "0", 0);
-	remote_addr = gi.cvar("remote_addr", "ctrl.pktfl.gr", 0);
-	remote_port = gi.cvar("remote_port", "5555", 0);
-	remote_uniqid = gi.cvar("remote_uniqid", "eaadcfe22de3fc95be801e4c0f2e8e02aa8c506b", 0);
 	
 	serverbindip = gi.cvar("ip", "", 0);
 	port = gi.cvar("port", "", 0);
@@ -199,12 +194,7 @@ game_export_t *GetGameAPI(game_import_t *import)
 		{
 			private_commands[i].command[0] = 0;
 		}
-
 	
-	RA_Init();
-		
-	
-
 
 //*** UPDATE START ***
 	q2a_strcpy(client_msg,DEFAULTQ2AMSG);
@@ -234,7 +224,7 @@ game_export_t *GetGameAPI(game_import_t *import)
 	
 	if(q2adminrunmode)
 		{
-			loadLogList();
+			//loadLogList();
 		}
 		
 	// setup zbot test strings

@@ -471,6 +471,8 @@ void InitGame (void)
 //*** UPDATE END ***
 
 	STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
+	
+	RA_Init();
 }
 
 
