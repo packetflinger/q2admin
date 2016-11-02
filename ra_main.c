@@ -1,4 +1,4 @@
-#include "ra_main.h"
+
 #include "g_local.h"
 
 
@@ -9,6 +9,7 @@ cvar_t		*remote_enabled;
 cvar_t		*remote_server;
 cvar_t		*remote_port;
 cvar_t		*remote_key;
+cvar_t		*net_port;
 
 
 void RA_Send(const char *format, ...) {
@@ -35,6 +36,7 @@ void RA_Send(const char *format, ...) {
 	if (r == -1) {
 		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
 	}
+	memset(&string, 0, sizeof(string));
 }
 
 
@@ -43,6 +45,7 @@ void RA_Init() {
 	remote_enabled = gi.cvar("remote_enabled", "1", 0);
 	remote_server = gi.cvar("remote_server", "packetflinger.com", 0);
 	remote_port = gi.cvar("remote_port", "9999", 0);
+	net_port = gi.cvar("net_port", "27910", 0);
 	
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;
@@ -84,7 +87,7 @@ void RA_Init() {
 	remote.addr = res;
 	
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("REG %s", rcon_password->string);
+	RA_Send("REG %s %s", net_port->string, rcon_password->string);
 }
 
 void RA_Shutdown() {

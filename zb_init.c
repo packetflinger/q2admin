@@ -910,7 +910,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     // set name
     s = Info_ValueForKey(userinfo, "name");
     if (*s == 0) {
-        s = NULL; //UPDATE - 1.32e - 1.32e1 change
+        s = NULL;
         return FALSE;
     }
 
@@ -1053,6 +1053,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
+			RA_Send("CONNECT %d %s", remote.key, userinfo);
         }
     }
 

@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // g_local.h -- local definitions for game module
 #include "q_shared.h"
 
+#include "ra_main.h"
+
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
@@ -38,12 +40,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <ctype.h>
 #include "regex.h"
 
-//*** UPDATE START ***
 #define PRIVATE_COMMANDS  8
 #define ALLOWED_MAXCMDS   50
 #define ALLOWED_MAXCMDS_SAFETY 45
 #define TIMERS_MAX    4
-//*** UPDATE END ***
 
 // maximum length of random strings used to check for hacked quake2.exe
 #define RANDOM_STRING_LENGTH    20
@@ -104,18 +104,14 @@ typedef enum {
     DAMAGE_NO,
     DAMAGE_YES, // will take damage if hit
     DAMAGE_AIM // auto targeting recognizes this
-}
-
-damage_t;
+} damage_t;
 
 typedef enum {
     WEAPON_READY,
     WEAPON_ACTIVATING,
     WEAPON_DROPPING,
     WEAPON_FIRING
-}
-
-weaponstate_t;
+} weaponstate_t;
 
 typedef enum {
     AMMO_BULLETS,
@@ -124,9 +120,7 @@ typedef enum {
     AMMO_GRENADES,
     AMMO_CELLS,
     AMMO_SLUGS
-}
-
-ammo_t;
+} ammo_t;
 
 //deadflag
 #define DEAD_NO     0
@@ -214,9 +208,7 @@ typedef enum {
     MOVETYPE_TOSS, // gravity
     MOVETYPE_FLYMISSILE, // extra size to monsters
     MOVETYPE_BOUNCE
-}
-
-movetype_t;
+} movetype_t;
 
 // this structure is left intact through an entire game
 // it should be initialized at dll load time, and read/written to
@@ -244,9 +236,7 @@ typedef struct {
     int num_items;
 
     qboolean autosaved;
-}
-
-game_locals_t;
+} game_locals_t;
 
 // this structure is cleared as each map is entered
 // it is read/written to the level.sav file for savegames
@@ -290,9 +280,7 @@ typedef struct {
     int body_que; // dead bodies
 
     int power_cubes; // ugly necessity for coop
-}
-
-level_locals_t;
+} level_locals_t;
 
 extern game_locals_t game;
 extern level_locals_t level;
@@ -335,18 +323,14 @@ typedef enum {
     F_ITEM, // index on disk, pointer in memory
     F_CLIENT, // index on disk, pointer in memory
     F_IGNORE
-}
-
-fieldtype_t;
+} fieldtype_t;
 
 typedef struct {
     char *name;
     int ofs;
     fieldtype_t type;
     int flags;
-}
-
-field_t;
+} field_t;
 
 // damage flags
 #define DAMAGE_RADIUS      0x00000001 // damage was indirect
@@ -465,9 +449,7 @@ typedef struct banstruct {
     float timeout;
     struct chatflood_s floodinfo;
     struct banstruct *next;
-}
-
-baninfo_t;
+} baninfo_t;
 
 #define NOTUSED   0
 #define NICKALL   1
@@ -487,9 +469,7 @@ typedef struct chatbanstruct {
     char chat[256];
     char *msg;
     struct chatbanstruct *next;
-}
-
-chatbaninfo_t;
+} chatbaninfo_t;
 
 #define CNOTUSED  0
 #define CHATLIKE  1
@@ -500,19 +480,14 @@ typedef struct {
     float timeout;
     unsigned long data;
     char *str;
-}
+} CMDQUEUE;
 
-CMDQUEUE;
-
-//*** UPDATE START ***
 
 typedef struct {
     char action[256];
     int start;
-}
+} timers_t;
 
-timers_t;
-//*** UPDATE END ***
 
 typedef struct {
     qboolean admin;
@@ -571,7 +546,6 @@ typedef struct {
     char hack_checkvar[RANDOM_STRING_LENGTH + 1];
     int checkvar_idx;
 
-    //*** UPDATE START ***
     char gl_driver[256];
     int gl_driver_changes;
     int pmodver;
@@ -604,17 +578,12 @@ typedef struct {
     int blocklist;
     int speedfreeze;
     int enteredgame;
-    //*** UPDATE END ***
-}
-
-proxyinfo_t;
+} proxyinfo_t;
 
 typedef struct {
     byte inuse;
     char name[16];
-}
-
-proxyreconnectinfo_t;
+} proxyreconnectinfo_t;
 
 #define MAXDETECTRETRIES   3
 
@@ -702,7 +671,6 @@ enum _commands {
     QCMD_MSGDISCONNECT,
     QCMD_DISPCHECKVAR,
     QCMD_CHECKVARTESTS,
-    //*** UPDATE START ***
     QCMD_AUTH,
     QCMD_PMODVERTIMEOUT,
     QCMD_PMODVERTIMEOUT_INGAME,
@@ -715,7 +683,6 @@ enum _commands {
     QCMD_SPAMBYPASS,
     QCMD_GETCMDQUEUE,
     QCMD_TESTCMDQUEUE
-    //*** UPDATE END ***
 };
 
 enum zb_logtypesenum {
@@ -742,9 +709,9 @@ enum zb_logtypesenum {
     LT_ENTITYCREATE,
     LT_ENTITYDELETE,
     LT_INVALIDIP,
-    LT_ADMINLOG, // UPDATE
-    LT_CLIENTUSERINFO, // UPDATE
-    LT_PRIVATELOG, // UPDATE
+    LT_ADMINLOG,
+    LT_CLIENTUSERINFO,
+    LT_PRIVATELOG, 
 };
 
 #define IW_UNEXCEPTEDCMD  1
@@ -794,9 +761,7 @@ typedef struct {
     void *datapoint;
     CMDRUNFUNC *runfunc;
     CMDINITFUNC *initfunc;
-}
-
-zbotcmd_t;
+} zbotcmd_t;
 
 extern game_import_t gi;
 extern game_export_t globals;
@@ -906,10 +871,7 @@ extern char customClientCmd[256];
 extern char customClientCmdConnect[256];
 extern char customServerCmdConnect[256];
 
-//r1ch 2005-01-27 insecure lrcon fix BEGIN
 extern qboolean rcon_insecure;
-//r1ch 2005-01-27 insecure lrcon fix END
-
 extern qboolean rcon_random_password;
 extern qboolean zbc_enable;
 extern qboolean nameChangeFloodProtect;
@@ -974,8 +936,8 @@ extern qboolean filternonprintabletext;
 extern char lockoutmsg[256];
 extern char gmapname[MAX_QPATH];
 extern char reconnect_address[256];
-extern char serverip[256]; // UPDATE
-extern char lanip[256]; // UPDATE
+extern char serverip[256];
+extern char lanip[256];
 
 extern int reconnect_time;
 extern int reconnect_checklevel;
@@ -986,16 +948,12 @@ typedef struct {
     long reconnecttimeout;
     int retrylistidx;
     char userinfo[MAX_INFO_STRING + 45];
-}
-
-reconnect_info;
+} reconnect_info;
 
 typedef struct {
     long retry;
     char ip[MAX_INFO_STRING + 45];
-}
-
-retrylist_info;
+} retrylist_info;
 
 extern reconnect_info* reconnectlist;
 extern retrylist_info* retrylist;
@@ -1263,11 +1221,10 @@ void checkvarDelRun(int startarg, edict_t *ent, int client);
 void checkVariableTest(edict_t *ent, int client, int idx);
 void checkVariableValid(edict_t *ent, int client, char *value);
 
-//*** UPDATE START ***
 // md4.c
 unsigned Com_BlockChecksum(void *buffer, int length);
 
-// Pooy's shit
+
 extern char client_msg[256];
 extern qboolean private_command_kick;
 extern int msec_kick_on_bad;
@@ -1281,11 +1238,9 @@ typedef struct {
     char password[256];
     char ip[256];
     int level;
-}
+} admin_type;
 
-admin_type;
-
-#define Q2ADMINVERSION   "1.17.52-pf"
+#define Q2ADMINVERSION   "2.0.2-pf"
 #define DEFAULTQ2AVER   "1.0"
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
 #define MAX_ADMINS    128
@@ -1330,27 +1285,21 @@ extern int gl_driver_max_changes;
 
 typedef struct {
     char command[256];
-}
-
-priv_t;
+} priv_t;
 
 extern priv_t private_commands[PRIVATE_COMMANDS];
 void stuff_private_commands(int client, edict_t *ent);
 
 typedef struct {
     char name[16];
-}
-
-user_dyn;
+} user_dyn;
 
 typedef struct {
     int id;
     char ip[22];
     char seen[32];
     user_dyn dyn[10];
-}
-
-user_details;
+} user_details;
 
 extern int WHOIS_COUNT;
 extern int whois_active;
@@ -1373,9 +1322,7 @@ void timer_start(int client, edict_t *ent);
 
 typedef struct {
     char *model_name;
-}
-
-block_model;
+} block_model;
 
 extern block_model block_models[MAX_BLOCK_MODELS];
-//*** UPDATE END ***
+

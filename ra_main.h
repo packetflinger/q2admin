@@ -1,7 +1,7 @@
 #ifndef RA_MAIN_H
 #define RA_MAIN_H
 
-// #include <glib.h>
+#include <glib.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -25,7 +25,9 @@ typedef struct {
 	int 	enabled;
 	int 	socket;
 	struct 	addrinfo *addr;
-	short 	key;
+	int 	key;
 } remote_t;
+
+extern remote_t remote;
 
 #endif
