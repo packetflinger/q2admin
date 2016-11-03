@@ -35,6 +35,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef Q2ADMINCLIB
 
+qboolean startswith(char *needle, char *haystack) {
+	return (strncmp(needle, haystack, strlen(needle)) == 0);
+}	
+
 char *q2a_strcpy(char *strDestination, const char *strSource) {
     char *ret = strDestination;
 
