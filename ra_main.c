@@ -12,26 +12,20 @@ cvar_t		*remote_key;
 cvar_t		*net_port;
 
 
-void RA_Send(const char *format, ...) {
-	static char strings[8][MAX_STRING_CHARS];
-	static uint16_t index;
-
-	char *string = strings[index++ % 8];
-
-	va_list args;
-
-	va_start(args, format);
-	vsnprintf(string, MAX_STRING_CHARS, format, args);
-	va_end(args);
+void RA_Send(const char *type, const char *data) {
 
 	static char *laststring;
 	
+	gchar finalstring[1390] = "";
+	
+	g_strlcat(finalstring, pfva("%s %s", type, data), 1390);
+	
 	// don't send repeats
-	if (g_strcmp0(laststring, string) != 0) {
+	if (g_strcmp0(laststring, finalstring) != 0) {
 		int r = sendto(
 					remote.socket, 
-					string, 
-					strlen(string)+1, 
+					finalstring, 
+					strlen(finalstring)+1, 
 					MSG_DONTWAIT, 
 					remote.addr->ai_addr, 
 					remote.addr->ai_addrlen
@@ -39,10 +33,10 @@ void RA_Send(const char *format, ...) {
 		if (r == -1) {
 			gi.dprintf("RA: error sending data: %s\n", strerror(errno));
 		}
-		memset(&string, 0, sizeof(string));
+		memset(&finalstring, 0, sizeof(finalstring));
 	}
 	
-	laststring = string;
+	laststring = finalstring;
 }
 
 
@@ -93,7 +87,7 @@ void RA_Init() {
 	remote.addr = res;
 	
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("REG %s %s", net_port->string, rcon_password->string);
+	RA_Send("REG", pfva("%s %s", net_port->string, rcon_password->string));
 }
 
 void RA_Shutdown() {

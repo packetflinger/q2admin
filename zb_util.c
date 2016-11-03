@@ -36,6 +36,10 @@ void stuffcmd(edict_t *e, char *s) {
     gi.unicast(e, true);
 }
 
+qboolean startswith(char *needle, char *haystack) {
+	return (strncmp(needle, haystack, strlen(needle)) == 0);
+}	
+
 int Q_stricmp(char *string1, char *string2) {
     while (*string1 && *string2) {
         char s1c = tolower(*string1);

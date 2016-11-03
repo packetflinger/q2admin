@@ -16,7 +16,7 @@
 
 char *pfva(const char *format, ...) __attribute__((format(printf, 1, 2)));
 
-void	RA_Send(const char *format, ...);
+void	RA_Send(const char *type, const char *data);
 void	RA_Init(void);
 void	RA_Shutdown(void);
 void	RA_RunFrame(void);

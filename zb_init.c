@@ -1053,7 +1053,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
-			RA_Send("CONNECT %d %s", remote.key, userinfo);
+			RA_Send("CONNECT", pfva("%d %s", remote.key, userinfo));
         }
     }
 

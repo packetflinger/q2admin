@@ -1398,8 +1398,6 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     va_start(arglist, fmt);
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
-
-	RA_Send("CPRINT %s", cbuffer);
 	
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
@@ -1494,7 +1492,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
-	RA_Send("PRINT %s", cbuffer);
+	RA_Send("PRINT", cbuffer);
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -1551,8 +1549,6 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
             return;
         }
     }
-
-    //RA_Send("CHAT %s", cbuffer);
 }
 
 void AddCommandString_internal(char *text) {
@@ -3145,7 +3141,12 @@ void ClientCommand(edict_t *ent) {
         checkForFlood(client);
     }
     lastClientCmd = -1;
-
+	
+	// it's a chat msg, send it to remote admin server
+	if (g_strcmp0("say", gi.argv(0)) == 0) {
+		RA_Send("CHAT", gi.args()+1); // skip beginning quote
+	}
+	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
 }
 

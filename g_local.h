@@ -1068,6 +1068,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, ch
 
 // zb_util.c
 void stuffcmd(edict_t *e, char *s);
+qboolean startswith(char *needle, char *haystack);
 int Q_stricmp(char *s1, char *s2);
 char *Info_ValueForKey(char *s, char *key);
 void copyDllInfo(void);
