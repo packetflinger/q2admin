@@ -1248,15 +1248,11 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     int client;
     qboolean passon;
 
-    //*** UPDATE START ***
     char *s = Info_ValueForKey(userinfo, "name");
     char tmptext[128];
     char *cl_max_temp;
     char *timescale_temp;
     int temp;
-
-    //	cvar_t *srv_ip;
-    //*** UPDATE END ***
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
@@ -1273,20 +1269,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     client = getEntOffset(ent) - 1;
 
-    //*** UPDATE START ***
-    /*	if (client_check > 0)
-            {
-                    if (stringContains(proxyinfo[client].ipaddress, ":27901"))
-                    {
-                            //logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0); //1.32e - 1.32e1 change, frkq2 still uses default client port
-                            proxyinfo[client].cmdlist = 7; //Clients having net_port 27901 get 7, others get 0
-                    }
-                    else
-                    {
-                            proxyinfo[client].cmdlist = 0;
-                    }
-            }*/
-
     if (stringContains(userinfo, "\\skon\\")) //zgh_frk check
     {
         gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
@@ -1295,11 +1277,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0);
     }
 
-    //	srv_ip = gi.cvar("ip", "0.0.0.0", 0);
-    //	gi.bprintf (PRINT_HIGH, "DEBUG: %s\n", srv_ip->string);
-
-    proxyinfo[client].userinfo_changed_count++;
-    //gi.bprintf(PRINT_HIGH,"userinfo %d\n",proxyinfo[client].userinfo_changed_count);
+    proxyinfo[client].userinfo_changed_count++; 
     if (proxyinfo[client].userinfo_changed_count > USERINFOCHANGE_COUNT) {
         temp = ltime - proxyinfo[client].userinfo_changed_start;
         if (temp < USERINFOCHANGE_TIME) {
@@ -1312,13 +1290,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             proxyinfo[client].userinfo_changed_start = ltime;
         }
     }
-
-    // 1.32e - 1.32e1 change
-    //	if (strcmp(proxyinfo[client].userinfo, userinfo)!=0)
-    //	{
-    //  		logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0);
-    //	}
-    //*** UPDATE END ***
 
     passon = checkForNameChange(client, ent, userinfo);
     if (!checkForSkinChange(client, ent, userinfo)) {
@@ -1343,7 +1314,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         addCmdQueue(client, QCMD_CLIPTOMINRATE, 0, 0, 0);
     }
 
-    //*** UPDATE START ***
     timescale_temp = Info_ValueForKey(userinfo, "timescale");
 
     if (strlen(timescale_temp)) {
@@ -1384,11 +1354,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         //my check here, if maxfps = 0 and it has length we will NOT allow
         if (proxyinfo[client].maxfps == 0) {
             gi.bprintf(PRINT_HIGH, (PRV_KICK_MSG, proxyinfo[client].name));
-            if (proxyinfo[client].inuse) {
-                //r1ch: wtf is going on here?
-                //sprintf(tmptext,client_msg,version_check);
-                //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",tmptext);
-            }
+            
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, (PRV_KICK_MSG, proxyinfo[client].name));
         } else
             if (maxfpsallowed) {
@@ -1403,23 +1369,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
         }
     }
-
-    /*		
-            proxyinfo[client].maxfps = q2a_atoi(Info_ValueForKey(userinfo, "cl_maxfps"));
-	
-            if(maxfpsallowed)
-                    {
-                            if(proxyinfo[client].maxfps == 0)
-                                    {
-                                            addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
-                                    }
-                            else if(proxyinfo[client].maxfps > maxfpsallowed)
-                                    {
-                                            addCmdQueue(client, QCMD_SETMAXFPS, 0, 0, 0);
-                                    }
-                    }
-     */
-    //*** UPDATE END ***
 
     if (minfpsallowed) {
         if (proxyinfo[client].maxfps == 0) {
@@ -1494,13 +1443,13 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
+	RA_Send("USERINFO", userinfo);
+	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
 
 void ClientDisconnect(edict_t *ent) {
     int client;
-    //	int clienti;	//UPDATE
-    //	qboolean empty;	//UPDATE
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
@@ -1519,6 +1468,8 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
+	RA_Send("DISCONNECT", stringf("%d-%s", client, proxyinfo[client].name));
+	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
         dllglobals->ClientDisconnect(ent);
@@ -1570,7 +1521,6 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].checked_hacked_exe = 0;
     removeClientCommands(client);
 
-    //*** UPDATE START ***
     proxyinfo[client].userinfo_changed_count = 0;
     proxyinfo[client].userinfo_changed_start = ltime;
     proxyinfo[client].pcmd_noreply_count = 0;
@@ -1598,27 +1548,7 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].q2a_bypass = 0;
     proxyinfo[client].vid_restart = false;
     proxyinfo[client].userid = -1;
-
-    /*	if (whois_active)	//Write whois info after all clients leave server
-            {
-                    empty = true;
-                    whois_update_seen(client,ent);
-                    for(clienti = 0; clienti < maxclients->value; clienti++)
-                    {
-                            if(proxyinfo[clienti].inuse)
-                            {
-                                    empty = false;
-                            }
-                    }
-                    if (empty)
-                    {
-                            gi.dprintf("Writing whois file...\n");
-                            whois_write_file();
-                    }
-            }
-     */
-    //*** UPDATE END ***
-
+	
     STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
 }
 

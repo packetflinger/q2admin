@@ -14,6 +14,10 @@ cvar_t		*net_port;
 
 void RA_Send(const char *type, const char *data) {
 
+	if (!remote.enabled) {
+		return;
+	}
+	
 	static gchar finalstring[1390] = "";
 	g_strlcat(finalstring, stringf("%s\\%s\\%s", remote_key->string, type, data), 1390);
 	
