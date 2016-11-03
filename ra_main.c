@@ -45,6 +45,7 @@ void RA_Init() {
 	remote_port = gi.cvar("remote_port", "9999", 0);
 	remote_key = gi.cvar("remote_key", "beefwellingon", 0);
 	net_port = gi.cvar("net_port", "27910", 0);
+	maxclients = gi.cvar("maxclients", "64", 0);
 	
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;
@@ -85,7 +86,7 @@ void RA_Init() {
 	remote.addr = res;
 	
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("REG", stringf("%s\\%s", net_port->string, rcon_password->string));
+	//RA_Send("REG", stringf("%s\\%s", net_port->string, rcon_password->string));
 }
 
 void RA_Shutdown() {

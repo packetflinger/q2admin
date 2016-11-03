@@ -423,7 +423,6 @@ void InitGame(void) {
         removeClientCommands(i);
     }
 
-    //*** UPDATE START ***
     Read_Admin_cfg();
 
     //whois shit
@@ -433,7 +432,6 @@ void InitGame(void) {
         gi.dprintf("Reading whois file...\n");
         whois_read_file();
     }
-    //*** UPDATE END ***
 
     STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
 
@@ -455,16 +453,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         copyDllInfo();
         return;
     }
-
-
+	
     STARTPERFORMANCE(1);
-
-    //  q2a_memset(proxyinfoBase, 0x0, (maxclients->value + 1) * sizeof(proxyinfo_t));
 
     for (i = -1; i < maxclients->value; i++) {
 
         if (i < 0 || proxyinfo[i].inuse == 0) {
-            //*** UPDATE START ***
             proxyinfo[i].speedfreeze = 0;
             proxyinfo[i].enteredgame = 0;
             proxyinfo[i].msec_bad = 0;
@@ -476,8 +470,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             proxyinfo[i].msec_count = 0;
             proxyinfo[i].q2a_admin = 0;
             proxyinfo[i].q2a_bypass = 0;
-            //*** UPDATE END ***
-            //proxyinfo[i].inuse = 0;
             proxyinfo[i].admin = 0;
             proxyinfo[i].clientcommand = 0;
             proxyinfo[i].floodinfo.chatFloodProtect = FALSE;
@@ -486,7 +478,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             proxyinfo[i].clientcommand &= (LEVELCHANGE_KEEP);
         }
 
-        //*** UPDATE START ***
         proxyinfo[i].userinfo_changed_count = 0;
         proxyinfo[i].userinfo_changed_start = ltime;
         proxyinfo[i].pcmd_noreply_count = 0;
@@ -501,7 +492,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         proxyinfo[i].pmodver = 0;
         proxyinfo[i].gl_driver_changes = 0;
         proxyinfo[i].gl_driver[0] = 0;
-        //*** UPDATE END ***
         proxyinfo[i].impulsesgenerated = 0;
         proxyinfo[i].rbotretries = 0;
         proxyinfo[i].retries = 0;
@@ -611,22 +601,16 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     copyDllInfo();
 
     readBanLists();
-    // addition by MDVz0r 9apr2007
-    // download r1ch exception list
     loadexceptionlist();
-    // addition by MDVz0r 28jan2008
     loadhashlist();
-    // end of addition by MDVz0r
     readLRconLists();
     readFloodLists();
     readVoteLists();
     readDisableLists();
     readCheckVarLists();
 
-
-
     // exec the map cfg file...
-    q2a_strcpy(gmapname, mapname); //UPDATE
+    q2a_strcpy(gmapname, mapname);
     if (mapcfgexec) {
         q2a_strcpy(gmapname, mapname);
         q2a_strcpy(buffer, "exec mapcfg/");
@@ -635,12 +619,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         gi.AddCommandString(buffer);
     }
 
-    //*** UPDATE START ***
     if (!*serverip) {
         gi.dprintf("You have not set a server ip.  Please add the following to q2admin.txt\nserverip \"ip\" where ip matches the outgoing one of the server.\n");
     }
-    //*** UPDATE END ***
 
+	RA_Send("MAP", stringf("%s\\%s\\%s", mapname, maxclients->string, rcon_password->string));
+	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
@@ -1588,8 +1572,6 @@ void ClientBegin(edict_t *ent) {
 
     if (!proxyinfo[client].inuse) {
         proxyinfo[client].admin = 0;
-
-        //*** UPDATE START ***
         proxyinfo[client].speedfreeze = 0;
         proxyinfo[client].enteredgame = ltime;
         proxyinfo[client].msec_bad = 0;
@@ -1617,8 +1599,6 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].pmodver = 0;
     proxyinfo[client].gl_driver_changes = 0;
     proxyinfo[client].gl_driver[0] = 0;
-    //*** UPDATE END ***
-
     proxyinfo[client].inuse = 0;
     proxyinfo[client].retries = 0;
     proxyinfo[client].rbotretries = 0;
@@ -1629,11 +1609,9 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
 
-    //*** UPDATE START ***
     if (num_q2a_admins) {
         addCmdQueue(client, QCMD_SPAMBYPASS, 60 + (10 * random()), 0, 0);
     }
-    //*** UPDATE END ***
 
     if (proxyinfo[client].clientcommand & CCMD_RECONNECT) {
         addCmdQueue(client, QCMD_RECONNECT, 1, 0, NULL);
@@ -1641,7 +1619,7 @@ void ClientBegin(edict_t *ent) {
         gi.cprintf(ent, PRINT_HIGH, "%s\n", proxyinfo[client].buffer);
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
     } else if (proxyinfo[client].clientcommand & CCMD_KICKED) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked."); //UPDATE
+        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked.");
     } else {
         addCmdQueue(client, QCMD_STARTUP, 0, 0, 0);
 
