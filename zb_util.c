@@ -36,6 +36,33 @@ void stuffcmd(edict_t *e, char *s) {
     gi.unicast(e, true);
 }
 
+// remove whitespace (space/tab/newline) from the beginning and end of a string
+char *trim(char *s) {
+    char *ptr;
+    if (!s)
+        return NULL;   // handle NULL string
+    if (!*s)
+        return s;      // handle empty string
+    for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+    ptr[1] = '\0';
+    return s;
+}
+
+char *stringf(const char *format, ...) {
+	static char strings[8][MAX_STRING_CHARS];
+	static uint16_t index;
+
+	char *string = strings[index++ % 8];
+
+	va_list args;
+
+	va_start(args, format);
+	vsnprintf(string, MAX_STRING_CHARS, format, args);
+	va_end(args);
+
+	return string;
+}
+
 qboolean startswith(char *needle, char *haystack) {
 	return (strncmp(needle, haystack, strlen(needle)) == 0);
 }	

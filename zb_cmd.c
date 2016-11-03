@@ -1492,7 +1492,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
-	RA_Send("PRINT", cbuffer);
+	RA_Send("PRINT", stringf("%d %s", printlevel, trim(cbuffer)));
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);

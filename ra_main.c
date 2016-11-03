@@ -14,29 +14,23 @@ cvar_t		*net_port;
 
 void RA_Send(const char *type, const char *data) {
 
-	static char *laststring;
+	static gchar finalstring[1390] = "";
+	g_strlcat(finalstring, stringf("%s %s %s", remote_key->string, type, data), 1390);
 	
-	gchar finalstring[1390] = "";
+	int r = sendto(
+		remote.socket, 
+		finalstring, 
+		strlen(finalstring)+1, 
+		MSG_DONTWAIT, 
+		remote.addr->ai_addr, 
+		remote.addr->ai_addrlen
+	);
 	
-	g_strlcat(finalstring, pfva("%s %s", type, data), 1390);
-	
-	// don't send repeats
-	if (g_strcmp0(laststring, finalstring) != 0) {
-		int r = sendto(
-					remote.socket, 
-					finalstring, 
-					strlen(finalstring)+1, 
-					MSG_DONTWAIT, 
-					remote.addr->ai_addr, 
-					remote.addr->ai_addrlen
-				);
-		if (r == -1) {
-			gi.dprintf("RA: error sending data: %s\n", strerror(errno));
-		}
-		memset(&finalstring, 0, sizeof(finalstring));
+	if (r == -1) {
+		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
 	}
 	
-	laststring = finalstring;
+	memset(&finalstring, 0, sizeof(finalstring));
 }
 
 
@@ -45,6 +39,7 @@ void RA_Init() {
 	remote_enabled = gi.cvar("remote_enabled", "1", 0);
 	remote_server = gi.cvar("remote_server", "packetflinger.com", 0);
 	remote_port = gi.cvar("remote_port", "9999", 0);
+	remote_key = gi.cvar("remote_key", "beefwellingon", 0);
 	net_port = gi.cvar("net_port", "27910", 0);
 	
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
@@ -58,7 +53,6 @@ void RA_Init() {
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 	
-	//hints.ai_family			= AF_UNSPEC;    // ipv6 then v4
 	hints.ai_family         = AF_INET;   	// ipv4 only
 	hints.ai_socktype       = SOCK_DGRAM;	// UDP
 	hints.ai_protocol       = 0;
@@ -73,7 +67,7 @@ void RA_Init() {
 	} else {
 		char address[INET_ADDRSTRLEN];
 		inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
-		gi.dprintf("done [%s].\n", address);
+		gi.dprintf("%s\n", address);
 	}
 	
 	int fd = socket(res->ai_family, res->ai_socktype, IPPROTO_UDP);
@@ -87,7 +81,7 @@ void RA_Init() {
 	remote.addr = res;
 	
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("REG", pfva("%s %s", net_port->string, rcon_password->string));
+	RA_Send("REG", stringf("%s %s", net_port->string, rcon_password->string));
 }
 
 void RA_Shutdown() {
@@ -97,17 +91,3 @@ void RA_Shutdown() {
 void RA_RunFrame() {
 }
 
-char *pfva(const char *format, ...) {
-	static char strings[8][MAX_STRING_CHARS];
-	static uint16_t index;
-
-	char *string = strings[index++ % 8];
-
-	va_list args;
-
-	va_start(args, format);
-	vsnprintf(string, MAX_STRING_CHARS, format, args);
-	va_end(args);
-
-	return string;
-}
