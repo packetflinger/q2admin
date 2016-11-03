@@ -15,7 +15,7 @@ cvar_t		*net_port;
 void RA_Send(const char *type, const char *data) {
 
 	static gchar finalstring[1390] = "";
-	g_strlcat(finalstring, stringf("%s %s %s", remote_key->string, type, data), 1390);
+	g_strlcat(finalstring, stringf("%s\\%s\\%s", remote_key->string, type, data), 1390);
 	
 	int r = sendto(
 		remote.socket, 
@@ -81,7 +81,7 @@ void RA_Init() {
 	remote.addr = res;
 	
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("REG", stringf("%s %s", net_port->string, rcon_password->string));
+	RA_Send("REG", stringf("%s\\%s", net_port->string, rcon_password->string));
 }
 
 void RA_Shutdown() {

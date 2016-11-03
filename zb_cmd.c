@@ -1492,7 +1492,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
-	RA_Send("PRINT", stringf("%d %s", printlevel, trim(cbuffer)));
+	RA_Send("PRINT", stringf("%d\\%s", printlevel, trim(cbuffer)));
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -3144,7 +3144,8 @@ void ClientCommand(edict_t *ent) {
 	
 	// it's a chat msg, send it to remote admin server
 	if (g_strcmp0("say", gi.argv(0)) == 0) {
-		RA_Send("CHAT", gi.args()+1); // skip beginning quote
+		int clientid = getEntOffset(ent) - 1;
+		RA_Send("CHAT", stringf("%s\\%s", proxyinfo[clientid].name, gi.args()+1)); // skip beginning quote
 	}
 	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
