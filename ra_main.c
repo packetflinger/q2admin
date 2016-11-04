@@ -84,9 +84,6 @@ void RA_Init() {
 	
 	remote.socket = fd;
 	remote.addr = res;
-	
-	gi.dprintf("RA: Registering with remote admin server\n\n");
-	//RA_Send("REG", stringf("%s\\%s", net_port->string, rcon_password->string));
 }
 
 void RA_Shutdown() {

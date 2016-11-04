@@ -623,7 +623,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         gi.dprintf("You have not set a server ip.  Please add the following to q2admin.txt\nserverip \"ip\" where ip matches the outgoing one of the server.\n");
     }
 
-	RA_Send("MAP", stringf("%s\\%s\\%s", mapname, maxclients->string, rcon_password->string));
+	gi.dprintf("RA: Registering with remote admin server\n\n");
+	RA_Send("MAP", stringf("%s\\%s\\%s", mapname, maxclients->string, rconpassword->string));
 	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
