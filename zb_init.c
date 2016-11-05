@@ -624,7 +624,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send("MAP", stringf("%s\\%s\\%s", mapname, maxclients->string, rconpassword->string));
+	RA_Send(CMD_REGISTER, stringf("%s\\%s\\%s\\%s", mapname, maxclients->string, rconpassword->string, net_port->string));
 	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
@@ -1038,7 +1038,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
-			RA_Send("CONNECT", stringf("%d\\%s", client, userinfo));
+			RA_Send(CMD_CONNECT, stringf("%d\\%s", client, userinfo));
         }
     }
 
@@ -1428,7 +1428,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
-	RA_Send("USERINFO", userinfo);
+	RA_Send(CMD_USERINFO, userinfo);
 	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1453,7 +1453,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
-	RA_Send("DISCONNECT", stringf("%d-%s", client, proxyinfo[client].name));
+	RA_Send(CMD_DISCONNECT, stringf("%d-%s", client, proxyinfo[client].name));
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);

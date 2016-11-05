@@ -71,26 +71,25 @@ char zbot_testchar2;
 qboolean soloadlazy;
 
 void ShutdownGame(void) {
-    // gracefully close the remote admin connection
-    //RA_Disconnect();
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
     if (!dllloaded) return;
 
-    //*** UPDATE START ***
     if (whois_active) {
         whois_write_file();
         gi.TagFree(whois_details);
     }
-    //*** UPDATE END ***
 
     if (q2adminrunmode) {
         STARTPERFORMANCE(1);
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
         STARTPERFORMANCE(2);
     }
+	
+	gi.dprintf("RA: Unregistering with remote admin server\n\n");
+	RA_Send(CMD_UNREGISTER, "");
 
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);

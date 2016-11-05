@@ -1413,15 +1413,6 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         return;
     }
 
-    /*
-    // check for banned chat words
-    if(printlevel == PRINT_CHAT && checkCheckIfChatBanned(cbuffer))
-    {
-    logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, cbuffer, 0);
-    return;
-    }
-     */
-
     if (q2a_strcmp(mutedText, cbuffer) == 0) {
         return;
     }
@@ -1492,7 +1483,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
-	RA_Send("PRINT", stringf("%d\\%s", printlevel, trim(cbuffer)));
+	RA_Send(CMD_PRINT, stringf("%d\\%s", printlevel, cbuffer));
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -3145,7 +3136,7 @@ void ClientCommand(edict_t *ent) {
 	// it's a chat msg, send it to remote admin server
 	if (g_strcmp0("say", gi.argv(0)) == 0) {
 		int clientid = getEntOffset(ent) - 1;
-		RA_Send("CHAT", stringf("%s\\%s", proxyinfo[clientid].name, gi.args()+1)); // skip beginning quote
+		RA_Send(CMD_CHAT, stringf("%s\\%s", proxyinfo[clientid].name, gi.args()+1)); // skip beginning quote
 	}
 	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
