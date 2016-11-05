@@ -14,12 +14,12 @@
 #include <errno.h>
 #include <stdint.h>
 
+
 extern cvar_t		*remote_enabled;
 extern cvar_t		*remote_server;
 extern cvar_t		*remote_port;
 extern cvar_t		*remote_key;
 extern cvar_t		*net_port;
-
 
 
 typedef struct {
@@ -36,7 +36,10 @@ typedef enum {
 	CMD_PRINT,
 	CMD_CHAT,
 	CMD_DISCONNECT,
-	CMD_UNREGISTER
+	CMD_UNREGISTER,
+	CMD_TELEPORT,
+	CMD_INVITE,
+	CMD_FIND
 } remote_cmd_t;
 
 
@@ -44,6 +47,7 @@ void	RA_Send(remote_cmd_t cmd, const char *data);
 void	RA_Init(void);
 void	RA_Shutdown(void);
 void	RA_RunFrame(void);
+
 
 extern remote_t remote;
 

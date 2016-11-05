@@ -3108,6 +3108,12 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
+	// check if client typed "teleport" command
+	if (g_strcmp0(gi.argv(0), "teleport") == 0) {
+		Cmd_Teleport_f(ent);
+		return;
+	}
+	
     //Custom frkq2 check
     if ((do_franck_check) && (
             (stringContains(stemp, "riconnect")) ||
@@ -3728,4 +3734,11 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
     // clear all the reconnect user info...
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
+}
+
+void Cmd_Teleport_f(edict_t *ent) {
+	uint8_t id = getEntOffset(ent) - 1;
+	
+	//gi.dprintf("Teleport function called by %s\n", proxyinfo[id].name);
+	RA_Send(CMD_TELEPORT, stringf("%d\\%s", id, gi.args()));
 }

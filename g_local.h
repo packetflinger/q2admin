@@ -1065,6 +1065,7 @@ void stuffNextLine(edict_t *ent, int client);
 char *getArgs(void);
 int getClientsFromArg(int client, edict_t *ent, char *cp, char **text);
 edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text);
+void Cmd_Teleport_f(edict_t *ent);
 
 // zb_util.c
 void stuffcmd(edict_t *e, char *s);
