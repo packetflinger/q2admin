@@ -18,16 +18,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_cmd.c
-//
-// copyright 2000 Shane Powell
-//
 
 #include "g_local.h"
-//#include "md4.c"
 
 int lastClientCmd = -1;
 
@@ -57,7 +49,6 @@ void lockDownServerRun(int startarg, edict_t *ent, int client);
 
 #define ZBOTCOMMANDSSIZE (sizeof(zbotCommands) / sizeof(zbotCommands[0]))
 
-//*** UPDATE START ***
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
     {
@@ -137,7 +128,6 @@ block_model block_models[MAX_BLOCK_MODELS] ={
         "models/items/armor/shard/tris.md2"
     }
 };
-//*** UPDATE END ***
 
 zbotcmd_t zbotCommands[] ={
     {
@@ -777,14 +767,12 @@ zbotcmd_t zbotCommands[] ={
         CMDTYPE_LOGICAL,
         &rcon_random_password
     },
-    //r1ch 2005-01-27 insecure lrcon fix BEGIN
     {
         "rcon_insecure",
         CMDWHERE_CFGFILE,
         CMDTYPE_LOGICAL,
         &rcon_insecure
     },
-    //r1ch 2005-01-27 insecure lrcon fix END
     {
         "reconnect_address",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -810,7 +798,6 @@ zbotcmd_t zbotCommands[] ={
         NULL,
         reloadbanfileRun,
     },
-    //MDVz0r 9apr2007 exceptionlist addition
     {
         "reloadexceptionlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -825,7 +812,6 @@ zbotcmd_t zbotCommands[] ={
         NULL,
         reloadexceptionlistRun,
     },
-    //MDVz0r 28jan2008 hashlist addition
     {
         "reloadhashlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1104,13 +1090,12 @@ zbotcmd_t zbotCommands[] ={
         CMDTYPE_STRING,
         zbotuserdisplay
     },
-    //*** UPDATE START ***
-    /*		{
-                            "client_check",
-                            CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-                            CMDTYPE_NUMBER,
-                            &client_check
-                    },*/
+    /*{
+			"client_check",
+			CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+			CMDTYPE_NUMBER,
+			&client_check
+	},*/
     {
         "client_map_cfg",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1293,19 +1278,18 @@ zbotcmd_t zbotCommands[] ={
         CMDTYPE_NUMBER,
         &USERINFOCHANGE_TIME
     },
-    /*		{ 
-                            "version_check", 
-                            CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE, 
-                            CMDTYPE_STRING,
-                            &version_check
-                    },*/
+    /*{ 
+		"version_check", 
+		CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE, 
+		CMDTYPE_STRING,
+		&version_check
+	},*/
     {
         "whois_active",
         CMDWHERE_CFGFILE, //Only allocates memory at InitGame: can only be read from config
         CMDTYPE_NUMBER,
         &whois_active
     },
-    //*** UPDATE END ***
 };
 
 //===================================================================
@@ -1938,32 +1922,32 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, ch
         gi.cprintf(ent, PRINT_HIGH, "Unknown player...\n");
         return NULL;
         /*
-                                like = 2;
-			
-                                cp += 2;
-                                SKIPBLANK(cp);
-			
-                                if(*cp == '\"')
-                                        {
-                                                cp++;
-                                                cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
-                                                cp++;
-                                        }
-                                else
-                                        {
-                                                cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
-                                        }
-                                SKIPBLANK(cp);
-			
-                                q_strupr(strbuffer);
-			
-                                q2a_memset(&r, 0x0, sizeof(r));
-                                //    if(regcomp(&r, strbuffer, REG_EXTENDED))
-                                if(regcomp(&r, strbuffer, 0))
-                                        {
-                                                gi.cprintf(ent, PRINT_HIGH, "Regular Expression Incorrect.\n");
-                                                return NULL;
-                                }
+		like = 2;
+
+		cp += 2;
+		SKIPBLANK(cp);
+
+		if(*cp == '\"')
+				{
+						cp++;
+						cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+						cp++;
+				}
+		else
+				{
+						cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+				}
+		SKIPBLANK(cp);
+
+		q_strupr(strbuffer);
+
+		q2a_memset(&r, 0x0, sizeof(r));
+		//    if(regcomp(&r, strbuffer, REG_EXTENDED))
+		if(regcomp(&r, strbuffer, 0))
+				{
+						gi.cprintf(ent, PRINT_HIGH, "Regular Expression Incorrect.\n");
+						return NULL;
+		}
          */
 
     } else if (startContains(cp, "CL")) {
@@ -2256,7 +2240,6 @@ void hackDetected(edict_t *ent, int client) {
 }
 
 qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter) {
-    //*** UPDATE START ***
     unsigned int i, cnt, sameip;
     char abuffer[256];
     char stemp[1024];
@@ -2264,7 +2247,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     int alevel, slen;
     int q2a_admin_command = 0;
     qboolean dont_print;
-    //*** UPDATE END ***
     char *cmd;
     char text[2048];
 
@@ -2277,7 +2259,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     cmd = gi.argv(0);
 
-    //*** UPDATE START ***
     if (gi.argc() > 1) {
         q2a_strcpy(response, "");
         q2a_strcat(response, gi.args());
@@ -2300,7 +2281,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             return FALSE;
         }
     }
-    //*** UPDATE END ***
 
     if (Q_stricmp(cmd, zbot_teststring_test1) == 0) {
         if (proxyinfo[client].inuse && proxyinfo[client].clientcommand & CCMD_STARTUPTEST) {
@@ -2556,7 +2536,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         return FALSE;
     }
 
-    //*** UPDATE START ***
     if (Q_stricmp(cmd, "admin") == 0 ||
             Q_stricmp(cmd, "referee") == 0 ||
             Q_stricmp(cmd, "ref") == 0 ||
@@ -2700,9 +2679,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 }
             }
         }
-        //r1ch: removed NC 2.34 client forcing
     }
-    //*** UPDATE END ***
 
     if (Q_stricmp(cmd, "say") == 0 || Q_stricmp(cmd, "say_team") == 0) {
         if (strcmp(gi.argv(1), "XANIA") == 0 || strcmp(gi.argv(1), "Nitro2") == 0) {
@@ -2845,7 +2822,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     //	if(adminpassword[0] && proxyinfo[client].admin && cmd[0] == '!')
     //		{
-    //*** UPDATE START ***
     if (cmd[0] == '!') {
         if (proxyinfo[client].q2a_admin) {
             q2a_admin_command = ADMIN_process_command(ent, client);
@@ -2905,7 +2881,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 return FALSE;
             }
         } else if (adminpassword[0] && proxyinfo[client].admin) {
-            //*** UPDATE END ***
             for (i = 0; i < ZBOTCOMMANDSSIZE; i++) {
                 if ((zbotCommands[i].cmdwhere & CMDWHERE_CLIENTCONSOLE) && startContains(zbotCommands[i].cmdname, cmd + 1)) {
                     if (zbotCommands[i].runfunc) {
@@ -3046,7 +3021,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         run_vote(ent, client);
         return FALSE;
     }
-        //*** UPDATE START ***
     else if (Q_stricmp(cmd, "showfps") == 0) {
         proxyinfo[client].show_fps = !proxyinfo[client].show_fps;
         gi.cprintf(ent, PRINT_HIGH, "FPS Display %s\n", proxyinfo[client].show_fps ? "on" : "off");
@@ -3066,7 +3040,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             timer_stop(client, ent);
             return FALSE;
         }
-    }        //*** UPDATE END ***
+    } 
 
     else if (zbotmotd[0] && Q_stricmp(cmd, "motd") == 0) {
         gi.centerprintf(ent, motd);
@@ -3089,7 +3063,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 void ClientCommand(edict_t *ent) {
     int client = getEntOffset(ent) - 1;
     qboolean checkforfloodafter = FALSE;
-    char stemp[1024]; //UPDATE
+    char stemp[1024];
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);

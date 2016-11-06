@@ -40,16 +40,16 @@ RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 OBJS = 	g_anticheat.o \
 		g_ban.o \
 		g_checkvar.o \
+		g_cmd.o \
+		g_disable.o \
 		g_file.o \
+		g_flood.o \
 		g_hashlist.o \
 		g_libc.o \
 		g_main.o \
 		g_mdfour.o \
 		g_remote.o \
 		regex.o \
-		zb_cmd.o \
-		zb_disable.o \
-		zb_flood.o \
 		zb_init.o \
 		zb_log.o \
 		zb_lrcon.o \
