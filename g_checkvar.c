@@ -18,14 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_checkvar.c
-//
-// copyright 2000 Shane Powell
-//
-
 #include "g_local.h"
 
 #define CHECKVARFILE             "q2admincheckvar.txt"
@@ -36,8 +28,7 @@ typedef struct {
     char value[50];
     double upper, lower;
     int type;
-}
-checkvar_t;
+} checkvar_t;
 
 #define CV_CONSTANT     0
 #define CV_RANGE        1

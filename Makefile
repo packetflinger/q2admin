@@ -39,13 +39,13 @@ RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
 OBJS = 	g_anticheat.o \
 		g_ban.o \
+		g_checkvar.o \
 		g_file.o \
+		g_hashlist.o \
 		g_main.o \
 		g_mdfour.o \
 		g_remote.o \
 		regex.o \
-		zb_hashl.o \
-		zb_checkvar.o \
 		zb_clib.o \
 		zb_cmd.o \
 		zb_disable.o \
