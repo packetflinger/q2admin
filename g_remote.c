@@ -41,13 +41,13 @@ void RA_Send(remote_cmd_t cmd, const char *data) {
 
 void RA_Init() {
 	
-	remote_enabled = gi.cvar("remote_enabled", "1", 0);
-	remote_server = gi.cvar("remote_server", "packetflinger.com", 0);
-	remote_port = gi.cvar("remote_port", "9999", 0);
-	remote_key = gi.cvar("remote_key", "beefwellingon", 0);
-	remote_flags = gi.cvar("remote_flags", "7", 0);
-	net_port = gi.cvar("net_port", "27910", 0);
-	maxclients = gi.cvar("maxclients", "64", 0);
+	remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
+	remote_server = gi.cvar("remote_server", "packetflinger.com", CVAR_LATCH);
+	remote_port = gi.cvar("remote_port", "9999", CVAR_LATCH);
+	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
+	remote_flags = gi.cvar("remote_flags", "7", CVAR_LATCH | CVAR_SERVERINFO);
+	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
+	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;

@@ -335,8 +335,7 @@ typedef struct cvar_s {
     qboolean modified; // set each time the cvar is changed
     float value;
     struct cvar_s *next;
-}
-cvar_t;
+} cvar_t;
 
 #endif  // CVAR
 
@@ -415,8 +414,7 @@ typedef struct cplane_s {
     byte type; // for fast side tests
     byte signbits; // signx + (signy<<1) + (signz<<1)
     byte pad[2];
-}
-cplane_t;
+} cplane_t;
 
 // structure offset for asm code
 #define CPLANE_NORMAL_X   0
@@ -432,15 +430,13 @@ typedef struct cmodel_s {
     vec3_t mins, maxs;
     vec3_t origin; // for sounds or lights
     int headnode;
-}
-cmodel_t;
+} cmodel_t;
 
 typedef struct csurface_s {
     char name[16];
     int flags;
     int value;
-}
-csurface_t;
+} csurface_t;
 
 
 // a trace is returned when a box is swept through the world
@@ -454,8 +450,7 @@ typedef struct {
     csurface_t *surface; // surface hit
     int contents; // contents on other side of surface hit
     struct edict_s *ent; // not set by CM_*() functions
-}
-trace_t;
+} trace_t;
 
 
 
@@ -497,8 +492,7 @@ typedef struct {
     short gravity;
     short delta_angles[3]; // add to command angles to get view direction
     // changed by spawns, rotating objects, and teleporters
-}
-pmove_state_t;
+} pmove_state_t;
 
 
 //
@@ -518,8 +512,7 @@ typedef struct usercmd_s {
     short forwardmove, sidemove, upmove;
     byte impulse; // remove?
     byte lightlevel; // light level the player is standing on
-}
-usercmd_t;
+} usercmd_t;
 
 
 #define MAXTOUCH 32
@@ -548,8 +541,7 @@ typedef struct {
     // callbacks to test the world
     trace_t(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end);
     int (*pointcontents) (vec3_t point);
-}
-pmove_t;
+} pmove_t;
 
 
 // entity_state_t->effects
@@ -964,8 +956,7 @@ typedef struct entity_state_s {
     int event; // impulse events -- muzzle flashes, footsteps, etc
     // events only go out for a single frame, they
     // are automatically cleared each frame
-}
-entity_state_t;
+} entity_state_t;
 
 //==============================================
 
@@ -997,7 +988,6 @@ typedef struct {
     int rdflags; // refdef flags
 
     short stats[MAX_STATS]; // fast status bar updates
-}
-player_state_t;
+} player_state_t;
 
 
