@@ -37,7 +37,7 @@ CFLAGS += -DGAME_INCLUDE -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV)
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
 
-OBJS = 	ra_main.o \
+OBJS = 	g_remote.o \
 		fopen.o \
 		g_main.o \
 		md4.o \
