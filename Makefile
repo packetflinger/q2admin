@@ -40,7 +40,7 @@ RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 OBJS = 	g_remote.o \
 		g_file.o \
 		g_main.o \
-		md4.o \
+		g_mdfour.o \
 		regex.o \
 		zb_ban.o \
 		zb_acexcp.o \
