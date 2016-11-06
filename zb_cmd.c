@@ -3738,7 +3738,5 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
 void Cmd_Teleport_f(edict_t *ent) {
 	uint8_t id = getEntOffset(ent) - 1;
-	
-	//gi.dprintf("Teleport function called by %s\n", proxyinfo[id].name);
 	RA_Send(CMD_TELEPORT, stringf("%d\\%s", id, gi.args()));
 }

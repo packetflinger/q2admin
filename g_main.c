@@ -38,15 +38,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void *hdll = NULL;
 
 #ifdef LINUXAXP
-#define DLLNAME   "gameaxp.real.so"
+#define DLLNAME   					"gameaxp.real.so"
+
 #elif defined(SOLARIS_INTEL)
-#define DLLNAME   "gamei386.real.so"
+#define DLLNAME   					"gamei386.real.so"
+
 #elif defined(SOLARIS_SPARC)
-#define DLLNAME   "gamesparc.real.so"
+#define DLLNAME   					"gamesparc.real.so"
+
 #elif defined (LINUX) && defined (__x86_64__)
-#define DLLNAME "gamex86_64.real.so"
+#define DLLNAME 					"gamex86_64.real.so"
+
 #elif defined (LINUX) && defined (i386)
-#define DLLNAME "gamei386.real.so"
+#define DLLNAME 					"gamei386.real.so"
+
 #else
 #error Unknown GNUC OS
 #endif

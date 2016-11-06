@@ -624,7 +624,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
 	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send(CMD_REGISTER, stringf("%s\\%s\\%s\\%s", mapname, maxclients->string, rconpassword->string, net_port->string));
+	RA_Send(CMD_REGISTER, stringf("%s\\%s\\%s\\%s\\%d", mapname, maxclients->string, rconpassword->string, net_port->string, remote.flags));
 	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }

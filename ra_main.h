@@ -19,15 +19,23 @@ extern cvar_t		*remote_enabled;
 extern cvar_t		*remote_server;
 extern cvar_t		*remote_port;
 extern cvar_t		*remote_key;
+extern cvar_t		*remote_flags;
 extern cvar_t		*net_port;
 
 
+// flags
+#define REMOTE_FL_CMD_TELEPORT		1
+#define REMOET_FL_CMD_INVITE		2
+#define REMOTE_FL_CMD_FIND			4
+
+
 typedef struct {
-	int 	enabled;
-	int 	socket;
+	uint8_t 	enabled;
+	uint32_t 	socket;
 	struct 	addrinfo *addr;
-	int 	key;
+	uint32_t	flags;
 } remote_t;
+
 
 typedef enum {
 	CMD_REGISTER,

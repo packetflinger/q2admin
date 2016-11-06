@@ -9,6 +9,7 @@ cvar_t		*remote_enabled;
 cvar_t		*remote_server;
 cvar_t		*remote_port;
 cvar_t		*remote_key;
+cvar_t		*remote_flags;
 cvar_t		*net_port;
 
 
@@ -44,6 +45,7 @@ void RA_Init() {
 	remote_server = gi.cvar("remote_server", "packetflinger.com", 0);
 	remote_port = gi.cvar("remote_port", "9999", 0);
 	remote_key = gi.cvar("remote_key", "beefwellingon", 0);
+	remote_flags = gi.cvar("remote_flags", "7", 0);
 	net_port = gi.cvar("net_port", "27910", 0);
 	maxclients = gi.cvar("maxclients", "64", 0);
 	
@@ -84,6 +86,7 @@ void RA_Init() {
 	
 	remote.socket = fd;
 	remote.addr = res;
+	remote.flags = atoi(remote_flags->string);
 }
 
 void RA_Shutdown() {
