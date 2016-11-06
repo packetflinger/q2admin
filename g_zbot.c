@@ -18,24 +18,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_zbot.c
-//
-// copyright 2000 Shane Powell
-//
-
 #include "g_local.h"
 
 extern cvar_t *remote_enabled;
 
-//*** UPDATE START ***
 admin_type admin_pass[MAX_ADMINS];
 admin_type q2a_bypass_pass[MAX_ADMINS];
 int num_admins = 0;
 int num_q2a_admins = 0;
-//*** UPDATE END ***
 
 int clientsidetimeout = 30; // 30 seconds should be good for internet play
 int zbotdetectactivetimeout = 0; // -1 == random
