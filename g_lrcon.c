@@ -18,14 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_lrcon.c
-//
-// copyright 2000 Shane Powell
-//
-
 #include "g_local.h"
 
 #define LRCONFILE             "q2adminlrcon.txt"
@@ -48,9 +40,7 @@ int maxlrcon_cmds = 0;
 
 qboolean rcon_random_password = true;
 
-//r1ch 2005-01-27 insecure lrcon fix BEGIN
 qboolean rcon_insecure = true;
-//r1ch 2005-01-27 insecure lrcon fix END
 
 int lrcon_timeout = 2;
 char orginal_rcon_password[50];

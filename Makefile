@@ -48,11 +48,11 @@ OBJS = 	g_anticheat.o \
 		g_init.o \
 		g_libc.o \
 		g_log.o \
+		g_lrcon.o \
 		g_main.o \
 		g_mdfour.o \
 		g_remote.o \
 		regex.o \
-		zb_lrcon.o \
 		zb_msgqueue.o \
 		zb_spawn.o \
 		zb_util.o \
