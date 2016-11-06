@@ -54,9 +54,9 @@ OBJS = 	g_anticheat.o \
 		g_queue.o \
 		g_remote.o \
 		g_spawn.o \
+		g_util.o \
+		g_vote.o \
 		regex.o \
-		zb_util.o \
-		zb_vote.o \
 		zb_zbot.o \
 		zb_zbotcheck.o
 

@@ -17,15 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
-
-//
-// q2admin
-//
-// zb_vote.c
-//
-// copyright 2000 Shane Powell
-//
-
+ 
 #include "g_local.h"
 
 #define VOTEFILE             "q2adminvote.txt"
@@ -54,10 +46,9 @@ static qboolean voteinprogress = 0;
 static unsigned long votetimeout, voteremindtimeout;
 char cmdvote[2048];
 
-//*** UPDATE START ***
 char cmdpassedvote[2048];
 char votecaller[16];
-//*** UPDATE END ***
+
 
 int clientVoteTimeout = 60;
 int clientRemindTimeout = 10;
@@ -513,12 +504,12 @@ void run_vote(edict_t *ent, int client) {
 
         // check if allowed to vote at this time...
         if (clientMaxVotes) {
-            //*** UPDATE START *** - Nick
+      
             if (ltime <= 45) {
                 gi.cprintf(ent, PRINT_HIGH, "Recent map change - too soon to vote (please wait).\n");
                 return;
             }
-            //*** UPDATE END ***
+
             if (proxyinfo[client].votescast == -1) {
                 // not allowed to vote again..
                 gi.cprintf(ent, PRINT_HIGH, "You can't propose any more votes until the next level.\n");
@@ -554,10 +545,8 @@ void run_vote(edict_t *ent, int client) {
         proxyinfo[client].clientcommand |= (CCMD_VOTEYES | CCMD_VOTED);
         q2a_strcpy(cmdvote, votecmd);
         q2a_strcat(cmdvote, "\n");
-        //*** UPDATE START ***
         q2a_strcpy(votecaller, proxyinfo[client].name);
         q2a_strcat(votecaller, "\n");
-        //*** UPDATE END ***
 
         displayVote();
     } else {
