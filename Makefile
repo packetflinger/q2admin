@@ -37,13 +37,13 @@ CFLAGS += -DGAME_INCLUDE -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV)
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
 
-OBJS = 	g_remote.o \
+OBJS = 	g_anticheat.o \
+		g_ban.o \
 		g_file.o \
 		g_main.o \
 		g_mdfour.o \
+		g_remote.o \
 		regex.o \
-		g_ban.o \
-		zb_acexcp.o \
 		zb_hashl.o \
 		zb_checkvar.o \
 		zb_clib.o \
