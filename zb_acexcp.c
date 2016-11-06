@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
 #include "g_local.h"
-#include "fopen.h"
+#include "g_file.h"
 
 qboolean ReadRemoteAnticheatExceptionFile(char *bfname) {
     URL_FILE *handle;
