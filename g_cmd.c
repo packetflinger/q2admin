@@ -803,14 +803,14 @@ zbotcmd_t zbotCommands[] ={
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
         NULL,
-        reloadexceptionlistRun,
+        AC_ReloadExceptions,
     },
     {
         "reloadanticheatlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
         NULL,
-        reloadexceptionlistRun,
+        AC_ReloadExceptions,
     },
     {
         "reloadhashlist",

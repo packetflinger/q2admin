@@ -30,10 +30,10 @@ ifdef CONFIG_WINDOWS
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
 else
     CFLAGS += -fPIC -ffast-math -w
-    #LDFLAGS += -Wl,--no-undefined
+    LDFLAGS += 
 endif
 
-CFLAGS += -DGAME_INCLUDE -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
+CFLAGS += -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
 

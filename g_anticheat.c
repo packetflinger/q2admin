@@ -22,7 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "g_file.h"
 
-qboolean ReadRemoteAnticheatExceptionFile(char *bfname) {
+//qboolean ReadRemoteAnticheatExceptionFile(char *bfname) {
+qboolean AC_GetRemoteFile(char *bfname) {
     URL_FILE *handle;
     FILE *outf;
 
@@ -61,7 +62,7 @@ qboolean ReadRemoteAnticheatExceptionFile(char *bfname) {
 // download up to date anticheat config file including all execptions for r1ch
 // ugly code.. ;x
 
-void getR1chExceptionList(void) {
+void AC_UpdateList(void) {
     char cfgAnticheatList_enabled[100];
     q2a_strcpy(cfgAnticheatList_enabled, q2adminanticheat_enable->string);
 
@@ -75,30 +76,35 @@ void getR1chExceptionList(void) {
             q2a_strcpy(cfgAnticheatRemoteList, q2adminanticheat_file->string);
         }
 
-        ret = ReadRemoteAnticheatExceptionFile(cfgAnticheatRemoteList);
+        ret = AC_GetRemoteFile(cfgAnticheatRemoteList);
 
         if (!ret) {
             gi.dprintf("WARNING: " ANTICHEATEXCEPTIONREMOTEFILE " could not be found\n");
             logEvent(LT_INTERNALWARN, 0, NULL, ANTICHEATEXCEPTIONREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0);
+			return;
         }
+		
+		gi.dprintf("Remote anticheat config downloaded\n");
     }
 }
 
-void loadexceptionlist(void) {
+
+void AC_LoadExceptions(void) {	
     char cfgAnticheatList_enabled[100];
     q2a_strcpy(cfgAnticheatList_enabled, q2adminanticheat_enable->string);
     if (cfgAnticheatList_enabled[0] == '1') {
         // flush cache, which really sux
         //q2a_strcpy(buffer, "fsflushcache\n");
         //gi.AddCommandString(buffer);
-        getR1chExceptionList();
+        AC_UpdateList();
         // execute exception list even if the download was not succeeded, since there is probably an old version available.
         q2a_strcpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n");
         gi.AddCommandString(buffer);
     }
 }
 
-void reloadexceptionlistRun(int startarg, edict_t *ent, int client) {
-    loadexceptionlist();
+//void reloadexceptionlistRun(int startarg, edict_t *ent, int client) {
+void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
+    AC_LoadExceptions();
     gi.cprintf(ent, PRINT_HIGH, "Exceptionlist loaded.\n");
 }

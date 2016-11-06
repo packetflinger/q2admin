@@ -1087,9 +1087,9 @@ void q_strupr(char *c);
 // zb_ban.c
 void banRun(int startarg, edict_t *ent, int client);
 void reloadbanfileRun(int startarg, edict_t *ent, int client);
-void reloadexceptionlistRun(int startarg, edict_t *ent, int client);
+void AC_ReloadExceptions(int startarg, edict_t *ent, int client);
 void reloadhashlistRun(int startarg, edict_t *ent, int client);
-void loadexceptionlist(void);
+void AC_LoadExceptions(void);
 void loadhashlist(void);
 void readBanLists(void);
 int checkCheckIfBanned(edict_t *ent, int client);

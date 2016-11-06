@@ -590,7 +590,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     copyDllInfo();
 
     readBanLists();
-    loadexceptionlist();
+    AC_LoadExceptions();
     loadhashlist();
     readLRconLists();
     readFloodLists();
