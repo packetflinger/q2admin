@@ -18,14 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_init.c
-//
-// copyright 2000 Shane Powell
-//
-
 #include "g_local.h"
 
 game_import_t gi;
@@ -39,7 +31,6 @@ qboolean quake2dirsupport = TRUE;
 char dllname[256];
 char gmapname[MAX_QPATH];
 
-//*** UPDATE START ***
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
 int client_map_cfg = 6;
@@ -59,7 +50,7 @@ qboolean do_franck_check = true;
 qboolean q2a_command_check = false;
 qboolean do_vid_restart = false;
 qboolean private_command_kick = false;
-//*** UPDATE END ***
+
 
 qboolean dllloaded = FALSE;
 
@@ -328,7 +319,7 @@ void InitGame(void) {
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    proxyinfo = NULL; //UPDATE - Harven fix
+    proxyinfo = NULL;
     gi.dprintf(zbotversion);
 
     if (!dllloaded) return;
@@ -374,7 +365,6 @@ void InitGame(void) {
     motd[0] = 0;
 
     for (i = -1; i < maxclients->value; i++) {
-        //*** UPDATE START ***
         proxyinfo[i].speedfreeze = 0;
         proxyinfo[i].msec_bad = 0;
         proxyinfo[i].enteredgame = 0;
@@ -403,7 +393,6 @@ void InitGame(void) {
         proxyinfo[i].gl_driver_changes = 0;
         proxyinfo[i].vid_restart = false;
         proxyinfo[i].userid = -1;
-        //*** UPDATE END ***
         proxyinfo[i].inuse = 0;
         proxyinfo[i].admin = 0;
         proxyinfo[i].clientcommand = 0;
@@ -816,7 +805,6 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         proxyinfo[client].baninfo = NULL;
     }
 
-    //*** UPDATE START ***
     proxyinfo[client].private_command = 0;
     proxyinfo[client].pmod = 0;
     proxyinfo[client].userinfo_changed_count = 0;
@@ -844,7 +832,6 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     proxyinfo[client].q2a_bypass = 0;
     proxyinfo[client].userid = -1;
     proxyinfo[client].vid_restart = false;
-    //*** UPDATE END ***
     proxyinfo[client].inuse = 0;
     proxyinfo[client].admin = 0;
     proxyinfo[client].clientcommand = 0;
@@ -1042,12 +1029,10 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         }
     }
 
-    //*** UPDATE START ***
     if (whois_active) {
         whois_getid(client, ent);
         whois_update_seen(client, ent);
     }
-    //*** UPDATE END ***
 
     if (ret) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0);
@@ -1104,13 +1089,11 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
         q2a_strcpy(oldname, proxyinfo[client].name);
         q2a_strcpy(proxyinfo[client].name, newname);
 
-        //*** UPDATE START ***
         if (whois_active) {
             if (proxyinfo[client].userid == -1)
                 whois_adduser(client, ent);
             whois_newname(client, ent);
         }
-        //*** UPDATE END ***
 
         if (checkCheckIfBanned(ent, client)) {
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
@@ -1627,14 +1610,12 @@ void ClientBegin(edict_t *ent) {
         if (adminpassword[0] && !proxyinfo[client].admin) {
             addCmdQueue(client, QCMD_TESTADMIN, 0, 0, 0);
         }
-        //*** UPDATE START ***
         if (num_admins && !proxyinfo[client].q2a_admin) {
             addCmdQueue(client, QCMD_TESTADMIN2, 0, 0, 0);
         }
         if (num_q2a_admins && !proxyinfo[client].q2a_bypass) {
             addCmdQueue(client, QCMD_TESTADMIN3, 0, 0, 0);
         }
-        //*** UPDATE END ***
         if (customClientCmdConnect[0] || customServerCmdConnect[0]) {
             addCmdQueue(client, QCMD_CONNECTCMD, 0, 0, 0);
         }

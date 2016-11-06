@@ -45,12 +45,12 @@ OBJS = 	g_anticheat.o \
 		g_file.o \
 		g_flood.o \
 		g_hashlist.o \
+		g_init.o \
 		g_libc.o \
 		g_main.o \
 		g_mdfour.o \
 		g_remote.o \
 		regex.o \
-		zb_init.o \
 		zb_log.o \
 		zb_lrcon.o \
 		zb_msgqueue.o \
