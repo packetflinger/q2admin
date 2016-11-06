@@ -18,17 +18,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// zb_msgqueue.c
-//
-// copyright 2000 Shane Powell
-//
 #include "g_local.h"
 
 void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str) {
-    char tmptext[128]; //UPDATE
+    char tmptext[128];
 
     proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].command = command;
     proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].timeout = ltime + timeout;
@@ -40,7 +33,6 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
         gi.cprintf(NULL, PRINT_HIGH, "%s is being disconnected for %s.\n", proxyinfo[client].name, str);
     }
 
-    //*** UPDATE START ***
     if (proxyinfo[client].maxCmds >= ALLOWED_MAXCMDS_SAFETY) {
         proxyinfo[client].clientcommand |= CCMD_KICKED;
         gi.bprintf(PRINT_HIGH, "%s tried to flood the server.\n", proxyinfo[client].name);
@@ -48,7 +40,6 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
         //need to log
         gi.AddCommandString(tmptext);
     }
-    //*** UPDATE END ***
 }
 
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
