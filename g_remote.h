@@ -1,5 +1,5 @@
-#ifndef RA_MAIN_H
-#define RA_MAIN_H
+#ifndef G_REMOTE_H
+#define G_REMOTE_H
 
 #include <glib.h>
 #include <sys/socket.h>
