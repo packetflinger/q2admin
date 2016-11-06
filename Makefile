@@ -1,64 +1,114 @@
-ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
+-include .config
+
+ifndef CPU
+    CPU := $(shell uname -m | sed -e s/i.86/i386/ -e s/amd64/x86_64/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
+endif
+
+ifndef REV
+    REV := $(shell git rev-list HEAD | wc -l)
+endif
+
+ifndef VER
+    VER := r$(REV)~$(shell git rev-parse --short HEAD)
+endif
 
 GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
 GLIB_LDFLAGS := $(shell pkg-config --libs glib-2.0)
 
-ifndef REV
-    REV := $(shell git rev-list HEAD | wc -l)
-    #REV := $(shell echo $$((181+$REV1)))
+CC ?= gcc
+WINDRES ?= windres
+STRIP ?= strip
+RM ?= rm -f
+
+CFLAGS ?= -O3 $(GLIB_CFLAGS)
+LDFLAGS ?= -S -shared $(GLIB_LDFLAGS)
+LIBS ?= -lcurl -lm -ldl
+
+ifdef CONFIG_WINDOWS
+    LDFLAGS += -mconsole
+    LDFLAGS += -Wl,--nxcompat,--dynamicbase
+else
+    CFLAGS += -fPIC -ffast-math -w
+    LDFLAGS += -Wl,--no-undefined
 endif
 
-ifndef VER
-    VER := r$(REV)-$(shell git rev-parse --short HEAD)-pf
+CFLAGS += -DGAME_INCLUDE -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
+RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
+
+
+OBJS = 	ra_main.o \
+		fopen.o \
+		g_main.o \
+		md4.o \
+		regex.o \
+		zb_ban.o \
+		zb_acexcp.o \
+		zb_hashl.o \
+		zb_checkvar.o \
+		zb_clib.o \
+		zb_cmd.o \
+		zb_disable.o \
+		zb_flood.o \
+		zb_init.o \
+		zb_log.o \
+		zb_lrcon.o \
+		zb_msgqueue.o \
+		zb_spawn.o \
+		zb_util.o \
+		zb_vote.o \
+		zb_zbot.o \
+		zb_zbotcheck.o
+
+ifdef CONFIG_SQLITE
+    SQLITE_CFLAGS ?=
+    SQLITE_LIBS ?= -lsqlite3
+    CFLAGS += -DUSE_SQLITE=1 $(SQLITE_CFLAGS)
+    LIBS += $(SQLITE_LIBS)
+    OBJS += g_sqlite.o
 endif
 
-#CFLAGS = -O -g -DNDEBUG -DLINUX -Dstricmp=Q_stricmp -fPIC
-CFLAGS = -ffast-math -O3 -w -DGAME_INCLUDE -DLINUX -fPIC $(GLIB_CFLAGS)
-CFLAGS += -DOPENTDM_VERSION='"$(VER)"' -DOPENTDM_REVISION=$(REV)
-LDFLAGS = -S $(GLIB_LDFLAGS)
-ORIGDIR=src
+ifdef CONFIG_WINDOWS
+    OBJS += openffa.o
+    TARGET := game$(CPU).dll
+else
+    LIBS += -lm
+    TARGET := game$(CPU).so
+endif
 
-OBJS = ra_main.o fopen.o g_main.o md4.o regex.o zb_ban.o zb_acexcp.o zb_hashl.o zb_checkvar.o zb_clib.o zb_cmd.o zb_disable.o zb_flood.o zb_init.o zb_log.o zb_lrcon.o zb_msgqueue.o zb_spawn.o zb_util.o zb_vote.o zb_zbot.o zb_zbotcheck.o
+all: $(TARGET)
 
-game$(ARCH)-q2admin-$(VER).so: $(OBJS)
-	ld -lcurl -lm -shared -o $@ $(OBJS) $(LDFLAGS)
-	chmod 0755 $@
-	cp $@ game$(ARCH).so
-	#ldd $@
+default: all
 
-clean: 
-	/bin/rm -f $(OBJS) game*.so
+.PHONY: all default clean strip
 
-$*.o: $*.c
-	$(CC) $(CFLAGS) -c $*.c
+V=1
+# Define V=1 to show command line.
+ifdef V
+    Q :=
+    E := @true
+else
+    Q := @
+    E := @echo
+endif
 
-$*.c: $(ORIGDIR)/$*.c
-	tr -d '\015' < $(ORIGDIR)/$*.c > $*.c
+-include $(OBJS:.o=.d)
 
-$*.h: $(ORIGDIR)/$*.h
-	tr -d '\015' < $(ORIGDIR)/$*.h > $*.h
+%.o: %.c
+	$(E) [CC] $@
+	$(Q)$(CC) -c $(CFLAGS) -o $@ $<
 
-# DO NOT DELETE
+%.o: %.rc
+	$(E) [RC] $@
+	$(Q)$(WINDRES) $(RCFLAGS) -o $@ $<
 
-ra_main.o: g_local.h q_shared.h game.h
-fopen.o: g_local.h q_shared.h game.h
-g_main.o: g_local.h q_shared.h game.h
-md4.o: g_local.h q_shared.h game.h
-regex.o: g_local.h q_shared.h game.h
-zb_ban.o: g_local.h q_shared.h game.h
-zb_acexcp.o: g_local.h q_shared.h game.h
-zb_hashl.o: g_local.h q_shared.h game.h
-zb_checkvar.o: g_local.h q_shared.h game.h
-zb_clib.o: g_local.h q_shared.h game.h
-zb_cmd.o: g_local.h q_shared.h game.h
-zb_disable.o: g_local.h q_shared.h game.h
-zb_flood.o: g_local.h q_shared.h game.h
-zb_init.o: g_local.h q_shared.h game.h
-zb_log.o: g_local.h q_shared.h game.h
-zb_lrcon.o: g_local.h q_shared.h game.h
-zb_msgqueue.o: g_local.h q_shared.h game.h
-zb_spawn.o: g_local.h q_shared.h game.h
-zb_util.o: g_local.h q_shared.h game.h
-zb_vote.o: g_local.h q_shared.h game.h
-zb_zbot.o: g_local.h q_shared.h game.h
-zb_zbotcheck.o: g_local.h q_shared.h game.h
+$(TARGET): $(OBJS)
+	$(E) [LD] $@
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+
+clean:
+	$(E) [CLEAN]
+	$(Q)$(RM) *.o *.d $(TARGET)
+
+strip: $(TARGET)
+	$(E) [STRIP]
+	$(Q)$(STRIP) $(TARGET)
