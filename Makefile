@@ -42,11 +42,11 @@ OBJS = 	g_anticheat.o \
 		g_checkvar.o \
 		g_file.o \
 		g_hashlist.o \
+		g_libc.o \
 		g_main.o \
 		g_mdfour.o \
 		g_remote.o \
 		regex.o \
-		zb_clib.o \
 		zb_cmd.o \
 		zb_disable.o \
 		zb_flood.o \
