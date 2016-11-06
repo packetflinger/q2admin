@@ -57,8 +57,8 @@ OBJS = 	g_anticheat.o \
 		g_util.o \
 		g_vote.o \
 		g_zbot.o \
-		regex.o \
-		zb_zbotcheck.o
+		g_zbotcheck.o \
+		regex.o
 
 ifdef CONFIG_SQLITE
     SQLITE_CFLAGS ?=
