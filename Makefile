@@ -42,7 +42,7 @@ OBJS = 	g_remote.o \
 		g_main.o \
 		g_mdfour.o \
 		regex.o \
-		zb_ban.o \
+		g_ban.o \
 		zb_acexcp.o \
 		zb_hashl.o \
 		zb_checkvar.o \
