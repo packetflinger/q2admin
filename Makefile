@@ -16,6 +16,7 @@ GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)
 GLIB_LDFLAGS := $(shell pkg-config --libs glib-2.0)
 
 CC ?= gcc
+LD ?= ld
 WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
@@ -29,7 +30,7 @@ ifdef CONFIG_WINDOWS
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
 else
     CFLAGS += -fPIC -ffast-math -w
-    LDFLAGS += -Wl,--no-undefined
+    #LDFLAGS += -Wl,--no-undefined
 endif
 
 CFLAGS += -DGAME_INCLUDE -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
@@ -81,7 +82,6 @@ default: all
 
 .PHONY: all default clean strip
 
-V=1
 # Define V=1 to show command line.
 ifdef V
     Q :=
@@ -103,7 +103,7 @@ endif
 
 $(TARGET): $(OBJS)
 	$(E) [LD] $@
-	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:
 	$(E) [CLEAN]
