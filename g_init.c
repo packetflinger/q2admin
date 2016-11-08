@@ -1,4 +1,6 @@
 /*
+Copyright (C) 2016 Joe Reid (joe@joereid.com)
+
 Copyright (C) 2000 Shane Powell
 
 This program is free software; you can redistribute it and/or
@@ -20,11 +22,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-game_import_t gi;
-game_export_t globals;
-game_export_t *dllglobals;
+game_import_t gi;			// server access from proxy game
+game_export_t globals;		// proxy game access from server
+game_export_t *dllglobals;	// real game access from proxy game
 
-cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
+cvar_t *rcon_password;
+cvar_t *gamedir;
+cvar_t *maxclients;
+cvar_t *logfile;
+cvar_t *rconpassword;
+cvar_t *port;
+cvar_t *serverbindip;
+cvar_t *q2admintxt;
+cvar_t *q2adminbantxt;
+cvar_t *q2adminbanremotetxt;
+cvar_t *q2adminbanremotetxt_enable;
+cvar_t *q2adminanticheat_enable;
+cvar_t *q2adminanticheat_file;
+cvar_t *q2adminhashlist_enable;
+cvar_t *q2adminhashlist_dir;
 
 qboolean quake2dirsupport = TRUE;
 
@@ -105,17 +121,10 @@ qboolean extendedsay_enable = FALSE;
 qboolean spawnentities_enable = FALSE;
 qboolean spawnentities_internal_enable = FALSE;
 qboolean vote_enable = FALSE;
-
 qboolean consolechat_disable = FALSE;
-
-
 qboolean gamemaptomap = FALSE;
-
-
 qboolean banOnConnect = TRUE;
-
 qboolean lockDownServer = FALSE;
-
 qboolean printmessageonplaycmds = TRUE;
 
 int randomwaitreporttime = 55;
@@ -155,22 +164,16 @@ proxyinfo_t *proxyinfo;
 proxyinfo_t *proxyinfoBase;
 proxyreconnectinfo_t *reconnectproxyinfo;
 
-
-
 reconnect_info* reconnectlist;
 retrylist_info* retrylist;
 int maxReconnectList = 0;
 int maxretryList = 0;
 
-
-
 int lframenum;
 float ltime;
 
-
 int proxy_bwproxy = 1;
 int proxy_nitro2 = 1;
-
 
 int q2adminrunmode = 100;
 int maxclientsperframe = 100;
@@ -189,12 +192,7 @@ char cl_anglespeedkey_kickmsg[256];
 
 qboolean filternonprintabletext = FALSE;
 
-
 char lockoutmsg[256];
-
-
-
-
 
 char com_token[MAX_TOKEN_CHARS];
 
@@ -336,7 +334,11 @@ void InitGame(void) {
 
     STARTPERFORMANCE(1);
     STARTPERFORMANCE(2);
-    dllglobals->Init(); //be carefull with all functions called from this one (like dprintf_internal) to not use proxyinfo pointer because it's not initialized yet. -Harven
+	
+	/* Be carefull with all functions called from this one (like dprintf_internal) 
+	to not use proxyinfo pointer because it's not initialized yet. -Harven */
+    dllglobals->Init(); 
+	
     STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
 
     copyDllInfo();
@@ -408,6 +410,7 @@ void InitGame(void) {
         proxyinfo[i].votescast = 0;
         proxyinfo[i].votetimeout = 0;
         proxyinfo[i].checked_hacked_exe = 0;
+		proxyinfo[i].ent = 0;
 
         removeClientCommands(i);
     }
@@ -853,6 +856,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
+	proxyinfo[client].ent = ent;
     removeClientCommands(client);
 
     ret = 1;
@@ -1592,6 +1596,7 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
+	
 
     if (num_q2a_admins) {
         addCmdQueue(client, QCMD_SPAMBYPASS, 60 + (10 * random()), 0, 0);

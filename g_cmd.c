@@ -3713,4 +3713,17 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 void Cmd_Teleport_f(edict_t *ent) {
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_TELEPORT, stringf("%d\\%s", id, gi.args()));
+	
+	//gi.dprintf("die: %d\n", ent->die);
+	//gi.dprintf("&die: %d\n", &ent->die);
+	
+	// hijack die() pointer to capture deaths
+	proxyinfo[id].die = *ent->die;
+	ent->die = &PlayerDie_Internal;
+	
+	//gi.dprintf("die: %d\n", ent->die);
+	//gi.dprintf("&die: %d\n", &ent->die);
+
+	//proxyinfo[id].die = &(dllglobals->edicts[id]).die;`
+	//dllglobals->edicts[id].die = &PlayerDie_Internal;
 }

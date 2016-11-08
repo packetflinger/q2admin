@@ -47,14 +47,14 @@ typedef enum {
 	CMD_UNREGISTER,
 	CMD_TELEPORT,
 	CMD_INVITE,
-	CMD_FIND
+	CMD_FIND,
+	CMD_FRAG
 } remote_cmd_t;
 
 
 void	RA_Send(remote_cmd_t cmd, const char *data);
 void	RA_Init(void);
-void	RA_Shutdown(void);
-void	RA_RunFrame(void);
+void	Remote_RunFrame(void);
 
 
 extern remote_t remote;

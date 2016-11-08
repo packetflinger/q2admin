@@ -122,6 +122,731 @@ extern cvar_t *remote_server;
 extern cvar_t *remote_port;
 extern cvar_t *remote_key;
 
+
+void G_RunFrame(void) {
+    unsigned int j, required_cmdlist;
+
+    int maxdoclients;
+    static int client = -1;
+    edict_t *ent;
+    byte command;
+    unsigned long data;
+    char *str;
+    char checkConnectProxy[RANDOM_STRING_LENGTH + 1];
+    char ReconnectString[RANDOM_STRING_LENGTH + 1];
+    char rndConnectString[RANDOM_STRING_LENGTH + 1];
+
+    INITPERFORMANCE_2(1);
+    INITPERFORMANCE_2(2);
+
+    if (!dllloaded) return;
+
+    if (q2adminrunmode == 0) {
+        dllglobals->RunFrame();
+        copyDllInfo();
+        return;
+    }
+
+    STARTPERFORMANCE(1);
+
+    lframenum++;
+    ltime = lframenum * FRAMETIME;
+
+    if (serverinfoenable && (lframenum > 10)) {
+        //    sprintf(buffer, "logfile 2;set Bot \"No Bots\" s\n");
+        sprintf(buffer, "set Q2Admin \"" Q2ADMINVERSION "\" s\n");
+        gi.AddCommandString(buffer);
+        serverinfoenable = 0;
+    }
+
+    // check if a lrcon password has timed out
+    check_lrcon_password();
+
+    if (maxReconnectList) {
+        unsigned int i;
+
+        for (i = 0; i < maxReconnectList; i++) {
+            if (reconnectlist[i].reconnecttimeout < ltime) {
+                unsigned int j;
+
+                // remove the retry list entry if needed...
+                for (j = 0; j < maxReconnectList; j++) {
+                    if ((j != i) && (reconnectlist[j].retrylistidx == reconnectlist[i].retrylistidx)) {
+                        break;
+                    }
+                }
+
+                if (j >= maxReconnectList) {
+                    if ((reconnectlist[i].retrylistidx + 1) < maxretryList) {
+                        q2a_memmove(&(retrylist[reconnectlist[i].retrylistidx]), &(retrylist[reconnectlist[i].retrylistidx + 1]), (maxretryList - (reconnectlist[i].retrylistidx + 1)) * sizeof (retrylist_info));
+                    }
+                    maxretryList--;
+                }
+
+                if ((i + 1) < maxReconnectList) {
+                    q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
+                    i--;
+                }
+                maxReconnectList--;
+            }
+        }
+    }
+
+    if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
+        dllglobals->RunFrame();
+        copyDllInfo();
+        return;
+    }
+
+    maxdoclients = client;
+    maxdoclients += maxclientsperframe;
+
+    if (maxdoclients > maxclients->value) {
+        maxdoclients = maxclients->value;
+    }
+
+    for (; client < maxdoclients; client++) {
+        if (client < 0) {
+            ent = NULL;
+        } else {
+            ent = getEnt((client + 1));
+        }
+
+        if (timers_active)
+            timer_action(client, ent);
+
+        if (getCommandFromQueue(client, &command, &data, &str)) {
+            if (!proxyinfo[client].inuse) {
+                if (command == QCMD_STARTUP) {
+                    addCmdQueue(client, QCMD_STARTUPTEST, 2, 0, 0);
+                    proxyinfo[client].clientcommand |= CCMD_STARTUPTEST;
+                } else if (command == QCMD_STARTUPTEST) {
+                
+                    addCmdQueue(client, QCMD_EXECMAPCFG, 5, 0, 0);
+                    if (do_franck_check) {
+                        stuffcmd(ent, "riconnect; roconnect; connect; set frkq2 disconnect; set quake2frk disconnect; set q2frk disconnect\n");
+                    }
+
+                    if (do_vid_restart) {
+                        if (!proxyinfo[client].vid_restart) {
+                            proxyinfo[client].vid_restart = true;
+                            stuffcmd(ent, "vid_restart\n");
+                        }
+                    }
+
+                    addCmdQueue(client, QCMD_SHOWMOTD, 0, 0, 0);
+                   
+                    if (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED) {
+                        break;
+                    }
+
+                    proxyinfo[client].inuse = 1;
+
+                    if (proxyinfo[client].retries > MAXSTARTTRY) {
+                        if (zbotdetect) {
+                            serverLogZBot(ent, client);
+                            proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
+                            proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
+                            addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUP, 0);
+                            proxyinfo[client].charindex = -1;
+                            logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail", IW_STARTUPFAIL, 0.0);
+                        }
+                        break;
+                    }
+
+                    stuffcmd(ent, zbot_teststring1);
+                    addCmdQueue(client, QCMD_STARTUPTEST, 5, 0, 0);
+                    proxyinfo[client].retries++;
+                } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
+                    //stuffcmd(ent, "disconnect\n");
+                    proxyinfo[client].clientcommand |= CCMD_KICKED;
+                    logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
+                    gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
+                    sprintf(buffer, "\nkick %d\n", client);
+                    gi.AddCommandString(buffer);
+                } else if (command == QCMD_RECONNECT) {
+                    unsigned int i;
+                    char ipbuffer[40];
+                    char *ip = ipbuffer;
+                    char *bp = ip;
+
+                    strcpy(ipbuffer, proxyinfo[client].ipaddress);
+
+                    while (*bp && (*bp != ':')) {
+                        bp++;
+                    }
+
+                    *bp = 0;
+
+                    if (*ip) {
+                        q2a_strcpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo);
+                        reconnectlist[maxReconnectList].reconnecttimeout = ltime;
+                        reconnectlist[maxReconnectList].reconnecttimeout += reconnect_time;
+
+                        // check for retry entry..
+                        for (i = 0; i < maxretryList; i++) {
+                            if (q2a_strcmp(retrylist[i].ip, ip) == 0) {
+                                break;
+                            }
+                        }
+
+                        if (i < maxretryList) {
+                            if (retrylist[i].retry >= 5) {
+                                unsigned int j;
+
+                                // remove the retry list entry if needed...
+                                for (j = 0; j < maxReconnectList; j++) {
+                                    if (reconnectlist[j].retrylistidx == i) {
+                                        break;
+                                    }
+                                }
+                                if (j >= maxReconnectList) {
+                                    if ((i + 1) < maxretryList) {
+                                        q2a_memmove(&(retrylist[i]), &(retrylist[i + 1]), (maxretryList - (i + 1)) * sizeof (retrylist_info));
+                                    }
+                                    maxretryList--;
+                                }
+
+                                // cut off here...
+                                sprintf(buffer, "\ndisconnect\n");
+                                stuffcmd(ent, buffer);
+                                break;
+                            }
+
+                            retrylist[i].retry++;
+                            reconnectlist[maxReconnectList].retrylistidx = i;
+                        } else {
+                            q2a_strcpy(retrylist[maxretryList].ip, ip);
+                            retrylist[maxretryList].retry = 0;
+                            maxretryList++;
+                        }
+
+                        maxReconnectList++;
+                    }
+
+                    q2a_strcpy(buffer, ("%s\n", defaultreconnectmessage));
+                    gi.cprintf(ent, PRINT_HIGH, buffer);
+
+                    generateRandomString(ReconnectString, 5);
+                    generateRandomString(rndConnectString, 5); //UPDATE
+                    sprintf(buffer, "\nset %s %s\nset %s connect\n", ReconnectString, reconnect_address, rndConnectString); //UPDATE
+                    stuffcmd(ent, buffer);
+
+                    generateRandomString(proxyinfo[client].hack_teststring3, RANDOM_STRING_LENGTH);
+                    generateRandomString(checkConnectProxy, RANDOM_STRING_LENGTH);
+
+                    sprintf(buffer, "\nalias connect %s\nalias %s $%s $%s\n%s\n", proxyinfo[client].hack_teststring3, checkConnectProxy, rndConnectString, ReconnectString, checkConnectProxy); //UPDATE
+
+                    proxyinfo[client].clientcommand |= CCMD_WAITFORCONNECTREPLY;
+                    stuffcmd(ent, buffer);
+                    //addCmdQueue(client, QCMD_KICK, 0, 0, NULL);
+                } else {
+                    // add command to back of line for processing later..
+                    addCmdQueue(client, command, 0, data, str);
+                }
+            } else if (command == QCMD_STARTUPTEST) {
+                if (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED) {
+                    break;
+                }
+
+                if (proxyinfo[client].retries > MAXSTARTTRY) {
+                    if (zbotdetect) {
+                        serverLogZBot(ent, client);
+                        proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
+                        proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
+                        addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUPTEST, 0);
+                        proxyinfo[client].charindex = -2;
+                        logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail 2", IW_STARTUPFAIL, 0.0);
+                        break;
+                    }
+                }
+
+                stuffcmd(ent, zbot_teststring1);
+                addCmdQueue(client, QCMD_STARTUPTEST, 5, 0, 0);
+                proxyinfo[client].retries++;
+            } else if (command == QCMD_LETRATBOTQUIT) {
+                if (zbotdetect) {
+                    sprintf(buffer, "\n%s\n", zbot_teststring_test3);
+                    stuffcmd(ent, buffer);
+                    stuffcmd(ent, buffer);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_RESTART) {
+                if (zbotdetect) {
+                    if (!(proxyinfo[client].clientcommand & CCMD_ZBOTCLEAR)) {
+                        addCmdQueue(client, QCMD_ZPROXYCHECK1, 0, 0, 0); // retry check for proxy
+                    }
+                }
+            } else if (command == QCMD_ZPROXYCHECK1) {
+                // are we at the end?
+                if (proxyinfo[client].charindex >= testcharslength) {
+                    break;
+                }
+
+                // begin test for proxies
+                proxyinfo[client].teststr[0] = testchars[proxyinfo[client].charindex];
+                proxyinfo[client].teststr[1] = BOTDETECT_CHAR1;
+                proxyinfo[client].teststr[2] = BOTDETECT_CHAR2;
+                proxyinfo[client].teststr[3] = zbot_testchar1;
+                proxyinfo[client].teststr[4] = zbot_testchar2;
+                proxyinfo[client].teststr[5] = RANDCHAR();
+                proxyinfo[client].teststr[6] = RANDCHAR();
+                proxyinfo[client].teststr[7] = 0;
+                proxyinfo[client].teststr[8] = 0;
+
+                sprintf(buffer, "\n%s\n%s\n", proxyinfo[client].teststr, zbot_teststring_test2);
+                stuffcmd(ent, buffer);
+
+                proxyinfo[client].clientcommand |= CCMD_ZPROXYCHECK2;
+                addCmdQueue(client, QCMD_ZPROXYCHECK2, clientsidetimeout, IW_ZBOTTEST, 0);
+            } else if (command == QCMD_ZPROXYCHECK2) // are we dealing with a proxy???
+            {
+                char text[35];
+
+                if (!(proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2)) {
+                    sprintf(text, "I(%d) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
+                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
+                    break;
+                }
+
+                if (proxyinfo[client].charindex >= testcharslength) {
+                    sprintf(text, "I(%d >= end) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
+                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
+                    break;
+                }
+
+                // yes...  detected by long timeout or the normal timeout on detect
+                if (!(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
+                    if (checkForOverflows(ent, client)) {
+                        break;
+                    }
+
+                    if (proxyinfo[client].retries < MAXDETECTRETRIES) {
+                        // try and get "unknown command" off the screen as fast as possible
+                        proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
+                        addCmdQueue(client, QCMD_CLEAR, 0, 0, 0);
+                        addCmdQueue(client, QCMD_RESTART, 2 + (3 * random()), 0, 0);
+                        proxyinfo[client].retries++;
+                        break;
+                    }
+
+                    serverLogZBot(ent, client);
+                }
+
+                proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
+                proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
+
+                if (displayzbotuser) {
+                    unsigned int i;
+
+                    q2a_strcpy(buffer, ("%s\n", zbotuserdisplay));
+
+                    for (i = 0; i < numofdisplays; i++) {
+                        gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+                    }
+                }
+
+                if (customClientCmd[0]) {
+                    addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
+                }
+
+                if (disconnectuser) {
+                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
+                }
+            }  							
+            else if (command == QCMD_TESTSTANDARDPROXY) {
+                if (private_commands[0].command[0]) {
+                    addCmdQueue(client, QCMD_PRIVATECOMMAND, 10, 0, 0);
+                    stuff_private_commands(client, ent);
+                }
+
+                if (!proxyinfo[client].q2a_bypass) {
+                    if (dopversion) {
+                        /*if (client_check > 0)
+						{
+							addCmdQueue(client, QCMD_PMODVERTIMEOUT, 0, 0, 0);
+							gi.cprintf(ent, PRINT_HIGH, "%s: p_version Standard Proxy Test\r\n", proxyinfo[client].name);
+						}*/
+                    }
+                }
+            }                //*** UPDATE END ***							
+            else if (command == QCMD_TESTRATBOT) {
+                gi.cprintf(ent, PRINT_HIGH, "ratbot Detect Test ( %s )\r\n", "rbkck &%trf .disconnect");
+                addCmdQueue(client, QCMD_TESTRATBOT2, clientsidetimeout, 0, 0);
+                proxyinfo[client].clientcommand |= CCMD_RATBOTDETECT;
+                addCmdQueue(client, QCMD_TESTRATBOT3, 2, 0, 0);
+            } else if (command == QCMD_TESTRATBOT2) {
+                if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECT)) {
+                    logEvent(LT_INTERNALWARN, client, ent, "RatBot detect problem", 0, 0.0);
+                    break;
+                }
+                //proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECT;
+            } else if (command == QCMD_TESTRATBOT3) {
+                proxyinfo[client].clientcommand |= CCMD_RATBOTDETECTNAME;
+                addCmdQueue(client, QCMD_TESTRATBOT4, clientsidetimeout, 0, 0);
+                sprintf(buffer, "\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n", proxyinfo[client].name);
+                stuffcmd(ent, buffer);
+            } else if (command == QCMD_TESTRATBOT4) {
+                if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECTNAME)) {
+                    logEvent(LT_INTERNALWARN, client, ent, "RatBot Detect 2 problem", 0, 0.0);
+                    break;
+                }
+
+                // yes...  detected by long timeout or the normal timeout on detect
+                if (!(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
+                    if (checkForOverflows(ent, client)) {
+                        addCmdQueue(client, QCMD_TESTRATBOT3, 2, 0, 0);
+                        break;
+                    }
+
+                    if (proxyinfo[client].rbotretries < MAXDETECTRETRIES) {
+                        //            proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECTNAME;
+                        addCmdQueue(client, QCMD_TESTRATBOT3, 2 + (3 * random()), 0, 0);
+                        proxyinfo[client].rbotretries++;
+                        break;
+                    }
+
+                    proxyinfo[client].charindex = -4;
+                    serverLogZBot(ent, client);
+                }
+
+                proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECTNAME;
+                proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
+
+                if (displayzbotuser) {
+                    unsigned int i;
+
+                    q2a_strcpy(buffer, ("%s\n", zbotuserdisplay));
+
+                    for (i = 0; i < numofdisplays; i++) {
+                        gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+                    }
+                }
+
+                if (customClientCmd[0]) {
+                    addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
+                }
+
+                if (disconnectuser) {
+                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
+                }
+            } else if (command == QCMD_TESTALIASCMD1) {
+                generateRandomString(proxyinfo[client].hack_teststring1, RANDOM_STRING_LENGTH);
+                generateRandomString(proxyinfo[client].hack_teststring2, RANDOM_STRING_LENGTH);
+                sprintf(buffer, "\nalias %s %s\n", proxyinfo[client].hack_teststring1, proxyinfo[client].hack_teststring2);
+                stuffcmd(ent, buffer);
+                proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY1;
+                addCmdQueue(client, QCMD_TESTALIASCMD2, 1, 0, NULL);
+            } else if (command == QCMD_TESTALIASCMD2) {
+                sprintf(buffer, "\n%s\n", proxyinfo[client].hack_teststring1);
+                stuffcmd(ent, buffer);
+                proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY2;
+            } else if (command == QCMD_DISPLOGFILE) {
+                displayLogFileCont(ent, client, data);
+            } else if (command == QCMD_DISPLOGFILELIST) {
+                displayLogFileListCont(ent, client, data);
+            } else if (command == QCMD_DISPLOGEVENTLIST) {
+                displayLogEventListCont(ent, client, data, FALSE);
+            } else if (command == QCMD_GETIPALT) {
+                // open logfile and read IP address from log
+                readIpFromLog(client, ent);
+                addCmdQueue(client, QCMD_GETIPALT, 0, 0, 0);
+            } else if (command == QCMD_LOGTOFILE1) {
+                logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0);
+            } else if (command == QCMD_LOGTOFILE2) {
+                logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[proxyinfo[client].impulse - 169], proxyinfo[client].impulse, 0.0);
+            } else if (command == QCMD_LOGTOFILE3) {
+                logEvent(LT_IMPULSES, client, ent, NULL, proxyinfo[client].impulse, 0.0);
+            } else if (command == QCMD_CONNECTCMD) {
+                if (customClientCmdConnect[0]) {
+                    sprintf(buffer, "%s\n", customClientCmdConnect);
+                    stuffcmd(ent, buffer);
+                }
+
+                if (customServerCmdConnect[0]) {
+                    // copy string across to buffer, replacing %c with client number
+                    char *cp = customServerCmdConnect;
+                    char *dp = buffer;
+
+                    while (*cp) {
+                        if ((*cp == '%') && (tolower(*(cp + 1)) == 'c')) {
+                            sprintf(dp, "%d", client);
+                            dp += q2a_strlen(dp);
+                            cp += 2;
+                        } else {
+                            *dp++ = *cp++;
+                        }
+                    }
+
+                    *dp = 0x0;
+
+                    gi.AddCommandString(buffer);
+                }
+            } else if (command == QCMD_CLEAR) {
+                stuffcmd(ent, "clear\n");
+            } else if (command == QCMD_CUSTOM) {
+                if (customClientCmd[0]) {
+                    sprintf(buffer, "%s\n", customClientCmd);
+                    stuffcmd(ent, buffer);
+                }
+            } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
+                //stuffcmd(ent, "disconnect\n");
+                proxyinfo[client].clientcommand |= CCMD_KICKED;
+                logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
+                gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
+                sprintf(buffer, "\nkick %d\n", client);
+                gi.AddCommandString(buffer);
+            } else if (command == QCMD_RECONNECT) {
+                sprintf(buffer, "\nconnect %s\n", reconnect_address);
+                stuffcmd(ent, buffer);
+                //        addCmdQueue(client, QCMD_KICK, 0, 0, NULL);
+            } else if (command == QCMD_CLIPTOMAXRATE) {
+                sprintf(buffer, "rate %d\n", maxrateallowed);
+                stuffcmd(ent, buffer);
+            } else if (command == QCMD_CLIPTOMINRATE) {
+                sprintf(buffer, "rate %d\n", minrateallowed);
+                stuffcmd(ent, buffer);
+            } else if (command == QCMD_SETUPMAXFPS) {
+                stuffcmd(ent, "set cl_maxfps $cl_maxfps u\n");
+                addCmdQueue(client, QCMD_FORCEUDATAUPDATE, 0, 0, 0);
+            } else if (command == QCMD_FORCEUDATAUPDATE) {
+                if (proxyinfo[client].rate) {
+                    sprintf(buffer, "set rate %d\nset rate %d\n", proxyinfo[client].rate + 1, proxyinfo[client].rate);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_SETMAXFPS) {
+                if (maxfpsallowed) {
+                    sprintf(buffer, "cl_maxfps %d\n", maxfpsallowed);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_SETMINFPS) {
+                if (minfpsallowed) {
+                    sprintf(buffer, "cl_maxfps %d\n", minfpsallowed);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_DISPBANS) {
+                displayNextBan(ent, client, data);
+            } else if (command == QCMD_DISPLRCONS) {
+                displayNextLRCon(ent, client, data);
+            } else if (command == QCMD_DISPFLOOD) {
+                displayNextFlood(ent, client, data);
+            } else if (command == QCMD_DISPSPAWN) {
+                displayNextSpawn(ent, client, data);
+            }
+            else if (command == QCMD_DISPVOTE) {
+                displayNextVote(ent, client, data);
+            } else if (command == QCMD_DISPDISABLE) {
+                displayNextDisable(ent, client, data);
+            } else if (command == QCMD_DISPCHECKVAR) {
+                displayNextCheckvar(ent, client, data);
+            } else if (command == QCMD_CHECKVARTESTS) {
+                checkVariableTest(ent, client, data);
+            } else if (command == QCMD_CHANGENAME) {
+                sprintf(buffer, "name \"%s\"\n", proxyinfo[client].name);
+                stuffcmd(ent, buffer);
+            } else if (command == QCMD_CHANGESKIN) {
+                sprintf(buffer, "skin \"%s\"\n", proxyinfo[client].skin);
+                stuffcmd(ent, buffer);
+            } else if (command == QCMD_BAN) {
+                gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
+                gi.cprintf(ent, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
+                addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
+            } else if (command == QCMD_DISPCHATBANS) {
+                displayNextChatBan(ent, client, data);
+            } else if (command == QCMD_STUFFCLIENT) {
+                stuffNextLine(ent, client);
+            } else if (command == QCMD_TESTADMIN) {
+                stuffcmd(ent, "!setadmin $q2adminpassword\n");
+            }                //*** UPDATE START ***
+            else if (command == QCMD_TESTADMIN2) {
+                stuffcmd(ent, "!admin $q2adminuser $q2adminpass\n");
+            } else if (command == QCMD_TESTADMIN3) {
+                stuffcmd(ent, "!bypass $clientuser $clientpass\n");
+            } else if (command == QCMD_PMODVERTIMEOUT) {
+                //no reply? kick the bastard
+                if (!proxyinfo[client].q2a_bypass) {
+                    /*if (client_check > 0)
+                    {
+						if (proxyinfo[client].pmod != 1)
+						{
+							gi.bprintf(PRINT_HIGH,NOMATCH_KICK_MSG,proxyinfo[client].name);
+							sprintf(buffer,client_msg,version_check);
+							gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+							addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_NOMATCH_KICK_MSG);
+						}
+						else if (proxyinfo[client].cmdlist == 7) //Kick false NoCheat clients
+						{
+							gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+							sprintf(buffer,client_msg,version_check);
+							gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+							addCmdQueue(client, QCMD_DISCONNECT, 1, 0, FRKQ2_KICK_MSG);
+						}
+                    }*/
+                }
+            } else if (command == QCMD_PRIVATECOMMAND) {
+                for (j = 0; j < PRIVATE_COMMANDS; j++) {
+                    //check each command, if we didnt get a response log it
+                    if (private_commands[j].command[0]) {
+                        if (((!proxyinfo[client].private_command_got[j]) && (j < 4)) || ((proxyinfo[client].private_command_got[j]) && (j > 3))) {
+                            //log
+                            logEvent(LT_PRIVATELOG, client, ent, private_commands[j].command, 0, 0.0);
+
+                            //kick on private_command
+                            if (private_command_kick) {
+                                gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+                                addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_PRV_KICK_MSG);
+                                //dont want this printed
+                                //return FALSE;
+                            }
+                        }
+                    }
+                }
+            } else if (command == QCMD_PMODVERTIMEOUT_INGAME) {
+                if (!proxyinfo[client].q2a_bypass) {
+                    /*if (client_check > 0)
+                    {
+                    //no reply? increase no reply count
+                            if (!proxyinfo[client].pmod)
+                            {
+                                    proxyinfo[client].pmod_noreply_count++;
+                                    if (proxyinfo[client].pmod_noreply_count > max_pmod_noreply)
+                                    {
+                                            gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);	          
+                                            sprintf(buffer,client_msg,version_check);
+                                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
+                                    }
+                            }
+                            else if (proxyinfo[client].pmod != 1)
+                            {
+                                    gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);	          
+                                    sprintf(buffer,client_msg,version_check);
+                                    gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
+                            }
+                    }*/
+                }
+            } else if (command == QCMD_GL_CHECK) {
+            } else if (command == QCMD_SETUPTIMESCALE) {
+                stuffcmd(ent, "set timescale $timescale u\n");
+            } else if (command == QCMD_SETTIMESCALE) {
+                if (timescaledetect) {
+                    strcpy(buffer, "set timescale 1\n");
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_SPAMBYPASS) {
+                if (proxyinfo[client].q2a_bypass) {
+                    gi.bprintf(PRINT_HIGH, "ƒ  %s has logged on without an anti-cheat client because of an arrangement\nƒ  with the server admin.  This is most likely because %s is using a linux\nƒ  or mac client - contact the server admin if you have issues with %s.\n", proxyinfo[client].name, proxyinfo[client].name, proxyinfo[client].name);
+                }
+            } else if (command == QCMD_GETCMDQUEUE) {
+                addCmdQueue(client, QCMD_TESTCMDQUEUE, 5, 0, 0);
+                proxyinfo[client].cmdlist_timeout = ltime;
+                proxyinfo[client].cmdlist_timeout += 5;
+                proxyinfo[client].cmdlist = 1;
+                //1.20
+                if (!proxyinfo[client].done_server_and_blocklist) {
+                    proxyinfo[client].blocklist = random()*(MAX_BLOCK_MODELS - 1);
+                    sprintf(buffer, "p_blocklist %i\n", proxyinfo[client].blocklist);
+                    stuffcmd(ent, buffer);
+                    generateRandomString(proxyinfo[client].serverip, 15);
+                    sprintf(buffer, "p_server %s\n", proxyinfo[client].serverip);
+                    stuffcmd(ent, buffer);
+                    //q2ace responds with blahblah %i %s
+                }
+            } else if (command == QCMD_TESTCMDQUEUE) {
+                if (proxyinfo[client].done_server_and_blocklist)
+                    required_cmdlist = 1;
+                else
+                    required_cmdlist = 7;
+
+                if (!proxyinfo[client].cmdlist) {
+                    proxyinfo[client].pcmd_noreply_count++;
+                    if (proxyinfo[client].pcmd_noreply_count > max_pmod_noreply) {
+                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 16);
+                        //sprintf(buffer,client_msg,version_check);
+                        //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
+                    }
+                } else if (proxyinfo[client].cmdlist == required_cmdlist) {
+                    //all 3 checks came thru fine
+                    proxyinfo[client].done_server_and_blocklist = 1;
+                } else {
+                    //just kick anyway
+                    //gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].cmdlist);
+                    //sprintf(buffer,client_msg,version_check);
+                    //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
+                }
+            } else if (command == QCMD_EXECMAPCFG) {
+                if (client_map_cfg & 1) {
+                    sprintf(buffer, "set map_name %s\n", gmapname);
+                    stuffcmd(ent, buffer);
+                } else if (client_map_cfg & 2) {
+                    sprintf(buffer, "exec cfg/%s.cfg\n", gmapname);
+                    stuffcmd(ent, buffer);
+                } else if (client_map_cfg & 4) {
+                    sprintf(buffer, "exec cfg/all.cfg\n");
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_SHOWMOTD) {
+                if (zbotmotd[0]) {
+                    gi.centerprintf(ent, motd);
+                }
+            }                //*** UPDATE END ***							
+            else if (command == QCMD_RUNVOTECMD) {
+                gi.AddCommandString(cmdpassedvote);
+            } else if (command == QCMD_TESTTIMESCALE) {
+                if (timescaledetect) {
+                    generateRandomString(proxyinfo[client].hack_timescale, RANDOM_STRING_LENGTH);
+                    sprintf(buffer, "%s $timescale\n", proxyinfo[client].hack_timescale);
+                    stuffcmd(ent, buffer);
+                    addCmdQueue(client, QCMD_TESTTIMESCALE, 15, 0, 0);
+                }
+            } else if (command == QCMD_SETUPCL_PITCHSPEED) {
+                stuffcmd(ent, "set cl_pitchspeed $cl_pitchspeed u\n");
+                addCmdQueue(client, QCMD_FORCEUDATAUPDATEPS, 0, 0, 0);
+            } else if (command == QCMD_FORCEUDATAUPDATEPS) {
+                if (proxyinfo[client].cl_pitchspeed) {
+                    sprintf(buffer, "set cl_pitchspeed %d\nset cl_pitchspeed %d\n", proxyinfo[client].cl_pitchspeed + 1, proxyinfo[client].cl_pitchspeed);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_SETUPCL_ANGLESPEEDKEY) {
+                stuffcmd(ent, "set cl_anglespeedkey $cl_anglespeedkey u\n");
+                addCmdQueue(client, QCMD_FORCEUDATAUPDATEAS, 0, 0, 0);
+            } else if (command == QCMD_FORCEUDATAUPDATEAS) {
+                if (proxyinfo[client].cl_anglespeedkey) {
+                    sprintf(buffer, "set cl_anglespeedkey %g\nset cl_anglespeedkey %g\n", proxyinfo[client].cl_anglespeedkey + 1.0, proxyinfo[client].cl_anglespeedkey);
+                    stuffcmd(ent, buffer);
+                }
+            } else if (command == QCMD_MSGDISCONNECT) {
+                sprintf(buffer, "Client 'msg' mode has to be set to less than %d on this server!\n", maxMsgLevel + 1);
+                gi.cprintf(ent, PRINT_HIGH, buffer);
+                addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+            }
+        } else {
+            if (maxdoclients < maxclients->value) {
+                maxdoclients++;
+            }
+        }
+    }
+	
+    if (client >= maxclients->value) {
+        client = -1;
+    }
+
+    checkOnVoting();
+
+    STARTPERFORMANCE(2);
+    dllglobals->RunFrame();
+	Remote_RunFrame();
+    STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
+
+    copyDllInfo();
+
+    STOPPERFORMANCE_2(1, "q2admin->G_RunFrame", 0, NULL);
+}
+
+
 /*
 =================
 GetGameAPI

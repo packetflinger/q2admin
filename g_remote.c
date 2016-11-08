@@ -89,9 +89,35 @@ void RA_Init() {
 	remote.flags = atoi(remote_flags->string);
 }
 
-void RA_Shutdown() {
+
+void Remote_RunFrame() {
+	
+	uint8_t i;
+	static uint8_t mc = 0;
+	if (mc == 0) 
+		mc = maxclients->value;
+	
+	// hijack each player entity's die() pointer, it gets reset on spawn.
+	for (i=0; i<=mc; i++) {
+		if (proxyinfo[i].inuse) {
+			if (*proxyinfo[i].ent->die != PlayerDie_Internal) {
+				proxyinfo[i].die = *proxyinfo[i].ent->die;
+				proxyinfo[i].ent->die = &PlayerDie_Internal;
+			}
+		}
+	}
 }
 
-// run every frame (1/10 second)
-void RA_RunFrame() {
+// hijack the real player_die function to get frag info to send
+void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
+	uint8_t id = getEntOffset(self) - 1;
+	uint8_t aid = getEntOffset(attacker) - 1;
+	
+	if (self->deadflag != DEAD_DEAD) {	
+		gi.dprintf("%s just died (by %s)\n", proxyinfo[id].name, proxyinfo[aid].name);
+		RA_Send(CMD_FRAG, stringf("%d\\%d\\%s", id, aid, inflictor->classname));
+	}
+	
+	// call the real die()
+	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
