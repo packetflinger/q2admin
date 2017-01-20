@@ -1467,7 +1467,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
 
-	RA_Send(CMD_PRINT, stringf("%d\\%s", printlevel, cbuffer));
+	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -3116,7 +3116,7 @@ void ClientCommand(edict_t *ent) {
 	// it's a chat msg, send it to remote admin server
 	if (g_strcmp0("say", gi.argv(0)) == 0) {
 		int clientid = getEntOffset(ent) - 1;
-		RA_Send(CMD_CHAT, stringf("%s\\%s", proxyinfo[clientid].name, gi.args()+1)); // skip beginning quote
+		RA_Send(CMD_CHAT, "%s\\%s", proxyinfo[clientid].name, gi.args()+1);
 	}
 	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
@@ -3712,7 +3712,7 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
 void Cmd_Teleport_f(edict_t *ent) {
 	uint8_t id = getEntOffset(ent) - 1;
-	RA_Send(CMD_TELEPORT, stringf("%d\\%s", id, gi.args()));
+	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
 	
 	//gi.dprintf("die: %d\n", ent->die);
 	//gi.dprintf("&die: %d\n", &ent->die);
