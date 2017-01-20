@@ -17,7 +17,6 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 
 	va_list     argptr;
     char        string[MAX_STRING_CHARS];
-	char		finalstr[MAX_STRING_CHARS];
 	size_t      len;
 	
 	if (!remote.enabled) {
@@ -25,20 +24,21 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	}
 	
 	va_start(argptr, fmt);
-    len = Q_vsnprintf(string, sizeof(string), fmt, argptr);
+    len = g_vsnprintf(string, sizeof(string), fmt, argptr);
     va_end(argptr);
 	
 	if (len >= sizeof(string)) {
         return;
     }
 	
-	g_
-	gi.dprintf("Sending: %s\n", string);
+	gchar *final = g_strconcat(stringf("%d\\", cmd), string, NULL);
+	
+	gi.dprintf("Sending: %s\n", final);
 	
 	int r = sendto(
 		remote.socket, 
-		string, 
-		strlen(string)+1, 
+		final, 
+		strlen(final)+1, 
 		MSG_DONTWAIT, 
 		remote.addr->ai_addr, 
 		remote.addr->ai_addrlen
@@ -47,6 +47,8 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	if (r == -1) {
 		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
 	}
+	
+	g_free(final);
 }
 
 
@@ -125,35 +127,16 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	uint8_t aid = getEntOffset(attacker) - 1;
 	
 	if (self->deadflag != DEAD_DEAD) {	
-		gi.dprintf("%s just died (by %s)\n", proxyinfo[id].name, proxyinfo[aid].name);
-		RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid, 
-			attacker->client->pers.weapon->classname
-		);
+		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
+		
+		// another player killed us
+		if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
+			RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid, 
+				attacker->client->pers.weapon->classname
+			);
+		}
 	}
 	
 	// call the real die()
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
-
-size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr) {
-    int ret;
-
-    if (size > INT_MAX)
-        Com_Error(ERR_FATAL, "%s: bad buffer size", __func__);
-
-#ifdef _WIN32
-    if (size) {
-        ret = _vsnprintf(dest, size - 1, fmt, argptr);
-        if (ret < 0 || ret >= size - 1)
-            dest[size - 1] = 0;
-    } else {
-        ret = _vscprintf(fmt, argptr);
-    }
-#else
-    ret = vsnprintf(dest, size, fmt, argptr);
-#endif
-
-    // exploit the fact -1 becomes SIZE_MAX > size
-    return (size_t)ret;
-}
-

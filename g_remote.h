@@ -52,11 +52,9 @@ typedef enum {
 } remote_cmd_t;
 
 
-//void	RA_Send(remote_cmd_t cmd, const char *data);
 void 	RA_Send(remote_cmd_t cmd, const char *fmt, ...);
 void	RA_Init(void);
 void	Remote_RunFrame(void);
-size_t 	Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
 
 extern remote_t remote;
 

@@ -95,7 +95,8 @@ void ShutdownGame(void) {
 	
 	gi.dprintf("RA: Unregistering with remote admin server\n\n");
 	RA_Send(CMD_UNREGISTER, "");
-
+	freeaddrinfo(remote.addr);
+	
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
     dllglobals->Shutdown();

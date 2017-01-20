@@ -1029,7 +1029,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
-			RA_Send(CMD_CONNECT, "%d\\%s", client, userinfo);
+			//RA_Send(CMD_CONNECT, "%d\\%s", client, userinfo);
         }
     }
 
@@ -1648,6 +1648,8 @@ void ClientBegin(edict_t *ent) {
         }
     }
 
+	RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
+	
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
     STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);
 }

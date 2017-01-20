@@ -3116,7 +3116,7 @@ void ClientCommand(edict_t *ent) {
 	// it's a chat msg, send it to remote admin server
 	if (g_strcmp0("say", gi.argv(0)) == 0) {
 		int clientid = getEntOffset(ent) - 1;
-		RA_Send(CMD_CHAT, "%s\\%s", proxyinfo[clientid].name, gi.args()+1);
+		RA_Send(CMD_CHAT, "%d\\%s", clientid, gi.args()+1);
 	}
 	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
