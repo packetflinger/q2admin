@@ -1440,7 +1440,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
-	RA_Send(CMD_DISCONNECT, "%d-%s", client, proxyinfo[client].name);
+	RA_Send(CMD_DISCONNECT, "%d", client);
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);

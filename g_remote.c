@@ -31,7 +31,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
         return;
     }
 	
-	gchar *final = g_strconcat(stringf("%d\\", cmd), string, NULL);
+	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
 	
 	gi.dprintf("Sending: %s\n", final);
 	
