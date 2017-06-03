@@ -14,7 +14,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-
+extern cvar_t		*gamelib;
 extern cvar_t		*remote_enabled;
 extern cvar_t		*remote_server;
 extern cvar_t		*remote_port;
@@ -27,6 +27,7 @@ extern cvar_t		*net_port;
 #define REMOTE_FL_CMD_TELEPORT		1
 #define REMOET_FL_CMD_INVITE		2
 #define REMOTE_FL_CMD_FIND			4
+#define REMOTE_FL_DEBUG				8
 
 
 typedef struct {

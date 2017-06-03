@@ -866,6 +866,9 @@ game_export_t *GetGameAPI(game_import_t *import) {
     dllloaded = FALSE;
     gi = *import;
 
+    cvar_t *gamelib;
+    gamelib = gi.cvar("gamelib", DLLNAME, 0);
+
     import->bprintf = bprintf_internal;
     import->cprintf = cprintf_internal;
     import->dprintf = dprintf_internal;
@@ -961,11 +964,11 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
 #ifdef __GNUC__
     loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
-    sprintf(dllname, "%s/%s", moddir, DLLNAME);
+    sprintf(dllname, "%s/%s", moddir, gamelib->string);
     hdll = dlopen(dllname, loadtype);
 #elif defined(WIN32)
     if (quake2dirsupport) {
-        sprintf(dllname, "%s/%s", moddir, DLLNAME);
+        sprintf(dllname, "%s/%s", moddir, gamelib->string);
     } else {
         sprintf(dllname, "%s/%s", moddir, DLLNAMEMODDIR);
     }
@@ -975,7 +978,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
     if (hdll == NULL) {
         // try the baseq2 directory...
-        sprintf(dllname, "baseq2/%s", DLLNAME);
+        sprintf(dllname, "baseq2/%s", gamelib->string);
 
 #ifdef __GNUC__
         hdll = dlopen(dllname, loadtype);
@@ -984,10 +987,10 @@ game_export_t *GetGameAPI(game_import_t *import) {
 #endif
 
 #ifdef __GNUC__
-        sprintf(dllname, "%s/%s", moddir, DLLNAME);
+        sprintf(dllname, "%s/%s", moddir, gamelib->string);
 #elif defined(WIN32)
         if (quake2dirsupport) {
-            sprintf(dllname, "%s/%s", moddir, DLLNAME);
+            sprintf(dllname, "%s/%s", moddir, gamelib->string);
         } else {
             sprintf(dllname, "%s/%s", moddir, DLLNAMEMODDIR);
         }
@@ -1018,6 +1021,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
         return &globals;
     }
 
+    gi.dprintf("Loaded forward game library: %s\n", dllname);
     dllglobals = (*getapi)(import);
     dllloaded = TRUE;
     copyDllInfo();

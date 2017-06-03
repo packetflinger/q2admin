@@ -33,7 +33,9 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	
 	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
 	
-	gi.dprintf("Sending: %s\n", final);
+	if (remote.flags & REMOTE_FL_DEBUG) {
+		gi.dprintf("RA - Sending: %s\n", final);
+	}
 	
 	int r = sendto(
 		remote.socket, 
@@ -100,6 +102,9 @@ void RA_Init() {
 	remote.socket = fd;
 	remote.addr = res;
 	remote.flags = atoi(remote_flags->string);
+
+	// remove later - set debug while under development
+	remote.flags |= REMOTE_FL_DEBUG;
 }
 
 
