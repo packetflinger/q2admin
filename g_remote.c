@@ -60,7 +60,7 @@ void RA_Init() {
 	remote_server = gi.cvar("remote_server", "packetflinger.com", CVAR_LATCH);
 	remote_port = gi.cvar("remote_port", "9999", CVAR_LATCH);
 	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
-	remote_flags = gi.cvar("remote_flags", "7", CVAR_LATCH | CVAR_SERVERINFO);
+	remote_flags = gi.cvar("remote_flags", "28", CVAR_LATCH | CVAR_SERVERINFO);
 	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
@@ -108,22 +108,34 @@ void RA_Init() {
 }
 
 
-void Remote_RunFrame() {
+void RA_RunFrame() {
 	
 	uint8_t i;
-	static uint8_t mc = 0;
-	if (mc == 0) 
-		mc = maxclients->value;
-	
-	// hijack each player entity's die() pointer, it gets reset on spawn.
-	for (i=0; i<=mc; i++) {
+
+	// report if necessary
+	if (remote.next_report <= remote.frame_number) {
+		RA_Send(CMD_REGISTER, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
+		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
+		gi.dprintf("Frame: %d\n", remote.frame_number);
+	}
+
+	for (i=0; i<=remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
+
+			if (!proxyinfo[i].remote_reported) {
+				RA_Send(CMD_CONNECT, "%d\\%s", i, proxyinfo[i].userinfo);
+				proxyinfo[i].remote_reported = 1;
+			}
+
+			// replace player edict's die() pointer
 			if (*proxyinfo[i].ent->die != PlayerDie_Internal) {
 				proxyinfo[i].die = *proxyinfo[i].ent->die;
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
 		}
 	}
+
+	remote.frame_number++;
 }
 
 // hijack the real player_die function to get frag info to send

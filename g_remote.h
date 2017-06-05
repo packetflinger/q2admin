@@ -25,9 +25,10 @@ extern cvar_t		*net_port;
 
 // flags
 #define REMOTE_FL_CMD_TELEPORT		1
-#define REMOET_FL_CMD_INVITE		2
+#define REMOTE_FL_CMD_INVITE		2
 #define REMOTE_FL_CMD_FIND			4
 #define REMOTE_FL_DEBUG				8
+#define REMOTE_FL_LOG_CHAT			16
 
 
 typedef struct {
@@ -35,6 +36,12 @@ typedef struct {
 	uint32_t 	socket;
 	struct 	addrinfo *addr;
 	uint32_t	flags;
+	uint32_t	frame_number;
+	char		mapname[32];
+	uint32_t	next_report;
+	char		rcon_password[32];
+	uint8_t		maxclients;
+	uint16_t	port;
 } remote_t;
 
 
@@ -55,7 +62,7 @@ typedef enum {
 
 void 	RA_Send(remote_cmd_t cmd, const char *fmt, ...);
 void	RA_Init(void);
-void	Remote_RunFrame(void);
+void	RA_RunFrame(void);
 
 extern remote_t remote;
 

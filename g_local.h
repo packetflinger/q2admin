@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "q_shared.h"
 
 #include "g_remote.h"
-
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
@@ -88,7 +87,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define FL_POWER_ARMOR   0x00001000 // power armor (if any) is active
 #define FL_RESPAWN    0x80000000 // used for item respawning
 
-#define FRAMETIME    0.1
+// variable server FPS
+#if USE_FPS
+#define HZ              game.framerate
+#define FRAMETIME       game.frametime
+#define FRAMEDIV        game.framediv
+#define FRAMESYNC       !(level.framenum % game.framediv)
+#else
+#define HZ              BASE_FRAMERATE
+#define FRAMETIME       BASE_FRAMETIME_1000
+#define FRAMEDIV        1
+#define FRAMESYNC       1
+#endif
+
+#define SECS_TO_FRAMES(seconds)	(int)((seconds) * HZ)
+#define FRAMES_TO_SECS(frames)	(int)((frames) * FRAMETIME)
 
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME    765  // clear when unloading the dll
@@ -235,6 +248,13 @@ typedef struct {
     int num_items;
 
     qboolean autosaved;
+
+#if USE_FPS
+    int framerate;
+    int frametime;
+    int framediv;
+#endif
+
 } game_locals_t;
 
 // this structure is cleared as each map is entered
@@ -925,6 +945,7 @@ typedef struct {
     int enteredgame;
 	void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 	edict_t *ent;	// the actual entity
+	int remote_reported;
 } proxyinfo_t;
 
 typedef struct {
@@ -1110,9 +1131,9 @@ typedef struct {
     CMDINITFUNC *initfunc;
 } zbotcmd_t;
 
-extern game_import_t gi;
-extern game_export_t globals;
-extern game_export_t *dllglobals;
+extern game_import_t gi;			// server access from inside game lib
+extern game_export_t globals;		// game access from inside server
+extern game_export_t *dllglobals;	// real game access from inside proxy game lib
 extern cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
 
 extern char dllname[256];
@@ -1593,7 +1614,7 @@ typedef struct {
 } admin_type;
 
 #define Q2ADMINVERSION   "2.0.2-pf"
-#define DEFAULTQ2AVER   "1.0"
+#define DEFAULTQ2AVER   "2.0"
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
 #define MAX_ADMINS    128
 #define ADMIN_AUTH_LEVEL  1

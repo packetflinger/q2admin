@@ -1448,7 +1448,10 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         }
     }
 
+    RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+
     gi.cprintf(ent, printlevel, "%s", cbuffer);
+
 
     if (printlevel == PRINT_CHAT && clienti != -1 && ent == NULL && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
         if (checkForFlood(clienti)) {
@@ -1673,7 +1676,8 @@ qboolean readCfgFile(char *cfgfilename) {
     char buff2[256];
 
     cfgfile = fopen(cfgfilename, "rt");
-    if (!cfgfile) return FALSE;
+    if (!cfgfile)
+    	return FALSE;
 
     while (fgets(buffer, 256, cfgfile) != NULL) {
         char *cp = buffer;
@@ -1733,7 +1737,6 @@ void readCfgFiles(void) {
 
     if (!ret) {
         gi.dprintf("WARNING: " CFGFILE " could not be found\n");
-        //    logEvent(LT_INTERNALWARN, 0, NULL, CFGFILE " could not be found", IW_Q2ADMINCFGLOAD, 0.0);
     }
 }
 
@@ -2255,7 +2258,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     //int clienti;
     //r1ch 2005-01-26 disable hugely buggy commands END
 
-    if (client >= maxclients->value) return FALSE;
+    if (client >= maxclients->value)
+    	return FALSE;
 
     cmd = gi.argv(0);
 
@@ -2268,11 +2272,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     if (*(rcon_password->string)) {
         if (strstr(response, rcon_password->string)) {
-            //gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabledcommand: (%s)\n", proxyinfo[client].name, response);
-            //logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent,response, 0, 0.0);
-            //stuffcmd(ent, "echo YOU HAVE BEEN LOGGED FOR THAT ACTION!!!!\n");
-
-            //r1ch: buffer overflow fix
             snprintf(abuffer, sizeof (abuffer) - 1, "EXPLOIT - %s", response);
             abuffer[sizeof (abuffer) - 1] = 0;
             logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
@@ -2283,7 +2282,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (Q_stricmp(cmd, zbot_teststring_test1) == 0) {
-        if (proxyinfo[client].inuse && proxyinfo[client].clientcommand & CCMD_STARTUPTEST) {
+        if (proxyinfo[client].inuse && (proxyinfo[client].clientcommand & CCMD_STARTUPTEST)) {
             proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
             removeClientCommand(client, QCMD_STARTUPTEST);
             proxyinfo[client].retries = 0;
@@ -3061,7 +3060,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 }
 
 void ClientCommand(edict_t *ent) {
-    int client = getEntOffset(ent) - 1;
+	char *cmd;
+	cmd = gi.argv(0);
+
+    int clientnum = getEntOffset(ent) - 1;
     qboolean checkforfloodafter = FALSE;
     char stemp[1024];
 
@@ -3082,24 +3084,33 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	// check if client typed "teleport" command
-	if (g_strcmp0(gi.argv(0), "teleport") == 0) {
+	if (g_strcmp0(cmd, "!teleport") == 0) {
 		Cmd_Teleport_f(ent);
 		return;
 	}
 	
+	if (g_strcmp0(cmd, "!invite") == 0) {
+		Cmd_Invite_f(ent);
+		return;
+	}
+
+	if (g_strcmp0(cmd, "!find") == 0) {
+		Cmd_Find_f(ent);
+		return;
+	}
+
     //Custom frkq2 check
     if ((do_franck_check) && (
             (stringContains(stemp, "riconnect")) ||
-            (stringContains(gi.argv(0), "riconnect")) ||
+            (stringContains(cmd, "riconnect")) ||
             (stringContains(stemp, "roconnect")) || //Extra check for zgh-frk patch
-            (stringContains(gi.argv(0), "roconnect")))) {
+            (stringContains(cmd, "roconnect")))) {
         return;
     }
 
-    lastClientCmd = client;
-    if (doClientCommand(ent, client, &checkforfloodafter)) {
-        if (!(proxyinfo[client].clientcommand & BANCHECK)) {
+    lastClientCmd = clientnum;
+    if (doClientCommand(ent, clientnum, &checkforfloodafter)) {
+        if (!(proxyinfo[clientnum].clientcommand & BANCHECK)) {
             STARTPERFORMANCE(2);
             dllglobals->ClientCommand(ent);
             STOPPERFORMANCE(2, "mod->ClientCommand", 0, NULL);
@@ -3109,16 +3120,51 @@ void ClientCommand(edict_t *ent) {
     }
 
     if (checkforfloodafter) {
-        checkForFlood(client);
+        checkForFlood(clientnum);
     }
     lastClientCmd = -1;
 	
 	// it's a chat msg, send it to remote admin server
-	if (g_strcmp0("say", gi.argv(0)) == 0) {
-		int clientid = getEntOffset(ent) - 1;
-		RA_Send(CMD_CHAT, "%d\\%s", clientid, gi.args()+1);
+	/*if (g_strcmp0("say", cmd) == 0 && (remote.flags & REMOTE_FL_LOG_CHAT)) {
+		RA_Send(CMD_CHAT, "%d\\%s", clientnum - 1, gi.args()+1);
+	}*/
+
+    /*
+	if (Q_stricmp(cmd, "players") == 0) {}
+	//else if (Q_stricmp(cmd, "say") == 0) {}
+	//else if (Q_stricmp(cmd, "say_team") == 0) {}
+	else if (Q_stricmp(cmd, "score") == 0) {}
+	else if (Q_stricmp(cmd, "help") == 0) {}
+	else if (Q_stricmp(cmd, "use") == 0) {}
+	else if (Q_stricmp(cmd, "drop") == 0) {}
+	else if (Q_stricmp(cmd, "give") == 0) {}
+	else if (Q_stricmp(cmd, "god") == 0) {}
+	else if (Q_stricmp(cmd, "notarget") == 0) {}
+	else if (Q_stricmp(cmd, "noclip") == 0) {}
+	else if (Q_stricmp(cmd, "inven") == 0) {}
+	else if (Q_stricmp(cmd, "invnext") == 0) {}
+	else if (Q_stricmp(cmd, "invprev") == 0) {}
+	else if (Q_stricmp(cmd, "invnextw") == 0) {}
+	else if (Q_stricmp(cmd, "invprevw") == 0) {}
+	else if (Q_stricmp(cmd, "invnextp") == 0) {}
+	else if (Q_stricmp(cmd, "invprevp") == 0) {}
+	else if (Q_stricmp(cmd, "invuse") == 0) {}
+	else if (Q_stricmp(cmd, "invdrop") == 0) {}
+	else if (Q_stricmp(cmd, "weapprev") == 0) {}
+	else if (Q_stricmp(cmd, "weapnext") == 0) {}
+	else if (Q_stricmp(cmd, "weaplast") == 0) {}
+	else if (Q_stricmp(cmd, "kill") == 0) {}
+	else if (Q_stricmp(cmd, "putaway") == 0) {}
+	else if (Q_stricmp(cmd, "wave") == 0) {}
+	else if (Q_stricmp(cmd, "playerlist") == 0) {}
+	else {
+		if (remote.flags & REMOTE_FL_LOG_CHAT) {
+			RA_Send(CMD_CHAT, "%d\\%s", clientnum, gi.args()+1);
+		}
+
+		gi.dprintf("%s\n", cmd);
 	}
-	
+	*/
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
 }
 
@@ -3711,19 +3757,32 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 }
 
 void Cmd_Teleport_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_TELEPORT)) {
+		gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
+		return;
+	}
+
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
-	
-	//gi.dprintf("die: %d\n", ent->die);
-	//gi.dprintf("&die: %d\n", &ent->die);
-	
-	// hijack die() pointer to capture deaths
-	proxyinfo[id].die = *ent->die;
-	ent->die = &PlayerDie_Internal;
-	
-	//gi.dprintf("die: %d\n", ent->die);
-	//gi.dprintf("&die: %d\n", &ent->die);
-
-	//proxyinfo[id].die = &(dllglobals->edicts[id]).die;`
-	//dllglobals->edicts[id].die = &PlayerDie_Internal;
 }
+
+void Cmd_Invite_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
+		gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+	RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
+}
+
+void Cmd_Find_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_FIND)) {
+		gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+	RA_Send(CMD_FIND, "%d\\%s", id, gi.args());
+}
+

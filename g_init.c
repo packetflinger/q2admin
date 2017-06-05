@@ -615,9 +615,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         gi.dprintf("You have not set a server ip.  Please add the following to q2admin.txt\nserverip \"ip\" where ip matches the outgoing one of the server.\n");
     }
 
-	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send(CMD_REGISTER, "%s\\%s\\%s\\%s\\%d", mapname, maxclients->string, rconpassword->string, net_port->string, remote.flags);
-	
+    remote.maxclients = atoi(maxclients->string);
+    q2a_strcpy(remote.mapname, mapname);
+    q2a_strcpy(remote.rcon_password, rconpassword->string);
+    remote.port = atoi(net_port->string);
+    remote.next_report = 0;
+
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
@@ -1415,7 +1418,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
-	RA_Send(CMD_USERINFO, "%d\\%s", client, userinfo);
+    if (proxyinfo[client].remote_reported) {
+    	RA_Send(CMD_USERINFO, "%d\\%s", client, userinfo);
+    }
 	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1648,7 +1653,7 @@ void ClientBegin(edict_t *ent) {
         }
     }
 
-	RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
+	//RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
 	
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
     STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);

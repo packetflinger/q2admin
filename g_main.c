@@ -839,7 +839,7 @@ void G_RunFrame(void) {
 
     STARTPERFORMANCE(2);
     dllglobals->RunFrame();
-	Remote_RunFrame();
+	RA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
     copyDllInfo();
