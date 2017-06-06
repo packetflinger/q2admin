@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 
 game_import_t gi;			// server access from proxy game
-game_export_t globals;		// proxy game access from server
+game_export_t ge;		// proxy game access from server
 game_export_t *dllglobals;	// real game access from proxy game
 
 cvar_t *rcon_password;

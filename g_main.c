@@ -859,9 +859,9 @@ game_export_t *GetGameAPI(game_import_t *import) {
     gi = *import;
 
     cvar_t *gamelib;
-    gamelib = gi.cvar("gamelib", DLLNAME, 0);
+    gamelib = gi.cvar("gamelib", DLLNAME, CVAR_NOSET);
 
-
+    
     // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
     import->cprintf = cprintf_internal;
@@ -872,25 +872,25 @@ game_export_t *GetGameAPI(game_import_t *import) {
     import->unlinkentity = unlinkentity_internal;
 
 
-    globals.Init = InitGame;
-    globals.Shutdown = ShutdownGame;
-    globals.SpawnEntities = SpawnEntities;
+    ge.Init = InitGame;
+    ge.Shutdown = ShutdownGame;
+    ge.SpawnEntities = SpawnEntities;
 
-    globals.WriteGame = WriteGame;
-    globals.ReadGame = ReadGame;
-    globals.WriteLevel = WriteLevel;
-    globals.ReadLevel = ReadLevel;
+    ge.WriteGame = WriteGame;
+    ge.ReadGame = ReadGame;
+    ge.WriteLevel = WriteLevel;
+    ge.ReadLevel = ReadLevel;
 
-    globals.ClientThink = ClientThink;
-    globals.ClientConnect = ClientConnect;
-    globals.ClientUserinfoChanged = ClientUserinfoChanged;
-    globals.ClientDisconnect = ClientDisconnect;
-    globals.ClientBegin = ClientBegin;
-    globals.ClientCommand = ClientCommand;
+    ge.ClientThink = ClientThink;
+    ge.ClientConnect = ClientConnect;
+    ge.ClientUserinfoChanged = ClientUserinfoChanged;
+    ge.ClientDisconnect = ClientDisconnect;
+    ge.ClientBegin = ClientBegin;
+    ge.ClientCommand = ClientCommand;
 
-    globals.RunFrame = G_RunFrame;
+    ge.RunFrame = G_RunFrame;
 
-    globals.ServerCommand = ServerCommand;
+    ge.ServerCommand = ServerCommand;
 
     serverbindip = gi.cvar("ip", "", 0);
     port = gi.cvar("port", "", 0);
@@ -994,7 +994,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
         if (hdll == NULL) {
             gi.dprintf("Unable to load DLL %s.\n", dllname);
-            return &globals;
+            return &ge;
         } else {
             gi.dprintf("Unable to load DLL %s, loading baseq2 DLL.\n", dllname);
         }
@@ -1014,7 +1014,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 #endif
 
         gi.dprintf("No \"GetGameApi\" entry in DLL %s.\n", dllname);
-        return &globals;
+        return &ge;
     }
 
     gi.dprintf("Loaded forward game library: %s\n", dllname);
@@ -1027,5 +1027,5 @@ game_export_t *GetGameAPI(game_import_t *import) {
         logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);
     }
 
-    return &globals;
+    return &ge;
 }
