@@ -1378,22 +1378,12 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     char *cp;
     int clienti = lastClientCmd;
 
-    // convert to string
     va_start(arglist, fmt);
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
-	
+
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
-        return;
-    }
-
-    cp = q2a_strstr(cbuffer, "swpplay ");
-    if (cp) {
-        // found a play_team command, play sound at client console instead.
-        //r1ch 2005-01-26 fix fucking huge security hole BEGIN
-        //stuffcmd(ent, cp + 3);
-        //r1ch 2005-01-26 fix fucking huge security hole END
         return;
     }
 
@@ -1448,10 +1438,11 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         }
     }
 
-    RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    if (ent == NULL) {
+    	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);
-
 
     if (printlevel == PRINT_CHAT && clienti != -1 && ent == NULL && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
         if (checkForFlood(clienti)) {
@@ -1469,8 +1460,6 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     va_start(arglist, fmt);
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
-
-	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -1520,6 +1509,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
         }
     }
 
+    RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
     gi.bprintf(printlevel, "%s", cbuffer);
 
     if (printlevel == PRINT_CHAT && clienti != -1 && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {

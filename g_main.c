@@ -118,12 +118,6 @@ void ShutdownGame(void) {
     }
 }
 
-extern cvar_t *remote_enabled;
-extern cvar_t *remote_server;
-extern cvar_t *remote_port;
-extern cvar_t *remote_key;
-
-
 void G_RunFrame(void) {
     unsigned int j, required_cmdlist;
 
@@ -154,7 +148,6 @@ void G_RunFrame(void) {
     ltime = lframenum * FRAMETIME;
 
     if (serverinfoenable && (lframenum > 10)) {
-        //    sprintf(buffer, "logfile 2;set Bot \"No Bots\" s\n");
         sprintf(buffer, "set Q2Admin \"" Q2ADMINVERSION "\" s\n");
         gi.AddCommandString(buffer);
         serverinfoenable = 0;
@@ -862,13 +855,14 @@ game_export_t *GetGameAPI(game_import_t *import) {
     int loadtype;
 #endif
 
-    unsigned int i; // UPDATE
     dllloaded = FALSE;
     gi = *import;
 
     cvar_t *gamelib;
     gamelib = gi.cvar("gamelib", DLLNAME, 0);
 
+
+    // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
     import->cprintf = cprintf_internal;
     import->dprintf = dprintf_internal;
@@ -876,6 +870,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
     //import->Pmove = Pmove_internal;
     import->linkentity = linkentity_internal;
     import->unlinkentity = unlinkentity_internal;
+
 
     globals.Init = InitGame;
     globals.Shutdown = ShutdownGame;
@@ -916,6 +911,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
         q2a_strcpy(moddir, "baseq2");
     }
 
+    unsigned int i;
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         private_commands[i].command[0] = 0;
     }
@@ -946,7 +942,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
     readCfgFiles();
 
     if (q2adminrunmode) {
-        //loadLogList();
+        loadLogList();
     }
 
     // setup zbot test strings
@@ -1022,10 +1018,10 @@ game_export_t *GetGameAPI(game_import_t *import) {
     }
 
     gi.dprintf("Loaded forward game library: %s\n", dllname);
+
     dllglobals = (*getapi)(import);
     dllloaded = TRUE;
     copyDllInfo();
-    import->cprintf = gi.cprintf;
 
     if (q2adminrunmode) {
         logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);
