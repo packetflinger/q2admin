@@ -228,7 +228,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientThink(ent, ucmd);
+        ge_mod->ClientThink(ent, ucmd);
         copyDllInfo();
         return;
     }
@@ -343,7 +343,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
 
         STARTPERFORMANCE(2);
-        dllglobals->ClientThink(ent, ucmd);
+        ge_mod->ClientThink(ent, ucmd);
         STOPPERFORMANCE_2(2, "mod->ClientThink", 0, NULL);
 
         copyDllInfo();

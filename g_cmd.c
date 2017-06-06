@@ -3072,7 +3072,7 @@ void ClientCommand(edict_t *ent) {
 
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientCommand(ent);
+        ge_mod->ClientCommand(ent);
         copyDllInfo();
         return;
     }
@@ -3110,7 +3110,7 @@ void ClientCommand(edict_t *ent) {
     if (doClientCommand(ent, clientnum, &checkforfloodafter)) {
         if (!(proxyinfo[clientnum].clientcommand & BANCHECK)) {
             STARTPERFORMANCE(2);
-            dllglobals->ClientCommand(ent);
+            ge_mod->ClientCommand(ent);
             STOPPERFORMANCE(2, "mod->ClientCommand", 0, NULL);
 
             copyDllInfo();
@@ -3158,7 +3158,7 @@ void ServerCommand(void) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ServerCommand();
+        ge_mod->ServerCommand();
         copyDllInfo();
         return;
     }
@@ -3167,7 +3167,7 @@ void ServerCommand(void) {
 
     if (doServerCommand()) {
         STARTPERFORMANCE(2);
-        dllglobals->ServerCommand();
+        ge_mod->ServerCommand();
         STOPPERFORMANCE(2, "mod->ServerCommand", 0, NULL);
 
         copyDllInfo();

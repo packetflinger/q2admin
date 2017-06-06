@@ -99,7 +99,7 @@ void ShutdownGame(void) {
 	
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
-    dllglobals->Shutdown();
+    ge_mod->Shutdown();
 
     if (q2adminrunmode) {
         STOPPERFORMANCE(2, "mod->ShutdownGame", 0, NULL);
@@ -137,7 +137,7 @@ void G_RunFrame(void) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->RunFrame();
+        ge_mod->RunFrame();
         copyDllInfo();
         return;
     }
@@ -187,7 +187,7 @@ void G_RunFrame(void) {
     }
 
     if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
-        dllglobals->RunFrame();
+        ge_mod->RunFrame();
         copyDllInfo();
         return;
     }
@@ -831,7 +831,7 @@ void G_RunFrame(void) {
     checkOnVoting();
 
     STARTPERFORMANCE(2);
-    dllglobals->RunFrame();
+    ge_mod->RunFrame();
 	RA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
@@ -1019,7 +1019,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
     gi.dprintf("Loaded forward game library: %s\n", dllname);
 
-    dllglobals = (*getapi)(import);
+    ge_mod = (*getapi)(import);
     dllloaded = TRUE;
     copyDllInfo();
 

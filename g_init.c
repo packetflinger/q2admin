@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 game_import_t gi;			// server access from proxy game
 game_export_t ge;		// proxy game access from server
-game_export_t *dllglobals;	// real game access from proxy game
+game_export_t *ge_mod;	// real game access from proxy game
 
 cvar_t *rcon_password;
 cvar_t *gamedir;
@@ -327,7 +327,7 @@ void InitGame(void) {
     }
 
     if (q2adminrunmode == 0) {
-        dllglobals->Init();
+        ge_mod->Init();
         copyDllInfo();
         return;
     }
@@ -337,7 +337,7 @@ void InitGame(void) {
 	
 	/* Be carefull with all functions called from this one (like dprintf_internal) 
 	to not use proxyinfo pointer because it's not initialized yet. -Harven */
-    dllglobals->Init(); 
+    ge_mod->Init(); 
 	
     STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
 
@@ -441,7 +441,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->SpawnEntities(mapname, backupentities, spawnpoint);
+        ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
         copyDllInfo();
         return;
     }
@@ -587,7 +587,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
     STARTPERFORMANCE(2);
-    dllglobals->SpawnEntities(mapname, backupentities, spawnpoint);
+    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
     copyDllInfo();
@@ -762,7 +762,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     if (!dllloaded) return FALSE;
 
     if (q2adminrunmode == 0) {
-        ret = dllglobals->ClientConnect(ent, userinfo);
+        ret = ge_mod->ClientConnect(ent, userinfo);
         copyDllInfo();
         return ret;
     }
@@ -1028,7 +1028,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
         if (doConnect) {
             STARTPERFORMANCE(2);
-            ret = dllglobals->ClientConnect(ent, userinfo);
+            ret = ge_mod->ClientConnect(ent, userinfo);
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
@@ -1235,7 +1235,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientUserinfoChanged(ent, userinfo);
+        ge_mod->ClientUserinfoChanged(ent, userinfo);
         copyDllInfo();
         return;
     }
@@ -1273,7 +1273,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     if (passon && !(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientUserinfoChanged(ent, userinfo);
+        ge_mod->ClientUserinfoChanged(ent, userinfo);
         STOPPERFORMANCE(2, "mod->ClientUserinfoChanged", client, ent);
 
         copyDllInfo();
@@ -1434,7 +1434,7 @@ void ClientDisconnect(edict_t *ent) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientDisconnect(ent);
+        ge_mod->ClientDisconnect(ent);
         copyDllInfo();
         return;
     }
@@ -1449,7 +1449,7 @@ void ClientDisconnect(edict_t *ent) {
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientDisconnect(ent);
+        ge_mod->ClientDisconnect(ent);
         STOPPERFORMANCE(2, "mod->ClientDisconnect", client, ent);
 
         copyDllInfo();
@@ -1538,7 +1538,7 @@ void ClientBegin(edict_t *ent) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientBegin(ent);
+        ge_mod->ClientBegin(ent);
         copyDllInfo();
         return;
     }
@@ -1549,7 +1549,7 @@ void ClientBegin(edict_t *ent) {
 
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientBegin(ent);
+        ge_mod->ClientBegin(ent);
         STOPPERFORMANCE(2, "mod->ClientBegin", client, ent);
 
         copyDllInfo();
@@ -1665,14 +1665,14 @@ void WriteGame(char *filename, qboolean autosave) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->WriteGame(filename, autosave);
+        ge_mod->WriteGame(filename, autosave);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->WriteGame(filename, autosave);
+    ge_mod->WriteGame(filename, autosave);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
@@ -1684,14 +1684,14 @@ void ReadGame(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ReadGame(filename);
+        ge_mod->ReadGame(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->ReadGame(filename);
+    ge_mod->ReadGame(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
@@ -1703,14 +1703,14 @@ void WriteLevel(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->WriteLevel(filename);
+        ge_mod->WriteLevel(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->WriteLevel(filename);
+    ge_mod->WriteLevel(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
@@ -1722,14 +1722,14 @@ void ReadLevel(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ReadLevel(filename);
+        ge_mod->ReadLevel(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->ReadLevel(filename);
+    ge_mod->ReadLevel(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);

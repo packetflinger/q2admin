@@ -194,11 +194,11 @@ qboolean Info_Validate(char *s) {
 }
 
 void copyDllInfo(void) {
-    ge.apiversion = dllglobals->apiversion;
-    ge.edict_size = dllglobals->edict_size;
-    ge.edicts = dllglobals->edicts;
-    ge.num_edicts = dllglobals->num_edicts;
-    ge.max_edicts = dllglobals->max_edicts;
+    ge.apiversion = ge_mod->apiversion;
+    ge.edict_size = ge_mod->edict_size;
+    ge.edicts = ge_mod->edicts;
+    ge.num_edicts = ge_mod->num_edicts;
+    ge.max_edicts = ge_mod->max_edicts;
 }
 
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {

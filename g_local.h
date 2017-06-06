@@ -1133,7 +1133,7 @@ typedef struct {
 
 extern game_import_t gi;			// server access from inside game lib
 extern game_export_t ge;		// game access from inside server
-extern game_export_t *dllglobals;	// real game access from inside proxy game lib
+extern game_export_t *ge_mod;	// real game access from inside proxy game lib
 extern cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
 
 extern char dllname[256];
