@@ -1603,6 +1603,14 @@ void AddCommandString_internal(char *text) {
             q2a_strcat(buffer, "-pre.cfg\n");
             gi.AddCommandString(buffer);
         }
+
+        // force all clients to report if map changes
+        uint32_t i;
+        for (i=0; i<remote.maxclients; i++) {
+        	if (proxyinfo[i].inuse) {
+        		proxyinfo[i].remote_reported = 0;
+        	}
+        }
     }
 
     gi.AddCommandString(text);
@@ -3114,47 +3122,6 @@ void ClientCommand(edict_t *ent) {
     }
     lastClientCmd = -1;
 	
-	// it's a chat msg, send it to remote admin server
-	/*if (g_strcmp0("say", cmd) == 0 && (remote.flags & REMOTE_FL_LOG_CHAT)) {
-		RA_Send(CMD_CHAT, "%d\\%s", clientnum - 1, gi.args()+1);
-	}*/
-
-    /*
-	if (Q_stricmp(cmd, "players") == 0) {}
-	//else if (Q_stricmp(cmd, "say") == 0) {}
-	//else if (Q_stricmp(cmd, "say_team") == 0) {}
-	else if (Q_stricmp(cmd, "score") == 0) {}
-	else if (Q_stricmp(cmd, "help") == 0) {}
-	else if (Q_stricmp(cmd, "use") == 0) {}
-	else if (Q_stricmp(cmd, "drop") == 0) {}
-	else if (Q_stricmp(cmd, "give") == 0) {}
-	else if (Q_stricmp(cmd, "god") == 0) {}
-	else if (Q_stricmp(cmd, "notarget") == 0) {}
-	else if (Q_stricmp(cmd, "noclip") == 0) {}
-	else if (Q_stricmp(cmd, "inven") == 0) {}
-	else if (Q_stricmp(cmd, "invnext") == 0) {}
-	else if (Q_stricmp(cmd, "invprev") == 0) {}
-	else if (Q_stricmp(cmd, "invnextw") == 0) {}
-	else if (Q_stricmp(cmd, "invprevw") == 0) {}
-	else if (Q_stricmp(cmd, "invnextp") == 0) {}
-	else if (Q_stricmp(cmd, "invprevp") == 0) {}
-	else if (Q_stricmp(cmd, "invuse") == 0) {}
-	else if (Q_stricmp(cmd, "invdrop") == 0) {}
-	else if (Q_stricmp(cmd, "weapprev") == 0) {}
-	else if (Q_stricmp(cmd, "weapnext") == 0) {}
-	else if (Q_stricmp(cmd, "weaplast") == 0) {}
-	else if (Q_stricmp(cmd, "kill") == 0) {}
-	else if (Q_stricmp(cmd, "putaway") == 0) {}
-	else if (Q_stricmp(cmd, "wave") == 0) {}
-	else if (Q_stricmp(cmd, "playerlist") == 0) {}
-	else {
-		if (remote.flags & REMOTE_FL_LOG_CHAT) {
-			RA_Send(CMD_CHAT, "%d\\%s", clientnum, gi.args()+1);
-		}
-
-		gi.dprintf("%s\n", cmd);
-	}
-	*/
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
 }
 

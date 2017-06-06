@@ -867,7 +867,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
     import->cprintf = cprintf_internal;
     import->dprintf = dprintf_internal;
     import->AddCommandString = AddCommandString_internal;
-    //import->Pmove = Pmove_internal;
+    import->Pmove = Pmove_internal;
     import->linkentity = linkentity_internal;
     import->unlinkentity = unlinkentity_internal;
 
