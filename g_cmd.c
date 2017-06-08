@@ -46,6 +46,9 @@ void cvarsetRun(int startarg, edict_t *ent, int client);
 void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
 void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
 void lockDownServerRun(int startarg, edict_t *ent, int client);
+void Cmd_Remote_Status_f(edict_t *ent);
+void remoteOnlineRun(int startarg, edict_t *ent, int client);
+void remoteOfflineRun(int startarg, edict_t *ent, int client);
 
 #define ZBOTCOMMANDSSIZE (sizeof(zbotCommands) / sizeof(zbotCommands[0]))
 
@@ -861,6 +864,20 @@ zbotcmd_t zbotCommands[] ={
         NULL,
         reloadVoteFileRun,
     },
+	{
+		"ra_offline",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteOfflineRun,
+	},
+	{
+		"ra_online",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteOnlineRun,
+	},
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -3082,18 +3099,27 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	if (g_strcmp0(cmd, "!teleport") == 0) {
+	if (g_strcmp0(cmd, remote_cmd_teleport->string) == 0) {
 		Cmd_Teleport_f(ent);
 		return;
 	}
 	
-	if (g_strcmp0(cmd, "!invite") == 0) {
+	if (g_strcmp0(cmd, remote_cmd_invite->string) == 0) {
 		Cmd_Invite_f(ent);
 		return;
 	}
 
-	if (g_strcmp0(cmd, "!find") == 0) {
+	if (g_strcmp0(cmd, remote_cmd_seen->string) == 0) {
 		Cmd_Find_f(ent);
+		return;
+	}
+
+	if (g_strcmp0(cmd, remote_cmd_whois->string) == 0) {
+		return;
+	}
+
+	if (g_strcmp0(cmd, "!rastatus") == 0) {
+		Cmd_Remote_Status_f(ent);
 		return;
 	}
 
@@ -3723,6 +3749,14 @@ void Cmd_Teleport_f(edict_t *ent) {
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
 }
 
+void remoteOfflineRun(int startarg, edict_t *ent, int client) {
+	remote.online = FALSE;
+}
+
+void remoteOnlineRun(int startarg, edict_t *ent, int client) {
+	remote.online = TRUE;
+}
+
 void Cmd_Invite_f(edict_t *ent) {
 	if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
 		gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
@@ -3731,6 +3765,17 @@ void Cmd_Invite_f(edict_t *ent) {
 
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
+}
+
+void Cmd_Remote_Status_f(edict_t *ent) {
+	switch (remote.online) {
+	case FALSE:
+		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
+		break;
+	case TRUE:
+		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
+		break;
+	}
 }
 
 void Cmd_Find_f(edict_t *ent) {

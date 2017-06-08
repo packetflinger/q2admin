@@ -22,9 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-game_import_t gi;			// server access from proxy game
-game_export_t ge;		// proxy game access from server
-game_export_t *ge_mod;	// real game access from proxy game
+game_import_t gi;		// server access from q2admin
+game_export_t ge;		// q2admin access from server
+game_export_t *ge_mod;	// game access from q2admin
 
 cvar_t *rcon_password;
 cvar_t *gamedir;
@@ -417,7 +417,6 @@ void InitGame(void) {
 
     Read_Admin_cfg();
 
-    //whois shit
     if (whois_active) {
         whois_details = gi.TagMalloc(whois_active * sizeof (user_details), TAG_GAME);
         memset(whois_details, 0, whois_active * sizeof (user_details));

@@ -5,12 +5,16 @@
 remote_t remote;
 
 // remote admin specific cvars
-cvar_t		*remote_enabled;
-cvar_t		*remote_server;
-cvar_t		*remote_port;
-cvar_t		*remote_key;
-cvar_t		*remote_flags;
-cvar_t		*net_port;
+cvar_t	*remote_enabled;
+cvar_t	*remote_server;
+cvar_t	*remote_port;
+cvar_t	*remote_key;
+cvar_t	*remote_flags;
+cvar_t	*remote_cmd_teleport;
+cvar_t	*remote_cmd_invite;
+cvar_t	*remote_cmd_seen;
+cvar_t	*remote_cmd_whois;
+cvar_t	*net_port;
 
 
 void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
@@ -36,7 +40,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	if (remote.flags & REMOTE_FL_DEBUG) {
 		gi.dprintf("RA - Sending: %s\n", final);
 	}
-	
+
 	int r = sendto(
 		remote.socket, 
 		final, 
@@ -56,18 +60,23 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 
 void RA_Init() {
 	
+	memset(&remote, 0, sizeof(remote));
+
 	remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
 	remote_server = gi.cvar("remote_server", "packetflinger.com", CVAR_LATCH);
 	remote_port = gi.cvar("remote_port", "9999", CVAR_LATCH);
 	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
 	remote_flags = gi.cvar("remote_flags", "28", CVAR_LATCH | CVAR_SERVERINFO);
+	remote_cmd_teleport = gi.cvar("remote_cmd_teleport", "!teleport", CVAR_LATCH);
+	remote_cmd_invite = gi.cvar("remote_cmd_invite", "!invite", CVAR_LATCH);
+	remote_cmd_seen = gi.cvar("remote_cmd_seen", "!seen", CVAR_LATCH);
+	remote_cmd_whois = gi.cvar("remote_cmd_teleport", "!whois", CVAR_LATCH);
+
 	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;
-
-	remote.enabled = 1;
 	
 	gi.dprintf("\nRA: Remote Admin Init\n");
 	
@@ -105,18 +114,23 @@ void RA_Init() {
 
 	// remove later - set debug while under development
 	remote.flags |= REMOTE_FL_DEBUG;
+
+	remote.enabled = 1;
 }
 
 
 void RA_RunFrame() {
 	
+	if (!remote.enabled) {
+		return;
+	}
+
 	uint8_t i;
 
 	// report if necessary
 	if (remote.next_report <= remote.frame_number) {
 		RA_Send(CMD_REGISTER, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
 		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
-		gi.dprintf("Frame: %d\n", remote.frame_number);
 	}
 
 	for (i=0; i<=remote.maxclients; i++) {
@@ -138,7 +152,6 @@ void RA_RunFrame() {
 	remote.frame_number++;
 }
 
-// hijack the real player_die function to get frag info to send
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
@@ -146,7 +159,6 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	if (self->deadflag != DEAD_DEAD) {	
 		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
 		
-		// another player killed us
 		if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
 			RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid, 
 				attacker->client->pers.weapon->classname
@@ -154,6 +166,5 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 		}
 	}
 	
-	// call the real die()
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }

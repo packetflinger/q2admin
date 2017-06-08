@@ -20,8 +20,11 @@ extern cvar_t		*remote_server;
 extern cvar_t		*remote_port;
 extern cvar_t		*remote_key;
 extern cvar_t		*remote_flags;
+extern cvar_t		*remote_cmd_teleport;
+extern cvar_t		*remote_cmd_invite;
+extern cvar_t		*remote_cmd_seen;
+extern cvar_t		*remote_cmd_whois;
 extern cvar_t		*net_port;
-
 
 // flags
 #define REMOTE_FL_CMD_TELEPORT		1
@@ -32,16 +35,17 @@ extern cvar_t		*net_port;
 
 
 typedef struct {
-	uint8_t 	enabled;
-	uint32_t 	socket;
+	uint8_t 		enabled;
+	uint32_t 		socket;
 	struct 	addrinfo *addr;
-	uint32_t	flags;
-	uint32_t	frame_number;
-	char		mapname[32];
-	uint32_t	next_report;
-	char		rcon_password[32];
-	uint8_t		maxclients;
-	uint16_t	port;
+	uint32_t		flags;
+	uint32_t		frame_number;
+	char			mapname[32];
+	uint32_t		next_report;
+	char			rcon_password[32];
+	uint8_t			maxclients;
+	uint16_t		port;
+	qboolean		online;
 } remote_t;
 
 
