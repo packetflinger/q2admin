@@ -38,7 +38,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
 	
 	if (remote.flags & REMOTE_FL_DEBUG) {
-		gi.dprintf("RA - Sending: %s\n", final);
+		gi.dprintf("[RA] Sending: %s\n", final);
 	}
 
 	int r = sendto(
@@ -51,7 +51,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	);
 	
 	if (r == -1) {
-		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
+		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
 	
 	g_free(final);
@@ -78,7 +78,7 @@ void RA_Init() {
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;
 	
-	gi.dprintf("\nRA: Remote Admin Init\n");
+	gi.dprintf("\Remote Admin [RA] Init...\n");
 	
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
@@ -89,7 +89,7 @@ void RA_Init() {
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
 	
-	gi.dprintf("RA: looking up %s... ", remote_server->string);
+	gi.dprintf("[RA] looking up %s... ", remote_server->string);
 	int err = getaddrinfo(remote_server->string, remote_port->string, &hints, &res);
 	if (err != 0) {
 		gi.dprintf("error, disabling\n");
@@ -127,15 +127,22 @@ void RA_RunFrame() {
 
 	uint8_t i;
 
-	// report if necessary
+	// report server if necessary
 	if (remote.next_report <= remote.frame_number) {
-		RA_Send(CMD_REGISTER, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
+		RA_Send(CMD_SHEARTBEAT, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
 		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
 	}
+
 
 	for (i=0; i<=remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
 
+			if (proxyinfo[i].next_report <= remote.frame_number) {
+				RA_Send(CMD_PHEARTBEAT, "%d\\%s", i, proxyinfo[i].userinfo);
+				proxyinfo[i].next_report = remote.frame_number + SECS_TO_FRAMES(60);
+			}
+
+			/*
 			if (!proxyinfo[i].remote_reported) {
 				RA_Send(CMD_CONNECT, "%d\\%s", i, proxyinfo[i].userinfo);
 				proxyinfo[i].remote_reported = 1;
@@ -146,11 +153,13 @@ void RA_RunFrame() {
 				proxyinfo[i].die = *proxyinfo[i].ent->die;
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
+			*/
 		}
 	}
 
 	remote.frame_number++;
 }
+
 
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
@@ -159,10 +168,14 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	if (self->deadflag != DEAD_DEAD) {	
 		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
 		
-		if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
-			RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid, 
+		// crater, drown (water, acid, lava)
+		if (g_strcmp0(attacker->classname, "worldspawn") == 0) {
+			//RA_Send(CMD_FRAG,"%d\\%d\\worldspawn", id, aid);
+		} else if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
+			//gi.dprintf("Attacker: %s\n", attacker->client->pers.netname);
+			/*RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid,
 				attacker->client->pers.weapon->classname
-			);
+			);*/
 		}
 	}
 	

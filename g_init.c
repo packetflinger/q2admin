@@ -1417,9 +1417,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
-    if (proxyinfo[client].remote_reported) {
-    	RA_Send(CMD_USERINFO, "%d\\%s", client, userinfo);
-    }
+    proxyinfo[client].next_report = 0;
 	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1444,7 +1442,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
-	RA_Send(CMD_DISCONNECT, "%d", client);
+	RA_Send(CMD_PDISCONNECT, "%d", client);
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);

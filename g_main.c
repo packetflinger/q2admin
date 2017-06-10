@@ -94,7 +94,7 @@ void ShutdownGame(void) {
     }
 	
 	gi.dprintf("RA: Unregistering with remote admin server\n\n");
-	RA_Send(CMD_UNREGISTER, "");
+	RA_Send(CMD_SDISCONNECT, "");
 	freeaddrinfo(remote.addr);
 	
     // reset the password just in case something has gone wrong...

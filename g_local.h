@@ -946,6 +946,7 @@ typedef struct {
 	void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 	edict_t *ent;	// the actual entity
 	int remote_reported;
+	int next_report;
 } proxyinfo_t;
 
 typedef struct {

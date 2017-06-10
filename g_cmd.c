@@ -3747,6 +3747,8 @@ void Cmd_Teleport_f(edict_t *ent) {
 
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
+
+	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remote_cmd_teleport->string);
 }
 
 void remoteOfflineRun(int startarg, edict_t *ent, int client) {
@@ -3785,6 +3787,6 @@ void Cmd_Find_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	RA_Send(CMD_FIND, "%d\\%s", id, gi.args());
+	RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
 }
 
