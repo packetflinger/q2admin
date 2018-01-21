@@ -36,14 +36,15 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
     }
 	
 	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
+	gchar *encoded = g_base64_encode(final, strlen(final));
 	
 	if (remote.flags & REMOTE_FL_DEBUG) {
-		gi.dprintf("[RA] Sending: %s\n", final);
+		gi.dprintf("[RA] Sending: %s\n", encoded);
 	}
 
 	int r = sendto(
 		remote.socket, 
-		final, 
+		encoded,
 		strlen(final)+1, 
 		MSG_DONTWAIT, 
 		remote.addr->ai_addr, 
@@ -55,6 +56,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	}
 	
 	g_free(final);
+	g_free(encoded);
 }
 
 

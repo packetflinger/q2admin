@@ -69,6 +69,7 @@ typedef enum {
 	true
 } qboolean;
 
+#define lengthof(a) (sizeof(a) / sizeof(a[0]))
 
 #ifndef NULL
 #define NULL ((void *)0)

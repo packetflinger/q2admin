@@ -50,8 +50,6 @@ void Cmd_Remote_Status_f(edict_t *ent);
 void remoteOnlineRun(int startarg, edict_t *ent, int client);
 void remoteOfflineRun(int startarg, edict_t *ent, int client);
 
-#define ZBOTCOMMANDSSIZE (sizeof(zbotCommands) / sizeof(zbotCommands[0]))
-
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
     {
@@ -132,7 +130,7 @@ block_model block_models[MAX_BLOCK_MODELS] ={
     }
 };
 
-zbotcmd_t zbotCommands[] ={
+q2acmd_t q2aCommands[] ={
     {
         "adminpassword",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
@@ -1655,32 +1653,32 @@ char *getArgs(void) {
 
 void processCommand(int cmdidx, int startarg, edict_t *ent) {
     if (gi.argc() > startarg) {
-        switch (zbotCommands[cmdidx].cmdtype) {
+        switch (q2aCommands[cmdidx].cmdtype) {
             case CMDTYPE_LOGICAL:
-                *((qboolean *) zbotCommands[cmdidx].datapoint) = getLogicalValue(gi.argv(startarg));
+                *((qboolean *) q2aCommands[cmdidx].datapoint) = getLogicalValue(gi.argv(startarg));
                 break;
 
             case CMDTYPE_NUMBER:
-                *((int *) zbotCommands[cmdidx].datapoint) = q2a_atoi(gi.argv(startarg));
+                *((int *) q2aCommands[cmdidx].datapoint) = q2a_atoi(gi.argv(startarg));
                 break;
 
             case CMDTYPE_STRING:
-                processstring(zbotCommands[cmdidx].datapoint, gi.argv(startarg), 255, 0);
+                processstring(q2aCommands[cmdidx].datapoint, gi.argv(startarg), 255, 0);
                 break;
         }
     }
 
-    switch (zbotCommands[cmdidx].cmdtype) {
+    switch (q2aCommands[cmdidx].cmdtype) {
         case CMDTYPE_LOGICAL:
-            gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", zbotCommands[cmdidx].cmdname, *((qboolean *) zbotCommands[cmdidx].datapoint) ? "Yes" : "No");
+            gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, *((qboolean *) q2aCommands[cmdidx].datapoint) ? "Yes" : "No");
             break;
 
         case CMDTYPE_NUMBER:
-            gi.cprintf(ent, PRINT_HIGH, "%s = %d\n", zbotCommands[cmdidx].cmdname, *((int *) zbotCommands[cmdidx].datapoint));
+            gi.cprintf(ent, PRINT_HIGH, "%s = %d\n", q2aCommands[cmdidx].cmdname, *((int *) q2aCommands[cmdidx].datapoint));
             break;
 
         case CMDTYPE_STRING:
-            gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", zbotCommands[cmdidx].cmdname, (char *) zbotCommands[cmdidx].datapoint);
+            gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, (char *) q2aCommands[cmdidx].datapoint);
             break;
     }
 }
@@ -1703,21 +1701,21 @@ qboolean readCfgFile(char *cfgfilename) {
             if (breakLine(cp, buff1, buff2, sizeof (buff2) - 1)) {
                 unsigned int i;
 
-                for (i = 0; i < ZBOTCOMMANDSSIZE; i++) {
-                    if ((zbotCommands[i].cmdwhere & CMDWHERE_CFGFILE) && startContains(zbotCommands[i].cmdname, buff1)) {
-                        if (zbotCommands[i].initfunc) {
-                            (*zbotCommands[i].initfunc)(buff2);
-                        } else switch (zbotCommands[i].cmdtype) {
+                for (i = 0; i < lengthof(q2aCommands); i++) {
+                    if ((q2aCommands[i].cmdwhere & CMDWHERE_CFGFILE) && startContains(q2aCommands[i].cmdname, buff1)) {
+                        if (q2aCommands[i].initfunc) {
+                            (*q2aCommands[i].initfunc)(buff2);
+                        } else switch (q2aCommands[i].cmdtype) {
                                 case CMDTYPE_LOGICAL:
-                                    *((qboolean *) zbotCommands[i].datapoint) = getLogicalValue(buff2);
+                                    *((qboolean *) q2aCommands[i].datapoint) = getLogicalValue(buff2);
                                     break;
 
                                 case CMDTYPE_NUMBER:
-                                    *((int *) zbotCommands[i].datapoint) = q2a_atoi(buff2);
+                                    *((int *) q2aCommands[i].datapoint) = q2a_atoi(buff2);
                                     break;
 
                                 case CMDTYPE_STRING:
-                                    q2a_strcpy(zbotCommands[i].datapoint, buff2);
+                                    q2a_strcpy(q2aCommands[i].datapoint, buff2);
                                     break;
                             }
 
@@ -2895,10 +2893,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 return FALSE;
             }
         } else if (adminpassword[0] && proxyinfo[client].admin) {
-            for (i = 0; i < ZBOTCOMMANDSSIZE; i++) {
-                if ((zbotCommands[i].cmdwhere & CMDWHERE_CLIENTCONSOLE) && startContains(zbotCommands[i].cmdname, cmd + 1)) {
-                    if (zbotCommands[i].runfunc) {
-                        (*zbotCommands[i].runfunc)(1, ent, client);
+            for (i = 0; i < lengthof(q2aCommands); i++) {
+                if ((q2aCommands[i].cmdwhere & CMDWHERE_CLIENTCONSOLE) && startContains(q2aCommands[i].cmdname, cmd + 1)) {
+                    if (q2aCommands[i].runfunc) {
+                        (*q2aCommands[i].runfunc)(1, ent, client);
                     } else {
                         processCommand(i, 1, ent);
                     }
@@ -3158,10 +3156,10 @@ qboolean doServerCommand(void) {
     cmd = gi.argv(1);
 
     if (*cmd == '!') {
-        for (i = 0; i < ZBOTCOMMANDSSIZE; i++) {
-            if ((zbotCommands[i].cmdwhere & CMDWHERE_SERVERCONSOLE) && startContains(zbotCommands[i].cmdname, cmd + 1)) {
-                if (zbotCommands[i].runfunc) {
-                    (*zbotCommands[i].runfunc)(2, NULL, -1);
+        for (i = 0; i < lengthof(q2aCommands); i++) {
+            if ((q2aCommands[i].cmdwhere & CMDWHERE_SERVERCONSOLE) && startContains(q2aCommands[i].cmdname, cmd + 1)) {
+                if (q2aCommands[i].runfunc) {
+                    (*q2aCommands[i].runfunc)(2, NULL, -1);
                 } else {
                     processCommand(i, 2, NULL);
                 }

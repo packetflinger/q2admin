@@ -1130,7 +1130,7 @@ typedef struct {
     void *datapoint;
     CMDRUNFUNC *runfunc;
     CMDINITFUNC *initfunc;
-} zbotcmd_t;
+} q2acmd_t;
 
 extern game_import_t gi;			// server access from inside game lib
 extern game_export_t ge;		// game access from inside server
@@ -1281,7 +1281,7 @@ extern char *currentBanMsg;
 extern proxyinfo_t *proxyinfo;
 extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
-extern zbotcmd_t zbotCommands[];
+extern q2acmd_t q2aCommands[];
 
 extern int clientsidetimeout;
 extern int zbotdetectactivetimeout;
