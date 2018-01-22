@@ -49,6 +49,7 @@ void lockDownServerRun(int startarg, edict_t *ent, int client);
 void Cmd_Remote_Status_f(edict_t *ent);
 void remoteOnlineRun(int startarg, edict_t *ent, int client);
 void remoteOfflineRun(int startarg, edict_t *ent, int client);
+void remoteResetRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -877,6 +878,12 @@ q2acmd_t q2aCommands[] ={
 		remoteOnlineRun,
 	},
 	{
+		"remote_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteKey,
+	},
+	{
 		"remote_port",
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NUMBER,
@@ -923,6 +930,13 @@ q2acmd_t q2aCommands[] ={
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_STRING,
 		remoteCmdWhois,
+	},
+	{
+		"remote_reset",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteResetRun,
 	},
     {
         "resetrcon",
@@ -3803,6 +3817,10 @@ void remoteOfflineRun(int startarg, edict_t *ent, int client) {
 
 void remoteOnlineRun(int startarg, edict_t *ent, int client) {
 	remote.online = TRUE;
+}
+
+void remoteResetRun(int startarg, edict_t *ent, int client) {
+	RA_Init();
 }
 
 void Cmd_Invite_f(edict_t *ent) {

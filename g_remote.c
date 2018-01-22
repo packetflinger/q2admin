@@ -4,14 +4,6 @@
 
 remote_t remote;
 
-// remote admin specific cvars
-//cvar_t	*remote_enabled;
-cvar_t	*remote_key;
-//cvar_t	*remote_flags;
-//cvar_t	*remote_cmd_teleport;
-//cvar_t	*remote_cmd_invite;
-//cvar_t	*remote_cmd_seen;
-//cvar_t	*remote_cmd_whois;
 cvar_t	*net_port;
 
 
@@ -33,7 +25,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
         return;
     }
 	
-	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
+	gchar *final = g_strconcat(stringf("%s\\%d\\", remoteKey, cmd), string, NULL);
 	gchar *encoded = g_base64_encode(final, strlen(final));
 	
 	if (remote.flags & REMOTE_FL_DEBUG) {
@@ -62,19 +54,13 @@ void RA_Init() {
 	
 	memset(&remote, 0, sizeof(remote));
 
-	//remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
-	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
-	//remote_flags = gi.cvar("remote_flags", "28", CVAR_LATCH | CVAR_SERVERINFO);
-	//remote_cmd_teleport = gi.cvar("remote_cmd_teleport", "!teleport", CVAR_LATCH);
-	//remote_cmd_invite = gi.cvar("remote_cmd_invite", "!invite", CVAR_LATCH);
-	//remote_cmd_seen = gi.cvar("remote_cmd_seen", "!seen", CVAR_LATCH);
-	//remote_cmd_whois = gi.cvar("remote_cmd_teleport", "!whois", CVAR_LATCH);
-
 	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
-	if (!remoteEnabled)
+	if (!remoteEnabled) {
+		gi.dprintf("Remote Admin is disabled in your config file.\n");
 		return;
+	}
 	
 	gi.dprintf("\[RA] Remote Admin Init...\n");
 	
@@ -110,10 +96,6 @@ void RA_Init() {
 	remote.socket = fd;
 	remote.addr = res;
 	remote.flags = remoteFlags;
-
-	// remove later - set debug while under development
-	remote.flags |= REMOTE_FL_DEBUG;
-
 	remote.enabled = 1;
 }
 
