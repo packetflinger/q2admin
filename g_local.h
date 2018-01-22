@@ -1167,6 +1167,12 @@ extern int maximpulses;
 
 extern char remoteAddr[256];
 extern int remotePort;
+extern int remoteFlags;
+extern qboolean remoteEnabled;
+extern char remoteCmdTeleport[15];
+extern char remoteCmdInvite[15];
+extern char remoteCmdSeen[15];
+extern char remoteCmdWhois[15];
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;

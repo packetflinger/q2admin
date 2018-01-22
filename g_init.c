@@ -49,6 +49,12 @@ char gmapname[MAX_QPATH];
 
 char remoteAddr[256] = "packetflinger.com";
 int remotePort = 5555;
+int remoteFlags = 1024;
+qboolean remoteEnabled = FALSE;
+char remoteCmdTeleport[15] = "!teleport";
+char remoteCmdInvite[15] = "!invite";
+char remoteCmdSeen[15] = "!seen";
+char remoteCmdWhois[15] = "!whois";
 
 
 int USERINFOCHANGE_TIME = 60;

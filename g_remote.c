@@ -5,15 +5,13 @@
 remote_t remote;
 
 // remote admin specific cvars
-cvar_t	*remote_enabled;
-cvar_t	*remote_server;
-cvar_t	*remote_port;
+//cvar_t	*remote_enabled;
 cvar_t	*remote_key;
-cvar_t	*remote_flags;
-cvar_t	*remote_cmd_teleport;
-cvar_t	*remote_cmd_invite;
-cvar_t	*remote_cmd_seen;
-cvar_t	*remote_cmd_whois;
+//cvar_t	*remote_flags;
+//cvar_t	*remote_cmd_teleport;
+//cvar_t	*remote_cmd_invite;
+//cvar_t	*remote_cmd_seen;
+//cvar_t	*remote_cmd_whois;
 cvar_t	*net_port;
 
 
@@ -64,20 +62,18 @@ void RA_Init() {
 	
 	memset(&remote, 0, sizeof(remote));
 
-	remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
-	remote_server = gi.cvar("remote_server", "packetflinger.com", CVAR_LATCH);
-	remote_port = gi.cvar("remote_port", "9999", CVAR_LATCH);
+	//remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
 	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
-	remote_flags = gi.cvar("remote_flags", "28", CVAR_LATCH | CVAR_SERVERINFO);
-	remote_cmd_teleport = gi.cvar("remote_cmd_teleport", "!teleport", CVAR_LATCH);
-	remote_cmd_invite = gi.cvar("remote_cmd_invite", "!invite", CVAR_LATCH);
-	remote_cmd_seen = gi.cvar("remote_cmd_seen", "!seen", CVAR_LATCH);
-	remote_cmd_whois = gi.cvar("remote_cmd_teleport", "!whois", CVAR_LATCH);
+	//remote_flags = gi.cvar("remote_flags", "28", CVAR_LATCH | CVAR_SERVERINFO);
+	//remote_cmd_teleport = gi.cvar("remote_cmd_teleport", "!teleport", CVAR_LATCH);
+	//remote_cmd_invite = gi.cvar("remote_cmd_invite", "!invite", CVAR_LATCH);
+	//remote_cmd_seen = gi.cvar("remote_cmd_seen", "!seen", CVAR_LATCH);
+	//remote_cmd_whois = gi.cvar("remote_cmd_teleport", "!whois", CVAR_LATCH);
 
 	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
-	if (g_strcmp0(remote_enabled->string, "0") == 0)
+	if (!remoteEnabled)
 		return;
 	
 	gi.dprintf("\[RA] Remote Admin Init...\n");
@@ -86,7 +82,7 @@ void RA_Init() {
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 	
-	hints.ai_family         = AF_INET;   	// ipv4 only
+	hints.ai_family         = AF_INET;   	// either v6 or v4
 	hints.ai_socktype       = SOCK_DGRAM;	// UDP
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
@@ -106,14 +102,14 @@ void RA_Init() {
 	
 	int fd = socket(res->ai_family, res->ai_socktype, IPPROTO_UDP);
 	if (fd == -1) {
-		gi.dprintf("Unable to open socket to %s:%s...disabling remote admin\n", remote_server->string, remote_port->string);
+		gi.dprintf("Unable to open socket to %s:%d...disabling remote admin\n", remoteAddr, remotePort);
 		remote.enabled = 0;
 		return;
 	}
 	
 	remote.socket = fd;
 	remote.addr = res;
-	remote.flags = atoi(remote_flags->string);
+	remote.flags = remoteFlags;
 
 	// remove later - set debug while under development
 	remote.flags |= REMOTE_FL_DEBUG;

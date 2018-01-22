@@ -15,15 +15,7 @@
 #include <stdint.h>
 
 extern cvar_t		*gamelib;
-extern cvar_t		*remote_enabled;
-extern cvar_t		*remote_server;
-extern cvar_t		*remote_port;
 extern cvar_t		*remote_key;
-extern cvar_t		*remote_flags;
-extern cvar_t		*remote_cmd_teleport;
-extern cvar_t		*remote_cmd_invite;
-extern cvar_t		*remote_cmd_seen;
-extern cvar_t		*remote_cmd_whois;
 extern cvar_t		*net_port;
 
 // flags

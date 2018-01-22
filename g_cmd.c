@@ -888,6 +888,42 @@ q2acmd_t q2aCommands[] ={
 		CMDTYPE_STRING,
 		remoteAddr,
 	},
+	{
+		"remote_flags",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NUMBER,
+		&remoteFlags,
+	},
+	{
+		"remote_enabled",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_LOGICAL,
+		&remoteEnabled,
+	},
+	{
+		"remote_cmd_teleport",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdTeleport,
+	},
+	{
+		"remote_cmd_invite",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdInvite,
+	},
+	{
+		"remote_cmd_seen",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdSeen,
+	},
+	{
+		"remote_cmd_whois",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdWhois,
+	},
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -3109,22 +3145,22 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	if (g_strcmp0(cmd, remote_cmd_teleport->string) == 0) {
+	if (g_strcmp0(cmd, remoteCmdTeleport) == 0) {
 		Cmd_Teleport_f(ent);
 		return;
 	}
 	
-	if (g_strcmp0(cmd, remote_cmd_invite->string) == 0) {
+	if (g_strcmp0(cmd, remoteCmdInvite) == 0) {
 		Cmd_Invite_f(ent);
 		return;
 	}
 
-	if (g_strcmp0(cmd, remote_cmd_seen->string) == 0) {
+	if (g_strcmp0(cmd, remoteCmdSeen) == 0) {
 		Cmd_Find_f(ent);
 		return;
 	}
 
-	if (g_strcmp0(cmd, remote_cmd_whois->string) == 0) {
+	if (g_strcmp0(cmd, remoteCmdWhois) == 0) {
 		return;
 	}
 
@@ -3758,7 +3794,7 @@ void Cmd_Teleport_f(edict_t *ent) {
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
 
-	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remote_cmd_teleport->string);
+	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
 }
 
 void remoteOfflineRun(int startarg, edict_t *ent, int client) {
