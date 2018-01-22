@@ -47,6 +47,10 @@ qboolean quake2dirsupport = TRUE;
 char dllname[256];
 char gmapname[MAX_QPATH];
 
+char remoteAddr[256] = "packetflinger.com";
+int remotePort = 5555;
+
+
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
 int client_map_cfg = 6;

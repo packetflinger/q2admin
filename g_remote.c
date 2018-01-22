@@ -80,7 +80,7 @@ void RA_Init() {
 	if (g_strcmp0(remote_enabled->string, "0") == 0)
 		return;
 	
-	gi.dprintf("\Remote Admin [RA] Init...\n");
+	gi.dprintf("\[RA] Remote Admin Init...\n");
 	
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
@@ -91,8 +91,9 @@ void RA_Init() {
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
 	
-	gi.dprintf("[RA] looking up %s... ", remote_server->string);
-	int err = getaddrinfo(remote_server->string, remote_port->string, &hints, &res);
+	gi.dprintf("[RA] looking up %s... ", remoteAddr);
+
+	int err = getaddrinfo(remoteAddr, stringf("%d",remotePort), &hints, &res);
 	if (err != 0) {
 		gi.dprintf("error, disabling\n");
 		remote.enabled = 0;
@@ -160,6 +161,16 @@ void RA_RunFrame() {
 	}
 
 	remote.frame_number++;
+}
+
+void RA_Shutdown() {
+	if (!remote.enabled) {
+		return;
+	}
+
+	gi.dprintf("[RA] Unregistering with remote admin server\n\n");
+	RA_Send(CMD_SDISCONNECT, "");
+	freeaddrinfo(remote.addr);
 }
 
 

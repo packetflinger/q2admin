@@ -1165,6 +1165,9 @@ extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
 
+extern char remoteAddr[256];
+extern int remotePort;
+
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
 

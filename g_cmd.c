@@ -876,6 +876,18 @@ q2acmd_t q2aCommands[] ={
 		NULL,
 		remoteOnlineRun,
 	},
+	{
+		"remote_port",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NUMBER,
+		&remotePort,
+	},
+	{
+		"remote_addr",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteAddr,
+	},
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
