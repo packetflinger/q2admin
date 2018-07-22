@@ -105,9 +105,12 @@ block_model block_models[MAX_BLOCK_MODELS] ={
     {
         "models/weapons/g_machn/tris.md2"
     },
-    { "models/weapons/g_rocket/tris.md2"},
-
-    { "models/weapons/g_hyperb/tris.md2"},
+    { 
+		"models/weapons/g_rocket/tris.md2"
+	},
+    { 
+		"models/weapons/g_hyperb/tris.md2"
+	},
     {
         "models/weapons/g_shotg/tris.md2"
     },
@@ -123,7 +126,6 @@ block_model block_models[MAX_BLOCK_MODELS] ={
     {
         "models/weapons/g_launch/tris.md2"
     },
-
     {
         "models/items/armor/shard/tris.md2"
     }

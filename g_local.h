@@ -825,7 +825,7 @@ typedef struct {
     float timeout;
     unsigned long data;
     char *str;
-} CMDQUEUE;
+} cmd_queue_t;
 
 
 typedef struct {
@@ -838,7 +838,7 @@ typedef struct {
     qboolean admin;
     unsigned char retries;
     unsigned char rbotretries;
-    CMDQUEUE cmdQueue[ALLOWED_MAXCMDS]; // command queue - UPDATE
+    cmd_queue_t cmdQueue[ALLOWED_MAXCMDS]; // command queue - UPDATE
     int maxCmds;
     unsigned long clientcommand; // internal proxy commands
     char teststr[9];
@@ -1592,7 +1592,13 @@ typedef struct {
     int level;
 } admin_type;
 
-#define Q2ADMINVERSION   "2.0.2-pf"
+// should be set at build time in Makefile
+#ifndef Q2A_REVISION
+#define Q2ADMINVERSION	"2.0.0"
+#else
+#define Q2ADMINVERSION	"2.0-Q2A_REVISION"
+#endif
+
 #define DEFAULTQ2AVER   "1.0"
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
 #define MAX_ADMINS    128

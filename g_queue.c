@@ -60,7 +60,7 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
             proxyinfo[client].maxCmds--;
 
             if (i < proxyinfo[client].maxCmds) {
-                q2a_memmove(proxyinfo[client].cmdQueue + i, proxyinfo[client].cmdQueue + i + 1, (proxyinfo[client].maxCmds - i) * sizeof (CMDQUEUE));
+                q2a_memmove(proxyinfo[client].cmdQueue + i, proxyinfo[client].cmdQueue + i + 1, (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t));
             }
 
             return TRUE;
@@ -78,7 +78,7 @@ void removeClientCommand(int client, byte command) {
             // remove command
             proxyinfo[client].maxCmds--;
             if (i < proxyinfo[client].maxCmds) {
-                q2a_memmove(proxyinfo[client].cmdQueue + i, proxyinfo[client].cmdQueue + i + 1, (proxyinfo[client].maxCmds - i) * sizeof (CMDQUEUE));
+                q2a_memmove(proxyinfo[client].cmdQueue + i, proxyinfo[client].cmdQueue + i + 1, (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t));
             }
         } else {
             i++;

@@ -318,6 +318,7 @@ CVARS (console variables)
 #ifndef CVAR
 #define CVAR
 
+#define CVAR_GENERAL 0
 #define CVAR_ARCHIVE 1 // set to cause it to be saved to vars.rc
 #define CVAR_USERINFO 2 // added to userinfo  when changed
 #define CVAR_SERVERINFO 4 // added to serverinfo when changed
