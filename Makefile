@@ -36,8 +36,9 @@ endif
 CFLAGS += -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
+HEADERS := g_local.h q_shared.h g_file.h g_remote.h regex.h
 
-OBJS = 	g_anticheat.o \
+OBJS := g_anticheat.o \
 		g_ban.o \
 		g_checkvar.o \
 		g_cmd.o \
@@ -93,7 +94,7 @@ endif
 
 -include $(OBJS:.o=.d)
 
-%.o: %.c
+%.o: %.c $(HEADERS)
 	$(E) [CC] $@
 	$(Q)$(CC) -c $(CFLAGS) -o $@ $<
 
