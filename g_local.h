@@ -958,30 +958,30 @@ typedef struct {
 
 #define MAXDETECTRETRIES   3
 
-#define CCMD_STARTUPTEST   0x000001
-#define CCMD_ZPROXYCHECK2   0x000002
-#define CCMD_ZBOTDETECTED   0x000004
-#define CCMD_BANNED     0x000008
-#define CCMD_NCSILENCE    0x000010
-#define CCMD_KICKED     0x000020
-#define CCMD_SELECTED    0x000040
-#define CCMD_CSILENCE    0x000080
-#define CCMD_PCSILENCE    0x000100
-#define CCMD_VOTED     0x000200
-#define CCMD_VOTEYES    0x000400
-#define CCMD_NITRO2PROXY   0x000800
-#define CCMD_RATBOTDETECT   0x001000
-#define CCMD_RATBOTDETECTNAME  0x002000
-#define CCMD_ZBOTCLEAR    0x004000
-#define CCMD_RBOTCLEAR    0x008000
-#define CCMD_SCSILENCE    0x010000
-#define CCMD_RECONNECT    0x020000
-#define CCMD_ALIASCHECKSTARTED  0x040000
-#define CCMD_WAITFORALIASREPLY1  0x080000
-#define CCMD_WAITFORALIASREPLY2  0x100000
-#define CCMD_WAITFORCONNECTREPLY 0x200000
-#define CCMD_REMEMBERHACK   0x400000
-#define CCMD_CLIENTOVERFLOWED  0x800000
+#define CCMD_STARTUPTEST			0x000001
+#define CCMD_ZPROXYCHECK2			0x000002
+#define CCMD_ZBOTDETECTED			0x000004
+#define CCMD_BANNED					0x000008
+#define CCMD_NCSILENCE				0x000010
+#define CCMD_KICKED					0x000020
+#define CCMD_SELECTED				0x000040
+#define CCMD_CSILENCE				0x000080
+#define CCMD_PCSILENCE				0x000100
+#define CCMD_VOTED					0x000200
+#define CCMD_VOTEYES				0x000400
+#define CCMD_NITRO2PROXY			0x000800
+#define CCMD_RATBOTDETECT			0x001000
+#define CCMD_RATBOTDETECTNAME		0x002000
+#define CCMD_ZBOTCLEAR				0x004000
+#define CCMD_RBOTCLEAR				0x008000
+#define CCMD_SCSILENCE				0x010000
+#define CCMD_RECONNECT				0x020000
+#define CCMD_ALIASCHECKSTARTED		0x040000
+#define CCMD_WAITFORALIASREPLY1		0x080000
+#define CCMD_WAITFORALIASREPLY2		0x100000
+#define CCMD_WAITFORCONNECTREPLY	0x200000
+#define CCMD_REMEMBERHACK			0x400000
+#define CCMD_CLIENTOVERFLOWED		0x800000
 
 #define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
 #define BANCHECK     (CCMD_BANNED | CCMD_RECONNECT)
@@ -1085,25 +1085,25 @@ enum zb_logtypesenum {
     LT_PRIVATELOG, 
 };
 
-#define IW_UNEXCEPTEDCMD  1
-#define IW_UNKNOWNCMD   2
-#define IW_ZBOTDETECT   3
-#define IW_STARTUP    4
-#define IW_STARTUPTEST   5
-#define IW_ZBOTTEST    6
-#define IW_OVERFLOWDETECT  7
-#define IW_STARTUPFAIL   8
-#define IW_Q2ADMINCFGLOAD  9
-#define IW_LOGSETUPLOAD   10
-#define IW_BANSETUPLOAD   11
-#define IW_LRCONSETUPLOAD  12
-#define IW_FLOODSETUPLOAD  13
-#define IW_SPAWNSETUPLOAD  14
-#define IW_VOTESETUPLOAD  15
-#define IW_ZBCHECK    16
-#define IW_DISABLESETUPLOAD  17
-#define IW_CHECKVARSETUPLOAD 18
-#define IW_INVALIDIPADDRESS  19
+#define IW_UNEXCEPTEDCMD		1
+#define IW_UNKNOWNCMD			2
+#define IW_ZBOTDETECT			3
+#define IW_STARTUP				4
+#define IW_STARTUPTEST			5
+#define IW_ZBOTTEST				6
+#define IW_OVERFLOWDETECT		7
+#define IW_STARTUPFAIL			8
+#define IW_Q2ADMINCFGLOAD		9
+#define IW_LOGSETUPLOAD			10
+#define IW_BANSETUPLOAD			11
+#define IW_LRCONSETUPLOAD		12
+#define IW_FLOODSETUPLOAD		13
+#define IW_SPAWNSETUPLOAD		14
+#define IW_VOTESETUPLOAD		15
+#define IW_ZBCHECK				16
+#define IW_DISABLESETUPLOAD		17
+#define IW_CHECKVARSETUPLOAD	18
+#define IW_INVALIDIPADDRESS		19
 
 #define MINIMUMTIMEOUT   5
 #define MAXSTARTTRY    500
@@ -1112,15 +1112,15 @@ enum zb_logtypesenum {
 #define getEnt(entnum)   (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
 // where the command can't be run?
-#define CMDWHERE_CFGFILE  0x01
-#define CMDWHERE_CLIENTCONSOLE 0x02
-#define CMDWHERE_SERVERCONSOLE 0x04
+#define CMDWHERE_CFGFILE		0x01
+#define CMDWHERE_CLIENTCONSOLE	0x02
+#define CMDWHERE_SERVERCONSOLE	0x04
 
 // type of command
-#define CMDTYPE_NONE   0
-#define CMDTYPE_LOGICAL   1
-#define CMDTYPE_NUMBER   2
-#define CMDTYPE_STRING   3
+#define CMDTYPE_NONE		0
+#define CMDTYPE_LOGICAL		1
+#define CMDTYPE_NUMBER		2
+#define CMDTYPE_STRING		3
 
 typedef void CMDRUNFUNC(int startarg, edict_t *ent, int client);
 typedef void CMDINITFUNC(char *arg);
@@ -1134,10 +1134,25 @@ typedef struct {
     CMDINITFUNC *initfunc;
 } q2acmd_t;
 
-extern game_import_t gi;			// server access from inside game lib
+extern game_import_t gi;		// server access from inside game lib
 extern game_export_t ge;		// game access from inside server
 extern game_export_t *ge_mod;	// real game access from inside proxy game lib
-extern cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
+
+extern cvar_t 	*rcon_password, 
+				*gamedir, 
+				*maxclients, 
+				*logfile, 
+				*rconpassword, 
+				*port, 
+				*serverbindip, 
+				*q2admintxt, 
+				*q2adminbantxt, 
+				*q2adminbanremotetxt, 
+				*q2adminbanremotetxt_enable, 
+				*q2adminanticheat_enable, 
+				*q2adminanticheat_file, 
+				*q2adminhashlist_enable, 
+				*q2adminhashlist_dir;
 
 extern char dllname[256];
 extern char zbotuserdisplay[256];
