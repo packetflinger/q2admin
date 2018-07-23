@@ -146,7 +146,7 @@ void G_RunFrame(void) {
     ltime = lframenum * FRAMETIME;
 
     if (serverinfoenable && (lframenum > 10)) {
-        sprintf(buffer, "set q2admin \"" Q2ADMINVERSION "\" s\n");
+        sprintf(buffer, "set q2admin \"%s.%s\" s\n", Q2ADMINVERSION, Q2A_VERSION);
         gi.AddCommandString(buffer);
         serverinfoenable = 0;
     }
@@ -204,8 +204,9 @@ void G_RunFrame(void) {
             ent = getEnt((client + 1));
         }
 
-        if (timers_active)
+        if (timers_active) {
             timer_action(client, ent);
+		}
 
         if (getCommandFromQueue(client, &command, &data, &str)) {
             if (!proxyinfo[client].inuse) {
