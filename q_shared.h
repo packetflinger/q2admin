@@ -354,14 +354,14 @@ COLLISION DETECTION
  */
 
 // lower bits are stronger, and will eat weaker brushes completely
-#define CONTENTS_SOLID   1  // an eye is never valid in a solid
-#define CONTENTS_WINDOW   2  // translucent, but not watery
-#define CONTENTS_AUX   4
-#define CONTENTS_LAVA   8
-#define CONTENTS_SLIME   16
-#define CONTENTS_WATER   32
-#define CONTENTS_MIST   64
-#define LAST_VISIBLE_CONTENTS 64
+#define CONTENTS_SOLID			1  // an eye is never valid in a solid
+#define CONTENTS_WINDOW			2  // translucent, but not watery
+#define CONTENTS_AUX			4
+#define CONTENTS_LAVA			8
+#define CONTENTS_SLIME			16
+#define CONTENTS_WATER			32
+#define CONTENTS_MIST			64
+#define LAST_VISIBLE_CONTENTS	64
 
 // remaining contents are non-visible, and don't eat brushes
 #define CONTENTS_AREAPORTAL  0x8000
