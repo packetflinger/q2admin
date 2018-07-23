@@ -73,6 +73,7 @@ typedef enum {
 #define NULL ((void *)0)
 #endif
 
+#define lengthof(arr)	(sizeof(arr) / sizeof(arr[0]))
 
 // angle indexes
 #define PITCH    0  // up / down

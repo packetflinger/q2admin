@@ -131,6 +131,8 @@ int randomwaitreporttime = 55;
 
 int maxMsgLevel = 3;
 
+//char *zbotversion = va("Q2Admin Version %s-%s\n", Q2ADMINVERSION, Q2A_REVISION);
+
 char *zbotversion = "Q2Admin Version " Q2ADMINVERSION "\n";
 qboolean serverinfoenable = TRUE;
 
@@ -318,7 +320,7 @@ void InitGame(void) {
     INITPERFORMANCE(2);
 
     proxyinfo = NULL;
-    gi.dprintf(zbotversion);
+    gi.dprintf("Q2Admin v%s.%s\n", Q2ADMINVERSION, Q2A_VERSION);
 
     if (!dllloaded) return;
 
@@ -346,19 +348,19 @@ void InitGame(void) {
     maxclients = gi.cvar("maxclients", "4", 0);
     logfile = gi.cvar("logfile", "0", 0);
     rconpassword = gi.cvar("rcon_password", "", 0);
-    proxyinfoBase = gi.TagMalloc((maxclients->value + 1) * sizeof (proxyinfo_t), TAG_GAME);
-    q2a_memset(proxyinfoBase, 0x0, (maxclients->value + 1) * sizeof (proxyinfo_t));
+    proxyinfoBase = G_Malloc((maxclients->value + 1) * sizeof(proxyinfo_t));
+    q2a_memset(proxyinfoBase, 0x0, (maxclients->value + 1) * sizeof(proxyinfo_t));
     proxyinfo = proxyinfoBase;
     proxyinfo += 1;
     proxyinfo[-1].inuse = 1;
 
-    reconnectproxyinfo = gi.TagMalloc(maxclients->value * sizeof (proxyreconnectinfo_t), TAG_GAME);
-    q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
+    reconnectproxyinfo = G_Malloc(maxclients->value * sizeof(proxyreconnectinfo_t));
+    q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof(proxyreconnectinfo_t));
 
-    reconnectlist = (reconnect_info *) gi.TagMalloc(maxclients->value * sizeof (reconnect_info), TAG_GAME);
+    reconnectlist = (reconnect_info *) G_Malloc(maxclients->value * sizeof(reconnect_info));
     maxReconnectList = 0;
 
-    retrylist = (retrylist_info *) gi.TagMalloc(maxclients->value * sizeof (retrylist_info), TAG_GAME);
+    retrylist = (retrylist_info *) G_Malloc(maxclients->value * sizeof (retrylist_info));
     maxretryList = 0;
 
     logEvent(LT_SERVERINIT, 0, NULL, NULL, 0, 0.0);
@@ -417,9 +419,8 @@ void InitGame(void) {
 
     Read_Admin_cfg();
 
-    //whois shit
     if (whois_active) {
-        whois_details = gi.TagMalloc(whois_active * sizeof (user_details), TAG_GAME);
+        whois_details = G_Malloc(whois_active * sizeof (user_details));
         memset(whois_details, 0, whois_active * sizeof (user_details));
         gi.dprintf("Reading whois file...\n");
         whois_read_file();

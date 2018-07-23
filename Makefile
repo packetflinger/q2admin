@@ -9,7 +9,7 @@ ifndef REV
 endif
 
 ifndef VER
-    VER := r$(REV)~$(shell git rev-parse --short HEAD)
+    VER := $(REV)~$(shell git rev-parse --short HEAD)
 endif
 
 GLIB_CFLAGS := $(shell pkg-config --cflags glib-2.0)

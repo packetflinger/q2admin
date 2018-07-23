@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // the "gameversion" client command will print this plus compile date
 #define GAMEVERSION    "baseq2"
 
+#define G_Malloc(x)		(gi.TagMalloc(x, TAG_GAME))
+
 // protocol bytes that can be directly added to messages
 #define svc_muzzleflash   1
 #define svc_muzzleflash2  2
@@ -1108,7 +1110,7 @@ typedef struct {
     void *datapoint;
     CMDRUNFUNC *runfunc;
     CMDINITFUNC *initfunc;
-} zbotcmd_t;
+} q2acmd_t;
 
 extern game_import_t gi;
 extern game_export_t globals;
@@ -1259,7 +1261,7 @@ extern char *currentBanMsg;
 extern proxyinfo_t *proxyinfo;
 extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
-extern zbotcmd_t zbotCommands[];
+extern q2acmd_t q2aCommands[];
 
 extern int clientsidetimeout;
 extern int zbotdetectactivetimeout;
@@ -1595,8 +1597,9 @@ typedef struct {
 // should be set at build time in Makefile
 #ifndef Q2A_REVISION
 #define Q2ADMINVERSION	"2.0.0"
+#define Q2A_REVISION	""
 #else
-#define Q2ADMINVERSION	"2.0-Q2A_REVISION"
+#define Q2ADMINVERSION	"2.0"
 #endif
 
 #define DEFAULTQ2AVER   "1.0"
