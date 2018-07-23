@@ -93,13 +93,11 @@ void ShutdownGame(void) {
         STARTPERFORMANCE(2);
     }
 	
-	gi.dprintf("RA: Unregistering with remote admin server\n\n");
-	RA_Send(CMD_UNREGISTER, "");
-	freeaddrinfo(remote.addr);
+	RA_Shutdown();
 	
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
-    dllglobals->Shutdown();
+    ge_mod->Shutdown();
 
     if (q2adminrunmode) {
         STOPPERFORMANCE(2, "mod->ShutdownGame", 0, NULL);
@@ -117,12 +115,6 @@ void ShutdownGame(void) {
         STOPPERFORMANCE(1, "q2admin->ShutdownGame", 0, NULL);
     }
 }
-
-extern cvar_t *remote_enabled;
-extern cvar_t *remote_server;
-extern cvar_t *remote_port;
-extern cvar_t *remote_key;
-
 
 void G_RunFrame(void) {
     unsigned int j, required_cmdlist;
@@ -143,7 +135,7 @@ void G_RunFrame(void) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->RunFrame();
+        ge_mod->RunFrame();
         copyDllInfo();
         return;
     }
@@ -193,7 +185,7 @@ void G_RunFrame(void) {
     }
 
     if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
-        dllglobals->RunFrame();
+        ge_mod->RunFrame();
         copyDllInfo();
         return;
     }
@@ -837,8 +829,8 @@ void G_RunFrame(void) {
     checkOnVoting();
 
     STARTPERFORMANCE(2);
-    dllglobals->RunFrame();
-	Remote_RunFrame();
+    ge_mod->RunFrame();
+	RA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
     copyDllInfo();
@@ -861,37 +853,42 @@ game_export_t *GetGameAPI(game_import_t *import) {
     int loadtype;
 #endif
 
-    unsigned int i; // UPDATE
     dllloaded = FALSE;
     gi = *import;
 
+    cvar_t *gamelib;
+    gamelib = gi.cvar("gamelib", DLLNAME, CVAR_NOSET);
+
+    
+    // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
     import->cprintf = cprintf_internal;
     import->dprintf = dprintf_internal;
     import->AddCommandString = AddCommandString_internal;
-    //import->Pmove = Pmove_internal;
+    import->Pmove = Pmove_internal;
     import->linkentity = linkentity_internal;
     import->unlinkentity = unlinkentity_internal;
 
-    globals.Init = InitGame;
-    globals.Shutdown = ShutdownGame;
-    globals.SpawnEntities = SpawnEntities;
 
-    globals.WriteGame = WriteGame;
-    globals.ReadGame = ReadGame;
-    globals.WriteLevel = WriteLevel;
-    globals.ReadLevel = ReadLevel;
+    ge.Init = InitGame;
+    ge.Shutdown = ShutdownGame;
+    ge.SpawnEntities = SpawnEntities;
 
-    globals.ClientThink = ClientThink;
-    globals.ClientConnect = ClientConnect;
-    globals.ClientUserinfoChanged = ClientUserinfoChanged;
-    globals.ClientDisconnect = ClientDisconnect;
-    globals.ClientBegin = ClientBegin;
-    globals.ClientCommand = ClientCommand;
+    ge.WriteGame = WriteGame;
+    ge.ReadGame = ReadGame;
+    ge.WriteLevel = WriteLevel;
+    ge.ReadLevel = ReadLevel;
 
-    globals.RunFrame = G_RunFrame;
+    ge.ClientThink = ClientThink;
+    ge.ClientConnect = ClientConnect;
+    ge.ClientUserinfoChanged = ClientUserinfoChanged;
+    ge.ClientDisconnect = ClientDisconnect;
+    ge.ClientBegin = ClientBegin;
+    ge.ClientCommand = ClientCommand;
 
-    globals.ServerCommand = ServerCommand;
+    ge.RunFrame = G_RunFrame;
+
+    ge.ServerCommand = ServerCommand;
 
     serverbindip = gi.cvar("ip", "", 0);
     port = gi.cvar("port", "", 0);
@@ -912,6 +909,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
         q2a_strcpy(moddir, "baseq2");
     }
 
+    unsigned int i;
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         private_commands[i].command[0] = 0;
     }
@@ -942,7 +940,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
     readCfgFiles();
 
     if (q2adminrunmode) {
-        //loadLogList();
+        loadLogList();
     }
 
     // setup zbot test strings
@@ -960,11 +958,11 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
 #ifdef __GNUC__
     loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
-    sprintf(dllname, "%s/%s", moddir, DLLNAME);
+    sprintf(dllname, "%s/%s", moddir, gamelib->string);
     hdll = dlopen(dllname, loadtype);
 #elif defined(WIN32)
     if (quake2dirsupport) {
-        sprintf(dllname, "%s/%s", moddir, DLLNAME);
+        sprintf(dllname, "%s/%s", moddir, gamelib->string);
     } else {
         sprintf(dllname, "%s/%s", moddir, DLLNAMEMODDIR);
     }
@@ -974,7 +972,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
     if (hdll == NULL) {
         // try the baseq2 directory...
-        sprintf(dllname, "baseq2/%s", DLLNAME);
+        sprintf(dllname, "baseq2/%s", gamelib->string);
 
 #ifdef __GNUC__
         hdll = dlopen(dllname, loadtype);
@@ -983,10 +981,10 @@ game_export_t *GetGameAPI(game_import_t *import) {
 #endif
 
 #ifdef __GNUC__
-        sprintf(dllname, "%s/%s", moddir, DLLNAME);
+        sprintf(dllname, "%s/%s", moddir, gamelib->string);
 #elif defined(WIN32)
         if (quake2dirsupport) {
-            sprintf(dllname, "%s/%s", moddir, DLLNAME);
+            sprintf(dllname, "%s/%s", moddir, gamelib->string);
         } else {
             sprintf(dllname, "%s/%s", moddir, DLLNAMEMODDIR);
         }
@@ -994,7 +992,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
         if (hdll == NULL) {
             gi.dprintf("Unable to load DLL %s.\n", dllname);
-            return &globals;
+            return &ge;
         } else {
             gi.dprintf("Unable to load DLL %s, loading baseq2 DLL.\n", dllname);
         }
@@ -1014,17 +1012,18 @@ game_export_t *GetGameAPI(game_import_t *import) {
 #endif
 
         gi.dprintf("No \"GetGameApi\" entry in DLL %s.\n", dllname);
-        return &globals;
+        return &ge;
     }
 
-    dllglobals = (*getapi)(import);
+    gi.dprintf("Loaded forward game library: %s\n", dllname);
+
+    ge_mod = (*getapi)(import);
     dllloaded = TRUE;
     copyDllInfo();
-    import->cprintf = gi.cprintf;
 
     if (q2adminrunmode) {
         logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);
     }
 
-    return &globals;
+    return &ge;
 }

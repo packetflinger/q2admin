@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-extern cvar_t *remote_enabled;
+//extern cvar_t *remote_enabled;
 
 admin_type admin_pass[MAX_ADMINS];
 admin_type q2a_bypass_pass[MAX_ADMINS];
@@ -228,7 +228,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientThink(ent, ucmd);
+        ge_mod->ClientThink(ent, ucmd);
         copyDllInfo();
         return;
     }
@@ -343,7 +343,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
 
         STARTPERFORMANCE(2);
-        dllglobals->ClientThink(ent, ucmd);
+        ge_mod->ClientThink(ent, ucmd);
         STOPPERFORMANCE_2(2, "mod->ClientThink", 0, NULL);
 
         copyDllInfo();
@@ -942,10 +942,10 @@ void whois_write_file(void) {
         strcpy(temp, whois_details[i].ip);
         temp_len = strlen(temp);
 
-        //convert spaces to ÿ
+        //convert spaces to ï¿½
         for (j = 0; j < temp_len; j++) {
             if (temp[j] == ' ')
-                temp[j] = 'ÿ';
+                temp[j] = 'ï¿½';
         }
         fprintf(f, "%i %s ", whois_details[i].id, temp);
 
@@ -954,7 +954,7 @@ void whois_write_file(void) {
 
         for (j = 0; j < temp_len; j++) {
             if (temp[j] == ' ')
-                temp[j] = 'ÿ';
+                temp[j] = 'ï¿½';
         }
         fprintf(f, "%s ", temp);
 
@@ -965,11 +965,11 @@ void whois_write_file(void) {
 
                 for (k = 0; k < temp_len; k++) {
                     if (temp[k] == ' ')
-                        temp[k] = 'ÿ';
+                        temp[k] = 'ï¿½';
                 }
                 fprintf(f, "%s ", temp);
             } else {
-                fprintf(f, "ÿ ");
+                fprintf(f, "ï¿½ ");
             }
         }
         fprintf(f, "\n");
@@ -1008,17 +1008,17 @@ void whois_read_file(void) {
                 &whois_details[WHOIS_COUNT].dyn[8].name,
                 &whois_details[WHOIS_COUNT].dyn[9].name);
 
-        //convert all ÿ back to spaces
+        //convert all ï¿½ back to spaces
         temp_len = strlen(whois_details[WHOIS_COUNT].ip);
         for (i = 0; i < temp_len; i++) {
-            if (whois_details[WHOIS_COUNT].ip[i] == 'ÿ') {
+            if (whois_details[WHOIS_COUNT].ip[i] == 'ï¿½') {
                 whois_details[WHOIS_COUNT].ip[i] = ' ';
             }
         }
 
         temp_len = strlen(whois_details[WHOIS_COUNT].seen);
         for (i = 0; i < temp_len; i++) {
-            if (whois_details[WHOIS_COUNT].seen[i] == 'ÿ') {
+            if (whois_details[WHOIS_COUNT].seen[i] == 'ï¿½') {
                 whois_details[WHOIS_COUNT].seen[i] = ' ';
             }
         }
@@ -1026,12 +1026,12 @@ void whois_read_file(void) {
         for (i = 0; i < 10; i++) {
             if ((whois_details[WHOIS_COUNT].dyn[i].name[0] == 255)
                     || (whois_details[WHOIS_COUNT].dyn[i].name[0] == -1)
-                    || (whois_details[WHOIS_COUNT].dyn[i].name[0] == 'ÿ')) {
+                    || (whois_details[WHOIS_COUNT].dyn[i].name[0] == 'ï¿½')) {
                 whois_details[WHOIS_COUNT].dyn[i].name[0] = 0;
             } else {
                 name_len = strlen(whois_details[WHOIS_COUNT].dyn[i].name);
                 for (j = 0; j < name_len; j++) {
-                    if (whois_details[WHOIS_COUNT].dyn[i].name[j] == 'ÿ') {
+                    if (whois_details[WHOIS_COUNT].dyn[i].name[j] == 'ï¿½') {
                         whois_details[WHOIS_COUNT].dyn[i].name[j] = ' ';
                     }
                 }

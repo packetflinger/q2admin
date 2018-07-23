@@ -22,9 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-game_import_t gi;			// server access from proxy game
-game_export_t globals;		// proxy game access from server
-game_export_t *dllglobals;	// real game access from proxy game
+game_import_t gi;		// server access from q2admin
+game_export_t ge;		// q2admin access from server
+game_export_t *ge_mod;	// game access from q2admin
 
 cvar_t *rcon_password;
 cvar_t *gamedir;
@@ -46,6 +46,17 @@ qboolean quake2dirsupport = TRUE;
 
 char dllname[256];
 char gmapname[MAX_QPATH];
+
+char remoteKey[256] = {0};
+char remoteAddr[256] = "packetflinger.com";
+int remotePort = 5555;
+int remoteFlags = 1024;
+qboolean remoteEnabled = FALSE;
+char remoteCmdTeleport[15] = "!teleport";
+char remoteCmdInvite[15] = "!invite";
+char remoteCmdSeen[15] = "!seen";
+char remoteCmdWhois[15] = "!whois";
+
 
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
@@ -329,7 +340,7 @@ void InitGame(void) {
     }
 
     if (q2adminrunmode == 0) {
-        dllglobals->Init();
+        ge_mod->Init();
         copyDllInfo();
         return;
     }
@@ -339,7 +350,7 @@ void InitGame(void) {
 	
 	/* Be carefull with all functions called from this one (like dprintf_internal) 
 	to not use proxyinfo pointer because it's not initialized yet. -Harven */
-    dllglobals->Init(); 
+    ge_mod->Init(); 
 	
     STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
 
@@ -442,7 +453,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->SpawnEntities(mapname, backupentities, spawnpoint);
+        ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
         copyDllInfo();
         return;
     }
@@ -588,7 +599,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
     STARTPERFORMANCE(2);
-    dllglobals->SpawnEntities(mapname, backupentities, spawnpoint);
+    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
     copyDllInfo();
@@ -616,9 +627,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         gi.dprintf("You have not set a server ip.  Please add the following to q2admin.txt\nserverip \"ip\" where ip matches the outgoing one of the server.\n");
     }
 
-	gi.dprintf("RA: Registering with remote admin server\n\n");
-	RA_Send(CMD_REGISTER, "%s\\%s\\%s\\%s\\%d", mapname, maxclients->string, rconpassword->string, net_port->string, remote.flags);
-	
+    remote.maxclients = atoi(maxclients->string);
+    q2a_strcpy(remote.mapname, mapname);
+    q2a_strcpy(remote.rcon_password, rconpassword->string);
+    remote.port = atoi(net_port->string);
+    remote.next_report = 0;
+
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
@@ -760,7 +774,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     if (!dllloaded) return FALSE;
 
     if (q2adminrunmode == 0) {
-        ret = dllglobals->ClientConnect(ent, userinfo);
+        ret = ge_mod->ClientConnect(ent, userinfo);
         copyDllInfo();
         return ret;
     }
@@ -1026,7 +1040,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
         if (doConnect) {
             STARTPERFORMANCE(2);
-            ret = dllglobals->ClientConnect(ent, userinfo);
+            ret = ge_mod->ClientConnect(ent, userinfo);
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             copyDllInfo();
@@ -1233,7 +1247,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientUserinfoChanged(ent, userinfo);
+        ge_mod->ClientUserinfoChanged(ent, userinfo);
         copyDllInfo();
         return;
     }
@@ -1271,7 +1285,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     if (passon && !(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientUserinfoChanged(ent, userinfo);
+        ge_mod->ClientUserinfoChanged(ent, userinfo);
         STOPPERFORMANCE(2, "mod->ClientUserinfoChanged", client, ent);
 
         copyDllInfo();
@@ -1416,7 +1430,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
-	RA_Send(CMD_USERINFO, "%d\\%s", client, userinfo);
+    proxyinfo[client].next_report = 0;
 	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1430,7 +1444,7 @@ void ClientDisconnect(edict_t *ent) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientDisconnect(ent);
+        ge_mod->ClientDisconnect(ent);
         copyDllInfo();
         return;
     }
@@ -1441,11 +1455,11 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
-	RA_Send(CMD_DISCONNECT, "%d", client);
+	RA_Send(CMD_PDISCONNECT, "%d", client);
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientDisconnect(ent);
+        ge_mod->ClientDisconnect(ent);
         STOPPERFORMANCE(2, "mod->ClientDisconnect", client, ent);
 
         copyDllInfo();
@@ -1534,7 +1548,7 @@ void ClientBegin(edict_t *ent) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientBegin(ent);
+        ge_mod->ClientBegin(ent);
         copyDllInfo();
         return;
     }
@@ -1545,7 +1559,7 @@ void ClientBegin(edict_t *ent) {
 
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
-        dllglobals->ClientBegin(ent);
+        ge_mod->ClientBegin(ent);
         STOPPERFORMANCE(2, "mod->ClientBegin", client, ent);
 
         copyDllInfo();
@@ -1649,7 +1663,7 @@ void ClientBegin(edict_t *ent) {
         }
     }
 
-	RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
+	//RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
 	
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
     STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);
@@ -1661,14 +1675,14 @@ void WriteGame(char *filename, qboolean autosave) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->WriteGame(filename, autosave);
+        ge_mod->WriteGame(filename, autosave);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->WriteGame(filename, autosave);
+    ge_mod->WriteGame(filename, autosave);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
@@ -1680,14 +1694,14 @@ void ReadGame(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ReadGame(filename);
+        ge_mod->ReadGame(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->ReadGame(filename);
+    ge_mod->ReadGame(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
@@ -1699,14 +1713,14 @@ void WriteLevel(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->WriteLevel(filename);
+        ge_mod->WriteLevel(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->WriteLevel(filename);
+    ge_mod->WriteLevel(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
@@ -1718,14 +1732,14 @@ void ReadLevel(char *filename) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ReadLevel(filename);
+        ge_mod->ReadLevel(filename);
         copyDllInfo();
         return;
     }
 
     STARTPERFORMANCE(1);
 
-    dllglobals->ReadLevel(filename);
+    ge_mod->ReadLevel(filename);
     copyDllInfo();
 
     STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);

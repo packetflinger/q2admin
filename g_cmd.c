@@ -46,6 +46,10 @@ void cvarsetRun(int startarg, edict_t *ent, int client);
 void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
 void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
 void lockDownServerRun(int startarg, edict_t *ent, int client);
+void Cmd_Remote_Status_f(edict_t *ent);
+void remoteOnlineRun(int startarg, edict_t *ent, int client);
+void remoteOfflineRun(int startarg, edict_t *ent, int client);
+void remoteResetRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -861,6 +865,81 @@ q2acmd_t q2aCommands[] ={
         NULL,
         reloadVoteFileRun,
     },
+	{
+		"ra_offline",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteOfflineRun,
+	},
+	{
+		"ra_online",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteOnlineRun,
+	},
+	{
+		"remote_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteKey,
+	},
+	{
+		"remote_port",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NUMBER,
+		&remotePort,
+	},
+	{
+		"remote_addr",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteAddr,
+	},
+	{
+		"remote_flags",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NUMBER,
+		&remoteFlags,
+	},
+	{
+		"remote_enabled",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_LOGICAL,
+		&remoteEnabled,
+	},
+	{
+		"remote_cmd_teleport",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdTeleport,
+	},
+	{
+		"remote_cmd_invite",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdInvite,
+	},
+	{
+		"remote_cmd_seen",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdSeen,
+	},
+	{
+		"remote_cmd_whois",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteCmdWhois,
+	},
+	{
+		"remote_reset",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteResetRun,
+	},
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1378,22 +1457,12 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     char *cp;
     int clienti = lastClientCmd;
 
-    // convert to string
     va_start(arglist, fmt);
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
-	
+
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
-        return;
-    }
-
-    cp = q2a_strstr(cbuffer, "swpplay ");
-    if (cp) {
-        // found a play_team command, play sound at client console instead.
-        //r1ch 2005-01-26 fix fucking huge security hole BEGIN
-        //stuffcmd(ent, cp + 3);
-        //r1ch 2005-01-26 fix fucking huge security hole END
         return;
     }
 
@@ -1448,6 +1517,10 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         }
     }
 
+    if (ent == NULL) {
+    	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    }
+
     gi.cprintf(ent, printlevel, "%s", cbuffer);
 
     if (printlevel == PRINT_CHAT && clienti != -1 && ent == NULL && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
@@ -1466,8 +1539,6 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     va_start(arglist, fmt);
     vsprintf(cbuffer, fmt, arglist);
     va_end(arglist);
-
-	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
 	
     if (q2adminrunmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
@@ -1517,6 +1588,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
         }
     }
 
+    RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
     gi.bprintf(printlevel, "%s", cbuffer);
 
     if (printlevel == PRINT_CHAT && clienti != -1 && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
@@ -1610,6 +1682,14 @@ void AddCommandString_internal(char *text) {
             q2a_strcat(buffer, "-pre.cfg\n");
             gi.AddCommandString(buffer);
         }
+
+        // force all clients to report if map changes
+        uint32_t i;
+        for (i=0; i<remote.maxclients; i++) {
+        	if (proxyinfo[i].inuse) {
+        		proxyinfo[i].remote_reported = 0;
+        	}
+        }
     }
 
     gi.AddCommandString(text);
@@ -1673,7 +1753,8 @@ qboolean readCfgFile(char *cfgfilename) {
     char buff2[256];
 
     cfgfile = fopen(cfgfilename, "rt");
-    if (!cfgfile) return FALSE;
+    if (!cfgfile)
+    	return FALSE;
 
     while (fgets(buffer, 256, cfgfile) != NULL) {
         char *cp = buffer;
@@ -1733,7 +1814,6 @@ void readCfgFiles(void) {
 
     if (!ret) {
         gi.dprintf("WARNING: " CFGFILE " could not be found\n");
-        //    logEvent(LT_INTERNALWARN, 0, NULL, CFGFILE " could not be found", IW_Q2ADMINCFGLOAD, 0.0);
     }
 }
 
@@ -2255,7 +2335,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     //int clienti;
     //r1ch 2005-01-26 disable hugely buggy commands END
 
-    if (client >= maxclients->value) return FALSE;
+    if (client >= maxclients->value)
+    	return FALSE;
 
     cmd = gi.argv(0);
 
@@ -2268,11 +2349,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     if (*(rcon_password->string)) {
         if (strstr(response, rcon_password->string)) {
-            //gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabledcommand: (%s)\n", proxyinfo[client].name, response);
-            //logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent,response, 0, 0.0);
-            //stuffcmd(ent, "echo YOU HAVE BEEN LOGGED FOR THAT ACTION!!!!\n");
-
-            //r1ch: buffer overflow fix
             snprintf(abuffer, sizeof (abuffer) - 1, "EXPLOIT - %s", response);
             abuffer[sizeof (abuffer) - 1] = 0;
             logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
@@ -2283,7 +2359,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (Q_stricmp(cmd, zbot_teststring_test1) == 0) {
-        if (proxyinfo[client].inuse && proxyinfo[client].clientcommand & CCMD_STARTUPTEST) {
+        if (proxyinfo[client].inuse && (proxyinfo[client].clientcommand & CCMD_STARTUPTEST)) {
             proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
             removeClientCommand(client, QCMD_STARTUPTEST);
             proxyinfo[client].retries = 0;
@@ -3061,7 +3137,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 }
 
 void ClientCommand(edict_t *ent) {
-    int client = getEntOffset(ent) - 1;
+	char *cmd;
+	cmd = gi.argv(0);
+
+    int clientnum = getEntOffset(ent) - 1;
     qboolean checkforfloodafter = FALSE;
     char stemp[1024];
 
@@ -3072,7 +3151,7 @@ void ClientCommand(edict_t *ent) {
 
 
     if (q2adminrunmode == 0) {
-        dllglobals->ClientCommand(ent);
+        ge_mod->ClientCommand(ent);
         copyDllInfo();
         return;
     }
@@ -3082,26 +3161,44 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	// check if client typed "teleport" command
-	if (g_strcmp0(gi.argv(0), "teleport") == 0) {
+	if (g_strcmp0(cmd, remoteCmdTeleport) == 0) {
 		Cmd_Teleport_f(ent);
 		return;
 	}
 	
+	if (g_strcmp0(cmd, remoteCmdInvite) == 0) {
+		Cmd_Invite_f(ent);
+		return;
+	}
+
+	if (g_strcmp0(cmd, remoteCmdSeen) == 0) {
+		Cmd_Find_f(ent);
+		return;
+	}
+
+	if (g_strcmp0(cmd, remoteCmdWhois) == 0) {
+		return;
+	}
+
+	if (g_strcmp0(cmd, "!rastatus") == 0) {
+		Cmd_Remote_Status_f(ent);
+		return;
+	}
+
     //Custom frkq2 check
     if ((do_franck_check) && (
             (stringContains(stemp, "riconnect")) ||
-            (stringContains(gi.argv(0), "riconnect")) ||
+            (stringContains(cmd, "riconnect")) ||
             (stringContains(stemp, "roconnect")) || //Extra check for zgh-frk patch
-            (stringContains(gi.argv(0), "roconnect")))) {
+            (stringContains(cmd, "roconnect")))) {
         return;
     }
 
-    lastClientCmd = client;
-    if (doClientCommand(ent, client, &checkforfloodafter)) {
-        if (!(proxyinfo[client].clientcommand & BANCHECK)) {
+    lastClientCmd = clientnum;
+    if (doClientCommand(ent, clientnum, &checkforfloodafter)) {
+        if (!(proxyinfo[clientnum].clientcommand & BANCHECK)) {
             STARTPERFORMANCE(2);
-            dllglobals->ClientCommand(ent);
+            ge_mod->ClientCommand(ent);
             STOPPERFORMANCE(2, "mod->ClientCommand", 0, NULL);
 
             copyDllInfo();
@@ -3109,15 +3206,9 @@ void ClientCommand(edict_t *ent) {
     }
 
     if (checkforfloodafter) {
-        checkForFlood(client);
+        checkForFlood(clientnum);
     }
     lastClientCmd = -1;
-	
-	// it's a chat msg, send it to remote admin server
-	if (g_strcmp0("say", gi.argv(0)) == 0) {
-		int clientid = getEntOffset(ent) - 1;
-		RA_Send(CMD_CHAT, "%d\\%s", clientid, gi.args()+1);
-	}
 	
     STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
 }
@@ -3155,7 +3246,7 @@ void ServerCommand(void) {
     if (!dllloaded) return;
 
     if (q2adminrunmode == 0) {
-        dllglobals->ServerCommand();
+        ge_mod->ServerCommand();
         copyDllInfo();
         return;
     }
@@ -3164,7 +3255,7 @@ void ServerCommand(void) {
 
     if (doServerCommand()) {
         STARTPERFORMANCE(2);
-        dllglobals->ServerCommand();
+        ge_mod->ServerCommand();
         STOPPERFORMANCE(2, "mod->ServerCommand", 0, NULL);
 
         copyDllInfo();
@@ -3711,19 +3802,57 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 }
 
 void Cmd_Teleport_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_TELEPORT)) {
+		gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
+		return;
+	}
+
 	uint8_t id = getEntOffset(ent) - 1;
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
-	
-	//gi.dprintf("die: %d\n", ent->die);
-	//gi.dprintf("&die: %d\n", &ent->die);
-	
-	// hijack die() pointer to capture deaths
-	proxyinfo[id].die = *ent->die;
-	ent->die = &PlayerDie_Internal;
-	
-	//gi.dprintf("die: %d\n", ent->die);
-	//gi.dprintf("&die: %d\n", &ent->die);
 
-	//proxyinfo[id].die = &(dllglobals->edicts[id]).die;`
-	//dllglobals->edicts[id].die = &PlayerDie_Internal;
+	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
 }
+
+void remoteOfflineRun(int startarg, edict_t *ent, int client) {
+	remote.online = FALSE;
+}
+
+void remoteOnlineRun(int startarg, edict_t *ent, int client) {
+	remote.online = TRUE;
+}
+
+void remoteResetRun(int startarg, edict_t *ent, int client) {
+	RA_Init();
+}
+
+void Cmd_Invite_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
+		gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+	RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
+}
+
+void Cmd_Remote_Status_f(edict_t *ent) {
+	switch (remote.online) {
+	case FALSE:
+		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
+		break;
+	case TRUE:
+		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
+		break;
+	}
+}
+
+void Cmd_Find_f(edict_t *ent) {
+	if (!(remote.flags & REMOTE_FL_CMD_FIND)) {
+		gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+	RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
+}
+

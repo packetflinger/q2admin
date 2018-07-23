@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "q_shared.h"
 
 #include "g_remote.h"
-
 // define GAME_INCLUDE so that game.h does not define the
 // short, server-visible gclient_t and edict_t structures,
 // because we define the full size ones in this file
@@ -90,7 +89,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define FL_POWER_ARMOR   0x00001000 // power armor (if any) is active
 #define FL_RESPAWN    0x80000000 // used for item respawning
 
-#define FRAMETIME    0.1
+// variable server FPS
+#if USE_FPS
+#define HZ              game.framerate
+#define FRAMETIME       game.frametime
+#define FRAMEDIV        game.framediv
+#define FRAMESYNC       !(level.framenum % game.framediv)
+#else
+#define HZ              BASE_FRAMERATE
+#define FRAMETIME       BASE_FRAMETIME_1000
+#define FRAMEDIV        1
+#define FRAMESYNC       1
+#endif
+
+#define SECS_TO_FRAMES(seconds)	(int)((seconds) * HZ)
+#define FRAMES_TO_SECS(frames)	(int)((frames) * FRAMETIME)
 
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME    765  // clear when unloading the dll
@@ -237,6 +250,13 @@ typedef struct {
     int num_items;
 
     qboolean autosaved;
+
+#if USE_FPS
+    int framerate;
+    int frametime;
+    int framediv;
+#endif
+
 } game_locals_t;
 
 // this structure is cleared as each map is entered
@@ -286,7 +306,7 @@ typedef struct {
 extern game_locals_t game;
 extern level_locals_t level;
 extern game_import_t gi;
-extern game_export_t globals;
+extern game_export_t ge;
 
 extern edict_t *g_edicts;
 
@@ -927,6 +947,8 @@ typedef struct {
     int enteredgame;
 	void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 	edict_t *ent;	// the actual entity
+	int remote_reported;
+	int next_report;
 } proxyinfo_t;
 
 typedef struct {
@@ -1086,8 +1108,8 @@ enum zb_logtypesenum {
 #define MINIMUMTIMEOUT   5
 #define MAXSTARTTRY    500
 
-#define getEntOffset(ent)  (((char *)ent - (char *)globals.edicts) / globals.edict_size)
-#define getEnt(entnum)   (edict_t *)((char *)globals.edicts + (globals.edict_size * entnum))
+#define getEntOffset(ent)  (((char *)ent - (char *)ge.edicts) / ge.edict_size)
+#define getEnt(entnum)   (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
 // where the command can't be run?
 #define CMDWHERE_CFGFILE  0x01
@@ -1112,9 +1134,9 @@ typedef struct {
     CMDINITFUNC *initfunc;
 } q2acmd_t;
 
-extern game_import_t gi;
-extern game_export_t globals;
-extern game_export_t *dllglobals;
+extern game_import_t gi;			// server access from inside game lib
+extern game_export_t ge;		// game access from inside server
+extern game_export_t *ge_mod;	// real game access from inside proxy game lib
 extern cvar_t *rcon_password, *gamedir, *maxclients, *logfile, *rconpassword, *port, *serverbindip, *q2admintxt, *q2adminbantxt, *q2adminbanremotetxt, *q2adminbanremotetxt_enable, *q2adminanticheat_enable, *q2adminanticheat_file, *q2adminhashlist_enable, *q2adminhashlist_dir; // UPDATE
 
 extern char dllname[256];
@@ -1144,6 +1166,16 @@ extern int clientMaxVoteTimeout;
 extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
+
+extern char remoteKey[256];
+extern char remoteAddr[256];
+extern int remotePort;
+extern int remoteFlags;
+extern qboolean remoteEnabled;
+extern char remoteCmdTeleport[15];
+extern char remoteCmdInvite[15];
+extern char remoteCmdSeen[15];
+extern char remoteCmdWhois[15];
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
@@ -1603,6 +1635,7 @@ typedef struct {
 #endif
 
 #define DEFAULTQ2AVER   "1.0"
+
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
 #define MAX_ADMINS    128
 #define ADMIN_AUTH_LEVEL  1

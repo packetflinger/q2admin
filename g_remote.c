@@ -4,13 +4,7 @@
 
 remote_t remote;
 
-// remote admin specific cvars
-cvar_t		*remote_enabled;
-cvar_t		*remote_server;
-cvar_t		*remote_port;
-cvar_t		*remote_key;
-cvar_t		*remote_flags;
-cvar_t		*net_port;
+cvar_t	*net_port;
 
 
 void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
@@ -31,13 +25,16 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
         return;
     }
 	
-	gchar *final = g_strconcat(stringf("%s\\%d\\", remote_key->string, cmd), string, NULL);
+	gchar *final = g_strconcat(stringf("%s\\%d\\", remoteKey, cmd), string, NULL);
+	gchar *encoded = g_base64_encode(final, strlen(final));
 	
-	gi.dprintf("Sending: %s\n", final);
-	
+	if (remote.flags & REMOTE_FL_DEBUG) {
+		gi.dprintf("[RA] Sending: %s\n", encoded);
+	}
+
 	int r = sendto(
 		remote.socket, 
-		final, 
+		encoded,
 		strlen(final)+1, 
 		MSG_DONTWAIT, 
 		remote.addr->ai_addr, 
@@ -45,41 +42,40 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	);
 	
 	if (r == -1) {
-		gi.dprintf("RA: error sending data: %s\n", strerror(errno));
+		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
 	
 	g_free(final);
+	g_free(encoded);
 }
 
 
 void RA_Init() {
 	
-	remote_enabled = gi.cvar("remote_enabled", "1", CVAR_LATCH | CVAR_SERVERINFO);
-	remote_server = gi.cvar("remote_server", "packetflinger.com", CVAR_LATCH);
-	remote_port = gi.cvar("remote_port", "9999", CVAR_LATCH);
-	remote_key = gi.cvar("remote_key", "beefwellingon", CVAR_LATCH);
-	remote_flags = gi.cvar("remote_flags", "7", CVAR_LATCH | CVAR_SERVERINFO);
+	memset(&remote, 0, sizeof(remote));
+
 	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
-	if (g_strcmp0(remote_enabled->string, "0") == 0)
+	if (!remoteEnabled) {
+		gi.dprintf("Remote Admin is disabled in your config file.\n");
 		return;
-
-	remote.enabled = 1;
+	}
 	
-	gi.dprintf("\nRA: Remote Admin Init\n");
+	gi.dprintf("\[RA] Remote Admin Init...\n");
 	
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 	
-	hints.ai_family         = AF_INET;   	// ipv4 only
+	hints.ai_family         = AF_INET;   	// either v6 or v4
 	hints.ai_socktype       = SOCK_DGRAM;	// UDP
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
 	
-	gi.dprintf("RA: looking up %s... ", remote_server->string);
-	int err = getaddrinfo(remote_server->string, remote_port->string, &hints, &res);
+	gi.dprintf("[RA] looking up %s... ", remoteAddr);
+
+	int err = getaddrinfo(remoteAddr, stringf("%d",remotePort), &hints, &res);
 	if (err != 0) {
 		gi.dprintf("error, disabling\n");
 		remote.enabled = 0;
@@ -92,36 +88,70 @@ void RA_Init() {
 	
 	int fd = socket(res->ai_family, res->ai_socktype, IPPROTO_UDP);
 	if (fd == -1) {
-		gi.dprintf("Unable to open socket to %s:%s...disabling remote admin\n", remote_server->string, remote_port->string);
+		gi.dprintf("Unable to open socket to %s:%d...disabling remote admin\n", remoteAddr, remotePort);
 		remote.enabled = 0;
 		return;
 	}
 	
 	remote.socket = fd;
 	remote.addr = res;
-	remote.flags = atoi(remote_flags->string);
+	remote.flags = remoteFlags;
+	remote.enabled = 1;
 }
 
 
-void Remote_RunFrame() {
+void RA_RunFrame() {
 	
+	if (!remote.enabled) {
+		return;
+	}
+
 	uint8_t i;
-	static uint8_t mc = 0;
-	if (mc == 0) 
-		mc = maxclients->value;
-	
-	// hijack each player entity's die() pointer, it gets reset on spawn.
-	for (i=0; i<=mc; i++) {
+
+	// report server if necessary
+	if (remote.next_report <= remote.frame_number) {
+		RA_Send(CMD_SHEARTBEAT, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
+		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
+	}
+
+
+	for (i=0; i<=remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
+
+			if (proxyinfo[i].next_report <= remote.frame_number) {
+				RA_Send(CMD_PHEARTBEAT, "%d\\%s", i, proxyinfo[i].userinfo);
+				proxyinfo[i].next_report = remote.frame_number + SECS_TO_FRAMES(60);
+			}
+
+			/*
+			if (!proxyinfo[i].remote_reported) {
+				RA_Send(CMD_CONNECT, "%d\\%s", i, proxyinfo[i].userinfo);
+				proxyinfo[i].remote_reported = 1;
+			}
+
+			// replace player edict's die() pointer
 			if (*proxyinfo[i].ent->die != PlayerDie_Internal) {
 				proxyinfo[i].die = *proxyinfo[i].ent->die;
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
+			*/
 		}
 	}
+
+	remote.frame_number++;
 }
 
-// hijack the real player_die function to get frag info to send
+void RA_Shutdown() {
+	if (!remote.enabled) {
+		return;
+	}
+
+	gi.dprintf("[RA] Unregistering with remote admin server\n\n");
+	RA_Send(CMD_SDISCONNECT, "");
+	freeaddrinfo(remote.addr);
+}
+
+
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
@@ -129,14 +159,16 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	if (self->deadflag != DEAD_DEAD) {	
 		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
 		
-		// another player killed us
-		if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
-			RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid, 
+		// crater, drown (water, acid, lava)
+		if (g_strcmp0(attacker->classname, "worldspawn") == 0) {
+			//RA_Send(CMD_FRAG,"%d\\%d\\worldspawn", id, aid);
+		} else if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
+			//gi.dprintf("Attacker: %s\n", attacker->client->pers.netname);
+			/*RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid,
 				attacker->client->pers.weapon->classname
-			);
+			);*/
 		}
 	}
 	
-	// call the real die()
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
