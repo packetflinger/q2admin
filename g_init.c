@@ -341,7 +341,7 @@ void InitGame(void) {
 
     if (q2adminrunmode == 0) {
         ge_mod->Init();
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -354,7 +354,7 @@ void InitGame(void) {
 	
     STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
 
-    copyDllInfo();
+    G_MergeEdicts();
 
     maxclients = gi.cvar("maxclients", "4", 0);
     logfile = gi.cvar("logfile", "0", 0);
@@ -454,7 +454,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
     if (q2adminrunmode == 0) {
         ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 	
@@ -602,7 +602,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
-    copyDllInfo();
+    G_MergeEdicts();
 
     readBanLists();
     AC_LoadExceptions();
@@ -775,7 +775,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
     if (q2adminrunmode == 0) {
         ret = ge_mod->ClientConnect(ent, userinfo);
-        copyDllInfo();
+        G_MergeEdicts();
         return ret;
     }
 
@@ -1043,7 +1043,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             ret = ge_mod->ClientConnect(ent, userinfo);
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
-            copyDllInfo();
+            G_MergeEdicts();
 			//RA_Send(CMD_CONNECT, "%d\\%s", client, userinfo);
         }
     }
@@ -1248,7 +1248,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientUserinfoChanged(ent, userinfo);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -1288,7 +1288,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         ge_mod->ClientUserinfoChanged(ent, userinfo);
         STOPPERFORMANCE(2, "mod->ClientUserinfoChanged", client, ent);
 
-        copyDllInfo();
+        G_MergeEdicts();
     }
 
     proxyinfo[client].rate = q2a_atoi(Info_ValueForKey(userinfo, "rate"));
@@ -1445,7 +1445,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientDisconnect(ent);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -1462,7 +1462,7 @@ void ClientDisconnect(edict_t *ent) {
         ge_mod->ClientDisconnect(ent);
         STOPPERFORMANCE(2, "mod->ClientDisconnect", client, ent);
 
-        copyDllInfo();
+        G_MergeEdicts();
 
         // setup the reconnect info if required.
         if (lockDownServer) {
@@ -1549,7 +1549,7 @@ void ClientBegin(edict_t *ent) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientBegin(ent);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -1562,7 +1562,7 @@ void ClientBegin(edict_t *ent) {
         ge_mod->ClientBegin(ent);
         STOPPERFORMANCE(2, "mod->ClientBegin", client, ent);
 
-        copyDllInfo();
+        G_MergeEdicts();
     } else {
         // setup ent to be valid...
         ent->client->ps.fov = 10;
@@ -1676,14 +1676,14 @@ void WriteGame(char *filename, qboolean autosave) {
 
     if (q2adminrunmode == 0) {
         ge_mod->WriteGame(filename, autosave);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
     STARTPERFORMANCE(1);
 
     ge_mod->WriteGame(filename, autosave);
-    copyDllInfo();
+    G_MergeEdicts();
 
     STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
 }
@@ -1695,14 +1695,14 @@ void ReadGame(char *filename) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ReadGame(filename);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
     STARTPERFORMANCE(1);
 
     ge_mod->ReadGame(filename);
-    copyDllInfo();
+    G_MergeEdicts();
 
     STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
 }
@@ -1714,14 +1714,14 @@ void WriteLevel(char *filename) {
 
     if (q2adminrunmode == 0) {
         ge_mod->WriteLevel(filename);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
     STARTPERFORMANCE(1);
 
     ge_mod->WriteLevel(filename);
-    copyDllInfo();
+    G_MergeEdicts();
 
     STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
 }
@@ -1733,14 +1733,14 @@ void ReadLevel(char *filename) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ReadLevel(filename);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
     STARTPERFORMANCE(1);
 
     ge_mod->ReadLevel(filename);
-    copyDllInfo();
+    G_MergeEdicts();
 
     STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);
 }

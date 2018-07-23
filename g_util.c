@@ -193,7 +193,7 @@ qboolean Info_Validate(char *s) {
     return true;
 }
 
-void copyDllInfo(void) {
+void G_MergeEdicts(void) {
     ge.apiversion = ge_mod->apiversion;
     ge.edict_size = ge_mod->edict_size;
     ge.edicts = ge_mod->edicts;

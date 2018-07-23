@@ -3152,7 +3152,7 @@ void ClientCommand(edict_t *ent) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientCommand(ent);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -3201,7 +3201,7 @@ void ClientCommand(edict_t *ent) {
             ge_mod->ClientCommand(ent);
             STOPPERFORMANCE(2, "mod->ClientCommand", 0, NULL);
 
-            copyDllInfo();
+            G_MergeEdicts();
         }
     }
 
@@ -3247,7 +3247,7 @@ void ServerCommand(void) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ServerCommand();
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -3258,7 +3258,7 @@ void ServerCommand(void) {
         ge_mod->ServerCommand();
         STOPPERFORMANCE(2, "mod->ServerCommand", 0, NULL);
 
-        copyDllInfo();
+        G_MergeEdicts();
     }
 
     STOPPERFORMANCE(1, "q2admin->ServerCommand", 0, NULL);

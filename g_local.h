@@ -1456,7 +1456,7 @@ char *trim(char *s);
 qboolean startswith(char *needle, char *haystack);
 int Q_stricmp(char *s1, char *s2);
 char *Info_ValueForKey(char *s, char *key);
-void copyDllInfo(void);
+void G_MergeEdicts(void);
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 int startContains(char *src, char *cmp);
 int stringContains(char *buff1, char *buff2);

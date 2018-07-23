@@ -136,7 +136,7 @@ void G_RunFrame(void) {
 
     if (q2adminrunmode == 0) {
         ge_mod->RunFrame();
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -186,7 +186,7 @@ void G_RunFrame(void) {
 
     if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
         ge_mod->RunFrame();
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -834,7 +834,7 @@ void G_RunFrame(void) {
 	RA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
-    copyDllInfo();
+    G_MergeEdicts();
 
     STOPPERFORMANCE_2(1, "q2admin->G_RunFrame", 0, NULL);
 }
@@ -1020,7 +1020,7 @@ game_export_t *GetGameAPI(game_import_t *import) {
 
     ge_mod = (*getapi)(import);
     dllloaded = TRUE;
-    copyDllInfo();
+    G_MergeEdicts();
 
     if (q2adminrunmode) {
         logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);

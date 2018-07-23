@@ -229,7 +229,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientThink(ent, ucmd);
-        copyDllInfo();
+        G_MergeEdicts();
         return;
     }
 
@@ -346,7 +346,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         ge_mod->ClientThink(ent, ucmd);
         STOPPERFORMANCE_2(2, "mod->ClientThink", 0, NULL);
 
-        copyDllInfo();
+        G_MergeEdicts();
     }
 
     STOPPERFORMANCE_2(1, "q2admin->ClientThink", 0, NULL);
