@@ -36,7 +36,7 @@ endif
 CFLAGS += -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
-HEADERS := g_local.h q_shared.h g_file.h g_remote.h regex.h
+HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h
 
 OBJS := g_anticheat.o \
 		g_ban.o \
