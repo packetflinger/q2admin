@@ -56,6 +56,23 @@ char *va(const char *format, ...) {
 	return string;
 }
 
+// compare strings with wildcards 
+qboolean WildcardMatch(char *pattern, char *haystack) {
+    if (*pattern == '\0' && *haystack == '\0')
+        return true;
+
+    if (*pattern == '*' && *(pattern+1) != '\0' && *haystack == '\0')
+        return false;
+
+    if (*pattern == '?' || *pattern == *haystack)
+        return match(pattern+1, haystack+1);
+
+    if (*pattern == '*')
+        return match(pattern+1, haystack) || match(pattern, haystack+1);
+	
+    return false;
+}
+
 qboolean startswith(char *needle, char *haystack) {
 	return (strncmp(needle, haystack, strlen(needle)) == 0);
 }	
