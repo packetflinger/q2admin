@@ -40,6 +40,7 @@ HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h
 
 OBJS := g_anticheat.o \
 		g_ban.o \
+		g_base64.o \
 		g_checkvar.o \
 		g_cmd.o \
 		g_disable.o \

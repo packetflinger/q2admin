@@ -52,11 +52,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define G_Malloc(x)		(gi.TagMalloc(x, TAG_GAME))
 
 // protocol bytes that can be directly added to messages
-#define svc_muzzleflash   1
-#define svc_muzzleflash2  2
-#define svc_temp_entity   3
-#define svc_layout    4
-#define svc_inventory   5
+#define SVC_MUZZLEFLASH		1
+#define SVC_MUZZLEFLASH2	2
+#define SVC_TEMP_ENTITY		3
+#define SVC_LAYOUT			4
+#define SVC_INVENTORY		5
+#define SVC_STUFFTEXT		11
 
 //==================================================================
 
@@ -1466,7 +1467,7 @@ void Cmd_Teleport_f(edict_t *ent);
 
 // zb_util.c
 void stuffcmd(edict_t *e, char *s);
-char *stringf(const char *format, ...) __attribute__((format(printf, 1, 2)));
+//char *stringf(const char *format, ...) __attribute__((format(printf, 1, 2)));
 char *trim(char *s);
 qboolean startswith(char *needle, char *haystack);
 int Q_stricmp(char *s1, char *s2);

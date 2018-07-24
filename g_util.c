@@ -22,8 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // required for proxy testing
 
+// Force entity to do a command
 void stuffcmd(edict_t *e, char *s) {
-    gi.WriteByte(11);
+    gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
     gi.unicast(e, true);
 }
@@ -40,7 +41,7 @@ char *trim(char *s) {
     return s;
 }
 
-char *stringf(const char *format, ...) {
+char *va(const char *format, ...) {
 	static char strings[8][MAX_STRING_CHARS];
 	static uint16_t index;
 

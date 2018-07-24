@@ -25,7 +25,7 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
         return;
     }
 	
-	gchar *final = g_strconcat(stringf("%s\\%d\\", remoteKey, cmd), string, NULL);
+	gchar *final = g_strconcat(va("%s\\%d\\", remoteKey, cmd), string, NULL);
 	gchar *encoded = g_base64_encode(final, strlen(final));
 	
 	if (remote.flags & REMOTE_FL_DEBUG) {
@@ -75,7 +75,7 @@ void RA_Init() {
 	
 	gi.dprintf("[RA] looking up %s... ", remoteAddr);
 
-	int err = getaddrinfo(remoteAddr, stringf("%d",remotePort), &hints, &res);
+	int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
 	if (err != 0) {
 		gi.dprintf("error, disabling\n");
 		remote.enabled = 0;
