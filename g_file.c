@@ -45,12 +45,14 @@
 
 #include <stdio.h>
 #include <string.h>
+
 #if defined(WIN32)
 #include <time.h>
 #include <Winsock2.h>
 #else
 #include <sys/time.h>
 #endif
+
 #include <stdlib.h>
 #include <errno.h>
 
@@ -59,7 +61,9 @@
 #include "g_local.h"
 
 enum fcurl_type_e {
-    CFTYPE_NONE = 0, CFTYPE_FILE = 1, CFTYPE_CURL = 2
+    CFTYPE_NONE = 0, 
+	CFTYPE_FILE = 1, 
+	CFTYPE_CURL = 2
 };
 
 struct fcurl_data {
@@ -90,11 +94,7 @@ void url_rewind(URL_FILE *file);
 CURLM *multi_handle;
 
 /* curl calls this routine to get more data */
-static size_t
-write_callback(char *buffer,
-        size_t size,
-        size_t nitems,
-        void *userp) {
+static size_t write_callback(char *buffer, size_t size, size_t nitems, void *userp) {
     char *newbuff;
     int rembuff;
 
@@ -113,15 +113,11 @@ write_callback(char *buffer,
             /* realloc suceeded increase buffer size*/
             url->buffer_len += size - rembuff;
             url->buffer = newbuff;
-
-            /*printf("Callback buffer grown to %d bytes\n",url->buffer_len);*/
         }
     }
 
     memcpy(&url->buffer[url->buffer_pos], buffer, size);
     url->buffer_pos += size;
-
-    /*fprintf(stderr, "callback %d size bytes\n", size);*/
 
     return size;
 }
@@ -160,8 +156,9 @@ static int fill_buffer(URL_FILE *file, int want, int waittime) {
 
         rc = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
 
-        if (rc < 1) return 0;
-        else {
+        if (rc < 1) { 
+			return 0;
+		} else {
             /* timeout or readable/writable sockets */
             /* note we *could* be more efficient and not wait for
              * CURLM_CALL_MULTI_PERFORM to clear here and check it on re-entry
@@ -170,12 +167,12 @@ static int fill_buffer(URL_FILE *file, int want, int waittime) {
                     CURLM_CALL_MULTI_PERFORM);
         }
     } while (file->still_running && (file->buffer_pos < want));
+	
     return 1;
 }
 
 /* use to remove want bytes from the front of a files buffer */
-static int
-use_buffer(URL_FILE *file, int want) {
+static int use_buffer(URL_FILE *file, int want) {
     /* sort out buffer */
     if ((file->buffer_pos - want) <= 0) {
         /* ditch buffer - write will recreate */
@@ -187,17 +184,13 @@ use_buffer(URL_FILE *file, int want) {
         file->buffer_len = 0;
     } else {
         /* move rest down make it available for later */
-        memmove(file->buffer,
-                &file->buffer[want],
-                (file->buffer_pos - want));
-
+        memmove(file->buffer, &file->buffer[want], (file->buffer_pos - want));
         file->buffer_pos -= want;
     }
     return 0;
 }
 
-URL_FILE *
-url_fopen(char *url, const char *operation) {
+URL_FILE *url_fopen(char *url, const char *operation) {
     /* this code could check for URLs or types in the 'url' and
        basicly use the real fopen() for standard files */
 
@@ -253,8 +246,7 @@ url_fopen(char *url, const char *operation) {
     return file;
 }
 
-int
-url_fclose(URL_FILE *file) {
+int url_fclose(URL_FILE *file) {
     int ret = 0; /* default is good return */
 
     switch (file->type) {
@@ -285,8 +277,7 @@ url_fclose(URL_FILE *file) {
     return ret;
 }
 
-int
-url_feof(URL_FILE *file) {
+int url_feof(URL_FILE *file) {
     int ret = 0;
 
     switch (file->type) {
@@ -306,8 +297,7 @@ url_feof(URL_FILE *file) {
     return ret;
 }
 
-size_t
-url_fread(void *ptr, size_t size, size_t nmemb, URL_FILE *file) {
+size_t url_fread(void *ptr, size_t size, size_t nmemb, URL_FILE *file) {
     size_t want;
 
     switch (file->type) {
@@ -336,8 +326,6 @@ url_fread(void *ptr, size_t size, size_t nmemb, URL_FILE *file) {
 
             want = want / size; /* number of items - nb correct op - checked
                                  * with glibc code*/
-
-            /*printf("(fread) return %d bytes %d left\n", want,file->buffer_pos);*/
             break;
 
         default: /* unknown or supported type - oh dear */
@@ -397,8 +385,7 @@ char *url_fgets(char *ptr, int size, URL_FILE *file) {
     return ptr; /*success */
 }
 
-void
-url_rewind(URL_FILE *file) {
+void url_rewind(URL_FILE *file) {
     switch (file->type) {
         case CFTYPE_FILE:
             rewind(file->handle.file); /* passthrough */
@@ -425,5 +412,4 @@ url_rewind(URL_FILE *file) {
             break;
 
     }
-
 }
