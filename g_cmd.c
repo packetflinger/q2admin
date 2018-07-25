@@ -1715,6 +1715,8 @@ char *getArgs(void) {
 }
 
 void processCommand(int cmdidx, int startarg, edict_t *ent) {
+	
+	// save value
     if (gi.argc() > startarg) {
         switch (q2aCommands[cmdidx].cmdtype) {
             case CMDTYPE_LOGICAL:
@@ -1731,6 +1733,7 @@ void processCommand(int cmdidx, int startarg, edict_t *ent) {
         }
     }
 
+	// show value
     switch (q2aCommands[cmdidx].cmdtype) {
         case CMDTYPE_LOGICAL:
             gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, *((qboolean *) q2aCommands[cmdidx].datapoint) ? "Yes" : "No");
@@ -3214,7 +3217,7 @@ void ClientCommand(edict_t *ent) {
 
 qboolean doServerCommand(void) {
     char *cmd;
-    unsigned int i;
+    uint8_t i;
 
     cmd = gi.argv(1);
 
