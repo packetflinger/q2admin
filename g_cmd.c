@@ -2211,8 +2211,8 @@ void hackDetected(edict_t *ent, int client) {
 qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter) {
     unsigned int i, cnt, sameip;
     char abuffer[256];
-    char stemp[1024];
-    char response[2048];
+    char stemp[MAX_STRING_CHARS];
+    char response[MAX_STRING_CHARS * 2];
     int alevel, slen;
     int q2a_admin_command = 0;
     qboolean dont_print;
@@ -3031,7 +3031,7 @@ void ClientCommand(edict_t *ent) {
 
     int clientnum = getEntOffset(ent) - 1;
     qboolean checkforfloodafter = FALSE;
-    char stemp[1024];
+    char stemp[MAX_STRING_CHARS];
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
@@ -3050,26 +3050,26 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	if (g_strcmp0(cmd, remoteCmdTeleport) == 0) {
+	if (Q_stricmp(cmd, remoteCmdTeleport) == 0) {
 		Cmd_Teleport_f(ent);
 		return;
 	}
 	
-	if (g_strcmp0(cmd, remoteCmdInvite) == 0) {
+	if (Q_stricmp(cmd, remoteCmdInvite) == 0) {
 		Cmd_Invite_f(ent);
 		return;
 	}
 
-	if (g_strcmp0(cmd, remoteCmdSeen) == 0) {
+	if (Q_stricmp(cmd, remoteCmdSeen) == 0) {
 		Cmd_Find_f(ent);
 		return;
 	}
 
-	if (g_strcmp0(cmd, remoteCmdWhois) == 0) {
+	if (Q_stricmp(cmd, remoteCmdWhois) == 0) {
 		return;
 	}
 
-	if (g_strcmp0(cmd, "!rastatus") == 0) {
+	if (Q_stricmp(cmd, "!rastatus") == 0) {
 		Cmd_Remote_Status_f(ent);
 		return;
 	}
@@ -3153,11 +3153,6 @@ void ServerCommand(void) {
     STOPPERFORMANCE(1, "q2admin->ServerCommand", 0, NULL);
 }
 
-
-
-
-//======================================================================
-
 void clientsidetimeoutInit(char *arg) {
     clientsidetimeout = q2a_atoi(arg);
 
@@ -3167,7 +3162,7 @@ void clientsidetimeoutInit(char *arg) {
 }
 
 void zbotversionRun(int startarg, edict_t *ent, int client) {
-    gi.cprintf(ent, PRINT_HIGH, zbotversion);
+	gi.cprintf(ent, PRINT_HIGH, "Q2Admin v%s.%s\n", Q2ADMINVERSION, Q2A_VERSION);
 }
 
 void clientsidetimeoutRun(int startarg, edict_t *ent, int client) {
@@ -3498,7 +3493,7 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "Command sent to client!\n");
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !stuff [LIKE/RE/CL] name [client commands / FILE <filename>]\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !stuff [CL <id>]|name [client commands | FILE <filename>]\n");
     }
 }
 
@@ -3519,10 +3514,9 @@ void stuffNextLine(edict_t *ent, int client) {
 
 void sayGroupRun(int startarg, edict_t *ent, int client) {
     char *text;
-    char tmptext[2048];
+    char tmptext[MAX_STRING_CHARS];
     edict_t *enti;
-    int clienti;
-    int max;
+    int8_t clienti, max;
 
     // skip the first part (!say_xxx)
     text = getArgs();
@@ -3538,8 +3532,8 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
     max = getClientsFromArg(client, ent, text, &text);
 
     if (max) {
-        if (q2a_strlen(text) > 2000) {
-            text[2000] = 0;
+        if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
+            text[MAX_STRING_CHARS - 40] = 0;
         }
 
         for (clienti = 0; clienti < maxclients->value; clienti++) {
@@ -3557,7 +3551,7 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
             }
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_group [LIKE/CL] name message\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_group [CL <id>]|name message\n");
     }
 }
 
@@ -3565,7 +3559,7 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
     int clienti;
-    char tmptext[2100];
+    char tmptext[MAX_STRING_CHARS];
 
     // skip the first part (!say_xxx)
     text = getArgs();
@@ -3582,8 +3576,8 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        if (q2a_strlen(text) > 2000) {
-            text[2000] = 0;
+        if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
+            text[MAX_STRING_CHARS - 40] = 0;
         }
 
         sprintf(tmptext, "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
@@ -3596,7 +3590,7 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
         sprintf(tmptext, "(private message) %s\n", text);
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person [LIKE/CL] name message\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person [CL <id>]|name message\n");
     }
 }
 
@@ -3624,7 +3618,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
         sprintf(tmptext, "%s ip: %s\n", proxyinfo[clienti].name, proxyinfo[clienti].ipaddress);
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL] name\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL <id>]|name\n");
     }
 }
 
@@ -3657,7 +3651,7 @@ void kickRun(int startarg, edict_t *ent, int client) {
             }
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !kick [LIKE/RE/CL] name\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !kick [CL] name\n");
     }
 }
 
