@@ -1820,51 +1820,14 @@ void readCfgFiles(void) {
 }
 
 int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
-    int clienti;
-    unsigned int like, maxi;
-    regex_t r;
-    char strbuffer[sizeof (buffer)];
+    int8_t clienti;
+    uint8_t like, maxi;
+    char strbuffer[sizeof(buffer)];
+	char strbuffer2[sizeof(buffer)];
 
     maxi = 0;
 
-    if (startContains(cp, "LIKE")) {
-        like = 1;
-
-        cp += 5;
-        SKIPBLANK(cp);
-
-        if (*cp == '\"') {
-            cp++;
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
-            cp++;
-        } else {
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), ' ');
-        }
-        SKIPBLANK(cp);
-    } else if (startContains(cp, "RE")) {
-        like = 2;
-
-        cp += 2;
-        SKIPBLANK(cp);
-
-        if (*cp == '\"') {
-            cp++;
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
-            cp++;
-        } else {
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), ' ');
-        }
-        SKIPBLANK(cp);
-
-        q_strupr(strbuffer);
-
-        q2a_memset(&r, 0x0, sizeof (r));
-        //    if(regcomp(&r, strbuffer, REG_EXTENDED))
-        if (regcomp(&r, strbuffer, 0)) {
-            gi.cprintf(ent, PRINT_HIGH, "Regular Expression Incorrect.\n");
-            return 0;
-        }
-    } else if (startContains(cp, "CL")) {
+	if (startContains(cp, "CL")) {
         like = 3;
 
         cp += 2;
@@ -1923,22 +1886,18 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
         SKIPBLANK(cp);
     }
 
-
-
-
     if (like < 3) {
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             proxyinfo[clienti].clientcommand &= ~CCMD_SELECTED;
 
-            //    if(clienti == client)
-            //    {
-            //      continue;
-            //    }
-
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0:
-                        if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+						q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+						if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+							maxi++;
+							proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
+						} else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
                             maxi++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
@@ -1950,21 +1909,8 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
                         break;
-
-                    case 2:
-                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
-                        q_strupr(strbuffer);
-                        if (regexec(&r, strbuffer, 0, 0, 0) != REG_NOMATCH) {
-                            maxi++;
-                            proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
-                        }
-                        break;
                 }
             }
-        }
-
-        if (like == 2) {
-            regfree(&r);
         }
     }
 
@@ -1979,11 +1925,10 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 }
 
 edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
-    int clienti, foundclienti;
-    unsigned int like;
+    int8_t clienti, foundclienti;
+	uint8_t like, matchcount;
     char strbuffer[sizeof(buffer)];
 	char strbuffer2[sizeof(buffer)];
-	uint8_t matchcount;
 
     foundclienti = -1;
 	matchcount = 0;
