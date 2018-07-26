@@ -57,7 +57,7 @@ char *va(const char *format, ...) {
 }
 
 // compare strings with wildcards 
-qboolean WildcardMatch(char *pattern, char *haystack) {
+qboolean wildcard_match(char *pattern, char *haystack) {
     if (*pattern == '\0' && *haystack == '\0')
         return true;
 
@@ -65,10 +65,10 @@ qboolean WildcardMatch(char *pattern, char *haystack) {
         return false;
 
     if (*pattern == '?' || *pattern == *haystack)
-        return match(pattern+1, haystack+1);
+        return wildcard_match(pattern+1, haystack+1);
 
     if (*pattern == '*')
-        return match(pattern+1, haystack) || match(pattern, haystack+1);
+        return wildcard_match(pattern+1, haystack) || wildcard_match(pattern, haystack+1);
 	
     return false;
 }

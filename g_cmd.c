@@ -1978,61 +1978,17 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     return 0;
 }
 
-edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text) {
+edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
     int clienti, foundclienti;
     unsigned int like;
-    regex_t r;
-    char strbuffer[sizeof (buffer)];
+    char strbuffer[sizeof(buffer)];
+	char strbuffer2[sizeof(buffer)];
+	uint8_t matchcount;
 
     foundclienti = -1;
-
-    if (startContains(cp, "LIKE")) {
-        like = 1;
-
-        cp += 5;
-        SKIPBLANK(cp);
-
-        if (*cp == '\"') {
-            cp++;
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
-            cp++;
-        } else {
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), ' ');
-        }
-        SKIPBLANK(cp);
-    } else if (startContains(cp, "RE")) {
-        gi.cprintf(ent, PRINT_HIGH, "Unknown player...\n");
-        return NULL;
-        /*
-		like = 2;
-
-		cp += 2;
-		SKIPBLANK(cp);
-
-		if(*cp == '\"')
-				{
-						cp++;
-						cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
-						cp++;
-				}
-		else
-				{
-						cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
-				}
-		SKIPBLANK(cp);
-
-		q_strupr(strbuffer);
-
-		q2a_memset(&r, 0x0, sizeof(r));
-		//    if(regcomp(&r, strbuffer, REG_EXTENDED))
-		if(regcomp(&r, strbuffer, 0))
-				{
-						gi.cprintf(ent, PRINT_HIGH, "Regular Expression Incorrect.\n");
-						return NULL;
-		}
-         */
-
-    } else if (startContains(cp, "CL")) {
+	matchcount = 0;
+	
+	if (startContains(cp, "CL ")) {
         like = 3;
 
         cp += 2;
@@ -2069,14 +2025,18 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, ch
 
     if (like < 3) {
         for (clienti = 0; clienti < maxclients->value; clienti++) {
-            //      if(clienti == client)
-            //      {
-            //        continue;
-            //      }
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0:
-                        if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+						q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+						if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+							foundclienti = clienti;
+							matchcount++;
+							if (matchcount > 1) {
+								gi.cprintf(ent, PRINT_HIGH, "2 or more player names matched.\n");
+								return NULL;
+							}
+						} else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
                                 return NULL;
@@ -2096,32 +2056,14 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, ch
                             foundclienti = clienti;
                         }
                         break;
-
-                    case 2:
-                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
-                        q_strupr(strbuffer);
-                        if (regexec(&r, strbuffer, 0, 0, 0) != REG_NOMATCH) {
-                            if (foundclienti != -1) {
-                                regfree(&r);
-                                gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
-                                return NULL;
-                            }
-
-                            foundclienti = clienti;
-                        }
-                        break;
                 }
             }
-        }
-
-        if (like == 2) {
-            regfree(&r);
         }
     }
 
     if (foundclienti != -1) {
         *text = cp;
-        *cleintret = foundclienti;
+        *clientret = foundclienti;
         return getEnt((foundclienti + 1));
     } else {
         gi.cprintf(ent, PRINT_HIGH, "no player name matches found.\n");
@@ -3737,7 +3679,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
         sprintf(tmptext, "%s ip: %s\n", proxyinfo[clienti].name, proxyinfo[clienti].ipaddress);
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [LIKE/CL] name\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL] name\n");
     }
 }
 

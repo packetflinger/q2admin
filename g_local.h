@@ -1481,6 +1481,7 @@ char *processstring(char *output, char *input, int max, char end);
 qboolean getLogicalValue(char *arg);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 void q_strupr(char *c);
+qboolean wildcard_match(char *pattern, char *haystack);
 
 // zb_ban.c
 void banRun(int startarg, edict_t *ent, int client);
