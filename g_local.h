@@ -784,6 +784,7 @@ struct chatflood_s {
 #define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
 #define BANLISTFILE		"q2a_ban.cfg"
 #define BYPASSFILE		"q2a_bypass.cfg"
+#define CHECKVARFILE	"q2a_cvar.cfg"
 #define CFGFILE			"q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND    "vote"

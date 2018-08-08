@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define CHECKVARFILE             "q2admincheckvar.txt"
 #define CHECKVAR_MAX             50
 
 typedef struct {
