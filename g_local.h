@@ -783,7 +783,7 @@ struct chatflood_s {
 #define ANTICHEATEXCEPTIONLOCALFILE      "ac.cfg"
 #define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
 #define BANLISTFILE      "q2adminban.txt"
-#define CFGFILE       "q2admin.txt"
+#define CFGFILE       "q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND    "vote"
 #define DEFAULTRECONNECTMSG    "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."

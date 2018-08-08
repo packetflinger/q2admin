@@ -624,7 +624,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
     if (!*serverip) {
-        gi.dprintf("You have not set a server ip.  Please add the following to q2admin.txt\nserverip \"ip\" where ip matches the outgoing one of the server.\n");
+        gi.dprintf("You have not set a server ip.  Please add the following to %s\nserverip \"ip\" where ip matches the outgoing one of the server.\n", CFGFILE);
     }
 
     remote.maxclients = atoi(maxclients->string);
