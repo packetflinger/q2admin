@@ -70,7 +70,6 @@ ZB_LOGTYPES logtypes[] ={
 
 
 #define LOGTYPES_MAX    (sizeof(logtypes) / sizeof(logtypes[0]))
-#define LOGLISTFILE     "q2adminlog.txt"
 
 void expandOutPortNum(char *srcdest, int max) {
     char *org = srcdest;
