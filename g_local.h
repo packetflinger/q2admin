@@ -782,7 +782,7 @@ struct chatflood_s {
 #define ANTICHEATEXCEPTIONREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
 #define ANTICHEATEXCEPTIONLOCALFILE      "ac.cfg"
 #define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
-#define BANLISTFILE      "q2adminban.txt"
+#define BANLISTFILE      "q2a_ban.cfg"
 #define CFGFILE       "q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND    "vote"
