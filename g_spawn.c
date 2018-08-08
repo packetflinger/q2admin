@@ -20,8 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-
-#define SPAWNFILE             "q2adminspawn.txt"
 #define SPAWN_MAXCMDS         50
 
 typedef struct {
