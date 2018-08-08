@@ -436,7 +436,7 @@ void Read_Admin_cfg(void) {
     char name[256];
     int i, i2;
 
-    sprintf(name, "%s/q2adminlogin.txt", moddir);
+    sprintf(name, "%s/%s", moddir, LOGINFILE);
 
     f = fopen(name, "rb");
     if (!f) {
