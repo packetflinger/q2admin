@@ -787,6 +787,7 @@ struct chatflood_s {
 #define BYPASSFILE		"q2a_bypass.cfg"
 #define CHECKVARFILE	"q2a_cvar.cfg"
 #define DISABLEFILE		"q2a_disable.cfg"
+#define FLOODFILE		"q2a_flood.cfg"
 #define CFGFILE			"q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND    "vote"
