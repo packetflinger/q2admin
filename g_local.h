@@ -790,6 +790,7 @@ struct chatflood_s {
 #define FLOODFILE		"q2a_flood.cfg"
 #define LOGINFILE		"q2a_login.cfg"
 #define LOGLISTFILE     "q2a_log.cfg"
+#define LRCONFILE		"q2a_lrcon.cfg"
 #define CFGFILE			"q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND    "vote"

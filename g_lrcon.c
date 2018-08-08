@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define LRCONFILE             "q2adminlrcon.txt"
 #define LRCON_MAXCMDS         1024
 
 typedef struct {
