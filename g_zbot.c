@@ -462,7 +462,7 @@ void Read_Admin_cfg(void) {
 
 file2:
     ;
-    sprintf(name, "%s/q2adminbypass.txt", moddir);
+    sprintf(name, "%s/%s", moddir, BYPASSFILE);
 
     f = fopen(name, "rb");
     if (!f) {
