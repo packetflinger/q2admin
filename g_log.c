@@ -25,21 +25,18 @@ typedef struct {
     qboolean mod;
     char filename[256];
 
-}
-ZB_LOGFILE;
+} logfile_t;
 
-
-ZB_LOGFILE logFiles[32];
+logfile_t logFiles[32];
 
 typedef struct {
     char *logtype;
     qboolean log;
     unsigned long logfiles;
     char format[4096];
-}
-ZB_LOGTYPES;
+} logtypes_t;
 
-ZB_LOGTYPES logtypes[] ={
+logtypes_t logtypes[] ={
     { "ZBOT", FALSE, 0, ""},
     { "ZBOTIMPULSES", FALSE, 0, ""},
     { "IMPULSES", FALSE, 0, ""},
