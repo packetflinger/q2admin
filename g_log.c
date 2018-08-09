@@ -310,6 +310,7 @@ void loadLogList(void) {
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2) {
     char *cp;
     time_t ltimetemp;
+	struct tm *timeinfo;
 
     while (*format) {
         if (*format == '#') {
@@ -350,10 +351,19 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                         *dest++ = *cp++;
                     }
                 }
-            } else if (*format == 't') {
+            } else if (*format == 't') {	// long format
                 time(&ltimetemp);
                 q2a_strcpy(buffer, ctime(&ltimetemp));
 
+                cp = buffer;
+                while (*cp && *cp != '\n') {
+                    *dest++ = *cp++;
+                }
+			} else if (*format == 'T') {	// short format
+				time(&ltimetemp);
+				timeinfo = localtime(&ltimetemp);
+				strftime(buffer,15,"%Y%m%d%H%M%S", timeinfo);
+				
                 cp = buffer;
                 while (*cp && *cp != '\n') {
                     *dest++ = *cp++;
