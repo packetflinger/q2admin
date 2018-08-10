@@ -627,12 +627,13 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         gi.dprintf("You have not set a server ip.  Please add the following to %s\nserverip \"ip\" where ip matches the outgoing one of the server.\n", CFGFILE);
     }
 
-    remote.maxclients = atoi(maxclients->string);
+    remote.maxclients = (int) maxclients->value;
     q2a_strcpy(remote.mapname, mapname);
     q2a_strcpy(remote.rcon_password, rconpassword->string);
-    remote.port = atoi(net_port->string);
+	remote.port = getport();
     remote.next_report = 0;
-
+	RA_Register();
+	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
@@ -1455,7 +1456,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (client >= maxclients->value) return;
 
-	RA_Send(CMD_PDISCONNECT, "%d", client);
+	RA_PlayerDisconnect(ent);
 	
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);

@@ -1,11 +1,7 @@
-
 #include "g_local.h"
 
-
 remote_t remote;
-
-cvar_t	*net_port;
-
+cvar_t	*udpport;
 
 void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 
@@ -13,29 +9,27 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
     char        string[MAX_STRING_CHARS];
 	size_t      len;
 	
-	if (!remote.enabled) {
+	if (!(remote.enabled && remote.online)) {
 		return;
 	}
 	
 	va_start(argptr, fmt);
-    len = g_vsnprintf(string, sizeof(string), fmt, argptr);
+    len = vsnprintf(string, sizeof(string), fmt, argptr);
     va_end(argptr);
 	
 	if (len >= sizeof(string)) {
         return;
     }
 	
-	gchar *final = g_strconcat(va("%s\\%d\\", remoteKey, cmd), string, NULL);
-	gchar *encoded = g_base64_encode(final, strlen(final));
-	
-	if (remote.flags & REMOTE_FL_DEBUG) {
-		gi.dprintf("[RA] Sending: %s\n", encoded);
-	}
+	RA_InitBuffer();
+	RA_WriteByte(cmd);
+	RA_WriteString(remoteKey);
+	RA_WriteString(string);
 
 	int r = sendto(
 		remote.socket, 
-		encoded,
-		strlen(final)+1, 
+		remote.msg,
+		remote.msglen, 
 		MSG_DONTWAIT, 
 		remote.addr->ai_addr, 
 		remote.addr->ai_addrlen
@@ -44,17 +38,12 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	if (r == -1) {
 		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
-	
-	g_free(final);
-	g_free(encoded);
 }
 
 
 void RA_Init() {
 	
 	memset(&remote, 0, sizeof(remote));
-
-	net_port = gi.cvar("net_port", "27910", CVAR_LATCH);
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
 	if (!remoteEnabled) {
@@ -62,7 +51,7 @@ void RA_Init() {
 		return;
 	}
 	
-	gi.dprintf("\[RA] Remote Admin Init...\n");
+	gi.dprintf("[RA] Remote Admin Init...\n");
 	
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
@@ -97,6 +86,7 @@ void RA_Init() {
 	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
+	remote.online = 1;
 }
 
 
@@ -110,7 +100,7 @@ void RA_RunFrame() {
 
 	// report server if necessary
 	if (remote.next_report <= remote.frame_number) {
-		RA_Send(CMD_SHEARTBEAT, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
+		//RA_Send(CMD_SHEARTBEAT, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
 		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
 	}
 
@@ -119,7 +109,7 @@ void RA_RunFrame() {
 		if (proxyinfo[i].inuse) {
 
 			if (proxyinfo[i].next_report <= remote.frame_number) {
-				RA_Send(CMD_PHEARTBEAT, "%d\\%s", i, proxyinfo[i].userinfo);
+				//RA_Send(CMD_PHEARTBEAT, "%d\\%s", i, proxyinfo[i].userinfo);
 				proxyinfo[i].next_report = remote.frame_number + SECS_TO_FRAMES(60);
 			}
 
@@ -146,8 +136,8 @@ void RA_Shutdown() {
 		return;
 	}
 
-	gi.dprintf("[RA] Unregistering with remote admin server\n\n");
-	RA_Send(CMD_SDISCONNECT, "");
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
+	RA_Send(CMD_QUIT, "");
 	freeaddrinfo(remote.addr);
 }
 
@@ -171,4 +161,70 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	}
 	
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
+}
+
+uint16_t getport(void) {
+	static cvar_t *port;
+
+	port = gi.cvar("port", "0", 0);
+	if ((int) port->value) {
+		return (int) port->value;
+	}
+	
+	port = gi.cvar("net_port", "0", 0);
+	if ((int) port->value) {
+		return (int) port->value;
+	}
+	
+	port = gi.cvar("port", "27910", 0);
+	return (int) port->value;
+}
+
+void RA_InitBuffer() {
+	q2a_memset(&remote.msg, 0, sizeof(remote.msg));
+	remote.msglen = 0;
+}
+
+void RA_WriteByte(uint8_t b) {
+	remote.msg[remote.msglen] = b & 0xff;
+	remote.msglen++;
+}
+
+void RA_WriteString(char *str) {
+	
+	uint16_t i;
+	size_t len;
+	len = strlen(str);
+	
+	if (!str || len == 0) {
+		RA_WriteByte(0);
+		return;
+	}
+	
+	if (len > MAX_MSG_LEN - remote.msglen) {
+		RA_WriteByte(0);
+		return;
+	}
+	
+	while (*str) {
+		remote.msg[remote.msglen++] = *str++ | 0x80;
+	}
+
+	RA_WriteByte(0);
+}
+
+void RA_Register(void) {
+	RA_Send(CMD_REGISTER, "serverstarup");
+}
+
+void RA_Unregister(void) {
+	RA_Send(CMD_QUIT, "serverquit");
+}
+
+void RA_PlayerConnect(edict_t *ent) {
+	
+}
+
+void RA_PlayerDisconnect(edict_t *ent) {
+	
 }

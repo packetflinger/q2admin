@@ -46,6 +46,7 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
 void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
 void lockDownServerRun(int startarg, edict_t *ent, int client);
 void Cmd_Remote_Status_f(edict_t *ent);
+void remoteSettingsDisplay(int startarg, edict_t *ent, int client);
 void remoteOnlineRun(int startarg, edict_t *ent, int client);
 void remoteOfflineRun(int startarg, edict_t *ent, int client);
 void remoteResetRun(int startarg, edict_t *ent, int client);
@@ -865,14 +866,21 @@ q2acmd_t q2aCommands[] ={
         reloadVoteFileRun,
     },
 	{
-		"ra_offline",
+		"remote",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteSettingsDisplay,
+	},
+	{
+		"remote_offline",
 		CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NONE,
 		NULL,
 		remoteOfflineRun,
 	},
 	{
-		"ra_online",
+		"remote_online",
 		CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NONE,
 		NULL,
@@ -3694,6 +3702,31 @@ void Cmd_Teleport_f(edict_t *ent) {
 	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
 
 	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
+}
+
+// Show the remote settings/status 
+void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
+	char address[INET_ADDRSTRLEN];
+	
+	if (remote.enabled) {
+		inet_ntop(
+			remote.addr->ai_family, 
+			&((struct sockaddr_in *)remote.addr->ai_addr)->sin_addr, 
+			address, 
+			sizeof(address)
+		);
+	} else {
+		q2a_strcpy(address, "none");
+	}
+	
+	gi.cprintf(ent, PRINT_HIGH, 
+		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %s\n",
+		(remote.enabled) ? "yes" : "no",
+		(remote.online) ? "yes" : "no",
+		(remote.enabled) ? va("%s:%d", address, remote.port) : "none",
+		remote.flags,
+		remoteKey
+	);
 }
 
 void remoteOfflineRun(int startarg, edict_t *ent, int client) {

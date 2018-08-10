@@ -15,7 +15,7 @@
 #include <stdint.h>
 
 extern cvar_t		*gamelib;
-extern cvar_t		*net_port;
+extern cvar_t		*udpport;
 
 // flags
 #define REMOTE_FL_LOG_FRAGS			1 << 0 	// 1
@@ -26,6 +26,7 @@ extern cvar_t		*net_port;
 #define REMOTE_FL_CMD_WHOIS			1 << 5	// 32
 #define REMOTE_FL_DEBUG				1 << 11	// 2048
 
+#define MAX_MSG_LEN		1000
 
 typedef struct {
 	uint8_t 		enabled;
@@ -39,14 +40,16 @@ typedef struct {
 	uint8_t			maxclients;
 	uint16_t		port;
 	qboolean		online;
+	byte			msg[MAX_MSG_LEN];
+	uint16_t		msglen;
 } remote_t;
 
 
 typedef enum {
-	CMD_SHEARTBEAT,
-	CMD_SDISCONNECT,
-	CMD_PHEARTBEAT,
-	CMD_PDISCONNECT,
+	CMD_REGISTER,		// server
+	CMD_QUIT,			// server
+	CMD_CONNECT,		// player
+	CMD_DISCONNECT,		// player
 	CMD_PRINT,
 	CMD_TELEPORT,
 	CMD_INVITE,
@@ -55,9 +58,14 @@ typedef enum {
 } remote_cmd_t;
 
 
-void 	RA_Send(remote_cmd_t cmd, const char *fmt, ...);
-void	RA_Init(void);
-void	RA_RunFrame(void);
+void 		RA_Send(remote_cmd_t cmd, const char *fmt, ...);
+void		RA_Init(void);
+void		RA_RunFrame(void);
+void 		RA_Register(void);
+void 		RA_Unregister(void);
+void 		RA_PlayerConnect(edict_t *ent);
+void 		RA_PlayerDisconnect(edict_t *ent);
+uint16_t 	getport(void);
 
 extern remote_t remote;
 
