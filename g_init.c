@@ -1046,6 +1046,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
             G_MergeEdicts();
 			//RA_Send(CMD_CONNECT, "%d\\%s", client, userinfo);
+			RA_PlayerConnect(ent);
         }
     }
 

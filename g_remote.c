@@ -3,28 +3,11 @@
 remote_t remote;
 cvar_t	*udpport;
 
-void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
+void RA_Send() {
 
-	va_list     argptr;
-    char        string[MAX_STRING_CHARS];
-	size_t      len;
-	
 	if (!(remote.enabled && remote.online)) {
 		return;
 	}
-	
-	va_start(argptr, fmt);
-    len = vsnprintf(string, sizeof(string), fmt, argptr);
-    va_end(argptr);
-	
-	if (len >= sizeof(string)) {
-        return;
-    }
-	
-	RA_InitBuffer();
-	RA_WriteByte(cmd);
-	RA_WriteString(remoteKey);
-	RA_WriteString(string);
 
 	int r = sendto(
 		remote.socket, 
@@ -38,6 +21,8 @@ void RA_Send(remote_cmd_t cmd, const char *fmt, ...) {
 	if (r == -1) {
 		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
+	
+	RA_InitBuffer();
 }
 
 
@@ -137,7 +122,7 @@ void RA_Shutdown() {
 	}
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
-	RA_Send(CMD_QUIT, "");
+	RA_Quit();
 	freeaddrinfo(remote.addr);
 }
 
@@ -190,10 +175,17 @@ void RA_WriteByte(uint8_t b) {
 	remote.msglen++;
 }
 
-void RA_WriteString(char *str) {
+void RA_WriteString(const char *fmt, ...) {
 	
 	uint16_t i;
 	size_t len;
+	char str[MAX_MSG_LEN];
+	va_list argptr;
+	
+	va_start(argptr, fmt);
+    len = vsnprintf(str, sizeof(str), fmt, argptr);
+	va_end(argptr);
+
 	len = strlen(str);
 	
 	if (!str || len == 0) {
@@ -206,25 +198,40 @@ void RA_WriteString(char *str) {
 		return;
 	}
 	
-	while (*str) {
-		remote.msg[remote.msglen++] = *str++ | 0x80;
+	for (i=0; i<len; i++) {
+		remote.msg[remote.msglen++] = str[i] | 0x80;
 	}
 
 	RA_WriteByte(0);
 }
 
 void RA_Register(void) {
-	RA_Send(CMD_REGISTER, "serverstarup");
+	RA_WriteByte(CMD_REGISTER);
+	RA_Send();
 }
 
 void RA_Unregister(void) {
-	RA_Send(CMD_QUIT, "serverquit");
+	RA_WriteByte(CMD_QUIT); 
+	RA_Send();
 }
 
 void RA_PlayerConnect(edict_t *ent) {
-	
+	int8_t cl;
+	cl = getEntOffset(ent) - 1;
+	RA_WriteByte(CMD_CONNECT);
+	RA_WriteByte(cl);
+	RA_WriteString("%s", proxyinfo[cl].userinfo);
+	RA_Send();
 }
 
 void RA_PlayerDisconnect(edict_t *ent) {
+	int8_t cl;
+	cl = getEntOffset(ent) - 1;
+	RA_WriteByte(CMD_DISCONNECT);
+	RA_WriteByte(cl);
+	RA_Send();
+}
+
+void RA_PlayerCommand(edict_t *ent) {
 	
 }

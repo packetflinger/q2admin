@@ -58,13 +58,17 @@ typedef enum {
 } remote_cmd_t;
 
 
-void 		RA_Send(remote_cmd_t cmd, const char *fmt, ...);
+void 		RA_Send(void);
 void		RA_Init(void);
 void		RA_RunFrame(void);
-void 		RA_Register(void);
-void 		RA_Unregister(void);
-void 		RA_PlayerConnect(edict_t *ent);
-void 		RA_PlayerDisconnect(edict_t *ent);
+void		RA_Register(void);
+void		RA_Unregister(void);
+void		RA_PlayerConnect(edict_t *ent);
+void		RA_PlayerDisconnect(edict_t *ent);
+void		RA_PlayerCommand(edict_t *ent);
+void		RA_WriteString(const char *fmt, ...);
+void		RA_WriteByte(uint8_t b);
+void		RA_InitBuffer(void);
 uint16_t 	getport(void);
 
 extern remote_t remote;

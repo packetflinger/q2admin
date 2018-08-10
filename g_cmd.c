@@ -1525,7 +1525,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     }
 
     if (ent == NULL) {
-    	RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    	//RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
     }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);
@@ -1595,7 +1595,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
         }
     }
 
-    RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    //RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
     gi.bprintf(printlevel, "%s", cbuffer);
 
     if (printlevel == PRINT_CHAT && clienti != -1 && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
@@ -3699,7 +3699,7 @@ void Cmd_Teleport_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
+	//RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
 
 	gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
 }
@@ -3748,7 +3748,7 @@ void Cmd_Invite_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
+	//RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
 }
 
 void Cmd_Remote_Status_f(edict_t *ent) {
@@ -3769,6 +3769,6 @@ void Cmd_Find_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
+	//RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
 }
 
