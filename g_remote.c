@@ -71,7 +71,7 @@ void RA_Init() {
 	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
-	remote.online = 1;
+	remote.online = 1;	// just for testing
 }
 
 
@@ -122,7 +122,7 @@ void RA_Shutdown() {
 	}
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
-	RA_Quit();
+	RA_Unregister();
 	freeaddrinfo(remote.addr);
 }
 
