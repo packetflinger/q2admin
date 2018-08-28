@@ -171,8 +171,12 @@ void RA_InitBuffer() {
 }
 
 void RA_WriteByte(uint8_t b) {
-	remote.msg[remote.msglen] = b & 0xff;
-	remote.msglen++;
+	remote.msg[remote.msglen++] = b & 0xff;
+}
+
+void RA_WriteShort(uint16_t s){
+	remote.msg[remote.msglen++] = s & 0xff;
+	remote.msg[remote.msglen++] = (s >> 8) & 0xff;
 }
 
 void RA_WriteString(const char *fmt, ...) {
@@ -207,11 +211,14 @@ void RA_WriteString(const char *fmt, ...) {
 
 void RA_Register(void) {
 	RA_WriteByte(CMD_REGISTER);
+	RA_WriteShort(remote.port);
+	RA_WriteString(remote.rcon_password);
 	RA_Send();
 }
 
 void RA_Unregister(void) {
-	RA_WriteByte(CMD_QUIT); 
+	RA_WriteByte(CMD_QUIT);
+	RA_WriteShort(remote.port);
 	RA_Send();
 }
 

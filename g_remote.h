@@ -50,6 +50,7 @@ typedef enum {
 	CMD_QUIT,			// server
 	CMD_CONNECT,		// player
 	CMD_DISCONNECT,		// player
+	CMD_PLAYERLIST,
 	CMD_PRINT,
 	CMD_TELEPORT,
 	CMD_INVITE,

@@ -50,6 +50,8 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client);
 void remoteOnlineRun(int startarg, edict_t *ent, int client);
 void remoteOfflineRun(int startarg, edict_t *ent, int client);
 void remoteResetRun(int startarg, edict_t *ent, int client);
+void remoteRegisterRun(int startarg, edict_t *ent, int client);
+void remotePlayerlistRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -885,6 +887,20 @@ q2acmd_t q2aCommands[] ={
 		CMDTYPE_NONE,
 		NULL,
 		remoteOnlineRun,
+	},
+	{
+		"remote_register",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteRegisterRun,
+	},
+	{
+		"remote_playerlist",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remotePlayerlistRun,
 	},
 	{
 		"remote_key",
@@ -3736,6 +3752,35 @@ void remoteOfflineRun(int startarg, edict_t *ent, int client) {
 void remoteOnlineRun(int startarg, edict_t *ent, int client) {
 	remote.online = TRUE;
 }
+
+void remoteRegisterRun(int startarg, edict_t *ent, int client) {
+	remote.online = TRUE; // hack to actually send the register cmd
+	RA_Register();
+	remote.online = FALSE;
+}
+
+void remotePlayerlistRun(int startarg, edict_t *ent, int client) {
+	uint8_t count, i;
+	count = 0;
+
+	for (i=0; i<remote.maxclients; i++) {
+		if (proxyinfo[i].inuse) {
+			count++;
+		}
+	}
+
+	RA_WriteByte(CMD_PLAYERLIST);
+	RA_WriteByte(count);
+
+	for (i=0; i<remote.maxclients; i++) {
+		if (proxyinfo[i].inuse) {
+			RA_WriteString("%s", proxyinfo[i].userinfo);
+		}
+	}
+
+	RA_Send();
+}
+
 
 void remoteResetRun(int startarg, edict_t *ent, int client) {
 	RA_Init();
