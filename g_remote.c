@@ -179,6 +179,13 @@ void RA_WriteShort(uint16_t s){
 	remote.msg[remote.msglen++] = (s >> 8) & 0xff;
 }
 
+void RA_WriteLong(uint32_t i){
+	remote.msg[remote.msglen++] = i & 0xff;
+	remote.msg[remote.msglen++] = (i >> 8) & 0xff;
+	remote.msg[remote.msglen++] = (i >> 16) & 0xff;
+	remote.msg[remote.msglen++] = (i >> 32) & 0xff;
+}
+
 void RA_WriteString(const char *fmt, ...) {
 	
 	uint16_t i;
@@ -210,6 +217,7 @@ void RA_WriteString(const char *fmt, ...) {
 }
 
 void RA_Register(void) {
+	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_REGISTER);
 	RA_WriteShort(remote.port);
 	RA_WriteString(remote.rcon_password);
@@ -217,6 +225,7 @@ void RA_Register(void) {
 }
 
 void RA_Unregister(void) {
+	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_QUIT);
 	RA_WriteShort(remote.port);
 	RA_Send();
@@ -225,6 +234,7 @@ void RA_Unregister(void) {
 void RA_PlayerConnect(edict_t *ent) {
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
+	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
@@ -234,6 +244,7 @@ void RA_PlayerConnect(edict_t *ent) {
 void RA_PlayerDisconnect(edict_t *ent) {
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
+	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_DISCONNECT);
 	RA_WriteByte(cl);
 	RA_Send();
