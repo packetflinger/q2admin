@@ -905,8 +905,8 @@ q2acmd_t q2aCommands[] ={
 	{
 		"remote_key",
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteKey,
+		CMDTYPE_NUMBER,
+		&remoteKey,
 	},
 	{
 		"remote_port",
