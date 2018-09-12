@@ -183,7 +183,7 @@ void RA_WriteLong(uint32_t i){
 	remote.msg[remote.msglen++] = i & 0xff;
 	remote.msg[remote.msglen++] = (i >> 8) & 0xff;
 	remote.msg[remote.msglen++] = (i >> 16) & 0xff;
-	remote.msg[remote.msglen++] = (i >> 32) & 0xff;
+	remote.msg[remote.msglen++] = (i >> 24) & 0xff;
 }
 
 void RA_WriteString(const char *fmt, ...) {
@@ -220,7 +220,8 @@ void RA_Register(void) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_REGISTER);
 	RA_WriteShort(remote.port);
-	RA_WriteString(remote.rcon_password);
+	// map
+	// max clients
 	RA_Send();
 }
 
