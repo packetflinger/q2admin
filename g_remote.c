@@ -254,3 +254,11 @@ void RA_PlayerDisconnect(edict_t *ent) {
 void RA_PlayerCommand(edict_t *ent) {
 	
 }
+
+void RA_Print(uint8_t level, char *text) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_PRINT);
+	RA_WriteByte(level);
+	RA_WriteString("%s",text);
+	RA_Send();
+}

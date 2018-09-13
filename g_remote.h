@@ -72,6 +72,8 @@ void		RA_WriteByte(uint8_t b);
 void		RA_InitBuffer(void);
 uint16_t 	getport(void);
 
+void 		RA_Print(uint8_t level, char *text);
+
 extern remote_t remote;
 
 #endif

@@ -1541,7 +1541,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     }
 
     if (ent == NULL) {
-    	//RA_Send(CMD_PRINT, "%d\\%s", printlevel, cbuffer);
+    	RA_Print(printlevel, cbuffer);	// send the one for the server console
     }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);
