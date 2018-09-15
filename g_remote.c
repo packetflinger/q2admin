@@ -262,3 +262,18 @@ void RA_Print(uint8_t level, char *text) {
 	RA_WriteString("%s",text);
 	RA_Send();
 }
+
+void RA_Teleport(uint8_t client_id) {
+	char *srv;
+	if (gi.argc() > 1) {
+		srv = gi.argv(1);
+	} else {
+		srv = "";
+	}
+
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_TELEPORT);
+	RA_WriteByte(client_id);
+	RA_WriteString("%s", srv);
+	RA_Send();
+}
