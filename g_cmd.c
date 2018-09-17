@@ -39,6 +39,7 @@ void zbotmotdRun(int startarg, edict_t *ent, int client);
 void stuffClientRun(int startarg, edict_t *ent, int client);
 void sayGroupRun(int startarg, edict_t *ent, int client);
 void sayPersonRun(int startarg, edict_t *ent, int client);
+void sayPersonLowRun(int startarg, edict_t *ent, int client);
 void ipRun(int startarg, edict_t *ent, int client);
 void kickRun(int startarg, edict_t *ent, int client);
 void cvarsetRun(int startarg, edict_t *ent, int client);
@@ -135,7 +136,7 @@ block_model block_models[MAX_BLOCK_MODELS] ={
     }
 };
 
-q2acmd_t q2aCommands[] ={
+q2acmd_t q2aCommands[] = {
     {
         "adminpassword",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
@@ -990,6 +991,13 @@ q2acmd_t q2aCommands[] ={
         NULL,
         sayPersonRun,
     },
+	{
+		"say_person_low",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		sayPersonLowRun,
+	},
     {
         "say_person_enable",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -2076,6 +2084,41 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
     }
 
     return TRUE;
+}
+
+void sayPersonLowRun(int startarg, edict_t *ent, int client) {
+    char *text;
+    edict_t *enti;
+    int clienti;
+    char tmptext[MAX_STRING_CHARS];
+
+    // skip the first part (!say_xxx)
+    text = getArgs();
+
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+
+    SKIPBLANK(text);
+
+    enti = getClientFromArg(client, ent, &clienti, text, &text);
+
+    // make sure the text doesn't overflow the internal buffer...
+    if (enti) {
+        if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
+            text[MAX_STRING_CHARS - 40] = 0;
+        }
+
+        sprintf(tmptext, "%s-> %s\n", proxyinfo[clienti].name, text);
+        cprintf_internal(NULL, PRINT_LOW, "%s", tmptext);
+
+        sprintf(tmptext, "%s\n", text);
+        cprintf_internal(enti, PRINT_LOW, "%s", tmptext);
+    } else {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person_low [CL <id>]|name message\n");
+    }
 }
 
 qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
@@ -3772,11 +3815,13 @@ void remotePlayerlistRun(int startarg, edict_t *ent, int client) {
 		}
 	}
 
+	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_PLAYERLIST);
 	RA_WriteByte(count);
 
 	for (i=0; i<remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
+			RA_WriteByte(i);
 			RA_WriteString("%s", proxyinfo[i].userinfo);
 		}
 	}

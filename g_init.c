@@ -1433,6 +1433,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     q2a_strcpy(proxyinfo[client].userinfo, userinfo);
 
     proxyinfo[client].next_report = 0;
+
+    RA_PlayerUpdate(client, proxyinfo[client].userinfo);
 	
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }

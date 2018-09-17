@@ -277,3 +277,11 @@ void RA_Teleport(uint8_t client_id) {
 	RA_WriteString("%s", srv);
 	RA_Send();
 }
+
+void RA_PlayerUpdate(uint8_t cl, const char *ui) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_PLAYERUPDATE);
+	RA_WriteByte(cl);
+	RA_WriteString("%s", ui);
+	RA_Send();
+}
