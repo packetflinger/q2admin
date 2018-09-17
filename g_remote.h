@@ -56,7 +56,8 @@ typedef enum {
 	CMD_TELEPORT,
 	CMD_INVITE,
 	CMD_SEEN,
-	CMD_WHOIS
+	CMD_WHOIS,
+	CMD_PLAYERS,
 } remote_cmd_t;
 
 

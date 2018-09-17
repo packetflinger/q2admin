@@ -53,6 +53,7 @@ void remoteOfflineRun(int startarg, edict_t *ent, int client);
 void remoteResetRun(int startarg, edict_t *ent, int client);
 void remoteRegisterRun(int startarg, edict_t *ent, int client);
 void remotePlayerlistRun(int startarg, edict_t *ent, int client);
+void remotePlayersRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -3141,6 +3142,11 @@ void ClientCommand(edict_t *ent) {
 		return;
 	}
 
+	if (Q_stricmp(cmd, "!players") == 0) {
+		Cmd_Remote_Players_f(ent);
+		return;
+	}
+
     //Custom frkq2 check
     if ((do_franck_check) && (
             (stringContains(stemp, "riconnect")) ||
@@ -3865,3 +3871,17 @@ void Cmd_Find_f(edict_t *ent) {
 	//RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
 }
 
+void Cmd_Remote_Players_f(edict_t *ent) {
+	if (gi.argc() < 2) {
+		gi.cprintf(ent, PRINT_HIGH, "Usage: !players <servername>\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_PLAYERS);
+	RA_WriteByte(id);
+	RA_WriteString(gi.argv(1));
+	RA_Send();
+}
