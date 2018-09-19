@@ -112,9 +112,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
 	
-	if (self->deadflag != DEAD_DEAD) {	
-		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
-		
+	if (self->deadflag != DEAD_DEAD) {
 		RA_Frag(id, aid);
 	}
 	
