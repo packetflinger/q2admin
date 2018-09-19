@@ -3134,6 +3134,7 @@ void ClientCommand(edict_t *ent) {
 	}
 
 	if (Q_stricmp(cmd, remoteCmdWhois) == 0) {
+		Cmd_Remote_Whois_f(ent);
 		return;
 	}
 
@@ -3846,8 +3847,16 @@ void Cmd_Invite_f(edict_t *ent) {
 		return;
 	}
 
+	char *invitetext;
 	uint8_t id = getEntOffset(ent) - 1;
-	//RA_Send(CMD_INVITE, "%d\\%s", id, gi.args());
+
+	if (gi.argc() > 1) {
+		invitetext = gi.args();
+	} else {
+		invitetext = "";
+	}
+
+	RA_Invite(id, invitetext);
 }
 
 void Cmd_Remote_Status_f(edict_t *ent) {
@@ -3884,4 +3893,15 @@ void Cmd_Remote_Players_f(edict_t *ent) {
 	RA_WriteByte(id);
 	RA_WriteString(gi.argv(1));
 	RA_Send();
+}
+
+void Cmd_Remote_Whois_f(edict_t *ent) {
+	if (gi.argc() < 2) {
+		gi.cprintf(ent, PRINT_HIGH, "Usage: !whois <playername>\n");
+		return;
+	}
+
+	uint8_t id = getEntOffset(ent) - 1;
+
+	RA_Whois(id, gi.argv(1));
 }

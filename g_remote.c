@@ -83,33 +83,14 @@ void RA_RunFrame() {
 
 	uint8_t i;
 
-	// report server if necessary
-	if (remote.next_report <= remote.frame_number) {
-		//RA_Send(CMD_SHEARTBEAT, "%s\\%d\\%s\\%d\\%d", remote.mapname, remote.maxclients, remote.rcon_password, remote.port, remote.flags);
-		remote.next_report = remote.frame_number + SECS_TO_FRAMES(60);
-	}
-
-
 	for (i=0; i<=remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
-
-			if (proxyinfo[i].next_report <= remote.frame_number) {
-				//RA_Send(CMD_PHEARTBEAT, "%d\\%s", i, proxyinfo[i].userinfo);
-				proxyinfo[i].next_report = remote.frame_number + SECS_TO_FRAMES(60);
-			}
-
-			/*
-			if (!proxyinfo[i].remote_reported) {
-				RA_Send(CMD_CONNECT, "%d\\%s", i, proxyinfo[i].userinfo);
-				proxyinfo[i].remote_reported = 1;
-			}
 
 			// replace player edict's die() pointer
 			if (*proxyinfo[i].ent->die != PlayerDie_Internal) {
 				proxyinfo[i].die = *proxyinfo[i].ent->die;
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
-			*/
 		}
 	}
 
@@ -134,15 +115,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	if (self->deadflag != DEAD_DEAD) {	
 		gi.dprintf("self: %s\t inflictor: %s\t attacker %s\n", self->classname, inflictor->classname, attacker->classname);
 		
-		// crater, drown (water, acid, lava)
-		if (g_strcmp0(attacker->classname, "worldspawn") == 0) {
-			//RA_Send(CMD_FRAG,"%d\\%d\\worldspawn", id, aid);
-		} else if (g_strcmp0(attacker->classname, "player") == 0 && attacker->client) {
-			//gi.dprintf("Attacker: %s\n", attacker->client->pers.netname);
-			/*RA_Send(CMD_FRAG, "%d\\%d\\%s", id, aid,
-				attacker->client->pers.weapon->classname
-			);*/
-		}
+		RA_Frag(id, aid);
 	}
 	
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
@@ -283,5 +256,29 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui) {
 	RA_WriteByte(CMD_PLAYERUPDATE);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", ui);
+	RA_Send();
+}
+
+void RA_Invite(uint8_t cl, const char *text) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_INVITE);
+	RA_WriteByte(cl);
+	RA_WriteString(text);
+	RA_Send();
+}
+
+void RA_Whois(uint8_t cl, const char *name) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_WHOIS);
+	RA_WriteByte(cl);
+	RA_WriteString(name);
+	RA_Send();
+}
+
+void RA_Frag(uint8_t victim, uint8_t attacker) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_FRAG);
+	RA_WriteByte(victim);
+	RA_WriteByte(attacker);
 	RA_Send();
 }

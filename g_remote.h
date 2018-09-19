@@ -58,6 +58,7 @@ typedef enum {
 	CMD_SEEN,
 	CMD_WHOIS,
 	CMD_PLAYERS,
+	CMD_FRAG,
 } remote_cmd_t;
 
 
@@ -76,7 +77,7 @@ uint16_t 	getport(void);
 
 void 		RA_Print(uint8_t level, char *text);
 void 		RA_Teleport(uint8_t client_id);
-
+void		RA_Frag(uint8_t victim, uint8_t attacker);
 extern remote_t remote;
 
 #endif
