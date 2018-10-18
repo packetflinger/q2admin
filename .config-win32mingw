@@ -1,0 +1,24 @@
+CONFIG_WINDOWS = 1
+CC = i686-w64-mingw32-gcc
+STRIP = i686-w64-mingw32-strip
+WINDRES = i686-w64-mingw32-windres
+
+CFLAGS = -static -static-libgcc -DCURL_STATICLIB -I/usr/i686-w64-mingw32/sys-root/mingw/include
+LIBS = /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcurl.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
+LIBS += /root/zlib-1.2.11/libz.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssl.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssh2.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libidn.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libiconv.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libintl.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libwldap32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libgdi32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libSDL2main.a
+LIBS += -static -static-libgcc -ldl
+

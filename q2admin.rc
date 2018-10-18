@@ -1,0 +1,47 @@
+#include <windows.h>
+
+#pragma code_page(65001)
+
+#ifdef _DEBUG
+#define VER_FILEFLAGS   VS_FF_DEBUG
+#else
+#define VER_FILEFLAGS   0x0L
+#endif
+
+#ifdef _WIN64
+#define VER_ORIGINALFILENAME_STR    "gamex86_64.dll"
+#else
+#define VER_ORIGINALFILENAME_STR    "gamex86.dll"
+#endif
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION     Q2A_REVISION,0,0,0
+    PRODUCTVERSION  Q2A_REVISION,0,0,0
+    FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+    FILEFLAGS       VER_FILEFLAGS
+    FILEOS          VOS_NT_WINDOWS32
+    FILETYPE        VFT_DLL
+    FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "Comments", "https://packetflinger.com/q2admin/"
+            VALUE "CompanyName", "packetflinger.com"
+            VALUE "FileDescription", "Management proxy-mod for Quake 2 servers"
+            VALUE "OriginalFilename", VER_ORIGINALFILENAME_STR
+            VALUE "FileVersion", Q2A_VERSION
+            VALUE "InternalName", "q2admin"
+            VALUE "LegalCopyright", "Copyright © 2018 packetflinger.com"
+            VALUE "ProductName", "Q2Admin"
+            VALUE "ProductVersion", Q2A_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 0x4B0
+    END
+END

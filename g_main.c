@@ -53,7 +53,8 @@ void *hdll = NULL;
 #define DLLNAME 					"gamei386.real.so"
 
 #else
-#error Unknown GNUC OS
+// #error Unknown GNUC OS
+#define DLLNAME						"gamex86.real.so"
 #endif
 
 #elif defined(WIN32)

@@ -2,17 +2,33 @@
 #define G_REMOTE_H
 
 #include <glib.h>
-#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#define MSG_DONTWAIT 	0
+#define AI_ADDRCONFIG	0x00000400
+
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#define q2a_inet_ntop inet_ntop
+#endif
+
+#define NS_INT16SZ      2
+#define NS_INADDRSZ     4
+#define NS_IN6ADDRSZ    16
 
 extern cvar_t		*gamelib;
 extern cvar_t		*udpport;

@@ -1406,6 +1406,71 @@ q2acmd_t q2aCommands[] = {
 //===================================================================
 char mutedText[8192] = "";
 
+void Cmd_Invite_f(edict_t *ent) {
+        if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
+                gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
+                return;
+        }
+
+        char *invitetext;
+        uint8_t id = getEntOffset(ent) - 1;
+
+        if (gi.argc() > 1) {
+                invitetext = gi.args();
+        } else {
+                invitetext = "";
+        }
+
+        RA_Invite(id, invitetext);
+}
+
+void Cmd_Remote_Status_f(edict_t *ent) {
+        switch (remote.online) {
+        case FALSE:
+                gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
+                break;
+        case TRUE:
+                gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
+                break;
+        }
+}
+
+void Cmd_Find_f(edict_t *ent) {
+        if (!(remote.flags & REMOTE_FL_CMD_FIND)) {
+                gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
+                return;
+        }
+
+        uint8_t id = getEntOffset(ent) - 1;
+        //RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
+}
+
+void Cmd_Remote_Players_f(edict_t *ent) {
+        if (gi.argc() < 2) {
+                gi.cprintf(ent, PRINT_HIGH, "Usage: !players <servername>\n");
+                return;
+        }
+
+        uint8_t id = getEntOffset(ent) - 1;
+
+        RA_WriteLong(remoteKey);
+        RA_WriteByte(CMD_PLAYERS);
+        RA_WriteByte(id);
+        RA_WriteString(gi.argv(1));
+        RA_Send();
+}
+
+void Cmd_Remote_Whois_f(edict_t *ent) {
+        if (gi.argc() < 2) {
+                gi.cprintf(ent, PRINT_HIGH, "Usage: !whois <playername>\n");
+                return;
+        }
+
+        uint8_t id = getEntOffset(ent) - 1;
+
+        RA_Whois(id, gi.argv(1));
+}
+
 void dprintf_internal(char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
@@ -3778,7 +3843,7 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	char address[INET_ADDRSTRLEN];
 	
 	if (remote.enabled) {
-		inet_ntop(
+		q2a_inet_ntop(
 			remote.addr->ai_family, 
 			&((struct sockaddr_in *)remote.addr->ai_addr)->sin_addr, 
 			address, 
@@ -3841,67 +3906,3 @@ void remoteResetRun(int startarg, edict_t *ent, int client) {
 	RA_Init();
 }
 
-void Cmd_Invite_f(edict_t *ent) {
-	if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
-		gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
-		return;
-	}
-
-	char *invitetext;
-	uint8_t id = getEntOffset(ent) - 1;
-
-	if (gi.argc() > 1) {
-		invitetext = gi.args();
-	} else {
-		invitetext = "";
-	}
-
-	RA_Invite(id, invitetext);
-}
-
-void Cmd_Remote_Status_f(edict_t *ent) {
-	switch (remote.online) {
-	case FALSE:
-		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
-		break;
-	case TRUE:
-		gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
-		break;
-	}
-}
-
-void Cmd_Find_f(edict_t *ent) {
-	if (!(remote.flags & REMOTE_FL_CMD_FIND)) {
-		gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
-		return;
-	}
-
-	uint8_t id = getEntOffset(ent) - 1;
-	//RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
-}
-
-void Cmd_Remote_Players_f(edict_t *ent) {
-	if (gi.argc() < 2) {
-		gi.cprintf(ent, PRINT_HIGH, "Usage: !players <servername>\n");
-		return;
-	}
-
-	uint8_t id = getEntOffset(ent) - 1;
-
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_PLAYERS);
-	RA_WriteByte(id);
-	RA_WriteString(gi.argv(1));
-	RA_Send();
-}
-
-void Cmd_Remote_Whois_f(edict_t *ent) {
-	if (gi.argc() < 2) {
-		gi.cprintf(ent, PRINT_HIGH, "Usage: !whois <playername>\n");
-		return;
-	}
-
-	uint8_t id = getEntOffset(ent) - 1;
-
-	RA_Whois(id, gi.argv(1));
-}

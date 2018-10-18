@@ -48,7 +48,7 @@
 
 #if defined(WIN32)
 #include <time.h>
-#include <Winsock2.h>
+#include <winsock2.h>
 #else
 #include <sys/time.h>
 #endif

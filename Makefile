@@ -21,19 +21,19 @@ WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
 
-CFLAGS ?= -O3 $(GLIB_CFLAGS)
-LDFLAGS ?= -S -shared $(GLIB_LDFLAGS)
+CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD $(GLIB_CFLAGS) $(INCLUDES)
+LDFLAGS ?= -shared $(GLIB_LDFLAGS)
 LIBS ?= -lcurl -lm -ldl
 
 ifdef CONFIG_WINDOWS
+    CFLAGS += -Wno-unknown-pragmas
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
 else
-    CFLAGS += -fPIC -ffast-math -w
-    LDFLAGS += 
+    CFLAGS += -fPIC -ffast-math -w -DLINUX 
 endif
 
-CFLAGS += -DLINUX -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
+CFLAGS += -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
 HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h
@@ -71,8 +71,9 @@ ifdef CONFIG_SQLITE
 endif
 
 ifdef CONFIG_WINDOWS
-    OBJS += openffa.o
+    CPU := x86
     TARGET := game$(CPU).dll
+    OBJS += q2admin.o
 else
     LIBS += -lm
     TARGET := game$(CPU).so
@@ -105,7 +106,7 @@ endif
 
 $(TARGET): $(OBJS)
 	$(E) [LD] $@
-	$(Q)$(LD) $(LDFLAGS) -o $@ $^ $(LIBS)
+	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:
 	$(E) [CLEAN]

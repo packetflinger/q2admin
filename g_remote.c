@@ -56,7 +56,7 @@ void RA_Init() {
 		return;
 	} else {
 		char address[INET_ADDRSTRLEN];
-		inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
+		q2a_inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
 		gi.dprintf("%s\n", address);
 	}
 	
@@ -293,3 +293,4 @@ void RA_Map(const char *mapname) {
 	RA_WriteString("%s", mapname);
 	RA_Send();
 }
+

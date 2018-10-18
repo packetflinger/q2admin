@@ -112,7 +112,7 @@ static void init_syntax_once() {
     if (done)
         return;
 
-    bzero(re_syntax_table, sizeof re_syntax_table);
+    q2a_memset(&re_syntax_table, 0x0, sizeof(re_syntax_table));
 
     for (c = 'a'; c <= 'z'; c++)
         re_syntax_table[c] = Sword;
@@ -243,10 +243,17 @@ a good thing.  */
 
 #define STREQ(s1, s2) ((q2a_strcmp (s1, s2) == 0))
 
+#ifndef MAX
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
 
+#ifndef _WIN32
 typedef char boolean;
+#endif
+
 #define false 0
 #define true 1
 
@@ -1370,7 +1377,7 @@ handle_plus:
                 BUF_PUSH((1 << BYTEWIDTH) / BYTEWIDTH);
 
                 /* Clear the whole map.  */
-                bzero(b, (1 << BYTEWIDTH) / BYTEWIDTH);
+                q2a_memset(b, 0x0, (1 << BYTEWIDTH) / BYTEWIDTH);
 
                 /* charset_not matches newline according to a syntax bit.  */
                 if ((re_opcode_t) b[-2] == charset_not
@@ -2681,7 +2688,7 @@ struct re_pattern_buffer *bufp;
     assert(fastmap != NULL && p != NULL);
 
     INIT_FAIL_STACK();
-    bzero(fastmap, 1 << BYTEWIDTH); /* Assume nothing's valid.  */
+    memset(fastmap, 0x0, 1 << BYTEWIDTH);
     bufp->fastmap_accurate = 1; /* It will be when we're done.  */
     bufp->can_be_null = 0;
 
@@ -2947,7 +2954,7 @@ regoff_t *starts, *ends;
     } else {
         bufp->regs_allocated = REGS_UNALLOCATED;
         regs->num_regs = 0;
-        regs->start = regs->end = (regoff_t) NULL; //UPDATE
+        regs->start = regs->end = (regoff_t *) NULL; //UPDATE
     }
 }
 
@@ -3984,7 +3991,7 @@ restore_best_regs:
                     if (translate
                             ? bcmp_translate(d, d2, mcnt,
                             translate)
-                            : bcmp(d, d2, mcnt))
+                            : q2a_memcmp(d, d2, mcnt))
                         goto fail;
                     d += mcnt, d2 += mcnt;
                 }
