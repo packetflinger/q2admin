@@ -113,7 +113,11 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	uint8_t aid = getEntOffset(attacker) - 1;
 	
 	if (self->deadflag != DEAD_DEAD) {
-		RA_Frag(id, aid);
+		if (strcmp(attacker->classname,"player") == 0) {
+			RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
+		} else {
+			RA_Frag(id, aid, proxyinfo[id].name, "");
+		}
 	}
 	
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
@@ -273,10 +277,19 @@ void RA_Whois(uint8_t cl, const char *name) {
 	RA_Send();
 }
 
-void RA_Frag(uint8_t victim, uint8_t attacker) {
+void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_FRAG);
 	RA_WriteByte(victim);
+	RA_WriteString("%s", vname);
 	RA_WriteByte(attacker);
+	RA_WriteString("%s", aname);
+	RA_Send();
+}
+
+void RA_Map(const char *mapname) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_MAP);
+	RA_WriteString("%s", mapname);
 	RA_Send();
 }
