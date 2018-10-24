@@ -8,7 +8,7 @@ LIBS = /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcurl.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
-LIBS += /root/zlib-1.2.11/libz.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libz.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssl.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssh2.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libidn.a
@@ -20,5 +20,6 @@ LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libSDL2main.a
-LIBS += -static -static-libgcc -ldl
-
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libmingw32.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libdl.a
+LIBS += -static -static-libgcc
