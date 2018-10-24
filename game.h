@@ -51,8 +51,7 @@ typedef enum {
 
 typedef struct link_s {
     struct link_s *prev, *next;
-}
-link_t;
+} link_t;
 
 #define MAX_ENT_CLUSTERS 16
 
@@ -107,10 +106,10 @@ struct edict_s {
 
 typedef struct {
     // special messages
-    void (*bprintf) (int printlevel, char *fmt, ...);
-    void (*dprintf) (char *fmt, ...);
-    void (*cprintf) (edict_t *ent, int printlevel, char *fmt, ...);
-    void (*centerprintf) (edict_t *ent, char *fmt, ...);
+    void (* q_printf(2, 3) bprintf) (int printlevel, char *fmt, ...);
+    void (* q_printf(1, 2) dprintf) (char *fmt, ...);
+    void (* q_printf(3, 4) cprintf) (edict_t *ent, int printlevel, char *fmt, ...);
+    void (* q_printf(2, 3) centerprintf) (edict_t *ent, char *fmt, ...);
     void (*sound) (edict_t *ent, int channel, int soundindex, float volume, float attenuation, float timeofs);
     void (*positioned_sound) (vec3_t origin, edict_t *ent, int channel, int soundinedex, float volume, float attenuation, float timeofs);
 
@@ -120,7 +119,7 @@ typedef struct {
     // they connect, and changes are sent to all connected clients.
     void (*configstring) (int num, char *string);
 
-    void (*error) (char *fmt, ...);
+    void (* q_noreturn q_printf(1, 2) error) (char *fmt, ...);
 
     // the *index functions create configstrings and some internal server state
     int (*modelindex) (char *name);
@@ -130,7 +129,7 @@ typedef struct {
     void (*setmodel) (edict_t *ent, char *name);
 
     // collision detection
-    trace_t(*trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
+    trace_t(* q_gameabi trace) (vec3_t start, vec3_t mins, vec3_t maxs, vec3_t end, edict_t *passent, int contentmask);
     int (*pointcontents) (vec3_t point);
     qboolean(*inPVS) (vec3_t p1, vec3_t p2);
     qboolean(*inPHS) (vec3_t p1, vec3_t p2);
@@ -178,8 +177,7 @@ typedef struct {
     void (*AddCommandString) (char *text);
 
     void (*DebugGraph) (float value, int color);
-}
-game_import_t;
+} game_import_t;
 
 //
 // functions exported by the game subsystem
@@ -236,7 +234,6 @@ typedef struct {
     int edict_size;
     int num_edicts; // current number, <= max_edicts
     int max_edicts;
-}
-game_export_t;
+} game_export_t;
 
 game_export_t *GetGameApi(game_import_t *import);
