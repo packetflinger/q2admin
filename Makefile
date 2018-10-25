@@ -26,7 +26,7 @@ LDFLAGS ?= -shared $(GLIB_LDFLAGS)
 LIBS ?= -lcurl -lm -ldl
 
 ifdef CONFIG_WINDOWS
-    CFLAGS += -DQ2ADMINCLIB=1 -DWIN32=1
+    CFLAGS += -DQ2ADMINCLIB=1
     CFLAGS += -Wno-unknown-pragmas
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
