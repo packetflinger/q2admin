@@ -1,30 +1,31 @@
 CONFIG_WINDOWS = 1
-CC = i686-w64-mingw32-gcc
-STRIP = i686-w64-mingw32-strip
-WINDRES = i686-w64-mingw32-windres
 
-GLIB_CFLAGS = $(shell i686-w64-mingw32-pkg-config --cflags glib-2.0)
-GLIB_LDFLAGS = $(shell i686-w64-mingw32-pkg-config --libs glib-2.0)
+PREFIX = i686-w64-mingw32-
+IPATH = /usr/i686-w64-mingw32/sys-root/mingw/include
+LPATH = /usr/i686-w64-mingw32/sys-root/mingw/lib
 
+CC = $(PREFIX)gcc
+STRIP = $(PREFIX)strip
+WINDRES = $(PREFIX)windres
 
-CFLAGS = -static -static-libgcc -DCURL_STATICLIB -I/usr/i686-w64-mingw32/sys-root/mingw/include
-LIBS = /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcurl.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libz.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssl.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libssh2.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libidn.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libiconv.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libintl.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libwldap32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libgdi32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypto.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcrypt32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libSDL2main.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libmingw32.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libdl.a
-LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libpsapi.a 
+CFLAGS = -static -static-libgcc -DCURL_STATICLIB -I$(IPATH)
+
+LIBS = $(LPATH)/libws2_32.a
+LIBS += $(LPATH)/libcurl.a
+LIBS += $(LPATH)/libcrypto.a
+LIBS += $(LPATH)/libcrypt32.a
+LIBS += $(LPATH)/libz.a
+LIBS += $(LPATH)/libssl.a
+LIBS += $(LPATH)/libssh2.a
+LIBS += $(LPATH)/libidn.a
+LIBS += $(LPATH)/libiconv.a
+LIBS += $(LPATH)/libintl.a
+LIBS += $(LPATH)/libwldap32.a
+LIBS += $(LPATH)/libgdi32.a
+LIBS += $(LPATH)/libcrypto.a
+LIBS += $(LPATH)/libcrypt32.a
+LIBS += $(LPATH)/libws2_32.a
+LIBS += $(LPATH)/libSDL2main.a
+LIBS += $(LPATH)/libmingw32.a
+LIBS += $(LPATH)/libdl.a
 LIBS += -static -static-libgcc
