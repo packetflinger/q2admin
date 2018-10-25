@@ -1465,6 +1465,7 @@ void *q2a_memset(void *dest, int c, size_t count);
 #define q2a_memset   memset
 
 #endif
+const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 
 // zb_cmd.c
 void readCfgFiles(void);
@@ -1550,6 +1551,7 @@ void Pmove_internal(pmove_t *pmove);
 void generateRandomString(char *buffer, int length);
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client); //UPDATE
 void reloadLoginFileRun(int startarg, edict_t *ent, int client); //UPDATE
+void readIpFromLog(int client, edict_t *ent);
 
 // zb_msgqueue.c
 void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str);

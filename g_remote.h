@@ -81,20 +81,28 @@ typedef enum {
 
 void 		RA_Send(void);
 void		RA_Init(void);
+void		RA_Shutdown(void);
 void		RA_RunFrame(void);
 void		RA_Register(void);
 void		RA_Unregister(void);
 void		RA_PlayerConnect(edict_t *ent);
 void		RA_PlayerDisconnect(edict_t *ent);
 void		RA_PlayerCommand(edict_t *ent);
+
 void		RA_WriteString(const char *fmt, ...);
 void		RA_WriteByte(uint8_t b);
+void		RA_WriteLong(uint32_t i);
 void		RA_InitBuffer(void);
 uint16_t 	getport(void);
 
 void 		RA_Print(uint8_t level, char *text);
 void 		RA_Teleport(uint8_t client_id);
 void		RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname);
+void		RA_PlayerUpdate(uint8_t cl, const char *ui);
+void		RA_Invite(uint8_t cl, const char *text);
+void		RA_Whois(uint8_t cl, const char *name);
+void		RA_Map(const char *mapname);
+
 extern remote_t remote;
 
 #endif

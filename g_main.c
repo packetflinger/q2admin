@@ -57,7 +57,7 @@ void *hdll = NULL;
 #define DLLNAME						"gamex86.real.so"
 #endif
 
-#elif defined(WIN32)
+#elif defined(_WIN32)
 HINSTANCE hdll;
 #define DLLNAME   "gamex86.dll"
 #define DLLNAMEMODDIR "gamex86.real.dll"
@@ -75,6 +75,8 @@ char zbot_testchar1;
 char zbot_testchar2;
 
 qboolean soloadlazy;
+
+#define DLLNAME ("gamex86.real.dll")
 
 void ShutdownGame(void) {
 
@@ -962,7 +964,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
     sprintf(dllname, "%s/%s", moddir, gamelib->string);
     hdll = dlopen(dllname, loadtype);
-#elif defined(WIN32)
+#elif defined(_WIN32)
     if (quake2dirsupport) {
         sprintf(dllname, "%s/%s", moddir, gamelib->string);
     } else {
@@ -978,13 +980,13 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
 #ifdef __GNUC__
         hdll = dlopen(dllname, loadtype);
-#elif defined(WIN32)
+#elif defined(_WIN32)
         hdll = LoadLibrary(dllname);
 #endif
 
 #ifdef __GNUC__
         sprintf(dllname, "%s/%s", moddir, gamelib->string);
-#elif defined(WIN32)
+#elif defined(_WIN32)
         if (quake2dirsupport) {
             sprintf(dllname, "%s/%s", moddir, gamelib->string);
         } else {
@@ -1002,14 +1004,14 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
 #ifdef __GNUC__
     getapi = (GAMEAPI *) dlsym(hdll, "GetGameAPI");
-#elif defined(WIN32)
+#elif defined(_WIN32)
     getapi = (GAMEAPI *) GetProcAddress(hdll, "GetGameAPI");
 #endif
 
     if (getapi == NULL) {
 #ifdef __GNUC__
         dlclose(hdll);
-#elif defined(WIN32)
+#elif defined(_WIN32)
         FreeLibrary(hdll);
 #endif
 
@@ -1021,6 +1023,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
     ge_mod = (*getapi)(import);
     dllloaded = TRUE;
+    //import->dprintf("apiversion: %d\n", ge_mod->apiversion);
     G_MergeEdicts();
 
     if (q2adminrunmode) {

@@ -26,7 +26,7 @@ LDFLAGS ?= -shared $(GLIB_LDFLAGS)
 LIBS ?= -lcurl -lm -ldl
 
 ifdef CONFIG_WINDOWS
-    CFLAGS += -DQ2ADMINCLIB=1
+    CFLAGS += -DQ2ADMINCLIB=1 -DWIN32=1
     CFLAGS += -Wno-unknown-pragmas
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
@@ -37,7 +37,7 @@ endif
 CFLAGS += -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
 RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
 
-HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h
+HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h q_platform.h
 
 OBJS := g_anticheat.o \
 		g_ban.o \

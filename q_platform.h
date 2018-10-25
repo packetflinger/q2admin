@@ -70,6 +70,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #define Q_ISREG(m)          S_ISREG(m)
 #define Q_ISDIR(m)          S_ISDIR(m)
 #define Q_STATBUF           struct stat
+#define q2a_inet_ntop		inet_ntop
 #endif
 
 #ifndef F_OK
