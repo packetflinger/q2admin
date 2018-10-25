@@ -3,6 +3,10 @@ CC = i686-w64-mingw32-gcc
 STRIP = i686-w64-mingw32-strip
 WINDRES = i686-w64-mingw32-windres
 
+GLIB_CFLAGS = $(shell i686-w64-mingw32-pkg-config --cflags glib-2.0)
+GLIB_LDFLAGS = $(shell i686-w64-mingw32-pkg-config --libs glib-2.0)
+
+
 CFLAGS = -static -static-libgcc -DCURL_STATICLIB -I/usr/i686-w64-mingw32/sys-root/mingw/include
 LIBS = /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libcurl.a
@@ -22,4 +26,5 @@ LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libws2_32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libSDL2main.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libmingw32.a
 LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libdl.a
+LIBS += /usr/i686-w64-mingw32/sys-root/mingw/lib/libpsapi.a 
 LIBS += -static -static-libgcc
