@@ -45,6 +45,7 @@ cvar_t *q2adminhashlist_dir;
 qboolean quake2dirsupport = TRUE;
 
 char dllname[256];
+char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
 char gmapname[MAX_QPATH];
 
 uint32_t remoteKey = 0;

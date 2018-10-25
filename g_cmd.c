@@ -482,6 +482,12 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_LOGICAL,
         &gamemaptomap
     },
+	{
+        "gamelibrary",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        gamelibrary
+    },
     {
         "hackuserdisplay",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,

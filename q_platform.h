@@ -24,10 +24,35 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#define DLLNAME ("gamex86.real.dll")
+#elif defined(_WIN64)
+#define DLLNAME ("gamex86_64.real.dll")
+#else /*_WIN32 */
+#ifdef __x86_64__
+#define DLLNAME ("gamex86_64.real.so")
+#else /*__x86_64__*/
+#define DLLNAME ("gamex86.real.so")
+#endif /*__x86_64__*/
+#endif /*_WIN32*/
+
+#ifdef _WIN32
 #include <io.h>
 #include <direct.h>
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
 #else
+#include <dlfcn.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#endif
+
+#ifdef _WIN32
+#define MSG_DONTWAIT 	0
+#define AI_ADDRCONFIG	0x00000400
 #endif
 
 #ifdef _WIN32
