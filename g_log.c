@@ -794,7 +794,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
 }
 
 void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly) {
-    unsigned long logfile;
+	unsigned long logfile;
     unsigned int i;
 
     q2a_strcpy(buffer, "  ");
