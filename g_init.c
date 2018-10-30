@@ -556,6 +556,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         q2a_strcat(buffer, ".q2aspawn");
         ReadSpawnFile(buffer, TRUE);
 
+        qboolean replaceteam;
+
         // parse out all the turned off entities...
         while (1) {
             char *com_tok;
@@ -569,6 +571,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 break;
             if (com_tok[0] != '{')
                 break;
+
+            replaceteam = false;
 
             // go through all the dictionary pairs
             while (1) {
@@ -596,14 +600,17 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
                     classnamepos[0] = '_'; // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
 
-                    // if teamed, change 'team' entry to '_eam' to unlink it from the rest
-                    if (teampos) {
-                    	teampos[0] = '_';
-                    }
-                    teampos = 0;
+                    replaceteam = true;
                     // side-effect: it may cause error messages on the console screen depending on the mod...
                 }
             }
+
+            // if teamed, change 'team' entry to '_eam' to unlink it from the rest
+			if (teampos && replaceteam) {
+				teampos[0] = '_';
+				teampos = 0;
+				replaceteam = false;
+			}
         }
     }
 
