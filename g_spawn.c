@@ -27,8 +27,7 @@ typedef struct {
     byte type;
     qboolean onelevelflag;
     regex_t *r;
-}
-spawncmd_t;
+} spawncmd_t;
 
 #define SPAWN_SW  0
 #define SPAWN_EX  1
@@ -105,7 +104,6 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
 
                 spawncmds[maxspawn_cmds].r = gi.TagMalloc(sizeof (*spawncmds[maxspawn_cmds].r), TAG_GAME);
                 q2a_memset(spawncmds[maxspawn_cmds].r, 0x0, sizeof (*spawncmds[maxspawn_cmds].r));
-                //        if(regcomp(spawncmds[maxspawn_cmds].r, strbuffer, REG_EXTENDED))
                 if (regcomp(spawncmds[maxspawn_cmds].r, cp, 0)) {
                     gi.TagFree(spawncmds[maxspawn_cmds].r);
                     spawncmds[maxspawn_cmds].r = 0;
@@ -114,7 +112,20 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
                     gi.dprintf("Error loading SPAWN from line %d in file %s\n", uptoLine, spawnname);
                     continue;
                 }
+
+                // don't allow disabling worldspawn. Bad things will happen
+                if (regexec(spawncmds[maxspawn_cmds].r, "WORLDSPAWN", 0, 0, 0) != REG_NOMATCH){
+                	q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
+                	spawncmds[maxspawn_cmds].r = 0;
+                	spawncmds[maxspawn_cmds].type = SPAWN_EX;
+                	continue;
+                }
             } else {
+            	// Don't allow disabling worldspawn. Bad things will happen
+            	if (startContains(spawncmds[maxspawn_cmds].spawncmd, "world")) {
+            		q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
+            		continue;
+            	}
                 spawncmds[maxspawn_cmds].r = 0;
             }
 
