@@ -560,6 +560,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         while (1) {
             char *com_tok;
             char *classnamepos;
+            char *teampos;
             char keyname[256];
 
             // parse the opening brace
@@ -588,15 +589,22 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 if (com_tok[0] == '}') // {
                     break;
 
+                if (q2a_strcmp(keyname, "team") == 0) {
+                	teampos = classnamepos;
+                }
+
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
                     classnamepos[0] = '_'; // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
 
+                    // if teamed, change 'team' entry to '_eam' to unlink it from the rest
+                    if (teampos) {
+                    	teampos[0] = '_';
+                    }
+                    teampos = 0;
                     // side-effect: it may cause error messages on the console screen depending on the mod...
                 }
             }
         }
-
-        //    freeOneLevelSpawnLists();
     }
 
     STARTPERFORMANCE(2);
