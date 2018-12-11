@@ -2970,7 +2970,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             return FALSE;
         } else if (!proxyinfo[client].admin) {
             if (Q_stricmp(cmd, "!version") == 0) {
-                gi.cprintf(ent, PRINT_HIGH, zbotversion);
+                gi.cprintf(ent, PRINT_HIGH, "Q2Admin Version %s\n", version);
                 return FALSE;
             } else if (adminpassword[0] && Q_stricmp(cmd, "!setadmin") == 0) {
                 if (gi.argc() != 2) {
@@ -3307,7 +3307,7 @@ void clientsidetimeoutInit(char *arg) {
 }
 
 void zbotversionRun(int startarg, edict_t *ent, int client) {
-	gi.cprintf(ent, PRINT_HIGH, "Q2Admin v%s.%s\n", Q2ADMINVERSION, Q2A_VERSION);
+	gi.cprintf(ent, PRINT_HIGH, "Q2Admin version %s\n", version);
 }
 
 void clientsidetimeoutRun(int startarg, edict_t *ent, int client) {

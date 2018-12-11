@@ -34,10 +34,16 @@ else
     CFLAGS += -fPIC -ffast-math -w -DLINUX 
 endif
 
-CFLAGS += -DQ2A_VERSION='"$(VER)"' -DQ2A_REVISION=$(REV) 
-RCFLAGS += -DQ2A_VERSION='\"$(VER)\"' -DQ2A_REVISION=$(REV)
+CFLAGS += -DQ2A_COMMIT='"$(VER)"'
+RCFLAGS += -DQ2A_COMMIT='\"$(VER)\"'
 
-HEADERS := game.h g_file.h g_local.h g_remote.h q_shared.h regex.h q_platform.h
+HEADERS := 	game.h \
+			g_file.h \
+			g_local.h \
+			g_remote.h \
+			q_shared.h \
+			regex.h \
+			q_platform.h
 
 OBJS := g_anticheat.o \
 		g_ban.o \

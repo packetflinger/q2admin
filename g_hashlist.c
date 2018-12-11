@@ -44,7 +44,7 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
     while (!url_feof(handle)) {
         if (!url_fgets(buffer, sizeof (buffer), handle)) {
             // if it did timeout we are not trying again forever... - hifi
-            gi.dprintf("Timeout while waiting for reply.\n");
+            gi.dprintf("Timeout while waiting for remote hashlist reply.\n");
             url_fclose(handle);
             fclose(outf);
             return FALSE;

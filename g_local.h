@@ -1174,6 +1174,7 @@ extern char hackuserdisplay[256];
 extern char skincrashmsg[256];
 extern char defaultreconnectmessage[256];
 extern char moddir[256];
+extern char version[256];
 
 extern qboolean soloadlazy;
 extern qboolean dllloaded;
@@ -1662,11 +1663,8 @@ typedef struct {
 } admin_type;
 
 // should be set at build time in Makefile
-#ifndef Q2A_REVISION
-#define Q2ADMINVERSION	"2.0.0"
-#define Q2A_REVISION	""
-#else
-#define Q2ADMINVERSION	"2.0"
+#ifndef Q2A_COMMIT
+#define Q2A_COMMIT		"00~000000"
 #endif
 
 #define DEFAULTQ2AVER   "1.0"

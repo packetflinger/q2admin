@@ -47,6 +47,7 @@ qboolean quake2dirsupport = TRUE;
 char dllname[256];
 char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
 char gmapname[MAX_QPATH];
+char version[256];
 
 uint32_t remoteKey = 0;
 char remoteAddr[256] = "packetflinger.com";
@@ -145,7 +146,7 @@ int maxMsgLevel = 3;
 
 //char *zbotversion = va("Q2Admin Version %s-%s\n", Q2ADMINVERSION, Q2A_REVISION);
 
-char *zbotversion = "Q2Admin Version " Q2ADMINVERSION "\n";
+char *zbotversion = Q2A_COMMIT;
 qboolean serverinfoenable = TRUE;
 
 char zbotmotd[256];
@@ -332,7 +333,11 @@ void InitGame(void) {
     INITPERFORMANCE(2);
 
     proxyinfo = NULL;
-    gi.dprintf("Q2Admin v%s.%s\n", Q2ADMINVERSION, Q2A_VERSION);
+
+    q2a_strcpy(version, "r");
+    q2a_strcat(version, Q2A_COMMIT);
+
+    gi.cprintf(NULL, PRINT_HIGH, "Q2Admin version %s\n", version);
 
     if (!dllloaded) return;
 
