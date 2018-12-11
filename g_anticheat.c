@@ -1,5 +1,6 @@
 /*
 Copyright (C) 2007-2008 MDVz0r
+Copyright (C) 2018 Joe Reid <joe@joereid.com>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -22,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "g_file.h"
 
-//qboolean ReadRemoteAnticheatExceptionFile(char *bfname) {
+
 qboolean AC_GetRemoteFile(char *bfname) {
     URL_FILE *handle;
     FILE *outf;
@@ -46,7 +47,7 @@ qboolean AC_GetRemoteFile(char *bfname) {
     while (!url_feof(handle)) {
         if (!url_fgets(buffer, sizeof (buffer), handle)) {
             // if it did timeout we are not trying again forever... - hifi
-            gi.dprintf("Timeout while waiting for reply.\n");
+            gi.dprintf("Timeout while waiting for remote AC file.\n");
             url_fclose(handle);
             fclose(outf);
             return FALSE;
@@ -59,14 +60,9 @@ qboolean AC_GetRemoteFile(char *bfname) {
     return TRUE;
 }
 
-// download up to date anticheat config file including all execptions for r1ch
-// ugly code.. ;x
 
 void AC_UpdateList(void) {
-    char cfgAnticheatList_enabled[100];
-    q2a_strcpy(cfgAnticheatList_enabled, q2adminanticheat_enable->string);
-
-    if (cfgAnticheatList_enabled[0] == '1') {
+    if ((int) q2adminanticheat_enable->value) {
         qboolean ret;
         char cfgAnticheatRemoteList[100];
 
@@ -90,12 +86,8 @@ void AC_UpdateList(void) {
 
 
 void AC_LoadExceptions(void) {	
-    char cfgAnticheatList_enabled[100];
-    q2a_strcpy(cfgAnticheatList_enabled, q2adminanticheat_enable->string);
-    if (cfgAnticheatList_enabled[0] == '1') {
-        // flush cache, which really sux
-        //q2a_strcpy(buffer, "fsflushcache\n");
-        //gi.AddCommandString(buffer);
+    if ((int) q2adminanticheat_enable->value) {
+
         AC_UpdateList();
         // execute exception list even if the download was not succeeded, since there is probably an old version available.
         q2a_strcpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n");
@@ -103,7 +95,7 @@ void AC_LoadExceptions(void) {
     }
 }
 
-//void reloadexceptionlistRun(int startarg, edict_t *ent, int client) {
+
 void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
     AC_LoadExceptions();
     gi.cprintf(ent, PRINT_HIGH, "Exceptionlist loaded.\n");
