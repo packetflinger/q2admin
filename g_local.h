@@ -1238,7 +1238,6 @@ extern int proxy_nitro2;
 extern int q2adminrunmode;
 extern int maxMsgLevel;
 
-extern char *zbotversion;
 extern char zbotmotd[256];
 extern char motd[4096];
 extern char clientVoteCommand[256];

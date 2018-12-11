@@ -144,9 +144,6 @@ int randomwaitreporttime = 55;
 
 int maxMsgLevel = 3;
 
-//char *zbotversion = va("Q2Admin Version %s-%s\n", Q2ADMINVERSION, Q2A_REVISION);
-
-char *zbotversion = Q2A_COMMIT;
 qboolean serverinfoenable = TRUE;
 
 char zbotmotd[256];
