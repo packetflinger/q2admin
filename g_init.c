@@ -1276,6 +1276,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     client = getEntOffset(ent) - 1;
 
+    logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0);
+
     if (stringContains(userinfo, "\\skon\\")) //zgh_frk check
     {
         gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
