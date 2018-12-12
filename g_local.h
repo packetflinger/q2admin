@@ -1664,6 +1664,7 @@ typedef struct {
 // should be set at build time in Makefile
 #ifndef Q2A_COMMIT
 #define Q2A_COMMIT		"00~000000"
+#define Q2A_REVISION	0
 #endif
 
 #define DEFAULTQ2AVER   "1.0"

@@ -195,6 +195,7 @@ void RA_WriteString(const char *fmt, ...) {
 void RA_Register(void) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_REGISTER);
+	RA_WriteInt(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
 	RA_WriteString("%s", remote.mapname);
