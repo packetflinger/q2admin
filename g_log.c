@@ -78,7 +78,7 @@ void expandOutPortNum(char *srcdest, int max) {
             unsigned int i;
             char *cp, *dp;
 
-            sprintf(portnum, "%d", (int) port->value);
+            sprintf(portnum, "%d", getport());
             len = q2a_strlen(portnum);
 
             *srcdest = portnum[0];
