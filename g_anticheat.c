@@ -37,25 +37,12 @@ qboolean AC_GetRemoteFile(char *bfname) {
         return FALSE;
     }
 
-    handle = url_fopen(bfname, "r");
-    if (!handle) {
-        gi.dprintf("Error opening remote anticheat exception file.\n");
-        fclose(outf);
-        return FALSE;
+    if (!GetURLContents(bfname)) {
+    	gi.dprintf("Error fetching remote anticheat file: %s\n", bfname);
+    	fclose(outf);
+    	return FALSE;
     }
 
-    while (!url_feof(handle)) {
-        if (!url_fgets(buffer, sizeof (buffer), handle)) {
-            // if it did timeout we are not trying again forever... - hifi
-            gi.dprintf("Timeout while waiting for remote AC file.\n");
-            url_fclose(handle);
-            fclose(outf);
-            return FALSE;
-        }
-        fwrite(buffer, 1, strlen(buffer), outf);
-    }
-
-    url_fclose(handle);
     fclose(outf);
     return TRUE;
 }

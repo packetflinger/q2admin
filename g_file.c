@@ -413,3 +413,80 @@ void url_rewind(URL_FILE *file) {
 
     }
 }
+
+/******  blah *******/
+struct url_contents {
+	char *ptr;
+	size_t len;
+};
+
+void init_string(struct url_contents *s) {
+	s->len = 0;
+	s->ptr = malloc(s->len + 1);
+	if (s->ptr == NULL) {
+		fprintf(stderr, "malloc() failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	s->ptr[0] = '\0';
+}
+
+size_t writefunc(void *ptr, size_t size, size_t nmemb, struct url_contents *s) {
+	size_t new_len = s->len + size * nmemb;
+	s->ptr = realloc(s->ptr, new_len + 1);
+	if (s->ptr == NULL) {
+		fprintf(stderr, "realloc() failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	memcpy(s->ptr+s->len, ptr, size * nmemb);
+	s->ptr[new_len] = '\0';
+	s->len = new_len;
+
+	return size * nmemb;
+}
+
+qboolean GetURLContents(char *url) {
+	CURL *curl;
+	CURLcode res;
+	char *errmsg;
+
+	curl = curl_easy_init();
+	if (curl) {
+		struct url_contents s;
+		init_string(&s);
+
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+		res = curl_easy_perform(curl);
+
+		if (res == CURLE_OK) {
+			strncpy(buffer, s.ptr, sizeof(buffer));
+			free(s.ptr);
+
+			curl_easy_cleanup(curl);
+
+			return true;
+		} else {
+			switch (res) {
+			case CURLE_FAILED_INIT:
+				errmsg = "CURL init failed";
+				break;
+
+			case CURLE_URL_MALFORMAT:
+				errmsg = va("'%s' is incorrectly formatted", url);
+				break;
+
+			case CURLE_COULDNT_RESOLVE_HOST:
+				errmsg = va("'%s' unresolvable hostname", url);
+				break;
+			}
+
+			gi.dprintf("%s\n", errmsg);
+			return false;
+		}
+	}
+
+	return false;
+}
