@@ -1902,16 +1902,8 @@ qboolean readCfgFile(char *cfgfilename) {
 }
 
 void readCfgFiles(void) {
-    //char cfgFile[100];
     qboolean ret;
 
-    /*
-    if (!q2aconfig || isBlank(q2aconfig->string)) {
-        q2a_strcpy(cfgFile, CFGFILE);
-    } else {
-        q2a_strcpy(cfgFile, q2aconfig->string);
-    }
-*/
     ret = readCfgFile(q2aconfig->string);
 
     sprintf(buffer, "%s/%s", moddir, q2aconfig->string);
