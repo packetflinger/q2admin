@@ -25,13 +25,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 qboolean AC_GetRemoteFile(char *bfname) {
-    URL_FILE *handle;
     FILE *outf;
+    char localfilename[MAX_QPATH];
 
-    sprintf(buffer, "%s/%s", moddir, ANTICHEATEXCEPTIONLOCALFILE);
+    sprintf(localfilename, "%s/%s", moddir, ANTICHEATEXCEPTIONLOCALFILE);
 
-    // copy from url line by line with fgets //
-    outf = fopen(buffer, "w");
+    outf = fopen(localfilename, "r");
     if (!outf) {
         gi.dprintf("Error opening local anticheat exception file.\n");
         return FALSE;

@@ -116,6 +116,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BODY_QUEUE_SIZE   8
 
+#define TEMPCFGFILE		"temp.cfg"
+
 typedef enum {
     DAMAGE_NO,
     DAMAGE_YES, // will take damage if hit

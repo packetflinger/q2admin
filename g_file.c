@@ -435,8 +435,7 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct url_contents *s) {
 	size_t new_len = s->len + size * nmemb;
 	s->ptr = realloc(s->ptr, new_len + 1);
 	if (s->ptr == NULL) {
-		fprintf(stderr, "realloc() failed\n");
-		exit(EXIT_FAILURE);
+
 	}
 
 	memcpy(s->ptr+s->len, ptr, size * nmemb);
@@ -449,7 +448,7 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct url_contents *s) {
 qboolean GetURLContents(char *url) {
 	CURL *curl;
 	CURLcode res;
-	char *errmsg;
+	char errbuf[CURL_ERROR_SIZE];
 
 	curl = curl_easy_init();
 	if (curl) {
@@ -459,6 +458,9 @@ qboolean GetURLContents(char *url) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writefunc);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &s);
+		curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, errbuf);	// supply text error msg
+
+		errbuf[0] = 0;
 		res = curl_easy_perform(curl);
 
 		if (res == CURLE_OK) {
@@ -469,21 +471,8 @@ qboolean GetURLContents(char *url) {
 
 			return true;
 		} else {
-			switch (res) {
-			case CURLE_FAILED_INIT:
-				errmsg = "CURL init failed";
-				break;
-
-			case CURLE_URL_MALFORMAT:
-				errmsg = va("'%s' is incorrectly formatted", url);
-				break;
-
-			case CURLE_COULDNT_RESOLVE_HOST:
-				errmsg = va("'%s' unresolvable hostname", url);
-				break;
-			}
-
-			gi.dprintf("%s\n", errmsg);
+			free(s.ptr);
+			gi.dprintf("%s\n", errbuf);
 			return false;
 		}
 	}
