@@ -861,7 +861,8 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     serverbindip = gi.cvar("ip", "", 0);
     port = gi.cvar("port", "", 0);
     rcon_password = gi.cvar("rcon_password", "", 0);
-    q2admintxt = gi.cvar("q2admintxt", "", 0);
+    q2aconfig = gi.cvar("q2aconfig", CFGFILE, 0);
+
     q2adminbantxt = gi.cvar("q2adminbantxt", "", 0);
     q2adminbanremotetxt_enable = gi.cvar("q2adminbanremotetxt_enable", "0", 0);
     q2adminbanremotetxt = gi.cvar("q2adminbanremotetxt_file", "", 0);

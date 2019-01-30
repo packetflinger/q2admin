@@ -33,7 +33,7 @@ cvar_t *logfile;
 cvar_t *rconpassword;
 cvar_t *port;
 cvar_t *serverbindip;
-cvar_t *q2admintxt;
+cvar_t *q2aconfig;
 cvar_t *q2adminbantxt;
 cvar_t *q2adminbanremotetxt;
 cvar_t *q2adminbanremotetxt_enable;

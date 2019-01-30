@@ -1902,24 +1902,25 @@ qboolean readCfgFile(char *cfgfilename) {
 }
 
 void readCfgFiles(void) {
-    char cfgFile[100];
+    //char cfgFile[100];
     qboolean ret;
 
-    if (!q2admintxt || isBlank(q2admintxt->string)) {
+    /*
+    if (!q2aconfig || isBlank(q2aconfig->string)) {
         q2a_strcpy(cfgFile, CFGFILE);
     } else {
-        q2a_strcpy(cfgFile, q2admintxt->string);
+        q2a_strcpy(cfgFile, q2aconfig->string);
     }
+*/
+    ret = readCfgFile(q2aconfig->string);
 
-    ret = readCfgFile(cfgFile);
-
-    sprintf(buffer, "%s/%s", moddir, cfgFile);
+    sprintf(buffer, "%s/%s", moddir, q2aconfig->string);
     if (readCfgFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " CFGFILE " could not be found\n");
+        gi.dprintf("Q2A: %s could not be found\n", q2aconfig->string);
     }
 }
 
