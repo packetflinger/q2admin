@@ -331,10 +331,9 @@ void InitGame(void) {
 
     proxyinfo = NULL;
 
-    q2a_strcpy(version, "r");
-    q2a_strcat(version, Q2A_COMMIT);
 
-    gi.cprintf(NULL, PRINT_HIGH, "Q2Admin version %s\n", version);
+
+    //gi.cprintf(NULL, PRINT_HIGH, "Q2Admin version %s\n", version);
 
     if (!dllloaded) return;
 

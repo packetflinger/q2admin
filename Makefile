@@ -34,7 +34,7 @@ else
     CFLAGS += -fPIC -ffast-math -w -DLINUX 
 endif
 
-CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV)
+CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
 RCFLAGS += -DQ2A_COMMIT='\"$(VER)\"'
 
 HEADERS := 	game.h \

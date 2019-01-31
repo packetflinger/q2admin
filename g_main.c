@@ -821,14 +821,15 @@ and global variables
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
 	cvar_t *gamelib;
-	
-#if !(defined(_WIN32) || defined(_WIN64))
-    int loadtype;
-#endif
 
     dllloaded = FALSE;
     gi = *import;
     
+    q2a_strcpy(version, "r");
+    q2a_strcat(version, Q2A_COMMIT);
+
+    gi.dprintf("Q2Admin %s\n", version);
+
     // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
     import->cprintf = cprintf_internal;
@@ -861,7 +862,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     serverbindip = gi.cvar("ip", "", 0);
     port = gi.cvar("port", "", 0);
     rcon_password = gi.cvar("rcon_password", "", 0);
-    q2aconfig = gi.cvar("q2aconfig", CFGFILE, 0);
+    q2aconfig = gi.cvar("q2aconfig", CFGFILE, CVAR_GENERAL);
 
     q2adminbantxt = gi.cvar("q2adminbantxt", "", 0);
     q2adminbanremotetxt_enable = gi.cvar("q2adminbanremotetxt_enable", "0", 0);
@@ -926,50 +927,55 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     zbot_testchar2 = '0' + (int) (9.9 * random());
 	
 	// take cvar first, then gamelibrary from config, then old game.real.ext
-	gamelib = gi.cvar("gamelib", (*gamelibrary) ? gamelibrary : DLLNAME, CVAR_NOSET);
+	gamelib = gi.cvar("gamelib", (*gamelibrary) ? gamelibrary : DLLNAME, CVAR_LATCH);
 	
-	sprintf(dllname, "%s/%s", moddir, gamelib->string);
+	snprintf(dllname, sizeof(dllname), "%s/%s", moddir, gamelib->string);
 	
 #if defined(_WIN32) || defined(_WIN64)
+
 	hdll = LoadLibrary(dllname);
-#else
-	loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
-    hdll = dlopen(dllname, loadtype);
-#endif
-
-    if (hdll == NULL) {
+	if (hdll == NULL) {
 		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
-        sprintf(dllname, "baseq2/%s", gamelib->string);
+		sprintf(dllname, "baseq2/%s", gamelib->string);
 
-#if defined(_WIN32) || defined(_WIN64)
 		hdll = LoadLibrary(dllname);
-#else
-		hdll = dlopen(dllname, loadtype);
-#endif
-
-        if (hdll == NULL) {
-			gi.error("Unable to load DLL %s\n", dllname);
-            return &ge;
+		if (hdll == NULL) {
+			gi.error("Unable to load game DLL %s\n", dllname);
+			return &ge;
 		}
-    }
+	}
 
-#if defined(_WIN32) || defined(_WIN64)
 	getapi = (GAMEAPI *) GetProcAddress(hdll, "GetGameAPI");
-#else
-	getapi = (GAMEAPI *) dlsym(hdll, "GetGameAPI");
-#endif
-
-    if (getapi == NULL) {
-#if defined(_WIN32) || defined(_WIN64)
+	if (getapi == NULL) {
 		FreeLibrary(hdll);
+		gi.error("No GetGameApi() entry in DLL %s.\n", dllname);
+		return &ge;
+	}
 #else
-		dlclose(hdll);
-#endif
-        gi.error("No \"GetGameApi\" entry in DLL %s.\n", dllname);
-        return &ge;
-    }
+	int loadtype;
+	loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
 
-    gi.cprintf(NULL, PRINT_HIGH, "Loaded forward game library: %s\n", dllname);
+	hdll = dlopen(dllname, loadtype);
+	if (hdll == NULL) {
+		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
+		sprintf(dllname, "baseq2/%s", gamelib->string);
+
+		hdll = dlopen(dllname, loadtype);
+		if (hdll == NULL) {
+			gi.error("Unable to load game library %s\n", dllname);
+			return &ge;
+		}
+	}
+
+	getapi = (GAMEAPI *) dlsym(hdll, "GetGameAPI");
+	if (getapi == NULL) {
+		dlclose(hdll);
+		gi.error("No GetGameApi() entry in game library %s.\n", dllname);
+		return &ge;
+	}
+#endif
+
+    gi.cprintf(NULL, PRINT_HIGH, "Q2Admin loaded game: %s\n", dllname);
 
     ge_mod = (*getapi)(import);
     dllloaded = TRUE;

@@ -1901,6 +1901,14 @@ qboolean readCfgFile(char *cfgfilename) {
     return TRUE;
 }
 
+/**
+ * Reads the main config file. First from the q2 directory, then from the mod.
+ * This way you can have general stuff at the top and mod specific stuff, assuming
+ * you're running more than one server.
+ *
+ * Called in GetGameAPI() when the library is loaded
+ *
+ */
 void readCfgFiles(void) {
     qboolean ret;
 
