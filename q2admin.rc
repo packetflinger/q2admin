@@ -17,8 +17,8 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 VS_VERSION_INFO VERSIONINFO
-    FILEVERSION     Q2A_COMMIT,0,0,0
-    PRODUCTVERSION  Q2A_COMMIT,0,0,0
+    FILEVERSION     Q2A_REVISION,0,0,0
+    PRODUCTVERSION  Q2A_REVISION,0,0,0
     FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
     FILEFLAGS       VER_FILEFLAGS
     FILEOS          VOS_NT_WINDOWS32
@@ -29,15 +29,15 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "Comments", "https://packetflinger.com/q2admin/"
+            VALUE "Comments", "https://q2admin.org"
             VALUE "CompanyName", "packetflinger.com"
             VALUE "FileDescription", "Management proxy-mod for Quake 2 servers"
             VALUE "OriginalFilename", VER_ORIGINALFILENAME_STR
-            VALUE "FileVersion", Q2A_COMMIT
+            VALUE "FileVersion", "Q2A_REVISION"
             VALUE "InternalName", "q2admin"
-            VALUE "LegalCopyright", "Copyright © 2018 packetflinger.com"
+            VALUE "LegalCopyright", "Copyright © 2016-"YEAR" packetflinger.com"
             VALUE "ProductName", "Q2Admin"
-            VALUE "ProductVersion", Q2A_COMMIT
+            VALUE "ProductVersion", "Q2A_REVISION"
         END
     END
     BLOCK "VarFileInfo"

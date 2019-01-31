@@ -11,6 +11,9 @@ endif
 ifndef VER
     VER := $(REV)~$(shell git rev-parse --short HEAD)
 endif
+ifndef YEAR
+	YEAR := $(shell date +%Y)
+endif
 
 GLIB_CFLAGS ?= $(shell pkg-config --cflags glib-2.0)
 GLIB_LDFLAGS ?= $(shell pkg-config --libs glib-2.0)
@@ -35,7 +38,7 @@ else
 endif
 
 CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
-RCFLAGS += -DQ2A_COMMIT='\"$(VER)\"'
+RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 
 HEADERS := 	game.h \
 			g_file.h \

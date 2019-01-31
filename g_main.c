@@ -73,10 +73,10 @@ void ShutdownGame(void) {
         STOPPERFORMANCE(2, "mod->ShutdownGame", 0, NULL);
     }
 
-#ifdef __GNUC__
-    dlclose(hdll);
-#elif defined(WIN32)
+#if (defined(_WIN32) || defined(_WIN64))
     FreeLibrary(hdll);
+#else
+    dlclose(hdll);
 #endif
 
     dllloaded = FALSE;

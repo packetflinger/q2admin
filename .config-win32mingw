@@ -10,6 +10,9 @@ WINDRES = $(PREFIX)windres
 
 CFLAGS = -static -static-libgcc -DCURL_STATICLIB -I$(IPATH)
 
+GLIB_CFLAGS = $(shell $(PREFIX)pkg-config --cflags glib-2.0)
+GLIB_LDFLAGS = $(shell $(PREFIX)pkg-config --libs glib-2.0)
+
 LIBS = $(LPATH)/libws2_32.a
 LIBS += $(LPATH)/libcurl.a
 LIBS += $(LPATH)/libcrypto.a

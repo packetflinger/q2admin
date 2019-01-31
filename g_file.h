@@ -33,6 +33,7 @@ int url_feof(URL_FILE *file);
 size_t url_fread(void *ptr, size_t size, size_t nmemb, URL_FILE *file);
 char * url_fgets(char *ptr, int size, URL_FILE *file);
 void url_rewind(URL_FILE *file);
+qboolean GetURLContents(char *url);
 
 /* we use a global one for convenience */
 CURLM *multi_handle;
