@@ -331,11 +331,8 @@ void InitGame(void) {
 
     proxyinfo = NULL;
 
-
-
-    //gi.cprintf(NULL, PRINT_HIGH, "Q2Admin version %s\n", version);
-
-    if (!dllloaded) return;
+    if (!dllloaded)
+    	return;
 
     if (q2adminrunmode < 100) {
         gi.dprintf("(Q2Admin runlevel %d)\n", q2adminrunmode);
