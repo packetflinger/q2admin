@@ -15,6 +15,13 @@ Features
   * View status and logs of all your Q2 servers (chats, frags, connections)
   * Issue commands to groups of servers
   * Delegate control of servers to other admin users
+* Very flexible logging (up to 32 different log files)
+* Custom banning (IP, chat, nick)
+* Built-in command disabling
+* Flood control
+* Limited RCON support
+* Map Entity disabling by class (`weapon_bfg`, `ammo_slugs`, `item_quad`, `trigger_hurt`, etc...)
+* Custom voting
 
 
 Compiling for Linux
