@@ -38,6 +38,9 @@ Dependencies
 2. `glib2.0`
 
 For Debian run `apt-get install libcurl4-openssl-dev libglib2.0-dev`
+
 For Fedora run `dnf install libcurl-devel glib2-devel`
+
 For Centos run `yum install libcurl-devel glib2-devel`
+
 or...if you're a glutton for punishment, compile them manually on your own.
