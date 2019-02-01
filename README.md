@@ -51,3 +51,20 @@ For Fedora run `dnf install libcurl-devel glib2-devel`
 For Centos run `yum install libcurl-devel glib2-devel`
 
 or...if you're a glutton for punishment, compile them manually on your own.
+
+Settings
+--------
+
+Almost all settings are available in the runtime config files (`q2a*.cfg`). There are a couple CVARs that can be specified at the command line though.
+
+### Server CVARs
+CVAR | Purpose
+--- | ---
+`gamelib` | Specify the real game library for q2admin to load
+`q2aconfig` | Specify the main config filename (default = q2admin.cfg) 
+
+### Config Options
+Option | Default | What it does
+--- | --- | ---
+gamelibrary | none | Specifies the real mod library to use. CVAR > config > filename
+remote_enabled | no | Enable remote admin functionality 

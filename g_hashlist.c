@@ -87,13 +87,11 @@ void loadhashlist(void) {
     char cfgHashList_enabled[100];
     q2a_strcpy(cfgHashList_enabled, q2adminhashlist_enable->string);
     if (cfgHashList_enabled[0] == '1') {
-        // flush cache, which really sux
-        //q2a_strcpy(buffer, "fsflushcache\n");
-        //gi.AddCommandString(buffer);
+
         getR1chHashList("anticheat-cvars.txt");
         getR1chHashList("anticheat-hashes.txt");
         getR1chHashList("anticheat-tokens.txt");
-        // load hash list (is there a command to do this? else load on restart
+
         q2a_strcpy(buffer, "svacupdate\n");
         gi.AddCommandString(buffer);
     }
