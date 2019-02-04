@@ -54,6 +54,7 @@ void remoteResetRun(int startarg, edict_t *ent, int client);
 void remoteRegisterRun(int startarg, edict_t *ent, int client);
 void remotePlayerlistRun(int startarg, edict_t *ent, int client);
 void remotePlayersRun(int startarg, edict_t *ent, int client);
+void remoteAuthorizeRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -881,6 +882,13 @@ q2acmd_t q2aCommands[] = {
 		CMDTYPE_NONE,
 		NULL,
 		remoteSettingsDisplay,
+	},
+	{
+		"remote_authorize",
+		CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_NONE,
+		NULL,
+		remoteAuthorizeRun,
 	},
 	{
 		"remote_offline",
@@ -3911,5 +3919,31 @@ void remotePlayerlistRun(int startarg, edict_t *ent, int client) {
 
 void remoteResetRun(int startarg, edict_t *ent, int client) {
 	RA_Init();
+}
+
+/**
+ * Used for pairing q2 server with remoteadmin account. Sends an auth message to the remoteadmin
+ * server with the supplied key. Server owner can get the key from the remote admin web interface
+ * during the add-a-server wizard
+ *
+ * argv(2) should be the key
+ */
+void remoteAuthorizeRun(int startarg, edict_t *ent, int client) {
+
+	if (!remote.enabled) {
+		gi.cprintf(ent, PRINT_HIGH, "Remote Admin is currently disabled in your config\n");
+		return;
+	}
+
+	if (gi.argc() != 3) {
+		gi.cprintf(ent, PRINT_HIGH, "Usage: sv %s <authkey>\n", gi.argv(1));
+		return;
+	}
+
+	gi.cprintf(ent, PRINT_HIGH, "Sending authorization request to RA server...\n");
+
+	remote.online = true;
+	RA_Authorize(gi.argv(2));
+	remote.online = false;
 }
 

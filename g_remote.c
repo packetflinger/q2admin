@@ -3,6 +3,10 @@
 remote_t remote;
 cvar_t	*udpport;
 
+/**
+ * Sends the contents of the msg buffer to the RA server
+ *
+ */
 void RA_Send() {
 
 	if (!(remote.enabled && remote.online)) {
@@ -22,22 +26,44 @@ void RA_Send() {
 		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
 	
+	// reset the msg buffer for the next one
 	RA_InitBuffer();
 }
 
 
+/**
+ * Sets up RA connection. Makes sure we have what we need:
+ * - enabled in config
+ * - rcon password is set
+ *
+ */
 void RA_Init() {
 	
 	memset(&remote, 0, sizeof(remote));
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
 	if (!remoteEnabled) {
-		gi.dprintf("Remote Admin is disabled in your config file.\n");
+		gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
 		return;
 	}
 	
-	gi.dprintf("[RA] Remote Admin Init...\n");
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
+
+	if (!rconpassword->string[0]) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] rcon_password is blank...disabling\n");
+		return;
+	}
 	
+	if (!remoteAddr[0]) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
+		return;
+	}
+
+	if (!remotePort) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
+		return;
+	}
+
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
@@ -47,22 +73,22 @@ void RA_Init() {
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
 	
-	gi.dprintf("[RA] looking up %s... ", remoteAddr);
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] looking up %s...", remoteAddr);
 
 	int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
 	if (err != 0) {
-		gi.dprintf("error, disabling\n");
+		gi.cprintf(NULL, PRINT_HIGH, "error, disabling\n");
 		remote.enabled = 0;
 		return;
 	} else {
 		char address[INET_ADDRSTRLEN];
 		q2a_inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
-		gi.dprintf("%s\n", address);
+		gi.cprintf(NULL, PRINT_HIGH, "%s\n", address);
 	}
 	
 	int fd = socket(res->ai_family, res->ai_socktype, IPPROTO_UDP);
 	if (fd == -1) {
-		gi.dprintf("Unable to open socket to %s:%d...disabling remote admin\n", remoteAddr, remotePort);
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
 		remote.enabled = 0;
 		return;
 	}
@@ -74,14 +100,17 @@ void RA_Init() {
 	remote.online = 1;	// just for testing
 }
 
-
+/**
+ * Run once per server frame
+ *
+ */
 void RA_RunFrame() {
 	
 	if (!remote.enabled) {
 		return;
 	}
 
-	uint8_t i;
+	static uint8_t i;
 
 	for (i=0; i<=remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
@@ -107,7 +136,9 @@ void RA_Shutdown() {
 	freeaddrinfo(remote.addr);
 }
 
-
+/**
+ * Allows for RA to send frag notifications
+ */
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
@@ -120,9 +151,15 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 		}
 	}
 	
+	// call the player's real die() function
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
 
+/**
+ * q2pro uses "net_port" while most other servers use "port". This
+ * returns the value regardless.
+ *
+ */
 uint16_t getport(void) {
 	static cvar_t *port;
 
@@ -292,6 +329,14 @@ void RA_Map(const char *mapname) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_MAP);
 	RA_WriteString("%s", mapname);
+	RA_Send();
+}
+
+void RA_Authorize(const char *authkey) {
+	RA_WriteLong(-1);
+	RA_WriteByte(CMD_AUTHORIZE);
+	RA_WriteString("%s", authkey);
+	RA_WriteString("%s", remote.rcon_password);
 	RA_Send();
 }
 

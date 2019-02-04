@@ -50,8 +50,8 @@ char gmapname[MAX_QPATH];
 char version[256];
 
 uint32_t remoteKey = 0;
-char remoteAddr[256] = "packetflinger.com";
-int remotePort = 5555;
+char remoteAddr[256] = "127.0.0.1";
+int remotePort = 9988;
 int remoteFlags = 1024;
 qboolean remoteEnabled = FALSE;
 char remoteCmdTeleport[15] = "!teleport";
