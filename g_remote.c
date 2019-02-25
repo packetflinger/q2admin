@@ -26,6 +26,8 @@ void RA_Send() {
 		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
 	}
 	
+	remote.next_report = remote.frame_number + SECS_TO_FRAMES(10);
+
 	// reset the msg buffer for the next one
 	RA_InitBuffer();
 }
@@ -121,6 +123,11 @@ void RA_RunFrame() {
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
 		}
+	}
+
+	// report that we're still alive in case we're idle
+	if (remote.next_report >= remote.frame_number) {
+		RA_HeartBeat();
 	}
 
 	remote.frame_number++;
@@ -235,6 +242,7 @@ void RA_Register(void) {
 	RA_WriteLong(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
+	RA_WriteString("%s", remote.rcon_password);
 	RA_WriteString("%s", remote.mapname);
 	RA_Send();
 }
@@ -337,6 +345,12 @@ void RA_Authorize(const char *authkey) {
 	RA_WriteByte(CMD_AUTHORIZE);
 	RA_WriteString("%s", authkey);
 	RA_WriteString("%s", remote.rcon_password);
+	RA_Send();
+}
+
+void RA_HeartBeat(void) {
+	RA_WriteLong(remoteKey);
+	RA_WriteByte(CMD_HEARTBEAT);
 	RA_Send();
 }
 

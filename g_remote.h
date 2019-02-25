@@ -61,7 +61,8 @@ typedef enum {
 	CMD_PLAYERS,
 	CMD_FRAG,
 	CMD_MAP,
-	CMD_AUTHORIZE
+	CMD_AUTHORIZE,
+	CMD_HEARTBEAT
 } remote_cmd_t;
 
 
@@ -89,6 +90,8 @@ void		RA_Invite(uint8_t cl, const char *text);
 void		RA_Whois(uint8_t cl, const char *name);
 void		RA_Map(const char *mapname);
 void 		RA_Authorize(const char *authkey);
+void 		RA_HeartBeat(void);
+
 extern remote_t remote;
 
 #endif

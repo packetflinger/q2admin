@@ -82,11 +82,11 @@ endif
 
 ifdef CONFIG_WINDOWS
     CPU := x86
-    TARGET := game$(CPU).dll
+    TARGET ?= game$(CPU)-q2admin-r$(VER).dll
     OBJS += q2admin.o
 else
     LIBS += -lm
-    TARGET := game$(CPU).so
+    TARGET ?= game$(CPU)-q2admin-r$(VER).so
 endif
 
 all: $(TARGET)
