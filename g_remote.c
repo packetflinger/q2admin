@@ -126,7 +126,7 @@ void RA_RunFrame() {
 	}
 
 	// report that we're still alive in case we're idle
-	if (remote.next_report >= remote.frame_number) {
+	if (remote.frame_number >= remote.next_report) {
 		RA_HeartBeat();
 	}
 

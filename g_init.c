@@ -645,8 +645,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     q2a_strcpy(remote.mapname, mapname);
     q2a_strcpy(remote.rcon_password, rconpassword->string);
 	remote.port = getport();
-	remote.frame_number = level.framenum;
-	remote.next_report = level.framenum + SECS_TO_FRAMES(2 * 60 * 60);	// heartbeat in 2 hours
+	remote.next_report = remote.frame_number + SECS_TO_FRAMES(2 * 60 * 60);	// heartbeat in 2 hours
 	RA_Register();
 	
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
