@@ -344,7 +344,6 @@ void RA_Authorize(const char *authkey) {
 	RA_WriteLong(-1);
 	RA_WriteByte(CMD_AUTHORIZE);
 	RA_WriteString("%s", authkey);
-	RA_WriteString("%s", remote.rcon_password);
 	RA_Send();
 }
 
