@@ -10,6 +10,7 @@ cvar_t	*udpport;
 void RA_Send() {
 
 	if (!(remote.enabled && remote.online)) {
+		RA_InitBuffer();
 		return;
 	}
 
