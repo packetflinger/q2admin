@@ -99,7 +99,6 @@ void RA_Init() {
 	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
-	remote.online = 1;	// just for testing
 }
 
 /**
@@ -237,6 +236,7 @@ void RA_WriteString(const char *fmt, ...) {
 }
 
 void RA_Register(void) {
+	remote.online = true;
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_REGISTER);
 	RA_WriteLong(Q2A_REVISION);
@@ -245,6 +245,7 @@ void RA_Register(void) {
 	RA_WriteString("%s", remote.rcon_password);
 	RA_WriteString("%s", remote.mapname);
 	RA_Send();
+	remote.online = false;
 }
 
 void RA_Unregister(void) {
@@ -341,10 +342,12 @@ void RA_Map(const char *mapname) {
 }
 
 void RA_Authorize(const char *authkey) {
+	remote.online = true;
 	RA_WriteLong(-1);
 	RA_WriteByte(CMD_AUTHORIZE);
 	RA_WriteString("%s", authkey);
 	RA_Send();
+	remote.online = false;
 }
 
 void RA_HeartBeat(void) {

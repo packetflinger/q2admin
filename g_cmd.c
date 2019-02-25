@@ -3942,8 +3942,6 @@ void remoteAuthorizeRun(int startarg, edict_t *ent, int client) {
 
 	gi.cprintf(ent, PRINT_HIGH, "Sending authorization request to RA server...check web interface for status\n");
 
-	remote.online = true;
 	RA_Authorize(gi.argv(2));
-	remote.online = false;
 }
 
