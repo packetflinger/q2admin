@@ -118,7 +118,7 @@ void RA_RunFrame() {
 		if (proxyinfo[i].inuse) {
 
 			// replace player edict's die() pointer
-			if (*proxyinfo[i].ent->die != PlayerDie_Internal) {
+			if (proxyinfo[i].ent && *proxyinfo[i].ent->die != PlayerDie_Internal) {
 				proxyinfo[i].die = *proxyinfo[i].ent->die;
 				proxyinfo[i].ent->die = &PlayerDie_Internal;
 			}
