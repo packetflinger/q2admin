@@ -3869,7 +3869,7 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	}
 	
 	gi.cprintf(ent, PRINT_HIGH, 
-		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %s\n",
+		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %d\n",
 		(remote.enabled) ? "yes" : "no",
 		(remote.online) ? "yes" : "no",
 		(remote.enabled) ? va("%s:%d", address, remote.port) : "none",
