@@ -278,7 +278,12 @@ void RA_PlayerCommand(edict_t *ent) {
 	
 }
 
-void RA_Print(uint8_t level, char *text) {
+void RA_Print(uint8_t level, char *text)
+{
+	if (!(remote.flags & RFL_CHAT)) {
+		return;
+	}
+
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_PRINT);
 	RA_WriteByte(level);
@@ -286,7 +291,12 @@ void RA_Print(uint8_t level, char *text) {
 	RA_Send();
 }
 
-void RA_Teleport(uint8_t client_id) {
+void RA_Teleport(uint8_t client_id)
+{
+	if (!(remote.flags & RFL_TELEPORT)) {
+		return;
+	}
+
 	char *srv;
 	if (gi.argc() > 1) {
 		srv = gi.argv(1);
@@ -309,7 +319,12 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui) {
 	RA_Send();
 }
 
-void RA_Invite(uint8_t cl, const char *text) {
+void RA_Invite(uint8_t cl, const char *text)
+{
+	if (!(remote.flags & RFL_INVITE)) {
+		return;
+	}
+
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_INVITE);
 	RA_WriteByte(cl);
@@ -317,7 +332,12 @@ void RA_Invite(uint8_t cl, const char *text) {
 	RA_Send();
 }
 
-void RA_Whois(uint8_t cl, const char *name) {
+void RA_Whois(uint8_t cl, const char *name)
+{
+	if (!(remote.flags & RFL_WHOIS)) {
+		return;
+	}
+
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_WHOIS);
 	RA_WriteByte(cl);
@@ -325,7 +345,12 @@ void RA_Whois(uint8_t cl, const char *name) {
 	RA_Send();
 }
 
-void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname) {
+void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
+{
+	if (!(remote.flags & RFL_FRAGS)) {
+		return;
+	}
+
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_FRAG);
 	RA_WriteByte(victim);

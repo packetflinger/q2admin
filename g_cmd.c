@@ -1421,7 +1421,7 @@ q2acmd_t q2aCommands[] = {
 char mutedText[8192] = "";
 
 void Cmd_Invite_f(edict_t *ent) {
-        if (!(remote.flags & REMOTE_FL_CMD_INVITE)) {
+        if (!(remote.flags & RFL_INVITE)) {
                 gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
                 return;
         }
@@ -1450,7 +1450,7 @@ void Cmd_Remote_Status_f(edict_t *ent) {
 }
 
 void Cmd_Find_f(edict_t *ent) {
-        if (!(remote.flags & REMOTE_FL_CMD_FIND)) {
+        if (!(remote.flags & RFL_FIND)) {
                 gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
                 return;
         }
@@ -3839,7 +3839,7 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 }
 
 void Cmd_Teleport_f(edict_t *ent) {
-	if (!(remote.flags & REMOTE_FL_CMD_TELEPORT)) {
+	if (!(remote.flags & RFL_TELEPORT)) {
 		gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
 		return;
 	}

@@ -18,14 +18,14 @@
 extern cvar_t		*gamelib;
 extern cvar_t		*udpport;
 
-// flags
-#define REMOTE_FL_LOG_FRAGS			1 << 0 	// 1
-#define REMOTE_FL_LOG_CHAT			1 << 1	// 2
-#define REMOTE_FL_CMD_TELEPORT		1 << 2	// 4
-#define REMOTE_FL_CMD_INVITE		1 << 3	// 8
-#define REMOTE_FL_CMD_FIND			1 << 4	// 16
-#define REMOTE_FL_CMD_WHOIS			1 << 5	// 32
-#define REMOTE_FL_DEBUG				1 << 11	// 2048
+// Remote Admin flags
+#define RFL_FRAGS      1 << 0 	// 1
+#define RFL_CHAT       1 << 1	// 2
+#define RFL_TELEPORT   1 << 2	// 4
+#define RFL_INVITE     1 << 3	// 8
+#define RFL_FIND       1 << 4	// 16
+#define RFL_WHOIS      1 << 5	// 32
+#define RFL_DEBUG      1 << 11	// 2047
 
 #define MAX_MSG_LEN		1000
 
