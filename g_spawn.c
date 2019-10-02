@@ -218,7 +218,7 @@ qboolean checkforspawncmd(char *cp, int spawncmd) {
 qboolean checkDisabledEntities(char *cp) {
     unsigned int i;
 
-    q2a_strcpy(buffer, cp);
+    q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
 
     for (i = 0; i < maxspawn_cmds; i++) {

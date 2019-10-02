@@ -1532,7 +1532,7 @@ void dprintf_internal(char *fmt, ...) {
 
     if (clienti != -1) {
         if (checkForMute(clienti, getEnt((clienti + 1)), TRUE)) {
-            q2a_strcpy(mutedText, cbuffer);
+            q2a_strncpy(mutedText, cbuffer, sizeof(mutedText));
             return;
         }
 
@@ -1720,7 +1720,7 @@ void AddCommandString_internal(char *text) {
 
     if (gamemaptomap) {
         // check for gamemap in string.
-        q2a_strcpy(buffer, text);
+        q2a_strncpy(buffer, text, sizeof(buffer));
         q_strupr(buffer);
 
         str = q2a_strstr(buffer, "GAMEMAP");
@@ -1738,7 +1738,7 @@ void AddCommandString_internal(char *text) {
         }
     }
 
-    q2a_strcpy(buffer, text);
+    q2a_strncpy(buffer, text, sizeof(buffer));
     q_strupr(buffer);
 
     str = q2a_strstr(buffer, "GAMEMAP");
@@ -1776,12 +1776,12 @@ void AddCommandString_internal(char *text) {
         if (mapcfgexec) {
             char *nameBuffer;
 
-            q2a_strcpy(buffer, "exec mapcfg/");
+            q2a_strncpy(buffer, "exec mapcfg/", sizeof(buffer));
             q2a_strcat(buffer, gmapname);
             q2a_strcat(buffer, "-end.cfg\n");
             gi.AddCommandString(buffer);
 
-            q2a_strcpy(buffer, "exec ");
+            q2a_strncpy(buffer, "exec ", sizeof(buffer));
 
             nameBuffer = buffer + q2a_strlen(buffer);
             while (*str && *str != '\"') {
@@ -1815,7 +1815,7 @@ char *getArgs(void) {
     char *p;
 
     p = gi.args();
-    q2a_strcpy(argtext, p);
+    q2a_strncpy(argtext, p, sizeof(argtext));
     p = argtext;
 
     if (*p == '"') {
@@ -2258,7 +2258,7 @@ void proxyDetected(edict_t *ent, int client) {
     if (displayzbotuser) {
         unsigned int i;
 
-        q2a_strcpy(buffer, zbotuserdisplay);
+        q2a_strncpy(buffer, zbotuserdisplay, sizeof(buffer));
         q2a_strcat(buffer, "\n");
 
         for (i = 0; i < numofdisplays; i++) {
@@ -2287,7 +2287,7 @@ void ratbotDetected(edict_t *ent, int client) {
     if (displayzbotuser) {
         unsigned int i;
 
-        q2a_strcpy(buffer, zbotuserdisplay);
+        q2a_strncpy(buffer, zbotuserdisplay, sizeof(buffer));
         q2a_strcat(buffer, "\n");
 
         for (i = 0; i < numofdisplays; i++) {
@@ -2316,7 +2316,7 @@ void timescaleDetected(edict_t *ent, int client) {
     if (displayzbotuser) {
         unsigned int i;
 
-        q2a_strcpy(buffer, timescaleuserdisplay);
+        q2a_strncpy(buffer, timescaleuserdisplay, sizeof(buffer));
         q2a_strcat(buffer, "\n");
 
         for (i = 0; i < numofdisplays; i++) {
@@ -2342,7 +2342,7 @@ void hackDetected(edict_t *ent, int client) {
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
 
-    q2a_strcpy(buffer, hackuserdisplay);
+    q2a_strncpy(buffer, hackuserdisplay, sizeof(buffer));
     q2a_strcat(buffer, "\n");
 
     gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -2381,7 +2381,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         q2a_strcpy(response, "");
         q2a_strcat(response, gi.args());
     } else {
-        q2a_strcpy(response, cmd);
+        q2a_strncpy(response, cmd, sizeof(response));
     }
 
     if (*(rcon_password->string)) {
@@ -2635,11 +2635,11 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (gi.argc() > 1) {
-        q2a_strcpy(proxyinfo[client].lastcmd, cmd);
+        q2a_strncpy(proxyinfo[client].lastcmd, cmd, sizeof(proxyinfo[client].lastcmd));
         q2a_strcat(proxyinfo[client].lastcmd, " ");
         q2a_strcat(proxyinfo[client].lastcmd, gi.args());
     } else {
-        q2a_strcpy(proxyinfo[client].lastcmd, cmd);
+        q2a_strncpy(proxyinfo[client].lastcmd, cmd, sizeof(proxyinfo[client].lastcmd));
     }
 
     // check for disabled command.
@@ -2675,7 +2675,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (Q_stricmp(cmd, "say") == 0 || Q_stricmp(cmd, "say_team") == 0 || Q_stricmp(cmd, "say_world") == 0) {
-        strcpy(stemp, gi.args());
+        q2a_strncpy(stemp, gi.args(), sizeof(stemp));
         slen = strlen(stemp);
         cnt = 0;
         for (i = 0; i < slen; i++) {
@@ -2761,14 +2761,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                             //if they match ignore
                         } else {
                             //if they dont
-                            strcpy(proxyinfo[client].gl_driver, gi.args());
+                            q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                             proxyinfo[client].gl_driver_changes++;
                             dont_print = false;
                             if (gl_driver_check & 4)
                                 gi.dprintf("%s %s.\n", proxyinfo[client].name, gi.args());
                         }
                     } else {
-                        strcpy(proxyinfo[client].gl_driver, gi.args());
+                        q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                         proxyinfo[client].gl_driver_changes++;
                         dont_print = false;
                         if (gl_driver_check & 4)

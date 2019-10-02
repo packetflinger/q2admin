@@ -196,7 +196,7 @@ qboolean checkforvotecmd(char *cp, int votecmd) {
 qboolean checkVoteCommand(char *cp) {
     unsigned int i;
 
-    q2a_strcpy(buffer, cp);
+    q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
 
     for (i = 0; i < maxvote_cmds; i++) {
@@ -542,9 +542,9 @@ void run_vote(edict_t *ent, int client) {
         votetimeout = ltime + clientVoteTimeout;
         voteremindtimeout = ltime + clientRemindTimeout;
         proxyinfo[client].clientcommand |= (CCMD_VOTEYES | CCMD_VOTED);
-        q2a_strcpy(cmdvote, votecmd);
+        q2a_strncpy(cmdvote, votecmd, sizeof(cmdvote));
         q2a_strcat(cmdvote, "\n");
-        q2a_strcpy(votecaller, proxyinfo[client].name);
+        q2a_strncpy(votecaller, proxyinfo[client].name, sizeof(votecaller));
         q2a_strcat(votecaller, "\n");
 
         displayVote();
@@ -595,7 +595,7 @@ void checkOnVoting(void) {
 
             if (percent >= ((double) votepasspercent / 100)) {
                 q2a_strcpy(printstr, "Vote PASSED!");
-                q2a_strcpy(cmdpassedvote, cmdvote); //UPDATE
+                q2a_strncpy(cmdpassedvote, cmdvote, sizeof(cmdpassedvote));
                 addCmdQueue(-1, QCMD_RUNVOTECMD, 5, 0, 0);
             } else {
                 q2a_strcpy(printstr, "Vote FAILED!");

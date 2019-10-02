@@ -53,9 +53,9 @@ void AC_UpdateList(void) {
         char cfgAnticheatRemoteList[100];
 
         if (!q2adminanticheat_file || isBlank(q2adminanticheat_file->string)) {
-            q2a_strcpy(cfgAnticheatRemoteList, ANTICHEATEXCEPTIONREMOTEFILE);
+            q2a_strncpy(cfgAnticheatRemoteList, ANTICHEATEXCEPTIONREMOTEFILE, sizeof(cfgAnticheatRemoteList));
         } else {
-            q2a_strcpy(cfgAnticheatRemoteList, q2adminanticheat_file->string);
+            q2a_strncpy(cfgAnticheatRemoteList, q2adminanticheat_file->string, sizeof(cfgAnticheatRemoteList));
         }
 
         ret = AC_GetRemoteFile(cfgAnticheatRemoteList);
@@ -76,7 +76,7 @@ void AC_LoadExceptions(void) {
 
         AC_UpdateList();
         // execute exception list even if the download was not succeeded, since there is probably an old version available.
-        q2a_strcpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n");
+        q2a_strncpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n", sizeof(buffer));
         gi.AddCommandString(buffer);
     }
 }

@@ -75,6 +75,13 @@ typedef enum {
 
 #define lengthof(arr)	(sizeof(arr) / sizeof(arr[0]))
 
+//terminating strncpy
+#define Q_strncpy(dst, src, len) \
+do { \
+	strncpy ((dst), (src), (len)); \
+	(dst)[(len)] = 0; \
+} while (0)
+
 // angle indexes
 #define PITCH	0  // up / down
 #define YAW		1  // left / right

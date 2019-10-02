@@ -548,7 +548,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
     if (spawnentities_enable) {
         readSpawnLists();
-        q2a_strcpy(buffer, moddir);
+        q2a_strncpy(buffer, moddir, sizeof(buffer));
         q2a_strcat(buffer, "/q2adminmaps/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, ".q2aspawn");
@@ -628,9 +628,9 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readCheckVarLists();
 
     // exec the map cfg file...
-    q2a_strcpy(gmapname, mapname);
+    q2a_strncpy(gmapname, mapname, sizeof(gmapname));
     if (mapcfgexec) {
-        q2a_strcpy(gmapname, mapname);
+        q2a_strncpy(gmapname, mapname, sizeof(gmapname));
         q2a_strcpy(buffer, "exec mapcfg/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, "-post.cfg\n");
@@ -642,8 +642,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
     remote.maxclients = (int) maxclients->value;
-    q2a_strcpy(remote.mapname, mapname);
-    q2a_strcpy(remote.rcon_password, rconpassword->string);
+    q2a_strncpy(remote.mapname, mapname, sizeof(remote.mapname));
+    q2a_strncpy(remote.rcon_password, rconpassword->string, sizeof(remote.rcon_password));
 	remote.port = getport();
 	remote.frame_number = 0;
 	remote.next_report = SECS_TO_FRAMES(2 * 60 * 60);	// heartbeat in 2 hours
@@ -659,7 +659,7 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
         unsigned int i;
         int num;
 
-        q2a_strcpy(proxyinfo[client].ipaddress, ip);
+        q2a_strncpy(proxyinfo[client].ipaddress, ip, sizeof(proxyinfo[client].ipaddress));
 
         if (q2a_strcmp(ip, "loopback") == 0) {
             proxyinfo[client].ipaddress[0] = 127;
@@ -902,7 +902,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
                 ret = 0;
             } else {
                 proxyinfo[client].clientcommand |= CCMD_BANNED;
-                q2a_strcpy(proxyinfo[client].buffer, currentBanMsg);
+                q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
             }
         }
     }
@@ -912,7 +912,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         q2a_strcpy(userinfo, "\\name\\badinfo\\skin\\male/grunt");
     }
 
-    q2a_strcpy(proxyinfo[client].userinfo, userinfo);
+    q2a_strncpy(proxyinfo[client].userinfo, userinfo, sizeof(proxyinfo[client].userinfo));
 
     // set name
     s = Info_ValueForKey(userinfo, "name");
@@ -948,7 +948,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             ret = 0;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
-            q2a_strcpy(proxyinfo[client].buffer, currentBanMsg);
+            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
     } else if (checkClientIpAddress && proxyinfo[client].ipaddress[0] == 0) // check for invlaid IP's and don't let them in :)
     {
@@ -970,7 +970,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             ret = 0;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
-            q2a_strcpy(proxyinfo[client].buffer, currentBanMsg);
+            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
     } else if (ret && !(proxyinfo[client].clientcommand & CCMD_BANNED)) {
         qboolean doConnect = TRUE;
@@ -1447,7 +1447,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         addCmdQueue(client, QCMD_MSGDISCONNECT, 2, 0, 0);
     }
 
-    q2a_strcpy(proxyinfo[client].userinfo, userinfo);
+    q2a_strncpy(proxyinfo[client].userinfo, userinfo, sizeof(proxyinfo[client].userinfo));
 
     proxyinfo[client].next_report = 0;
 

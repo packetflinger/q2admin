@@ -233,7 +233,7 @@ void G_RunFrame(void) {
                     char *ip = ipbuffer;
                     char *bp = ip;
 
-                    strcpy(ipbuffer, proxyinfo[client].ipaddress);
+                    q2a_strncpy(ipbuffer, proxyinfo[client].ipaddress, sizeof(ipbuffer));
 
                     while (*bp && (*bp != ':')) {
                         bp++;
@@ -279,7 +279,7 @@ void G_RunFrame(void) {
                             retrylist[i].retry++;
                             reconnectlist[maxReconnectList].retrylistidx = i;
                         } else {
-                            q2a_strcpy(retrylist[maxretryList].ip, ip);
+                            q2a_strncpy(retrylist[maxretryList].ip, ip, MAX_INFO_STRING + 45);
                             retrylist[maxretryList].retry = 0;
                             maxretryList++;
                         }
@@ -287,7 +287,7 @@ void G_RunFrame(void) {
                         maxReconnectList++;
                     }
 
-                    q2a_strcpy(buffer, ("%s\n", defaultreconnectmessage));
+                    q2a_strncpy(buffer, ("%s\n", defaultreconnectmessage), sizeof(buffer));
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
                     generateRandomString(ReconnectString, 5);
@@ -402,7 +402,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strcpy(buffer, ("%s\n", zbotuserdisplay));
+                    q2a_strncpy(buffer, ("%s\n", zbotuserdisplay), sizeof(buffer));
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -479,7 +479,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strcpy(buffer, ("%s\n", zbotuserdisplay));
+                    q2a_strncpy(buffer, ("%s\n", zbotuserdisplay), sizeof(buffer));
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -694,7 +694,7 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "set timescale $timescale u\n");
             } else if (command == QCMD_SETTIMESCALE) {
                 if (timescaledetect) {
-                    strcpy(buffer, "set timescale 1\n");
+                    q2a_strcpy(buffer, "set timescale 1\n");
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SPAMBYPASS) {
@@ -873,7 +873,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     q2adminhashlist_dir = gi.cvar("q2adminhashlist_dir", "", 0);
 
     gamedir = gi.cvar("game", "baseq2", 0);
-    q2a_strcpy(moddir, gamedir->string);
+    q2a_strncpy(moddir, gamedir->string, sizeof(moddir));
 
     if (moddir[0] == 0) {
         q2a_strcpy(moddir, "baseq2");

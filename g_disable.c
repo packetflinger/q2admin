@@ -180,7 +180,7 @@ qboolean checkfordisablecmd(char *cp, int disablecmd) {
 qboolean checkDisabledCommand(char *cmd) {
     unsigned int i;
 
-    q2a_strcpy(buffer, cmd);
+    q2a_strncpy(buffer, cmd, sizeof(buffer));
     q_strupr(buffer);
 
     for (i = 0; i < maxdisable_cmds; i++) {
