@@ -252,6 +252,16 @@ int Q_stricmp(char *s1, char *s2);
 int Q_strcasecmp(char *s1, char *s2);
 int Q_strncasecmp(char *s1, char *s2, int n);
 
+size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
+size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
+size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...);
+size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...);
+size_t Q_concat(char *dest, size_t size, ...);
+size_t Q_strlcat(char *dst, const char *src, size_t size);
+size_t Q_strlcpy(char *dst, const char *src, size_t size);
+char *Q_strcasestr(const char *s1, const char *s2);
+
+
 //=============================================
 
 short BigShort(short l);

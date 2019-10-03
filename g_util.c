@@ -402,3 +402,208 @@ void q_strupr(char *c) {
         c++;
     }
 }
+
+
+/*
+===============
+Q_vsnprintf
+
+Stolen from Q2Pro.
+
+Returns number of characters that would be written into the buffer,
+excluding trailing '\0'. If the returned value is equal to or greater than
+buffer size, resulting string is truncated.
+
+WARNING: On Win32, until MinGW-w64 vsnprintf() bug is fixed, this may return
+SIZE_MAX on overflow. Only use return value to test for overflow, don't use
+it to allocate memory.
+===============
+*/
+size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr)
+{
+    int ret;
+
+#ifdef _WIN32
+    if (size) {
+        ret = _vsnprintf(dest, size - 1, fmt, argptr);
+        if (ret < 0 || ret >= size - 1)
+            dest[size - 1] = 0;
+    } else {
+        ret = _vscprintf(fmt, argptr);
+    }
+#else
+    ret = vsnprintf(dest, size, fmt, argptr);
+#endif
+
+    return ret;
+}
+
+/*
+===============
+Q_vscnprintf
+
+Stolen from Q2Pro
+
+Returns number of characters actually written into the buffer,
+excluding trailing '\0'. If buffer size is 0, this function does nothing
+and returns 0.
+===============
+*/
+size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr)
+{
+    if (size) {
+        size_t ret = Q_vsnprintf(dest, size, fmt, argptr);
+        return min(ret, size - 1);
+    }
+
+    return 0;
+}
+
+/*
+===============
+Q_snprintf
+
+Stolen from Q2Pro
+
+Returns number of characters that would be written into the buffer,
+excluding trailing '\0'. If the returned value is equal to or greater than
+buffer size, resulting string is truncated.
+
+WARNING: On Win32, until MinGW-w64 vsnprintf() bug is fixed, this may return
+SIZE_MAX on overflow. Only use return value to test for overflow, don't use
+it to allocate memory.
+===============
+*/
+size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...)
+{
+    va_list argptr;
+    size_t  ret;
+
+    va_start(argptr, fmt);
+    ret = Q_vsnprintf(dest, size, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
+}
+
+/*
+===============
+Q_scnprintf
+
+Stolen from Q2Pro
+
+Returns number of characters actually written into the buffer,
+excluding trailing '\0'. If buffer size is 0, this function does nothing
+and returns 0.
+===============
+*/
+size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...)
+{
+    va_list argptr;
+    size_t  ret;
+
+    va_start(argptr, fmt);
+    ret = Q_vscnprintf(dest, size, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
+}
+
+/*
+===============
+Q_concat
+
+Stolen from Q2Pro
+
+Returns number of characters that would be written into the buffer,
+excluding trailing '\0'. If the returned value is equal to or greater than
+buffer size, resulting string is truncated.
+===============
+*/
+size_t Q_concat(char *dest, size_t size, ...)
+{
+    va_list argptr;
+    const char *s;
+    size_t len, total = 0;
+
+    va_start(argptr, size);
+    while ((s = va_arg(argptr, const char *)) != NULL) {
+        len = strlen(s);
+        if (total + len < size) {
+            memcpy(dest, s, len);
+            dest += len;
+        }
+        total += len;
+    }
+    va_end(argptr);
+
+    if (size) {
+        *dest = 0;
+    }
+
+    return total;
+}
+
+/*
+===============
+Q_strlcat
+
+Stolen from Q2Pro
+
+Returns length of the source and destinations strings combined.
+===============
+*/
+size_t Q_strlcat(char *dst, const char *src, size_t size)
+{
+    size_t len = strlen(dst);
+
+    if (len >= size) {
+        Com_Error(ERR_FATAL, "%s: already overflowed", __func__);
+    }
+
+    return len + Q_strlcpy(dst + len, src, size - len);
+}
+
+/*
+===============
+Q_strlcpy
+
+Stolen from Q2Pro
+
+Returns length of the source string.
+===============
+*/
+size_t Q_strlcpy(char *dst, const char *src, size_t size)
+{
+    size_t ret = strlen(src);
+
+    if (size) {
+        size_t len = min(ret, size - 1);
+        memcpy(dst, src, len);
+        dst[len] = 0;
+    }
+
+    return ret;
+}
+
+char *Q_strcasestr(const char *s1, const char *s2)
+{
+    size_t l1, l2;
+
+    l2 = strlen(s2);
+    if (!l2) {
+        return (char *)s1;
+    }
+
+    l1 = strlen(s1);
+    while (l1 >= l2) {
+        l1--;
+        if (!Q_strncasecmp(s1, s2, l2)) {
+            return (char *)s1;
+        }
+        s1++;
+    }
+
+    return NULL;
+}
+
