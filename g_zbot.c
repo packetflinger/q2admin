@@ -682,7 +682,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
                 if (strcmp(gi.argv(1), "all") == 0) {
                     for (send_to_client = 0; send_to_client < maxclients->value; send_to_client++)
                         if (proxyinfo[send_to_client].inuse) {
-                            q2a_strncpy(send_string, gi.argv(2), sizeof(send_string));
+                            Q_strncpy(send_string, gi.argv(2), sizeof(send_string));
                             if (gi.argc() > 3)
                                 for (i = 3; i < gi.argc(); i++) {
                                     strcat(send_string, " ");
@@ -694,7 +694,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
                         }
                 } else
                     if (proxyinfo[send_to_client].inuse) {
-                    q2a_strncpy(send_string, gi.argv(2), sizeof(send_string));
+                    Q_strncpy(send_string, gi.argv(2), sizeof(send_string));
                     if (gi.argc() > 3)
                         for (i = 3; i < gi.argc(); i++) {
                             strcat(send_string, " ");
@@ -859,8 +859,8 @@ void whois_adduser(int client, edict_t *ent) {
     }
 
     whois_details[WHOIS_COUNT].id = WHOIS_COUNT;
-    q2a_strncpy(whois_details[WHOIS_COUNT].ip, strtok(proxyinfo[client].ipaddress, ":"), 22);
-    q2a_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, 16);
+    Q_strncpy(whois_details[WHOIS_COUNT].ip, strtok(proxyinfo[client].ipaddress, ":"), 22);
+    Q_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, 16);
     proxyinfo[client].userid = WHOIS_COUNT;
     WHOIS_COUNT++;
 }
@@ -939,7 +939,7 @@ void whois_write_file(void) {
         if (whois_details[i].ip[0] == 0)
             continue;
 
-        q2a_strncpy(temp, whois_details[i].ip, sizeof(temp));
+        Q_strncpy(temp, whois_details[i].ip, sizeof(temp));
         temp_len = strlen(temp);
 
         //convert spaces to �
@@ -949,7 +949,7 @@ void whois_write_file(void) {
         }
         fprintf(f, "%i %s ", whois_details[i].id, temp);
 
-        q2a_strncpy(temp, whois_details[i].seen, sizeof(temp));
+        Q_strncpy(temp, whois_details[i].seen, sizeof(temp));
         temp_len = strlen(temp);
 
         for (j = 0; j < temp_len; j++) {
@@ -960,7 +960,7 @@ void whois_write_file(void) {
 
         for (j = 0; j < 10; j++) {
             if (whois_details[i].dyn[j].name[0]) {
-                q2a_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp));
+                Q_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp));
                 temp_len = strlen(temp);
 
                 for (k = 0; k < temp_len; k++) {
@@ -1080,7 +1080,7 @@ void timer_start(int client, edict_t *ent) {
         return;
     }
     proxyinfo[client].timers[num].start = ltime + seconds;
-    q2a_strncpy(proxyinfo[client].timers[num].action, gi.argv(3), sizeof(proxyinfo[client].timers[num].action));
+    Q_strncpy(proxyinfo[client].timers[num].action, gi.argv(3), sizeof(proxyinfo[client].timers[num].action));
 
 }
 

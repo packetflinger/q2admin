@@ -269,9 +269,9 @@ int stringContains(char *buff1, char *buff2) {
     char strbuffer1[4096];
     char strbuffer2[4096];
 
-    q2a_strncpy(strbuffer1, buff1, sizeof(strbuffer1));
+    Q_strncpy(strbuffer1, buff1, sizeof(strbuffer1));
     q_strupr(strbuffer1);
-    q2a_strncpy(strbuffer2, buff2, sizeof(strbuffer2));
+    Q_strncpy(strbuffer2, buff2, sizeof(strbuffer2));
     q_strupr(strbuffer2);
     return (q2a_strstr(strbuffer1, strbuffer2) != NULL);
 }
@@ -324,7 +324,7 @@ char *processstring(char *output, char *input, int max, char end) {
                 timestamplen = strlen(timestampcp) - 1; /* length minus the '\n' */
 
                 if (timestamplen && max >= timestamplen) {
-                    q2a_strncpy(output, timestampcp, timestamplen);
+                    Q_strncpy(output, timestampcp, timestamplen);
                     output += timestamplen;
                     max -= (timestamplen - 1);
                 }

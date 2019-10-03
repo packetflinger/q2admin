@@ -5057,7 +5057,7 @@ size_t errbuf_size;
 
     if (errbuf_size != 0) {
         if (msg_size > errbuf_size) {
-            q2a_strncpy(errbuf, msg, errbuf_size - 1);
+            Q_strncpy(errbuf, msg, errbuf_size - 1);
             errbuf[errbuf_size - 1] = 0;
         } else
             q2a_strcpy(errbuf, msg);

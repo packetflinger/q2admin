@@ -63,16 +63,18 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
 void getR1chHashList(char *hashname) {
 
     char cfgHashList_enabled[100];
-    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+    Q_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
 
     if (cfgHashList_enabled[0] == '1') {
         qboolean ret;
         char cfgHashRemoteList[100];
 
         if (!q2adminhashlist_dir || isBlank(q2adminhashlist_dir->string)) {
-            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, HASHLISTREMOTEDIR, sizeof(cfgHashRemoteList)), "/"), hashname);
+            //q2a_strcat(q2a_strcat(Q_strncpy(cfgHashRemoteList, HASHLISTREMOTEDIR, sizeof(cfgHashRemoteList)), "/"), hashname);
+            Q_strncpy(cfgHashRemoteList, va("%s/%s", HASHLISTREMOTEDIR, hashname), sizeof(cfgHashRemoteList));
         } else {
-            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)), "/"), hashname);
+            //q2a_strcat(q2a_strcat(Q_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)), "/"), hashname);
+        	Q_strncpy(cfgHashRemoteList, va("%s/%s", q2adminhashlist_dir->string, hashname), sizeof(cfgHashRemoteList));
         }
         ret = ReadRemoteHashListFile(cfgHashRemoteList, hashname);
 
@@ -85,7 +87,7 @@ void getR1chHashList(char *hashname) {
 
 void loadhashlist(void) {
     char cfgHashList_enabled[100];
-    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+    Q_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
     if (cfgHashList_enabled[0] == '1') {
 
         getR1chHashList("anticheat-cvars.txt");
