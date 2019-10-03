@@ -37,19 +37,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable : 4018)     // signed/unsigned mismatch
 #pragma warning(disable : 4305)  // truncation from const double to float
 
-//r1ch
 #define snprintf _snprintf
 
 #endif
+
 #include <stdio.h>
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-/*
-#include <assert.h>
-#include <math.h>
- */
+
 #if defined _M_IX86 && !defined C_ONLY
 #define id386 1
 #else
@@ -81,6 +78,7 @@ do { \
 	q2a_strncpy ((dst), (src), (len)); \
 	(dst)[(len)] = 0; \
 } while (0)
+
 
 // angle indexes
 #define PITCH	0  // up / down
