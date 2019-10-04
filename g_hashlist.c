@@ -25,7 +25,7 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
     URL_FILE *handle;
     FILE *outf;
 
-    sprintf(buffer, "%s/%s", moddir, blname);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, blname);
 
     // copy from url line by line with fgets //
     outf = fopen(buffer, "w");

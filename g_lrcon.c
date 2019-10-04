@@ -183,7 +183,7 @@ void readLRconLists(void) {
 
     ret = ReadLRconFile(LRCONFILE);
 
-    sprintf(buffer, "%s/%s", moddir, LRCONFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, LRCONFILE);
     if (ReadLRconFile(buffer)) {
         ret = TRUE;
     }
@@ -271,13 +271,13 @@ void run_lrcon(edict_t *ent, int client) {
                         gi.cvar_set("rcon_password", cbuffer);
 
                         password_timeout = ltime + lrcon_timeout;
-                        sprintf(buffer, "rcon %s %s\n", cbuffer, cp);
+                        Q_snprintf(buffer, sizeof(buffer), "rcon %s %s\n", cbuffer, cp);
                         stuffcmd(ent, buffer);
 
-                        sprintf(buffer, "rcon %s sv !resetrcon\n", cbuffer, cp);
+                        Q_snprintf(buffer, sizeof(buffer), "rcon %s sv !resetrcon\n", cbuffer, cp);
 
                     } else {
-                        sprintf(buffer, "rcon %s %s\n", rconpassword->string, cp);
+                        Q_snprintf(buffer, sizeof(buffer), "rcon %s %s\n", rconpassword->string, cp);
                     }
 
                     // found a good command to run..
@@ -285,7 +285,7 @@ void run_lrcon(edict_t *ent, int client) {
                 } else {
                     //we don't let the client execute arbitrary commands, we write the allowed
                     //command directly to the server. downside is client never sees output of cmd.
-                    sprintf(buffer, "%s\n", cp);
+                    Q_snprintf(buffer, sizeof(buffer), "%s\n", cp);
                     gi.AddCommandString(buffer);
                 }
                 //r1ch 2005-01-27 insecure lrcon fix END

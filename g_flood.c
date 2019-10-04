@@ -142,7 +142,7 @@ void readFloodLists(void) {
 
     ret = ReadFloodFile(FLOODFILE);
 
-    sprintf(buffer, "%s/%s", moddir, FLOODFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, FLOODFILE);
     if (ReadFloodFile(buffer)) {
         ret = TRUE;
     }
@@ -232,7 +232,7 @@ qboolean checkForFlood(int client) {
         proxyinfo[client].chatcount = 0;
     } else {
         if (proxyinfo[client].chatcount >= fi->chatFloodProtectNum) {
-            sprintf(buffer, chatFloodProtectMsg, proxyinfo[client].name);
+            Q_snprintf(buffer, sizeof(buffer), chatFloodProtectMsg, proxyinfo[client].name);
             gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
             if (fi->chatFloodProtectSilence == 0) {

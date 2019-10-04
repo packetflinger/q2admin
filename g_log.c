@@ -78,7 +78,7 @@ void expandOutPortNum(char *srcdest, int max) {
             unsigned int i;
             char *cp, *dp;
 
-            sprintf(portnum, "%d", getport());
+            Q_snprintf(portnum, sizeof(portnum), "%d", getport());
             len = q2a_strlen(portnum);
 
             *srcdest = portnum[0];
@@ -295,7 +295,7 @@ void loadLogList(void) {
 
     ret = loadLogListFile(LOGLISTFILE);
 
-    sprintf(buffer, "%s/%s", moddir, LOGLISTFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, LOGLISTFILE);
     if (loadLogListFile(buffer)) {
         ret = TRUE;
     }
@@ -325,7 +325,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'p') {
                 if (ent) {
-                    sprintf(dest, "%d", ent->client->ping);
+                    Q_snprintf(dest, sizeof(dest), "%d", ent->client->ping);
                     while (*dest) {
                         dest++;
                     }
@@ -339,7 +339,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'r') {
                 if (ent) {
-                    sprintf(dest, "%d", proxyinfo[client].rate);
+                    Q_snprintf(dest, sizeof(dest), "%d", proxyinfo[client].rate);
                     while (*dest) {
                         dest++;
                     }
@@ -380,12 +380,12 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     }
                 }
             } else if (*format == 'e') {
-                sprintf(dest, "%d", number);
+                Q_snprintf(dest, sizeof(dest), "%d", number);
                 while (*dest) {
                     dest++;
                 }
             } else if (*format == 'f') {
-                sprintf(dest, "%g", number2);
+                Q_snprintf(dest, sizeof(dest), "%g", number2);
                 while (*dest) {
                     dest++;
                 }
@@ -424,7 +424,7 @@ void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *messag
         for (i = 0, logfile = 0x1; i < 32; i++, logfile <<= 1) {
             if ((logtypes[(int) ltype].logfiles & logfile) && logFiles[i].inuse) {
                 if (logFiles[i].mod) {
-                    sprintf(logname, "%s/%s", moddir, logFiles[i].filename);
+                    Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[i].filename);
                 } else {
                     Q_strncpy(logname, logFiles[i].filename, sizeof(logname));
                 }
@@ -469,7 +469,7 @@ void displayLogFileCont(edict_t *ent, int client, long logfilereadpos) {
     FILE *logfilePtr;
 
     if (logFiles[logNum].mod) {
-        sprintf(logname, "%s/%s", moddir, logFiles[logNum].filename);
+        Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[logNum].filename);
     } else {
         Q_strncpy(logname, logFiles[logNum].filename, sizeof(logname));
     }
@@ -509,7 +509,7 @@ void clearlogfileRun(int startarg, edict_t *ent, int client) {
             FILE *logfilePtr;
 
             if (logFiles[logToDisplay].mod) {
-                sprintf(logname, "%s/%s", moddir, logFiles[logToDisplay].filename);
+                Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[logToDisplay].filename);
             } else {
                 Q_strncpy(logname, logFiles[logToDisplay].filename, sizeof(logname));
             }
@@ -805,7 +805,7 @@ void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean o
                 q2a_strcat(buffer, "(");
             }
 
-            sprintf(buffer + q2a_strlen(buffer), "%d", i + 1);
+            Q_snprintf(buffer + q2a_strlen(buffer), sizeof(buffer) - q2a_strlen(buffer), "%d", i + 1);
 
             if (!logFiles[i].inuse) {
                 q2a_strcat(buffer, ")");

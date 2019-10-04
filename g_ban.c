@@ -1138,7 +1138,7 @@ void readBanLists(void) {
 
 
 
-    sprintf(buffer, "%s/%s", moddir, cfgFile);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, cfgFile);
     if (ReadBanFile(buffer)) {
         ret = TRUE;
     }
@@ -1161,7 +1161,7 @@ void readBanLists(void) {
 
         ret = ReadRemoteBanFile(cfgRemoteFile);
 
-        sprintf(buffer, "%s/%s", moddir, cfgRemoteFile);
+        Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, cfgRemoteFile);
         if (ReadBanFile(buffer)) {
             ret = TRUE;
         }
@@ -1486,7 +1486,12 @@ void banRun(int startarg, edict_t *ent, int client) {
                 newentry->ip[2] = proxyinfo[clienti].ipaddressBinary[2];
                 newentry->ip[3] = proxyinfo[clienti].ipaddressBinary[3];
 
-                sprintf(savecmd + q2a_strlen(savecmd), "%d.%d.%d.%d ", newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]);
+                Q_snprintf(
+                		savecmd + q2a_strlen(savecmd),
+						36,
+						"%d.%d.%d.%d ",
+						newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]
+				);
 
                 while (isdigit(*cp)) {
                     cp++;
@@ -1735,7 +1740,14 @@ void banRun(int startarg, edict_t *ent, int client) {
         }
 
         if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
-            sprintf(savecmd + q2a_strlen(savecmd), "FLOOD %d %d %d ", newentry->floodinfo.chatFloodProtectNum, newentry->floodinfo.chatFloodProtectSec, newentry->floodinfo.chatFloodProtectSilence);
+            Q_snprintf(
+            		savecmd + q2a_strlen(savecmd),
+					sizeof(savecmd) - q2a_strlen(savecmd),
+					"FLOOD %d %d %d ",
+					newentry->floodinfo.chatFloodProtectNum,
+					newentry->floodinfo.chatFloodProtectSec,
+					newentry->floodinfo.chatFloodProtectSilence
+			);
             newentry->floodinfo.chatFloodProtect = TRUE;
         } else {
             newentry->floodinfo.chatFloodProtect = FALSE;
@@ -1931,7 +1943,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (save == 1) {
                 Q_strncpy(buffer, BANLISTFILE, sizeof(buffer));
             } else {
-                sprintf(buffer, "%s/%s", moddir, BANLISTFILE);
+                Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
             }
 
             banlistfptr = fopen(buffer, "at");
@@ -2099,11 +2111,9 @@ int checkBanList(edict_t *ent, int client) {
             if (checkentry->password[0]) {
                 char *s = Info_ValueForKey(proxyinfo[client].userinfo, "pw");
 
-                //*** UPDATE START ***
-                sprintf(strbuffer, "INCLUDE - %s", s);
+                Q_snprintf(strbuffer, sizeof(strbuffer), "INCLUDE - %s", s);
                 logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0);
                 gi.dprintf("%s\n", strbuffer);
-                //*** UPDATE END ***
 
                 if (q2a_strcmp(checkentry->password, s)) {
                     if (checkentry->msg) {
@@ -2189,9 +2199,9 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
 
     if (findentry) {
         if (findentry->loadType == LT_TEMP) {
-            sprintf(buffer, " (%ld, Temporary) BAN:", findentry->bannum);
+            Q_snprintf(buffer, sizeof(buffer), " (%ld, Temporary) BAN:", findentry->bannum);
         } else {
-            sprintf(buffer, " (%ld, Permanent) BAN:", findentry->bannum);
+            Q_snprintf(buffer, sizeof(buffer), " (%ld, Permanent) BAN:", findentry->bannum);
         }
 
         if (!findentry->exclude) {
@@ -2220,7 +2230,16 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
             }
 
             if (findentry->subnetmask != 0) {
-                sprintf(buffer + q2a_strlen(buffer), " IP %d.%d.%d.%d/%d", findentry->ip[0], findentry->ip[1], findentry->ip[2], findentry->ip[3], findentry->subnetmask);
+                Q_snprintf(
+                		buffer + q2a_strlen(buffer),
+						sizeof(buffer) - q2a_strlen(buffer),
+						" IP %d.%d.%d.%d/%d",
+						findentry->ip[0],
+						findentry->ip[1],
+						findentry->ip[2],
+						findentry->ip[3],
+						findentry->subnetmask
+				);
             }
         }
 
@@ -2231,11 +2250,23 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
         }
 
         if (!findentry->exclude && findentry->maxnumberofconnects) {
-            sprintf(buffer + q2a_strlen(buffer), " MAX %d", findentry->maxnumberofconnects);
+            Q_snprintf(
+            		buffer + q2a_strlen(buffer),
+					sizeof(buffer) - q2a_strlen(buffer),
+					" MAX %d",
+					findentry->maxnumberofconnects
+			);
         }
 
         if (!findentry->exclude && findentry->floodinfo.chatFloodProtect) {
-            sprintf(buffer + q2a_strlen(buffer), " FLOOD %d %d %d", findentry->floodinfo.chatFloodProtectNum, findentry->floodinfo.chatFloodProtectSec, findentry->floodinfo.chatFloodProtectSilence);
+            Q_snprintf(
+            		buffer + q2a_strlen(buffer),
+					sizeof(buffer) - q2a_strlen(buffer),
+					" FLOOD %d %d %d",
+					findentry->floodinfo.chatFloodProtectNum,
+					findentry->floodinfo.chatFloodProtectSec,
+					findentry->floodinfo.chatFloodProtectSilence
+			);
         }
 
         if (findentry->msg) {
@@ -2245,7 +2276,12 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
         }
 
         if (findentry->timeout) {
-            sprintf(buffer + q2a_strlen(buffer), " TIME %g", (findentry->timeout - ltime) / 60.0);
+            Q_snprintf(
+            		buffer + q2a_strlen(buffer),
+					sizeof(buffer) - q2a_strlen(buffer),
+					" TIME %g",
+					(findentry->timeout - ltime) / 60.0
+			);
         }
 
         gi.cprintf(ent, PRINT_HIGH, "%s\n", buffer);
@@ -2498,7 +2534,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (save == 1) {
             Q_strncpy(buffer, BANLISTFILE, sizeof(buffer));
         } else {
-            sprintf(buffer, "%s/%s", moddir, BANLISTFILE);
+            Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
         }
 
         banlistfptr = fopen(buffer, "at");
@@ -2587,9 +2623,9 @@ void displayNextChatBan(edict_t *ent, int client, long chatbannum) {
 
     if (findentry) {
         if (findentry->loadType == LT_TEMP) {
-            sprintf(buffer, " (%ld, Temporary) CHATBAN:", findentry->bannum);
+            Q_snprintf(buffer, sizeof(buffer), " (%ld, Temporary) CHATBAN:", findentry->bannum);
         } else {
-            sprintf(buffer, " (%ld, Permanent) CHATBAN:", findentry->bannum);
+            Q_snprintf(buffer, sizeof(buffer), " (%ld, Permanent) CHATBAN:", findentry->bannum);
         }
 
         if (findentry->type == CHATLIKE) {

@@ -894,7 +894,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
     if (client < maxclients->value) {
         if (UpdateInternalClientInfo(client, ent, userinfo, &userInfoOverflow)) {
-            sprintf(buffer, zbotuserdisplay, proxyinfo[client].name);
+            Q_snprintf(buffer, sizeof(buffer), zbotuserdisplay, proxyinfo[client].name);
             currentBanMsg = buffer;
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
 
@@ -1159,7 +1159,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
                 } else {
                     if (proxyinfo[client].namechangecount >= nameChangeFloodProtectNum) {
                         //            q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
-                        sprintf(buffer, nameChangeFloodProtectMsg, proxyinfo[client].name);
+                        Q_snprintf(buffer, sizeof(buffer), nameChangeFloodProtectMsg, proxyinfo[client].name);
                         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                         if (nameChangeFloodProtectSilence == 0) {
@@ -1220,7 +1220,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                 proxyinfo[client].skinchangecount = 0;
             } else {
                 if (proxyinfo[client].skinchangecount >= skinChangeFloodProtectNum) {
-                    sprintf(buffer, skinChangeFloodProtectMsg, proxyinfo[client].name);
+                    Q_snprintf(buffer, sizeof(buffer), skinChangeFloodProtectMsg, proxyinfo[client].name);
                     gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                     if (skinChangeFloodProtectSilence == 0) {
@@ -1239,7 +1239,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (strlen(skinname) > 38) {
-        sprintf(buffer, skincrashmsg, proxyinfo[client].name);
+        Q_snprintf(buffer, sizeof(buffer), skincrashmsg, proxyinfo[client].name);
         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
         addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skincrashmsg);
         return FALSE;
@@ -1278,7 +1278,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     if (stringContains(userinfo, "\\skon\\")) //zgh_frk check
     {
         gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
-        sprintf(tmptext, "kick %d\n", client);
+        Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
         gi.AddCommandString(tmptext);
         logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0);
     }
@@ -1288,7 +1288,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         temp = ltime - proxyinfo[client].userinfo_changed_start;
         if (temp < USERINFOCHANGE_TIME) {
             gi.bprintf(PRINT_HIGH, "%s tried to flood the server (2)\n", proxyinfo[client].name);
-            sprintf(tmptext, "kick %d\n", client);
+            Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
             gi.AddCommandString(tmptext);
         } else {
             //enuf time passed, reset count
@@ -1675,7 +1675,7 @@ void ClientBegin(edict_t *ent) {
 
         addCmdQueue(client, QCMD_CHECKVARTESTS, (float) checkvar_poll_time, 0, 0);
 
-        sprintf(buffer, "%s/qconsole.log", moddir);
+        Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
         q2logfile = fopen(buffer, "rt");
         if (q2logfile) {
             fseek(q2logfile, 0, SEEK_END);

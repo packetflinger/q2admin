@@ -116,7 +116,7 @@ void G_RunFrame(void) {
     ltime = lframenum * FRAMETIME;
 
     if (serverinfoenable && (lframenum > 10)) {
-        sprintf(buffer, "set q2admin \"%s\" s\n", version);
+        Q_snprintf(buffer, sizeof(buffer), "set q2admin \"%s\" s\n", version);
         gi.AddCommandString(buffer);
         serverinfoenable = 0;
     }
@@ -225,7 +225,7 @@ void G_RunFrame(void) {
                     proxyinfo[client].clientcommand |= CCMD_KICKED;
                     logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
                     gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
-                    sprintf(buffer, "\nkick %d\n", client);
+                    Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                     gi.AddCommandString(buffer);
                 } else if (command == QCMD_RECONNECT) {
                     unsigned int i;
@@ -271,7 +271,7 @@ void G_RunFrame(void) {
                                 }
 
                                 // cut off here...
-                                sprintf(buffer, "\ndisconnect\n");
+                                Q_snprintf(buffer, sizeof(buffer), "\ndisconnect\n");
                                 stuffcmd(ent, buffer);
                                 break;
                             }
@@ -292,13 +292,29 @@ void G_RunFrame(void) {
 
                     generateRandomString(ReconnectString, 5);
                     generateRandomString(rndConnectString, 5); //UPDATE
-                    sprintf(buffer, "\nset %s %s\nset %s connect\n", ReconnectString, reconnect_address, rndConnectString); //UPDATE
+                    Q_snprintf(
+                    		buffer,
+							sizeof(buffer),
+							"\nset %s %s\nset %s connect\n",
+							ReconnectString,
+							reconnect_address,
+							rndConnectString
+					);
                     stuffcmd(ent, buffer);
 
                     generateRandomString(proxyinfo[client].hack_teststring3, RANDOM_STRING_LENGTH);
                     generateRandomString(checkConnectProxy, RANDOM_STRING_LENGTH);
 
-                    sprintf(buffer, "\nalias connect %s\nalias %s $%s $%s\n%s\n", proxyinfo[client].hack_teststring3, checkConnectProxy, rndConnectString, ReconnectString, checkConnectProxy); //UPDATE
+                    Q_snprintf(
+                    		buffer,
+							sizeof(buffer),
+							"\nalias connect %s\nalias %s $%s $%s\n%s\n",
+							proxyinfo[client].hack_teststring3,
+							checkConnectProxy,
+							rndConnectString,
+							ReconnectString,
+							checkConnectProxy
+					);
 
                     proxyinfo[client].clientcommand |= CCMD_WAITFORCONNECTREPLY;
                     stuffcmd(ent, buffer);
@@ -329,7 +345,7 @@ void G_RunFrame(void) {
                 proxyinfo[client].retries++;
             } else if (command == QCMD_LETRATBOTQUIT) {
                 if (zbotdetect) {
-                    sprintf(buffer, "\n%s\n", zbot_teststring_test3);
+                    Q_snprintf(buffer, sizeof(buffer), "\n%s\n", zbot_teststring_test3);
                     stuffcmd(ent, buffer);
                     stuffcmd(ent, buffer);
                     stuffcmd(ent, buffer);
@@ -357,7 +373,7 @@ void G_RunFrame(void) {
                 proxyinfo[client].teststr[7] = 0;
                 proxyinfo[client].teststr[8] = 0;
 
-                sprintf(buffer, "\n%s\n%s\n", proxyinfo[client].teststr, zbot_teststring_test2);
+                Q_snprintf(buffer, sizeof(buffer), "\n%s\n%s\n", proxyinfo[client].teststr, zbot_teststring_test2);
                 stuffcmd(ent, buffer);
 
                 proxyinfo[client].clientcommand |= CCMD_ZPROXYCHECK2;
@@ -367,13 +383,13 @@ void G_RunFrame(void) {
                 char text[35];
 
                 if (!(proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2)) {
-                    sprintf(text, "I(%d) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
+                    Q_snprintf(text, sizeof(text), "I(%d) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
                     logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
                     break;
                 }
 
                 if (proxyinfo[client].charindex >= testcharslength) {
-                    sprintf(text, "I(%d >= end) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
+                    Q_snprintf(text, sizeof(text), "I(%d >= end) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
                     logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
                     break;
                 }
@@ -447,7 +463,12 @@ void G_RunFrame(void) {
             } else if (command == QCMD_TESTRATBOT3) {
                 proxyinfo[client].clientcommand |= CCMD_RATBOTDETECTNAME;
                 addCmdQueue(client, QCMD_TESTRATBOT4, clientsidetimeout, 0, 0);
-                sprintf(buffer, "\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n", proxyinfo[client].name);
+                Q_snprintf(
+                		buffer,
+						sizeof(buffer),
+						"\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n",
+						proxyinfo[client].name
+				);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_TESTRATBOT4) {
                 if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECTNAME)) {
@@ -496,12 +517,12 @@ void G_RunFrame(void) {
             } else if (command == QCMD_TESTALIASCMD1) {
                 generateRandomString(proxyinfo[client].hack_teststring1, RANDOM_STRING_LENGTH);
                 generateRandomString(proxyinfo[client].hack_teststring2, RANDOM_STRING_LENGTH);
-                sprintf(buffer, "\nalias %s %s\n", proxyinfo[client].hack_teststring1, proxyinfo[client].hack_teststring2);
+                Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].hack_teststring1, proxyinfo[client].hack_teststring2);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY1;
                 addCmdQueue(client, QCMD_TESTALIASCMD2, 1, 0, NULL);
             } else if (command == QCMD_TESTALIASCMD2) {
-                sprintf(buffer, "\n%s\n", proxyinfo[client].hack_teststring1);
+                Q_snprintf(buffer, sizeof(buffer), "\n%s\n", proxyinfo[client].hack_teststring1);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY2;
             } else if (command == QCMD_DISPLOGFILE) {
@@ -522,7 +543,7 @@ void G_RunFrame(void) {
                 logEvent(LT_IMPULSES, client, ent, NULL, proxyinfo[client].impulse, 0.0);
             } else if (command == QCMD_CONNECTCMD) {
                 if (customClientCmdConnect[0]) {
-                    sprintf(buffer, "%s\n", customClientCmdConnect);
+                    Q_snprintf(buffer, sizeof(buffer), "%s\n", customClientCmdConnect);
                     stuffcmd(ent, buffer);
                 }
 
@@ -549,7 +570,7 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "clear\n");
             } else if (command == QCMD_CUSTOM) {
                 if (customClientCmd[0]) {
-                    sprintf(buffer, "%s\n", customClientCmd);
+                    Q_snprintf(buffer, sizeof(buffer), "%s\n", customClientCmd);
                     stuffcmd(ent, buffer);
                 }
             } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
@@ -557,34 +578,34 @@ void G_RunFrame(void) {
                 proxyinfo[client].clientcommand |= CCMD_KICKED;
                 logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
                 gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
-                sprintf(buffer, "\nkick %d\n", client);
+                Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                 gi.AddCommandString(buffer);
             } else if (command == QCMD_RECONNECT) {
-                sprintf(buffer, "\nconnect %s\n", reconnect_address);
+                Q_snprintf(buffer, sizeof(buffer), "\nconnect %s\n", reconnect_address);
                 stuffcmd(ent, buffer);
                 //        addCmdQueue(client, QCMD_KICK, 0, 0, NULL);
             } else if (command == QCMD_CLIPTOMAXRATE) {
-                sprintf(buffer, "rate %d\n", maxrateallowed);
+                Q_snprintf(buffer, sizeof(buffer), "rate %d\n", maxrateallowed);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_CLIPTOMINRATE) {
-                sprintf(buffer, "rate %d\n", minrateallowed);
+                Q_snprintf(buffer, sizeof(buffer), "rate %d\n", minrateallowed);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_SETUPMAXFPS) {
                 stuffcmd(ent, "set cl_maxfps $cl_maxfps u\n");
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATE, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATE) {
                 if (proxyinfo[client].rate) {
-                    sprintf(buffer, "set rate %d\nset rate %d\n", proxyinfo[client].rate + 1, proxyinfo[client].rate);
+                    Q_snprintf(buffer, sizeof(buffer), "set rate %d\nset rate %d\n", proxyinfo[client].rate + 1, proxyinfo[client].rate);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SETMAXFPS) {
                 if (maxfpsallowed) {
-                    sprintf(buffer, "cl_maxfps %d\n", maxfpsallowed);
+                    Q_snprintf(buffer, sizeof(buffer), "cl_maxfps %d\n", maxfpsallowed);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SETMINFPS) {
                 if (minfpsallowed) {
-                    sprintf(buffer, "cl_maxfps %d\n", minfpsallowed);
+                    Q_snprintf(buffer, sizeof(buffer), "cl_maxfps %d\n", minfpsallowed);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_DISPBANS) {
@@ -605,10 +626,10 @@ void G_RunFrame(void) {
             } else if (command == QCMD_CHECKVARTESTS) {
                 checkVariableTest(ent, client, data);
             } else if (command == QCMD_CHANGENAME) {
-                sprintf(buffer, "name \"%s\"\n", proxyinfo[client].name);
+                Q_snprintf(buffer, sizeof(buffer), "name \"%s\"\n", proxyinfo[client].name);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_CHANGESKIN) {
-                sprintf(buffer, "skin \"%s\"\n", proxyinfo[client].skin);
+                Q_snprintf(buffer, sizeof(buffer), "skin \"%s\"\n", proxyinfo[client].skin);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_BAN) {
                 gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
@@ -709,10 +730,10 @@ void G_RunFrame(void) {
                 //1.20
                 if (!proxyinfo[client].done_server_and_blocklist) {
                     proxyinfo[client].blocklist = random()*(MAX_BLOCK_MODELS - 1);
-                    sprintf(buffer, "p_blocklist %i\n", proxyinfo[client].blocklist);
+                    Q_snprintf(buffer, sizeof(buffer), "p_blocklist %i\n", proxyinfo[client].blocklist);
                     stuffcmd(ent, buffer);
                     generateRandomString(proxyinfo[client].serverip, 15);
-                    sprintf(buffer, "p_server %s\n", proxyinfo[client].serverip);
+                    Q_snprintf(buffer, sizeof(buffer), "p_server %s\n", proxyinfo[client].serverip);
                     stuffcmd(ent, buffer);
                     //q2ace responds with blahblah %i %s
                 }
@@ -742,13 +763,13 @@ void G_RunFrame(void) {
                 }
             } else if (command == QCMD_EXECMAPCFG) {
                 if (client_map_cfg & 1) {
-                    sprintf(buffer, "set map_name %s\n", gmapname);
+                    Q_snprintf(buffer, sizeof(buffer), "set map_name %s\n", gmapname);
                     stuffcmd(ent, buffer);
                 } else if (client_map_cfg & 2) {
-                    sprintf(buffer, "exec cfg/%s.cfg\n", gmapname);
+                    Q_snprintf(buffer, sizeof(buffer), "exec cfg/%s.cfg\n", gmapname);
                     stuffcmd(ent, buffer);
                 } else if (client_map_cfg & 4) {
-                    sprintf(buffer, "exec cfg/all.cfg\n");
+                    Q_snprintf(buffer, sizeof(buffer), "exec cfg/all.cfg\n");
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SHOWMOTD) {
@@ -761,7 +782,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_TESTTIMESCALE) {
                 if (timescaledetect) {
                     generateRandomString(proxyinfo[client].hack_timescale, RANDOM_STRING_LENGTH);
-                    sprintf(buffer, "%s $timescale\n", proxyinfo[client].hack_timescale);
+                    Q_snprintf(buffer, sizeof(buffer), "%s $timescale\n", proxyinfo[client].hack_timescale);
                     stuffcmd(ent, buffer);
                     addCmdQueue(client, QCMD_TESTTIMESCALE, 15, 0, 0);
                 }
@@ -770,7 +791,7 @@ void G_RunFrame(void) {
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATEPS, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATEPS) {
                 if (proxyinfo[client].cl_pitchspeed) {
-                    sprintf(buffer, "set cl_pitchspeed %d\nset cl_pitchspeed %d\n", proxyinfo[client].cl_pitchspeed + 1, proxyinfo[client].cl_pitchspeed);
+                    Q_snprintf(buffer, sizeof(buffer), "set cl_pitchspeed %d\nset cl_pitchspeed %d\n", proxyinfo[client].cl_pitchspeed + 1, proxyinfo[client].cl_pitchspeed);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SETUPCL_ANGLESPEEDKEY) {
@@ -778,11 +799,11 @@ void G_RunFrame(void) {
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATEAS, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATEAS) {
                 if (proxyinfo[client].cl_anglespeedkey) {
-                    sprintf(buffer, "set cl_anglespeedkey %g\nset cl_anglespeedkey %g\n", proxyinfo[client].cl_anglespeedkey + 1.0, proxyinfo[client].cl_anglespeedkey);
+                    Q_snprintf(buffer, sizeof(buffer), "set cl_anglespeedkey %g\nset cl_anglespeedkey %g\n", proxyinfo[client].cl_anglespeedkey + 1.0, proxyinfo[client].cl_anglespeedkey);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_MSGDISCONNECT) {
-                sprintf(buffer, "Client 'msg' mode has to be set to less than %d on this server!\n", maxMsgLevel + 1);
+                Q_snprintf(buffer, sizeof(buffer), "Client 'msg' mode has to be set to less than %d on this server!\n", maxMsgLevel + 1);
                 gi.cprintf(ent, PRINT_HIGH, buffer);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
             }
@@ -936,7 +957,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 	hdll = LoadLibrary(dllname);
 	if (hdll == NULL) {
 		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
-		sprintf(dllname, "baseq2/%s", gamelib->string);
+		Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
 
 		hdll = LoadLibrary(dllname);
 		if (hdll == NULL) {
@@ -958,7 +979,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 	hdll = dlopen(dllname, loadtype);
 	if (hdll == NULL) {
 		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
-		sprintf(dllname, "baseq2/%s", gamelib->string);
+		Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
 
 		hdll = dlopen(dllname, loadtype);
 		if (hdll == NULL) {

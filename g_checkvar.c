@@ -176,7 +176,7 @@ void readCheckVarLists(void) {
     maxcheckvars = 0;
     ret = ReadCheckVarFile(CHECKVARFILE);
 
-    sprintf(buffer, "%s/%s", moddir, CHECKVARFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, CHECKVARFILE);
     if (ReadCheckVarFile(buffer)) {
         ret = TRUE;
     }
@@ -201,7 +201,13 @@ void checkVariableTest(edict_t *ent, int client, int idx) {
         if (maxcheckvars) {
             proxyinfo[client].checkvar_idx = idx;
             generateRandomString(proxyinfo[client].hack_checkvar, RANDOM_STRING_LENGTH);
-            sprintf(buffer, "%s $%s\n", proxyinfo[client].hack_checkvar, checkvarList[idx].variablename);
+            Q_snprintf(
+            		buffer,
+					sizeof(buffer),
+					"%s $%s\n",
+					proxyinfo[client].hack_checkvar,
+					checkvarList[idx].variablename
+			);
             stuffcmd(ent, buffer);
 
             idx++;
@@ -218,7 +224,13 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
     switch (checkvarList[proxyinfo[client].checkvar_idx].type) {
         case CV_CONSTANT:
             if (q2a_strcmp(checkvarList[proxyinfo[client].checkvar_idx].value, value) != 0) {
-                sprintf(buffer, "%s %s\n", checkvarList[proxyinfo[client].checkvar_idx].variablename, checkvarList[proxyinfo[client].checkvar_idx].value);
+                Q_snprintf(
+                		buffer,
+						sizeof(buffer),
+						"%s %s\n",
+						checkvarList[proxyinfo[client].checkvar_idx].variablename,
+						checkvarList[proxyinfo[client].checkvar_idx].value
+				);
                 stuffcmd(ent, buffer);
             }
             break;
@@ -228,10 +240,22 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
             double fvalue = q2a_atof(value);
 
             if (fvalue < checkvarList[proxyinfo[client].checkvar_idx].lower) {
-                sprintf(buffer, "%s %g\n", checkvarList[proxyinfo[client].checkvar_idx].variablename, checkvarList[proxyinfo[client].checkvar_idx].lower);
+                Q_snprintf(
+                		buffer,
+						sizeof(buffer),
+						"%s %g\n",
+						checkvarList[proxyinfo[client].checkvar_idx].variablename,
+						checkvarList[proxyinfo[client].checkvar_idx].lower
+				);
                 stuffcmd(ent, buffer);
             } else if (fvalue > checkvarList[proxyinfo[client].checkvar_idx].upper) {
-                sprintf(buffer, "%s %g\n", checkvarList[proxyinfo[client].checkvar_idx].variablename, checkvarList[proxyinfo[client].checkvar_idx].upper);
+                Q_snprintf(
+                		buffer,
+						sizeof(buffer),
+						"%s %g\n",
+						checkvarList[proxyinfo[client].checkvar_idx].variablename,
+						checkvarList[proxyinfo[client].checkvar_idx].upper
+				);
                 stuffcmd(ent, buffer);
             }
             break;

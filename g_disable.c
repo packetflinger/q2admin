@@ -146,7 +146,7 @@ void readDisableLists(void) {
 
     ret = ReadDisableFile(DISABLEFILE);
 
-    sprintf(buffer, "%s/%s", moddir, DISABLEFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, DISABLEFILE);
     if (ReadDisableFile(buffer)) {
         ret = TRUE;
     }

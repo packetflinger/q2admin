@@ -1492,7 +1492,7 @@ void dprintf_internal(char *fmt, ...) {
 
     // convert to string
     va_start(arglist, fmt);
-    vsprintf(cbuffer, fmt, arglist);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 
     if (q2adminrunmode == 0 || !proxyinfo) {
@@ -1569,7 +1569,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     int clienti = lastClientCmd;
 
     va_start(arglist, fmt);
-    vsprintf(cbuffer, fmt, arglist);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 
     if (q2adminrunmode == 0) {
@@ -1648,7 +1648,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
 
     // convert to string
     va_start(arglist, fmt);
-    vsprintf(cbuffer, fmt, arglist);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 	
     if (q2adminrunmode == 0) {
@@ -1922,7 +1922,7 @@ void readCfgFiles(void) {
 
     ret = readCfgFile(q2aconfig->string);
 
-    sprintf(buffer, "%s/%s", moddir, q2aconfig->string);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, q2aconfig->string);
     if (readCfgFile(buffer)) {
         ret = TRUE;
     }
@@ -2154,11 +2154,24 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
             return FALSE;
         }
 
-        sprintf(tmptext, "(%s)(private message to: %s) %s\n", proxyinfo[client].name, proxyinfo[clienti].name, text);
+        Q_snprintf(
+        		tmptext,
+				sizeof(tmptext),
+				"(%s)(private message to: %s) %s\n",
+				proxyinfo[client].name,
+				proxyinfo[clienti].name,
+				text
+		);
         cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
         cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
 
-        sprintf(tmptext, "(%s)(private message) %s\n", proxyinfo[client].name, text);
+        Q_snprintf(
+        		tmptext,
+				sizeof(tmptext),
+				"(%s)(private message) %s\n",
+				proxyinfo[client].name,
+				text
+		);
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
 
         return FALSE;
@@ -2192,10 +2205,10 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
             text[MAX_STRING_CHARS - 40] = 0;
         }
 
-        sprintf(tmptext, "%s-> %s\n", proxyinfo[clienti].name, text);
+        Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", proxyinfo[clienti].name, text);
         cprintf_internal(NULL, PRINT_LOW, "%s", tmptext);
 
-        sprintf(tmptext, "%s\n", text);
+        Q_snprintf(tmptext, sizeof(tmptext), "%s\n", text);
         cprintf_internal(enti, PRINT_LOW, "%s", tmptext);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person_low [CL <id>]|name message\n");
@@ -2231,11 +2244,24 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
                 enti = getEnt((clienti + 1));
 
-                sprintf(tmptext, "(%s)(private message to: %s) %s\n", proxyinfo[client].name, proxyinfo[clienti].name, text);
+                Q_snprintf(
+                		tmptext,
+						sizeof(tmptext),
+						"(%s)(private message to: %s) %s\n",
+						proxyinfo[client].name,
+						proxyinfo[clienti].name,
+						text
+				);
                 cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
                 cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
 
-                sprintf(tmptext, "(%s)(private message) %s\n", proxyinfo[client].name, text);
+                Q_snprintf(
+                		tmptext,
+						sizeof(tmptext),
+						"(%s)(private message) %s\n",
+						proxyinfo[client].name,
+						text
+				);
                 cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
             }
         }
@@ -2563,7 +2589,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             return FALSE;
         }
 
-        sprintf(text, "I(%d) Cmd(%s) Exp(%s) (unexcepted cmd)", proxyinfo[client].charindex, cmd, proxyinfo[client].teststr);
+        Q_snprintf(
+        		text,
+				sizeof(text),
+				"I(%d) Cmd(%s) Exp(%s) (unexcepted cmd)",
+				proxyinfo[client].charindex,
+				cmd,
+				proxyinfo[client].teststr
+		);
         logEvent(LT_INTERNALWARN, client, ent, text, IW_UNEXCEPTEDCMD, 0.0);
 
         // clear retries just in case...
@@ -2574,7 +2607,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             return FALSE;
         }
 
-        sprintf(text, "I(%d) Cmd(%s) Exp(%s) (unknown cmd)", proxyinfo[client].charindex, cmd, proxyinfo[client].teststr);
+        Q_snprintf(
+        		text,
+				sizeof(text),
+				"I(%d) Cmd(%s) Exp(%s) (unknown cmd)",
+				proxyinfo[client].charindex,
+				cmd,
+				proxyinfo[client].teststr
+		);
         logEvent(LT_INTERNALWARN, client, ent, text, IW_UNKNOWNCMD, 0.0);
     }
 
@@ -2950,7 +2990,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 }
                 alevel = get_admin_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
-                    sprintf(abuffer, "ADMIN - %s %s %d", gi.argv(2), gi.argv(1), alevel);
+                    Q_snprintf(abuffer, sizeof(abuffer), "ADMIN - %s %s %d", gi.argv(2), gi.argv(1), alevel);
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
                     gi.dprintf("%s\n", abuffer);
 
@@ -2969,7 +3009,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 }
                 alevel = get_bypass_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
-                    sprintf(abuffer, "CLIENT BYPASS - %s %s %d", gi.argv(2), gi.argv(1), alevel);
+                    Q_snprintf(abuffer, sizeof(abuffer), "CLIENT BYPASS - %s %s %d", gi.argv(2), gi.argv(1), alevel);
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
                     gi.dprintf("%s\n", abuffer);
 
@@ -3694,13 +3734,13 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
                 enti = getEnt((clienti + 1));
 
-                sprintf(tmptext, "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
+                Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
                 cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
                 if (ent) {
                     cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
                 }
 
-                sprintf(tmptext, "(private message) %s\n", text);
+                Q_snprintf(tmptext, sizeof(tmptext), "(private message) %s\n", text);
                 cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
             }
         }
@@ -3730,18 +3770,14 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
-            text[MAX_STRING_CHARS - 40] = 0;
-        }
-
-        sprintf(tmptext, "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
+        Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
         cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
 
         if (ent) {
             cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
         }
 
-        sprintf(tmptext, "(private message) %s\n", text);
+        Q_snprintf(tmptext, sizeof(tmptext), "(private message) %s\n", text);
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person [CL <id>]|name message\n");
@@ -3769,7 +3805,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        sprintf(tmptext, "%s ip: %s\n", proxyinfo[clienti].name, proxyinfo[clienti].ipaddress);
+        Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", proxyinfo[clienti].name, proxyinfo[clienti].ipaddress);
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL <id>]|name\n");
@@ -3800,7 +3836,7 @@ void kickRun(int startarg, edict_t *ent, int client) {
 
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
-                sprintf(tmptext, "kick %d\n", clienti);
+                Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", clienti);
                 gi.AddCommandString(tmptext);
             }
         }

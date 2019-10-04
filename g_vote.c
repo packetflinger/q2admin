@@ -162,7 +162,7 @@ void readVoteLists(void) {
 
     ret = ReadVoteFile(VOTEFILE);
 
-    sprintf(buffer, "%s/%s", moddir, VOTEFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, VOTEFILE);
     if (ReadVoteFile(buffer)) {
         ret = TRUE;
     }

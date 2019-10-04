@@ -92,7 +92,7 @@ void readIpFromLog(int client, edict_t *ent) {
         return;
     }
 
-    sprintf(buffer, "%s/qconsole.log", moddir);
+    Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
     dumpfile = fopen(buffer, "rt");
     if (!dumpfile) {
         return;
@@ -127,7 +127,7 @@ int checkForOverflows(edict_t *ent, int client) {
     char checkmask1[100], checkmask2[100];
     unsigned int ret = 0;
 
-    sprintf(buffer, "%s/qconsole.log", moddir);
+    Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
     q2logfile = fopen(buffer, "rt");
     if (!q2logfile) {
         return 0; // assume ok
@@ -135,8 +135,8 @@ int checkForOverflows(edict_t *ent, int client) {
 
     fseek(q2logfile, proxyinfo[client].logfilecheckpos, SEEK_SET);
 
-    sprintf(checkmask1, "WARNING: msg overflowed for %s", proxyinfo[client].name);
-    sprintf(checkmask2, "%s overflowed", proxyinfo[client].name);
+    Q_snprintf(checkmask1, sizeof(checkmask1), "WARNING: msg overflowed for %s", proxyinfo[client].name);
+    Q_snprintf(checkmask2, sizeof(checkmask2), "%s overflowed", proxyinfo[client].name);
 
     while (fgets(buffer, 256, q2logfile)) {
         if (startContains(buffer, checkmask1) || startContains(buffer, checkmask2)) { // we have a problem...
@@ -146,7 +146,7 @@ int checkForOverflows(edict_t *ent, int client) {
             removeClientCommand(client, QCMD_ZPROXYCHECK2);
             addCmdQueue(client, QCMD_RESTART, 2 + (5 * random()), 0, 0);
 
-            sprintf(checkmask1, "I(%d) Exp(%s) (%s) (overflow detected)", proxyinfo[client].charindex, proxyinfo[client].teststr, buffer);
+            Q_snprintf(checkmask1, sizeof(checkmask1), "I(%d) Exp(%s) (%s) (overflow detected)", proxyinfo[client].charindex, proxyinfo[client].teststr, buffer);
             logEvent(LT_INTERNALWARN, client, ent, checkmask1, IW_OVERFLOWDETECT, 0.0);
             break;
         }
@@ -436,7 +436,7 @@ void Read_Admin_cfg(void) {
     char name[256];
     int i, i2;
 
-    sprintf(name, "%s/%s", moddir, LOGINFILE);
+    Q_snprintf(name, sizeof(name), "%s/%s", moddir, LOGINFILE);
 
     f = fopen(name, "rb");
     if (!f) {
@@ -462,7 +462,7 @@ void Read_Admin_cfg(void) {
 
 file2:
     ;
-    sprintf(name, "%s/%s", moddir, BYPASSFILE);
+    Q_snprintf(name, sizeof(name), "%s/%s", moddir, BYPASSFILE);
 
     f = fopen(name, "rb");
     if (!f) {
@@ -593,7 +593,7 @@ void ADMIN_boot(edict_t *ent, int client, int user) {
     if ((user >= 0) && (user < maxclients->value)) {
         if (proxyinfo[user].inuse) {
             gi.bprintf(PRINT_HIGH, "%s was kicked by %s.\n", proxyinfo[user].name, proxyinfo[client].name);
-            sprintf(tmptext, "\nkick %d\n", user);
+            Q_snprintf(tmptext, sizeof(tmptext), "\nkick %d\n", user);
             gi.AddCommandString(tmptext);
         }
     }
@@ -611,7 +611,7 @@ void ADMIN_changemap(edict_t *ent, int client, char *mname) {
         return;
 
     gi.bprintf(PRINT_HIGH, "%s is changing map to %s.\n", proxyinfo[client].name, mname);
-    sprintf(tmptext, "\nmap %s\n", mname);
+    Q_snprintf(tmptext, sizeof(tmptext), "\nmap %s\n", mname);
     gi.AddCommandString(tmptext);
 }
 
@@ -623,7 +623,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
     char abuffer[256];
 
     if (strlen(gi.args())) {
-        sprintf(abuffer, "COMMAND - %s %s", gi.argv(0), gi.args());
+        Q_snprintf(abuffer, sizeof(abuffer), "COMMAND - %s %s", gi.argv(0), gi.args());
         logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
         gi.dprintf("%s\n", abuffer);
     }
@@ -731,7 +731,7 @@ void stuff_private_commands(int client, edict_t *ent) {
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         if (private_commands[i].command[0]) {
             //stuff this
-            sprintf(temp, "%s\r\n", private_commands[i].command);
+            Q_snprintf(temp, sizeof(temp), "%s\r\n", private_commands[i].command);
             stuffcmd(ent, temp);
         }
         proxyinfo[client].private_command_got[i] = false;
@@ -928,7 +928,7 @@ void whois_write_file(void) {
     int temp_len;
     unsigned int i, j, k;
 
-    sprintf(name, "%s/q2adminwhois.txt", moddir);
+    Q_snprintf(name, sizeof(name), "%s/q2adminwhois.txt", moddir);
 
     f = fopen(name, "wb");
     if (!f) {
@@ -983,7 +983,7 @@ void whois_read_file(void) {
     unsigned int i, j;
     int temp_len, name_len;
 
-    sprintf(name, "%s/q2adminwhois.txt", moddir);
+    Q_snprintf(name, sizeof(name), "%s/q2adminwhois.txt", moddir);
 
     f = fopen(name, "rb");
     if (!f) {

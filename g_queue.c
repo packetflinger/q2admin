@@ -36,7 +36,7 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
     if (proxyinfo[client].maxCmds >= ALLOWED_MAXCMDS_SAFETY) {
         proxyinfo[client].clientcommand |= CCMD_KICKED;
         gi.bprintf(PRINT_HIGH, "%s tried to flood the server.\n", proxyinfo[client].name);
-        sprintf(tmptext, "kick %d\n", client);
+        Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
         //need to log
         gi.AddCommandString(tmptext);
     }

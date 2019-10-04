@@ -184,7 +184,7 @@ void readSpawnLists(void) {
 
     ret = ReadSpawnFile(SPAWNFILE, FALSE);
 
-    sprintf(buffer, "%s/%s", moddir, SPAWNFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, SPAWNFILE);
     if (ReadSpawnFile(buffer, FALSE)) {
         ret = TRUE;
     }

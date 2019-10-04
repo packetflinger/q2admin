@@ -28,7 +28,7 @@ qboolean AC_GetRemoteFile(char *bfname) {
     FILE *outf;
     char localfilename[MAX_QPATH];
 
-    sprintf(localfilename, "%s/%s", moddir, ANTICHEATEXCEPTIONLOCALFILE);
+    Q_snprintf(localfilename, sizeof(localfilename), "%s/%s", moddir, ANTICHEATEXCEPTIONLOCALFILE);
 
     outf = fopen(localfilename, "r");
     if (!outf) {
