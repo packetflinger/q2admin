@@ -177,7 +177,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
 
                         if (newentry->type == NICKRE) { // compile RE
-                            Q_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
+                            q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                             q_strupr(strbuffer);
                             newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
                             q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
@@ -388,7 +388,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                     if (num) {
                         newentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-                        Q_strncpy(newentry->msg, buffer2, num + 1);
+                        q2a_strncpy(newentry->msg, buffer2, num + 1);
                     } else {
                         newentry->msg = NULL;
                     }
@@ -466,7 +466,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     SKIPBLANK(cp);
 
                     if (cnewentry->type == CHATRE) { // compile RE
-                        Q_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
+                        q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
                         q_strupr(strbuffer);
                         cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
                         q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
@@ -506,7 +506,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                     if (num) {
                         cnewentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-                        Q_strncpy(cnewentry->msg, buffer2, num + 1);
+                        q2a_strncpy(cnewentry->msg, buffer2, num + 1);
                     } else {
                         cnewentry->msg = NULL;
                     }
@@ -692,7 +692,7 @@ qboolean ReadBanFile(char *bfname) {
 
 
                         if (newentry->type == NICKRE) { // compile RE
-                            Q_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
+                            q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                             q_strupr(strbuffer);
                             newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
                             q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
@@ -903,7 +903,7 @@ qboolean ReadBanFile(char *bfname) {
 
                     if (num) {
                         newentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-                        Q_strncpy(newentry->msg, buffer2, num + 1);
+                        q2a_strncpy(newentry->msg, buffer2, num + 1);
                     } else {
                         newentry->msg = NULL;
                     }
@@ -981,7 +981,7 @@ qboolean ReadBanFile(char *bfname) {
                     SKIPBLANK(cp);
 
                     if (cnewentry->type == CHATRE) { // compile RE
-                        Q_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
+                        q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
                         q_strupr(strbuffer);
                         cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
                         q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
@@ -1021,7 +1021,7 @@ qboolean ReadBanFile(char *bfname) {
 
                     if (num) {
                         cnewentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-                        Q_strncpy(cnewentry->msg, buffer2, num + 1);
+                        q2a_strncpy(cnewentry->msg, buffer2, num + 1);
                     } else {
                         cnewentry->msg = NULL;
                     }
@@ -1126,9 +1126,9 @@ void readBanLists(void) {
     qboolean ret;
 
     if (!q2adminbantxt || isBlank(q2adminbantxt->string)) {
-        Q_strncpy(cfgFile, BANLISTFILE, sizeof(cfgFile));
+        q2a_strncpy(cfgFile, BANLISTFILE, sizeof(cfgFile));
     } else {
-        Q_strncpy(cfgFile, q2adminbantxt->string, sizeof(cfgFile));
+        q2a_strncpy(cfgFile, q2adminbantxt->string, sizeof(cfgFile));
     }
 
 
@@ -1148,15 +1148,15 @@ void readBanLists(void) {
         logEvent(LT_INTERNALWARN, 0, NULL, BANLISTFILE " could not be found", IW_BANSETUPLOAD, 0.0);
     }
 
-    Q_strncpy(cfgRemoteFileEnabled, q2adminbanremotetxt_enable->string, sizeof(cfgRemoteFileEnabled));
+    q2a_strncpy(cfgRemoteFileEnabled, q2adminbanremotetxt_enable->string, sizeof(cfgRemoteFileEnabled));
 
     if (cfgRemoteFileEnabled[0] == '1') {
         char cfgRemoteFile[100];
 
         if (!q2adminbanremotetxt || isBlank(q2adminbanremotetxt->string)) {
-            Q_strncpy(cfgRemoteFile, BANLISTREMOTEFILE, sizeof(cfgRemoteFile));
+            q2a_strncpy(cfgRemoteFile, BANLISTREMOTEFILE, sizeof(cfgRemoteFile));
         } else {
-            Q_strncpy(cfgRemoteFile, q2adminbanremotetxt->string, sizeof(cfgRemoteFile));
+            q2a_strncpy(cfgRemoteFile, q2adminbanremotetxt->string, sizeof(cfgRemoteFile));
         }
 
         ret = ReadRemoteBanFile(cfgRemoteFile);
@@ -1201,7 +1201,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     newentry = gi.TagMalloc(sizeof (baninfo_t), TAG_LEVEL);
     newentry->r = 0;
 
-    Q_strncpy(savecmd, "BAN: ", sizeof(savecmd));
+    q2a_strncpy(savecmd, "BAN: ", sizeof(savecmd));
 
 
     // get +/-
@@ -1351,14 +1351,14 @@ void banRun(int startarg, edict_t *ent, int client) {
                     return;
                 }
 
-                Q_strncpy(newentry->nick, proxyinfo[clienti].name, 80);
+                q2a_strncpy(newentry->nick, proxyinfo[clienti].name, 80);
 
                 q2a_strcat(savecmd, "\"");
                 q2a_strcat(savecmd, proxyinfo[clienti].name);
                 q2a_strcat(savecmd, "\" ");
 
                 if (newentry->type == NICKRE) { // compile RE
-                    Q_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
+                    q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                     q_strupr(strbuffer);
 
                     newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
@@ -1390,7 +1390,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             }
 
             if (newentry->type == NICKRE) { // compile RE
-                Q_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
+                q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                 q_strupr(strbuffer);
 
                 newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
@@ -1786,7 +1786,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         if (num) {
             newentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-            Q_strncpy(newentry->msg, buffer2, num + 1);
+            q2a_strncpy(newentry->msg, buffer2, num + 1);
         } else {
             newentry->msg = NULL;
         }
@@ -1941,7 +1941,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             FILE *banlistfptr;
 
             if (save == 1) {
-                Q_strncpy(buffer, BANLISTFILE, sizeof(buffer));
+                q2a_strncpy(buffer, BANLISTFILE, sizeof(buffer));
             } else {
                 Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
             }
@@ -2046,7 +2046,7 @@ int checkBanList(edict_t *ent, int client) {
                         break;
 
                     case NICKRE:
-                        Q_strncpy(strbuffer, proxyinfo[client].name, sizeof(strbuffer));
+                        q2a_strncpy(strbuffer, proxyinfo[client].name, sizeof(strbuffer));
                         q_strupr(strbuffer);
 
                         if (regexec(checkentry->r, strbuffer, 0, 0, 0) == REG_NOMATCH) {
@@ -2362,7 +2362,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     cnewentry = gi.TagMalloc(sizeof (chatbaninfo_t), TAG_LEVEL);
     cnewentry->r = 0;
 
-    Q_strncpy(savecmd, "CHATBAN: ", sizeof(savecmd));
+    q2a_strncpy(savecmd, "CHATBAN: ", sizeof(savecmd));
 
     if (startContains(cp, "LIKE")) {
         if (gi.argc() <= startarg) {
@@ -2408,7 +2408,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     cp = processstring(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, 0);
 
     if (cnewentry->type == CHATRE) { // compile RE
-        Q_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
+        q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
         q_strupr(strbuffer);
 
         cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
@@ -2459,7 +2459,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
 
         if (num) {
             cnewentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
-            Q_strncpy(cnewentry->msg, buffer2, num + 1);
+            q2a_strncpy(cnewentry->msg, buffer2, num + 1);
         } else {
             cnewentry->msg = NULL;
         }
@@ -2532,7 +2532,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         FILE *banlistfptr;
 
         if (save == 1) {
-            Q_strncpy(buffer, BANLISTFILE, sizeof(buffer));
+            q2a_strncpy(buffer, BANLISTFILE, sizeof(buffer));
         } else {
             Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
         }
@@ -2583,7 +2583,7 @@ int checkCheckIfChatBanned(char *txt) {
                 break;
 
             case CHATRE:
-                Q_strncpy(strbuffer, txt, sizeof(strbuffer));
+                q2a_strncpy(strbuffer, txt, sizeof(strbuffer));
                 q_strupr(strbuffer);
                 if (regexec(checkentry->r, strbuffer, 0, 0, 0) == REG_NOMATCH) {
                     checkentry = checkentry->next;

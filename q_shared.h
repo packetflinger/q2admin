@@ -75,7 +75,7 @@ typedef enum {
 //terminating strncpy
 #define Q_strncpy(dst, src, len) \
 do { \
-	q2a_strncpy ((dst), (src), (len)); \
+	strncpy ((dst), (src), (len)); \
 	(dst)[(len)] = 0; \
 } while (0)
 

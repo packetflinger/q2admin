@@ -211,7 +211,7 @@ qboolean checklrcon(char *cp, int lrcon) {
 
         case LRC_RE:
             //r1ch: overflow fix
-            Q_strncpy(strbuffer, cp, sizeof (strbuffer) - 1);
+            q2a_strncpy(strbuffer, cp, sizeof (strbuffer) - 1);
             q_strupr(strbuffer);
             return (regexec(lrconcmds[lrcon].r, strbuffer, 0, 0, 0) != REG_NOMATCH);
     }
@@ -267,7 +267,7 @@ void run_lrcon(edict_t *ent, int client) {
                         generateRandomString(cbuffer, RANDOM_STRING_LENGTH);
 
                         //r1ch: fix for oversized rcon passwords
-                        Q_strncpy(orginal_rcon_password, rconpassword->string, sizeof (orginal_rcon_password) - 1);
+                        q2a_strncpy(orginal_rcon_password, rconpassword->string, sizeof (orginal_rcon_password) - 1);
                         gi.cvar_set("rcon_password", cbuffer);
 
                         password_timeout = ltime + lrcon_timeout;

@@ -176,7 +176,7 @@ qboolean checkforfloodcmd(char *cp, int floodcmd) {
 qboolean checkforfloodcmds(char *cp) {
     unsigned int i;
 
-    Q_strncpy(buffer, cp, sizeof(buffer));
+    q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
 
     for (i = 0; i < maxflood_cmds; i++) {
