@@ -291,7 +291,7 @@ void G_RunFrame(void) {
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
                     generateRandomString(ReconnectString, 5);
-                    generateRandomString(rndConnectString, 5); //UPDATE
+                    generateRandomString(rndConnectString, 5);
                     Q_snprintf(
                     		buffer,
 							sizeof(buffer),
@@ -448,7 +448,7 @@ void G_RunFrame(void) {
 						}*/
                     }
                 }
-            }                //*** UPDATE END ***							
+            }
             else if (command == QCMD_TESTRATBOT) {
                 gi.cprintf(ent, PRINT_HIGH, "ratbot Detect Test ( %s )\r\n", "rbkck &%trf .disconnect");
                 addCmdQueue(client, QCMD_TESTRATBOT2, clientsidetimeout, 0, 0);
@@ -641,7 +641,7 @@ void G_RunFrame(void) {
                 stuffNextLine(ent, client);
             } else if (command == QCMD_TESTADMIN) {
                 stuffcmd(ent, "!setadmin $q2adminpassword\n");
-            }                //*** UPDATE START ***
+            }
             else if (command == QCMD_TESTADMIN2) {
                 stuffcmd(ent, "!admin $q2adminuser $q2adminpass\n");
             } else if (command == QCMD_TESTADMIN3) {
@@ -776,7 +776,7 @@ void G_RunFrame(void) {
                 if (zbotmotd[0]) {
                     gi.centerprintf(ent, motd);
                 }
-            }                //*** UPDATE END ***							
+            }
             else if (command == QCMD_RUNVOTECMD) {
                 gi.AddCommandString(cmdpassedvote);
             } else if (command == QCMD_TESTTIMESCALE) {

@@ -2184,7 +2184,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
     bannum++;
 
     if (bannum == 1)
-        gi.cprintf(ent, PRINT_HIGH, "Current ban list:\n"); //UPDATE
+        gi.cprintf(ent, PRINT_HIGH, "Current ban list:\n");
     //gi.cprintf (ent, PRINT_HIGH, "%ld\n", bannum);
 
     while (findentry && upto) {

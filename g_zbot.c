@@ -238,7 +238,6 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     STARTPERFORMANCE(1);
 
-    //*** UPDATE START ***
     proxyinfo[client].frames_count++;
 
     if (lframenum > proxyinfo[client].msec_start) {
@@ -284,7 +283,6 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
 
     }
-    //*** UPDATE END ***
 
     if (ucmd->impulse) {
         if (client >= maxclients->value) return;
@@ -1110,4 +1108,3 @@ void timer_action(int client, edict_t *ent) {
             }
         }
 }
-//*** UPDATE END ***

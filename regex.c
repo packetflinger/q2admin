@@ -2954,7 +2954,7 @@ regoff_t *starts, *ends;
     } else {
         bufp->regs_allocated = REGS_UNALLOCATED;
         regs->num_regs = 0;
-        regs->start = regs->end = (regoff_t *) NULL; //UPDATE
+        regs->start = regs->end = (regoff_t *) NULL;
     }
 }
 

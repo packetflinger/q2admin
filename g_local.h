@@ -874,7 +874,7 @@ typedef struct {
     qboolean admin;
     unsigned char retries;
     unsigned char rbotretries;
-    cmd_queue_t cmdQueue[ALLOWED_MAXCMDS]; // command queue - UPDATE
+    cmd_queue_t cmdQueue[ALLOWED_MAXCMDS]; // command queue
     int maxCmds;
     unsigned long clientcommand; // internal proxy commands
     char teststr[9];
@@ -1035,8 +1035,8 @@ enum _commands {
     QCMD_DISPCHATBANS,
     QCMD_STUFFCLIENT,
     QCMD_TESTADMIN,
-    QCMD_TESTADMIN2, // UPDATE
-    QCMD_TESTADMIN3, // UPDATE
+    QCMD_TESTADMIN2,
+    QCMD_TESTADMIN3,
     QCMD_RUNVOTECMD,
     QCMD_TESTRATBOT,
     QCMD_TESTRATBOT2,
@@ -1552,8 +1552,8 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 void generateRandomString(char *buffer, int length);
-void reloadWhoisFileRun(int startarg, edict_t *ent, int client); //UPDATE
-void reloadLoginFileRun(int startarg, edict_t *ent, int client); //UPDATE
+void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
+void reloadLoginFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
 
 // zb_msgqueue.c

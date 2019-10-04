@@ -1571,7 +1571,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     va_start(arglist, fmt);
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
-
+    gi.dprintf("msg: \"%s\"", cbuffer);
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
         return;

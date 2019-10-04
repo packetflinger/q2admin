@@ -382,19 +382,19 @@ void displayVote(void) {
             if (proxyinfo[client].clientcommand & CCMD_VOTED) {
                 // just display the stat's
                 gi.centerprintf(getEnt((client + 1)), "Vote Summary So Far:\n"
-                        "Proposed Vote: %s by %s\n" //UPDATE
+                        "Proposed Vote: %s by %s\n"
                         "Voted Yes: %d    Voted No: %d\n"
-                        "Haven't Voted Yet: %d\n", cmdvote, votecaller, voteyes, voteno, novote); //UPDATE
+                        "Haven't Voted Yet: %d\n", cmdvote, votecaller, voteyes, voteno, novote);
             } else {
                 // format the remember and the stat's
                 gi.centerprintf(getEnt((client + 1)), "You haven't voted yet. To vote at the \n"
                         "console type '%s yes' or '%s no'\n"
                         "\n"
                         "Vote Summary So Far:\n"
-                        "Proposed Vote: %s by %s\n" //UPDATE
+                        "Proposed Vote: %s by %s\n"
                         "Voted Yes: %d    Voted No: %d\n"
                         "Haven't Voted Yet: %d\n", clientVoteCommand, clientVoteCommand,
-                        cmdvote, votecaller, voteyes, voteno, novote); //UPDATE
+                        cmdvote, votecaller, voteyes, voteno, novote);
             }
         }
     }
