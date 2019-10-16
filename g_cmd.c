@@ -2209,9 +2209,7 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
-            text[MAX_STRING_CHARS - 40] = 0;
-        }
+    	text[MAX_STRING_CHARS - 40] = 0;
 
         // for server console
         Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", proxyinfo[clienti].name, text);
