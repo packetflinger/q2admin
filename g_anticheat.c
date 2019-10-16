@@ -32,12 +32,12 @@ qboolean AC_GetRemoteFile(char *bfname) {
 
     outf = fopen(localfilename, "r");
     if (!outf) {
-        gi.dprintf("Error opening local anticheat exception file.\n");
+        gi.cprintf(NULL, PRINT_HIGH, "Error opening local anticheat exception file.\n");
         return FALSE;
     }
 
     if (!GetURLContents(bfname)) {
-    	gi.dprintf("Error fetching remote anticheat file: %s\n", bfname);
+    	gi.cprintf(NULL, PRINT_HIGH, "Error fetching remote anticheat file: %s\n", bfname);
     	fclose(outf);
     	return FALSE;
     }
