@@ -849,7 +849,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     q2a_strcpy(version, "r");
     q2a_strcat(version, Q2A_COMMIT);
 
-    gi.dprintf("Q2Admin %s\n", version);
+    //gi.dprintf("Q2Admin %s\n", version);
 
     // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
@@ -992,7 +992,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 	}
 #endif
 
-    gi.cprintf(NULL, PRINT_HIGH, "Q2Admin loaded game: %s\n", dllname);
+    gi.cprintf(NULL, PRINT_HIGH, "Q2Admin %s -> %s\n", version, dllname);
 
     ge_mod = (*getapi)(import);
     dllloaded = TRUE;
