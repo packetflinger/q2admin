@@ -2130,6 +2130,10 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
     return NULL;
 }
 
+/**
+ * Called when a player issues "say_person" command if extendedsay_enabled is true
+ *
+ */
 qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
     char *cp = args, *text;
     edict_t *enti;
@@ -2209,9 +2213,11 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
             text[MAX_STRING_CHARS - 40] = 0;
         }
 
+        // for server console
         Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", proxyinfo[clienti].name, text);
         cprintf_internal(NULL, PRINT_LOW, "%s", tmptext);
 
+        // for client
         Q_snprintf(tmptext, sizeof(tmptext), "%s\n", text);
         cprintf_internal(enti, PRINT_LOW, "%s", tmptext);
     } else {
@@ -3157,7 +3163,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
 
         if (sayPersonCmd(ent, client, getArgs())) {
-            gi.cprintf(ent, PRINT_HIGH, "say_person [LIKE/CL] name message\n");
+            gi.cprintf(ent, PRINT_HIGH, "say_person [CL <id>]|name message\n");
         }
 
         return FALSE;
@@ -3167,7 +3173,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
 
         if (sayGroupCmd(ent, client, getArgs())) {
-            gi.cprintf(ent, PRINT_HIGH, "say_group [LIKE/CL] name message\n");
+            gi.cprintf(ent, PRINT_HIGH, "say_group [CL <id>]|name message\n");
         }
 
         return FALSE;
