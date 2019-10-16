@@ -1571,7 +1571,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     va_start(arglist, fmt);
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
-    gi.dprintf("msg: \"%s\"", cbuffer);
+
     if (q2adminrunmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
         return;
@@ -2180,6 +2180,10 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
     return TRUE;
 }
 
+/**
+ * Send a message to a particular player as a PRINT_LOW, like a pickup message.
+ * Doesn't highlight or play a sound
+ */
 void sayPersonLowRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
