@@ -146,6 +146,13 @@ void RA_Shutdown() {
 
 /**
  * Allows for RA to send frag notifications
+ *
+ * Self is the fragged player
+ * inflictor is what did the damage (rocket, bolt, grenade)
+ *   in the case of hitscan weapons, the inflictor will be the attacking player
+ * attacker is the player doing the attacking
+ * damage is how much dmg was done
+ * point is where on the map the damage was dealt
  */
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
@@ -158,7 +165,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 			RA_Frag(id, aid, proxyinfo[id].name, "");
 		}
 	}
-	
+
 	// call the player's real die() function
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
