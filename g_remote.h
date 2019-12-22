@@ -65,25 +65,6 @@ typedef enum {
 	CMD_HEARTBEAT
 } remote_cmd_t;
 
-/**
- * For approximating the means of death during a frag
- */
-typedef enum {
-	MOD_ENVIRO,		// world (falling, drowning, crushed, laser, etc)
-	MOD_BLASTER,
-	MOD_SHOTGUN,
-	MOD_SSG,
-	MOD_MACHINEGUN,
-	MOD_CHAINGUN,
-	MOD_GRENADE,
-	MOD_GRENADELAUNCHER,
-	MOD_HYPERBLASTER,
-	MOD_ROCKETLAUNCHER,
-	MOD_RAILGUN,
-	MOD_BFG,
-	MOD_OTHER		// unknown mod-specific custom weapon
-} mod_t;
-
 void 		RA_Send(void);
 void		RA_Init(void);
 void		RA_Shutdown(void);
@@ -102,7 +83,7 @@ uint16_t 	getport(void);
 
 void 		RA_Print(uint8_t level, char *text);
 void 		RA_Teleport(uint8_t client_id);
-void		RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname, mod_t mod);
+void		RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname);
 void		RA_PlayerUpdate(uint8_t cl, const char *ui);
 void		RA_Invite(uint8_t cl, const char *text);
 void		RA_Whois(uint8_t cl, const char *name);

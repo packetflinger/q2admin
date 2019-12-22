@@ -142,34 +142,18 @@ void RA_Shutdown() {
 	freeaddrinfo(remote.addr);
 }
 
-static mod_t MeansOfDeath(edict_t *attacker)
-{
-	if (!attacker->client) {
-		return MOD_ENVIRO;
-	}
-
-	if (attacker->client) {
-		//return attacker->client->pers.weapon->
-	}
-
-	return MOD_OTHER;
-}
-
 /**
  * Allows for RA to send frag notifications
  */
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
-	mod_t mod;
-
-	mod = MeansOfDeath(attacker);
 
 	if (self->deadflag != DEAD_DEAD) {
 		if (strcmp(attacker->classname,"player") == 0) {
-			RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name, mod);
+			RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
 		} else {
-			RA_Frag(id, aid, proxyinfo[id].name, "", mod);
+			RA_Frag(id, aid, proxyinfo[id].name, "");
 		}
 	}
 	
@@ -360,7 +344,7 @@ void RA_Whois(uint8_t cl, const char *name)
 	RA_Send();
 }
 
-void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname, mod_t mod)
+void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
 	if (!(remote.flags & RFL_FRAGS)) {
 		return;
@@ -372,7 +356,6 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
 	RA_WriteString("%s", vname);
 	RA_WriteByte(attacker);
 	RA_WriteString("%s", aname);
-	RA_WriteByte(mod);
 	RA_Send();
 }
 
