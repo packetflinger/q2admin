@@ -54,6 +54,7 @@ char remoteAddr[256] = "127.0.0.1";
 int remotePort = 9988;
 int remoteFlags = 1024;
 qboolean remoteEnabled = FALSE;
+char encryptionKey[1400];
 char remoteCmdTeleport[15] = "!teleport";
 char remoteCmdInvite[15] = "!invite";
 char remoteCmdSeen[15] = "!seen";

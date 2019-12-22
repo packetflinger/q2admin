@@ -439,6 +439,12 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_LOGICAL,
         &displayzbotuser
     },
+	{
+		"encryption_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		encryptionKey
+	},
     {
         "entity_classname_offset",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,

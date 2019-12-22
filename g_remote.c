@@ -14,6 +14,8 @@ void RA_Send() {
 		return;
 	}
 
+	//RA_Encrypt();
+
 	int r = sendto(
 		remote.socket, 
 		remote.msg,
@@ -379,5 +381,22 @@ void RA_HeartBeat(void) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_HEARTBEAT);
 	RA_Send();
+}
+
+/**
+ * XOR part of the message with a secret key only known to this q2 server
+ * and the remote admin server.
+ */
+void RA_Encrypt(void) {
+	uint16_t i;
+
+	/*
+	 * Start 4 bytes into the message. We need the remoteKey (first 4 bytes)
+	 * to be unencrypted so we know which server the message is from and
+	 * we can pick the appropriate key to decrypt the rest of the message
+	 */
+	for (i=3; i<remote.msglen; i++) {
+		remote.msg[i] ^= encryptionKey[i];
+	}
 }
 

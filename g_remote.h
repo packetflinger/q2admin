@@ -90,6 +90,7 @@ void		RA_Whois(uint8_t cl, const char *name);
 void		RA_Map(const char *mapname);
 void 		RA_Authorize(const char *authkey);
 void 		RA_HeartBeat(void);
+void		RA_Encrypt(void);
 
 extern remote_t remote;
 
