@@ -192,20 +192,32 @@ uint16_t getport(void) {
 	return (int) port->value;
 }
 
+/**
+ * Reset the message buffer to zero to start a new msg
+ */
 void RA_InitBuffer() {
 	q2a_memset(&remote.msg, 0, sizeof(remote.msg));
 	remote.msglen = 0;
 }
 
+/**
+ * Write a single byte to the message buffer
+ */
 void RA_WriteByte(uint8_t b) {
 	remote.msg[remote.msglen++] = b & 0xff;
 }
 
+/**
+ * Write 2 bytes to the message buffer
+ */
 void RA_WriteShort(uint16_t s){
 	remote.msg[remote.msglen++] = s & 0xff;
 	remote.msg[remote.msglen++] = (s >> 8) & 0xff;
 }
 
+/**
+ * Write 4 bytes (long) to the message buffer
+ */
 void RA_WriteLong(uint32_t i){
 	remote.msg[remote.msglen++] = i & 0xff;
 	remote.msg[remote.msglen++] = (i >> 8) & 0xff;
