@@ -247,10 +247,104 @@ void Com_PageInMemory(byte *buffer, int size);
 
 //=============================================
 
+#define Q_isupper(c)    ((c) >= 'A' && (c) <= 'Z')
+#define Q_islower(c)    ((c) >= 'a' && (c) <= 'z')
+#define Q_isdigit(c)    ((c) >= '0' && (c) <= '9')
+#define Q_isalpha(c)    (Q_isupper(c) || Q_islower(c))
+#define Q_isalnum(c)    (Q_isalpha(c) || Q_isdigit(c))
+#define Q_isprint(c)    ((c) >= 32 && (c) < 127)
+#define Q_isgraph(c)    ((c) > 32 && (c) < 127)
+#define Q_isspace(c)    (c == ' ' || c == '\f' || c == '\n' || \
+c == '\r' || c == '\t' || c == '\v')
+
+// tests if specified character is valid quake path character
+#define Q_ispath(c)     (Q_isalnum(c) || (c) == '_' || (c) == '-')
+
+// tests if specified character has special meaning to quake console
+#define Q_isspecial(c) ((c) == '\r' || (c) == '\n' || (c) == 127)
+
+// make character lower case
+static inline int Q_tolower(int c)
+{
+    if (Q_isupper(c)) {
+        c += ('a' - 'A');
+    }
+    return c;
+}
+
+// make char upper case
+static inline int Q_toupper(int c)
+{
+    if (Q_islower(c)) {
+        c -= ('a' - 'A');
+    }
+    return c;
+}
+
+// make string lower case
+static inline char *Q_strlwr(char *s)
+{
+    char *p = s;
+
+    while (*p) {
+        *p = Q_tolower(*p);
+        p++;
+    }
+
+    return s;
+}
+
+// make string upper case
+static inline char *Q_strupr(char *s)
+{
+    char *p = s;
+
+    while (*p) {
+        *p = Q_toupper(*p);
+        p++;
+    }
+
+    return s;
+}
+
+// char dec to hex
+static inline int Q_charhex(int c)
+{
+    if (c >= 'A' && c <= 'F') {
+        return 10 + (c - 'A');
+    }
+    if (c >= 'a' && c <= 'f') {
+        return 10 + (c - 'a');
+    }
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    return -1;
+}
+
+// converts quake char to ASCII equivalent
+static inline int Q_charascii(int c)
+{
+    if (Q_isspace(c)) {
+        // white-space chars are output as-is
+        return c;
+    }
+    c &= 127; // strip high bits
+    if (Q_isprint(c)) {
+        return c;
+    }
+    switch (c) {
+        // handle bold brackets
+        case 16: return '[';
+        case 17: return ']';
+    }
+    return '.'; // don't output control chars, etc
+}
+
 // portable case insensitive compare
 int Q_stricmp(char *s1, char *s2);
 int Q_strcasecmp(char *s1, char *s2);
-int Q_strncasecmp(char *s1, char *s2, int n);
+int Q_strncasecmp(const char *s1, const char *s2, size_t n);
 
 size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
 size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
@@ -260,6 +354,7 @@ size_t Q_concat(char *dest, size_t size, ...);
 size_t Q_strlcat(char *dst, const char *src, size_t size);
 size_t Q_strlcpy(char *dst, const char *src, size_t size);
 char *Q_strcasestr(const char *s1, const char *s2);
+
 
 
 //=============================================

@@ -557,10 +557,6 @@ size_t Q_strlcat(char *dst, const char *src, size_t size)
 {
     size_t len = strlen(dst);
 
-    if (len >= size) {
-        Com_Error(ERR_FATAL, "%s: already overflowed", __func__);
-    }
-
     return len + Q_strlcpy(dst + len, src, size - len);
 }
 
@@ -585,6 +581,36 @@ size_t Q_strlcpy(char *dst, const char *src, size_t size)
 
     return ret;
 }
+
+/**
+ * Size limited case insensitive string compare
+ *
+ * Stolen from Q2Pro
+ */
+int Q_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+    int        c1, c2;
+
+    do {
+        c1 = *s1++;
+        c2 = *s2++;
+
+        if (!n--)
+            return 0;        /* strings are equal until end point */
+
+        if (c1 != c2) {
+            c1 = Q_tolower(c1);
+            c2 = Q_tolower(c2);
+            if (c1 < c2)
+                return -1;
+            if (c1 > c2)
+                return 1;        /* strings not equal */
+        }
+    } while (c1);
+
+    return 0;        /* strings are equal */
+}
+
 
 char *Q_strcasestr(const char *s1, const char *s2)
 {
