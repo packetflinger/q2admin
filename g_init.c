@@ -594,12 +594,11 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
                 if (q2a_strcmp(keyname, "team") == 0) {
                 	teampos = classnamepos;
+                	replaceteam = true;
                 }
 
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
                     classnamepos[0] = '_'; // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
-
-                    replaceteam = true;
                     // side-effect: it may cause error messages on the console screen depending on the mod...
                 }
             }
