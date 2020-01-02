@@ -1634,6 +1634,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         }
     }
 
+    // only works if we're a dedicated server
     if (ent == NULL) {
     	RA_Print(printlevel, cbuffer);	// send the one for the server console
     }

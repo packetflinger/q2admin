@@ -157,6 +157,7 @@ void RA_Shutdown() {
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
 	uint8_t id = getEntOffset(self) - 1;
 	uint8_t aid = getEntOffset(attacker) - 1;
+	gitem_t *weapon;
 
 	if (self->deadflag != DEAD_DEAD) {
 		if (strcmp(attacker->classname,"player") == 0) {
@@ -165,6 +166,10 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 			RA_Frag(id, aid, proxyinfo[id].name, "");
 		}
 	}
+
+	weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
+
+	gi.dprintf("MOD: %s\n", weapon->classname);
 
 	// call the player's real die() function
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
@@ -281,6 +286,7 @@ void RA_PlayerConnect(edict_t *ent) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
+	RA_WriteShort(ent->client->ping);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
 	RA_Send();
 }
@@ -303,7 +309,7 @@ void RA_Print(uint8_t level, char *text)
 	if (!(remote.flags & RFL_CHAT)) {
 		return;
 	}
-
+	gi.dprintf("sending chat...\n");
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_PRINT);
 	RA_WriteByte(level);
