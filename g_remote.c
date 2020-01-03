@@ -9,6 +9,8 @@ cvar_t	*udpport;
  */
 void RA_Send() {
 
+	return; // while testing connection
+
 	if (!(remote.enabled && remote.online)) {
 		RA_InitBuffer();
 		return;
@@ -44,6 +46,11 @@ void RA_Send() {
  */
 void RA_Init() {
 	
+	// we're already connected
+	if (remote.socket) {
+		return;
+	}
+
 	memset(&remote, 0, sizeof(remote));
 	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
 	
@@ -74,7 +81,7 @@ void RA_Init() {
 	memset(&res, 0, sizeof(res));
 	
 	hints.ai_family         = AF_INET;   	// either v6 or v4
-	hints.ai_socktype       = SOCK_DGRAM;	// UDP
+	hints.ai_socktype       = SOCK_STREAM;	// TCP
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
 	
@@ -91,28 +98,20 @@ void RA_Init() {
 		gi.cprintf(NULL, PRINT_HIGH, "%s\n", address);
 	}
 	
-	int fd = socket(res->ai_family, res->ai_socktype, IPPROTO_UDP);
-	if (fd == -1) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
-		remote.enabled = 0;
-		return;
-	}
-	
-	remote.socket = fd;
 	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
+
+	// delay connection by a few seconds
+	remote.connect_retry_frame = SECS_TO_FRAMES(5) + remote.frame_number;
 }
 
 /**
- * Run once per server frame
- *
+ * Replace the die() function pointer for each player edict.
+ * For capturing frag events
  */
-void RA_RunFrame() {
-	if (!remote.enabled) {
-		return;
-	}
-
+static void ra_replace_die(void)
+{
 	static uint8_t i;
 
 	for (i=0; i<=remote.maxclients; i++) {
@@ -125,23 +124,169 @@ void RA_RunFrame() {
 			}
 		}
 	}
-
-	// report that we're still alive in case we're idle
-	if (remote.frame_number >= remote.next_report) {
-		RA_HeartBeat();
-	}
-
-	remote.frame_number++;
 }
 
-void RA_Shutdown() {
+
+/**
+ * Run once per server frame
+ *
+ */
+void RA_RunFrame(void)
+{
+	// keep some time
+	remote.frame_number++;
+
+	// remote admin is disabled, don't do anything
+	if (!remote.enabled) {
+		return;
+	}
+
+	// connection started already, check for completion
+	if (remote.state == RA_STATE_CONNECTING) {
+		RA_CheckConnection();
+	}
+
+	// we're not connected, try again
+	if (remote.state == RA_STATE_DISCONNECTED) {
+		RA_Connect();
+	}
+
+	// update player die() pointers
+	ra_replace_die();
+}
+
+void RA_Shutdown(void) {
 	if (!remote.enabled) {
 		return;
 	}
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
 	RA_Unregister();
+	close(remote.socket);
+	remote.state = RA_STATE_DISCONNECTED;
 	freeaddrinfo(remote.addr);
+}
+
+/**
+ * Make the connection to the remote admin server
+ */
+void RA_Connect(void)
+{
+	int flags, ret;
+
+	if (remote.frame_number < remote.connect_retry_frame) {
+		return;
+	}
+
+	remote.state = RA_STATE_CONNECTING;
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connecting to server...\n");
+	remote.connection_attempts++;
+
+	remote.socket = socket(remote.addr->ai_family, remote.addr->ai_socktype, remote.addr->ai_protocol);
+	if (remote.socket == -1) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
+		remote.enabled = 0;
+		remote.state = RA_STATE_DISCONNECTED;
+		return;
+	}
+
+// preferred method is using POSIX O_NONBLOCK, if available
+#if defined(O_NONBLOCK)
+	flags = 0;
+	ret = fcntl(remote.socket, F_SETFL, flags | O_NONBLOCK);
+#else
+	flags = 1;
+	ret = ioctl(remote.socket, FIOBIO, &flags);
+#endif
+
+	if (ret == -1) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
+		remote.enabled = 0;
+		remote.state = RA_STATE_DISCONNECTED;
+		remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(30);
+	}
+
+	// make the actual connection
+	ret = connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+
+	/**
+	 * since we're non-blocking, the connection won't complete in this single server frame.
+	 * We have to select() for it on a later runframe
+	 */
+}
+
+/**
+ * Check to see if the connection initiated by RA_Connect() has finished
+ */
+void RA_CheckConnection(void)
+{
+	uint32_t ret;
+	qboolean connected = false;
+	qboolean exception = false;
+	struct sockaddr_storage addr;
+	socklen_t len;
+	struct timeval tv;
+	tv.tv_sec = tv.tv_usec = 0;
+
+	FD_ZERO(&remote.set_w);
+	FD_ZERO(&remote.set_e);
+	FD_SET(remote.socket, &remote.set_w);
+	FD_SET(remote.socket, &remote.set_e);
+
+	// check if connection is fully established
+	ret =	select(
+				(int)remote.socket + 1,
+				NULL,
+				&remote.set_w,
+				&remote.set_e,
+				&tv
+			);
+
+	if (ret == 1) {
+
+#ifdef LINUX
+		uint32_t number;
+		socklen_t len;
+
+		len = sizeof(number);
+		getsockopt(remote.socket, SOL_SOCKET, SO_ERROR, &number, &len);
+		if (number == 0) {
+			//remote.state = RA_STATE_CONNECTED;
+			//gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
+			connected = true;
+		} else {
+			exception = true;
+		}
+#else
+		if (FD_ISSET(remote.socket, &remote.set_w)) {
+			//remote.state = RA_STATE_CONNECTED;
+			//gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
+			connected = true;
+		}
+#endif
+	} else if (ret == -1) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
+		close(remote.socket);
+		remote.state = RA_STATE_DISCONNECTED;
+		remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(10);
+		return;
+	}
+
+	// we need to make sure it's actually connected
+	if (connected) {
+		errno = 0;
+		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
+
+		if (errno) {
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: [%d] %s\n", errno, strerror(errno));
+			remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(10);
+			remote.state = RA_STATE_DISCONNECTED;
+			close(remote.socket);
+		} else {
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected!\n");
+			remote.state = RA_STATE_CONNECTED;
+		}
+	}
 }
 
 /**

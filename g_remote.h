@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
@@ -29,9 +31,28 @@ extern cvar_t		*udpport;
 
 #define MAX_MSG_LEN		1000
 
+/**
+ * The various states of the remote admin connection
+ */
+typedef enum {
+	RA_STATE_DISCONNECTED,
+	RA_STATE_CONNECTING,
+	RA_STATE_CONNECTED
+} ra_state_t;
+
+
+/**
+ * Holds all info and state about the remote admin connection
+ */
 typedef struct {
 	uint8_t 		enabled;
+	ra_state_t      state;
+	uint32_t        connect_retry_frame;
+	uint32_t        connection_attempts;
 	uint32_t 		socket;
+	fd_set        	set_r;    // read
+	fd_set          set_w;    // write
+	fd_set          set_e;    // error
 	struct 	addrinfo *addr;
 	uint32_t		flags;
 	uint32_t		frame_number;
@@ -92,6 +113,8 @@ void 		RA_Authorize(const char *authkey);
 void 		RA_HeartBeat(void);
 void		RA_Encrypt(void);
 
+void        RA_Connect(void);
+void        RA_CheckConnection(void);
 extern remote_t remote;
 
 #endif
