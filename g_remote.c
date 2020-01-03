@@ -141,6 +141,19 @@ void RA_RunFrame(void)
 		return;
 	}
 
+	// everything we need to do while RA is connected
+	if (remote.state == RA_STATE_CONNECTED) {
+
+		// send any buffered messages to the server
+		RA_SendMessages();
+
+		// receive any pending messages from server
+		RA_ReadMessages();
+
+		// update player die() pointers
+		ra_replace_die();
+	}
+
 	// connection started already, check for completion
 	if (remote.state == RA_STATE_CONNECTING) {
 		RA_CheckConnection();
@@ -150,9 +163,6 @@ void RA_RunFrame(void)
 	if (remote.state == RA_STATE_DISCONNECTED) {
 		RA_Connect();
 	}
-
-	// update player die() pointers
-	ra_replace_die();
 }
 
 void RA_Shutdown(void) {
@@ -289,6 +299,60 @@ void RA_CheckConnection(void)
 	}
 }
 
+/**
+ * Send the contents of our outgoing buffer to the server
+ */
+void RA_SendMessages(void)
+{
+	// nothing to send
+	if (!remote.queue.length) {
+		return;
+	}
+
+	uint32_t ret;
+	struct timeval tv;
+	tv.tv_sec = tv.tv_usec = 0;
+
+	while (true) {
+		FD_ZERO(&remote.set_w);
+		FD_SET(remote.socket, &remote.set_w);
+
+		ret = select((int) remote.socket + 1, NULL, &remote.set_w, NULL, &tv);
+
+		// socket write buffer is ready, send
+		if (ret == 1) {
+			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
+
+			if (ret <= 0) {
+				// peer disconnect - handle it
+				return;
+			}
+
+			// shift off the data we just sent
+			memmove(remote.queue.data, remote.queue.data + ret, remote.queue.data - ret);
+			remote.queue.length -= ret;
+
+		} else if (ret < 0) {
+			// peer disconnected - handle it
+			return;
+		} else {
+			break;
+		}
+
+		// processed the whole queue, we're done for now
+		if (!remote.queue.length) {
+			break;
+		}
+	}
+}
+
+/**
+ * Accept any incoming messages from the server
+ */
+void RA_ReadMessages(void)
+{
+
+}
 /**
  * Allows for RA to send frag notifications
  *

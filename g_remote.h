@@ -17,6 +17,8 @@
 #define NS_INADDRSZ     4
 #define NS_IN6ADDRSZ    16
 
+#define QUEUE_SIZE      0x55FF
+
 extern cvar_t		*gamelib;
 extern cvar_t		*udpport;
 
@@ -40,6 +42,10 @@ typedef enum {
 	RA_STATE_CONNECTED
 } ra_state_t;
 
+typedef struct {
+	byte    data[QUEUE_SIZE];
+	size_t  length;
+} message_queue_t;
 
 /**
  * Holds all info and state about the remote admin connection
@@ -64,6 +70,7 @@ typedef struct {
 	qboolean		online;
 	byte			msg[MAX_MSG_LEN];
 	uint16_t		msglen;
+	message_queue_t queue;
 } remote_t;
 
 
@@ -115,6 +122,9 @@ void		RA_Encrypt(void);
 
 void        RA_Connect(void);
 void        RA_CheckConnection(void);
+void        RA_SendMessages(void);
+void        RA_ReadMessages(void);
+
 extern remote_t remote;
 
 #endif
