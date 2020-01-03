@@ -51,26 +51,26 @@ typedef struct {
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
-	uint8_t 		enabled;
-	ra_state_t      state;
-	uint32_t        connect_retry_frame;
-	uint32_t        connection_attempts;
-	uint32_t 		socket;
-	fd_set        	set_r;    // read
-	fd_set          set_w;    // write
-	fd_set          set_e;    // error
+	uint8_t          enabled;
+	ra_state_t       state;
+	uint32_t         connect_retry_frame;
+	uint32_t         connection_attempts;
+	uint32_t         socket;
+	fd_set           set_r;    // read
+	fd_set           set_w;    // write
+	fd_set           set_e;    // error
 	struct 	addrinfo *addr;
-	uint32_t		flags;
-	uint32_t		frame_number;
-	char			mapname[32];
-	uint32_t		next_report;
-	char			rcon_password[32];
-	uint8_t			maxclients;
-	uint16_t		port;
-	qboolean		online;
-	byte			msg[MAX_MSG_LEN];
-	uint16_t		msglen;
-	message_queue_t queue;
+	uint32_t         flags;
+	uint32_t         frame_number;
+	char             mapname[32];
+	uint32_t         next_report;
+	char             rcon_password[32];
+	uint8_t          maxclients;
+	uint16_t         port;
+	qboolean         online;
+	byte             msg[MAX_MSG_LEN];
+	uint16_t         msglen;
+	message_queue_t  queue;
 } remote_t;
 
 
