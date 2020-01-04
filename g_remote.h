@@ -19,6 +19,9 @@
 
 #define QUEUE_SIZE      0x55FF
 
+#define CURFRAME        (remote.frame_number)
+#define RECONNECT(t)    (CURFRAME + SECS_TO_FRAMES(t))
+
 extern cvar_t		*gamelib;
 extern cvar_t		*udpport;
 
@@ -43,8 +46,10 @@ typedef enum {
 } ra_state_t;
 
 typedef struct {
-	byte    data[QUEUE_SIZE];
-	size_t  length;
+	byte      data[QUEUE_SIZE];
+	size_t    length;
+	uint32_t  status;   // used for reading only
+	uint32_t  expectedLength;
 } message_queue_t;
 
 /**
@@ -125,6 +130,8 @@ void        RA_Connect(void);
 void        RA_CheckConnection(void);
 void        RA_SendMessages(void);
 void        RA_ReadMessages(void);
+void        RA_ParseMessage(void);
+void        RA_DisconnectedPeer(void);
 
 extern remote_t remote;
 

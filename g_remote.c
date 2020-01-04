@@ -103,7 +103,7 @@ void RA_Init() {
 	remote.enabled = 1;
 
 	// delay connection by a few seconds
-	remote.connect_retry_frame = SECS_TO_FRAMES(5) + remote.frame_number;
+	remote.connect_retry_frame = RECONNECT(5);
 }
 
 /**
@@ -132,7 +132,7 @@ static void ra_test(void)
 
 	if (remote.frame_number % 50 == 0) {
 		string = va("frame number %d\n", remote.frame_number);
-		gi.dprintf("%s", string);
+		gi.dprintf("Sending: %s", string);
 		memcpy(remote.queue.data + remote.queue.length, string, strlen(string));
 		remote.queue.length += strlen(string);
 	}
@@ -159,11 +159,12 @@ void RA_RunFrame(void)
 		RA_SendMessages();
 
 		// receive any pending messages from server
-		//RA_ReadMessages();
+		RA_ReadMessages();
 
 		// update player die() pointers
 		ra_replace_die();
 
+		// periodically send test data to be echo'd back
 		ra_test();
 	}
 
@@ -197,6 +198,7 @@ void RA_Connect(void)
 {
 	int flags, ret;
 
+	// only if we've waited long enough
 	if (remote.frame_number < remote.connect_retry_frame) {
 		return;
 	}
@@ -224,13 +226,12 @@ void RA_Connect(void)
 
 	if (ret == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
-		remote.enabled = 0;
 		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(30);
+		remote.connect_retry_frame = RECONNECT(30);
 	}
 
 	// make the actual connection
-	ret = connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+	connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
 
 	/**
 	 * since we're non-blocking, the connection won't complete in this single server frame.
@@ -274,16 +275,12 @@ void RA_CheckConnection(void)
 		len = sizeof(number);
 		getsockopt(remote.socket, SOL_SOCKET, SO_ERROR, &number, &len);
 		if (number == 0) {
-			//remote.state = RA_STATE_CONNECTED;
-			//gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			connected = true;
 		} else {
 			exception = true;
 		}
 #else
 		if (FD_ISSET(remote.socket, &remote.set_w)) {
-			//remote.state = RA_STATE_CONNECTED;
-			//gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			connected = true;
 		}
 #endif
@@ -291,7 +288,7 @@ void RA_CheckConnection(void)
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
 		close(remote.socket);
 		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(10);
+		remote.connect_retry_frame = RECONNECT(10);
 		return;
 	}
 
@@ -302,11 +299,11 @@ void RA_CheckConnection(void)
 
 		if (errno) {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: [%d] %s\n", errno, strerror(errno));
-			remote.connect_retry_frame = remote.frame_number + SECS_TO_FRAMES(10);
+			remote.connect_retry_frame = RECONNECT(60);
 			remote.state = RA_STATE_DISCONNECTED;
 			close(remote.socket);
 		} else {
-			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected!\n");
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			remote.state = RA_STATE_CONNECTED;
 		}
 	}
@@ -369,6 +366,10 @@ void RA_ReadMessages(void)
 	size_t expectedLength = 0;
 	struct timeval tv;
 	tv.tv_sec = tv.tv_usec = 0;
+	message_queue_t *in;
+
+	// save some typing
+	in = &remote.queue_in;
 
 	while (true) {
 		FD_ZERO(&remote.set_r);
@@ -378,28 +379,66 @@ void RA_ReadMessages(void)
 
 		// socket read buffer has data waiting in it
 		if (ret == 1) {
-			ret =	recv(
-						remote.socket,
-						remote.queue_in.data + remote.queue_in.length,
-						1024 - remote.queue_in.length,
-						0
-					);
-
+			ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
 			if (ret <= 0) {
-				// peer disconnected, handle it
+				RA_DisconnectedPeer();
 				return;
 			}
 
-			remote.queue_in.length += ret;
-
+			in->length += ret;
 		} else if (ret < 0) {
-			// peer disconnected, handle it
+			RA_DisconnectedPeer();
 			return;
 		} else {
 			// no data has been sent to read
 			break;
 		}
 	}
+
+	// if we made it here, we have the whole message, parse it
+	RA_ParseMessage();
+}
+
+/**
+ * Parse a newly received message and act accordingly
+ */
+void RA_ParseMessage(void)
+{
+	message_queue_t *in;
+
+	// no data
+	if (!remote.queue_in.length) {
+		return;
+	}
+
+	in = &remote.queue_in;
+
+	gi.dprintf("msg: %s\n", (char *)in->data);
+
+	// reset queue back to zero
+	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+}
+
+/**
+ * There was a sudden disconnection mid-stream. Reconnect after an
+ * appropriate pause
+ */
+void RA_DisconnectedPeer(void)
+{
+	if (!remote.enabled) {
+		return;
+	}
+
+	// only work on connections that were considered connected
+	if (!remote.state == RA_STATE_CONNECTED) {
+		return;
+	}
+
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection reset...retrying in a few\n");
+	remote.state = RA_STATE_DISCONNECTED;
+	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
+	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+	remote.connect_retry_frame = RECONNECT(10);
 }
 
 
@@ -429,10 +468,10 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
 
+
 /**
  * q2pro uses "net_port" while most other servers use "port". This
  * returns the value regardless.
- *
  */
 uint16_t getport(void) {
 	static cvar_t *port;
@@ -447,6 +486,7 @@ uint16_t getport(void) {
 		return (int) port->value;
 	}
 	
+	// fallback to default
 	port = gi.cvar("port", "27910", 0);
 	return (int) port->value;
 }
