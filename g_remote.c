@@ -4,6 +4,7 @@ remote_t remote;
 cvar_t	*udpport;
 
 /**
+ * OBSOLETE, DON'T USE
  * Sends the contents of the msg buffer to the RA server
  *
  */
@@ -492,36 +493,35 @@ uint16_t getport(void) {
 }
 
 /**
- * Reset the message buffer to zero to start a new msg
+ * Reset the outgoing message buffer to zero to start a new msg
  */
 void RA_InitBuffer() {
-	q2a_memset(&remote.msg, 0, sizeof(remote.msg));
-	remote.msglen = 0;
+	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
 }
 
 /**
  * Write a single byte to the message buffer
  */
 void RA_WriteByte(uint8_t b) {
-	remote.msg[remote.msglen++] = b & 0xff;
+	remote.queue.data[remote.queue.length++] = b & 0xff;
 }
 
 /**
  * Write 2 bytes to the message buffer
  */
 void RA_WriteShort(uint16_t s){
-	remote.msg[remote.msglen++] = s & 0xff;
-	remote.msg[remote.msglen++] = (s >> 8) & 0xff;
+	remote.queue.data[remote.queue.length++] = s & 0xff;
+	remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
 }
 
 /**
  * Write 4 bytes (long) to the message buffer
  */
 void RA_WriteLong(uint32_t i){
-	remote.msg[remote.msglen++] = i & 0xff;
-	remote.msg[remote.msglen++] = (i >> 8) & 0xff;
-	remote.msg[remote.msglen++] = (i >> 16) & 0xff;
-	remote.msg[remote.msglen++] = (i >> 24) & 0xff;
+	remote.queue.data[remote.queue.length++] = i & 0xff;
+	remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
+	remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
+	remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
 }
 
 // printf-ish
@@ -548,8 +548,9 @@ void RA_WriteString(const char *fmt, ...) {
 		return;
 	}
 	
+	// perhaps don't convert to consolechars...
 	for (i=0; i<len; i++) {
-		remote.msg[remote.msglen++] = str[i] | 0x80;
+		remote.queue.data[remote.queue.length++] = str[i] | 0x80;
 	}
 
 	RA_WriteByte(0);
@@ -564,14 +565,14 @@ void RA_Register(void) {
 	RA_WriteByte(remote.maxclients);
 	RA_WriteString("%s", remote.rcon_password);
 	RA_WriteString("%s", remote.mapname);
-	RA_Send();
+	//RA_Send();
 	remote.online = false;
 }
 
 void RA_Unregister(void) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_QUIT);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_PlayerConnect(edict_t *ent) {
@@ -581,7 +582,7 @@ void RA_PlayerConnect(edict_t *ent) {
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_PlayerDisconnect(edict_t *ent) {
@@ -590,7 +591,7 @@ void RA_PlayerDisconnect(edict_t *ent) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_DISCONNECT);
 	RA_WriteByte(cl);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_PlayerCommand(edict_t *ent) {
@@ -607,7 +608,7 @@ void RA_Print(uint8_t level, char *text)
 	RA_WriteByte(CMD_PRINT);
 	RA_WriteByte(level);
 	RA_WriteString("%s",text);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Teleport(uint8_t client_id)
@@ -627,7 +628,7 @@ void RA_Teleport(uint8_t client_id)
 	RA_WriteByte(CMD_TELEPORT);
 	RA_WriteByte(client_id);
 	RA_WriteString("%s", srv);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_PlayerUpdate(uint8_t cl, const char *ui) {
@@ -635,7 +636,7 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui) {
 	RA_WriteByte(CMD_PLAYERUPDATE);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", ui);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Invite(uint8_t cl, const char *text)
@@ -648,7 +649,7 @@ void RA_Invite(uint8_t cl, const char *text)
 	RA_WriteByte(CMD_INVITE);
 	RA_WriteByte(cl);
 	RA_WriteString(text);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Whois(uint8_t cl, const char *name)
@@ -661,7 +662,7 @@ void RA_Whois(uint8_t cl, const char *name)
 	RA_WriteByte(CMD_WHOIS);
 	RA_WriteByte(cl);
 	RA_WriteString(name);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
@@ -676,14 +677,14 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
 	RA_WriteString("%s", vname);
 	RA_WriteByte(attacker);
 	RA_WriteString("%s", aname);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Map(const char *mapname) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_MAP);
 	RA_WriteString("%s", mapname);
-	RA_Send();
+	//RA_Send();
 }
 
 void RA_Authorize(const char *authkey) {
@@ -691,14 +692,14 @@ void RA_Authorize(const char *authkey) {
 	RA_WriteLong(-1);
 	RA_WriteByte(CMD_AUTHORIZE);
 	RA_WriteString("%s", authkey);
-	RA_Send();
+	//RA_Send();
 	remote.online = false;
 }
 
 void RA_HeartBeat(void) {
 	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_HEARTBEAT);
-	RA_Send();
+	//RA_Send();
 }
 
 /**
@@ -713,8 +714,8 @@ void RA_Encrypt(void) {
 	 * to be unencrypted so we know which server the message is from and
 	 * we can pick the appropriate key to decrypt the rest of the message
 	 */
-	for (i=3; i<remote.msglen; i++) {
-		remote.msg[i] ^= encryptionKey[i];
+	for (i=3; i<remote.queue.length; i++) {
+		remote.queue.data[i] ^= encryptionKey[i];
 	}
 }
 
