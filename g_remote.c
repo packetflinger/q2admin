@@ -334,7 +334,7 @@ void RA_SendMessages(void)
 			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
 
 			if (ret <= 0) {
-				// peer disconnect - handle it
+				RA_DisconnectedPeer();
 				return;
 			}
 
@@ -343,7 +343,7 @@ void RA_SendMessages(void)
 			remote.queue.length -= ret;
 
 		} else if (ret < 0) {
-			// peer disconnected - handle it
+			RA_DisconnectedPeer();
 			return;
 		} else {
 			break;
