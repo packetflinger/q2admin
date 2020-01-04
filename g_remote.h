@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
-#include <sys/ioctl.h>
 #include <fcntl.h>
 
 #define NS_INT16SZ      2

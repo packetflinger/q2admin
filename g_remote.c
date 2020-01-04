@@ -187,7 +187,7 @@ void RA_Shutdown(void) {
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
 	RA_Unregister();
-	close(remote.socket);
+	closesocket(remote.socket);
 	remote.state = RA_STATE_DISCONNECTED;
 	freeaddrinfo(remote.addr);
 }
@@ -225,7 +225,7 @@ void RA_Connect(void)
 	ret = fcntl(remote.socket, F_SETFL, flags | O_NONBLOCK);
 #else
 	flags = 1;
-	ret = ioctl(remote.socket, FIOBIO, &flags);
+	ret = ioctlsocket(remote.socket, FIONBIO, (long unsigned int *) &flags);
 #endif
 
 	if (ret == -1) {
@@ -290,7 +290,7 @@ void RA_CheckConnection(void)
 #endif
 	} else if (ret == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
-		close(remote.socket);
+		closesocket(remote.socket);
 		remote.state = RA_STATE_DISCONNECTED;
 		remote.connect_retry_frame = RECONNECT(10);
 		return;
@@ -305,7 +305,7 @@ void RA_CheckConnection(void)
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: [%d] %s\n", errno, strerror(errno));
 			remote.connect_retry_frame = RECONNECT(60);
 			remote.state = RA_STATE_DISCONNECTED;
-			close(remote.socket);
+			closesocket(remote.socket);
 		} else {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			remote.state = RA_STATE_CONNECTED;
@@ -575,7 +575,7 @@ char *RA_ReadString(void)
 	memset(&str, 0, MAX_STRING_CHARS);
 
 	for (i=0; i<=len; i++) {
-		character = MSG_ReadByte() & 0x7f;
+		character = RA_ReadByte() & 0x7f;
 		strcat(str,  &character);
 	}
 
