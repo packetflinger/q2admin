@@ -48,8 +48,7 @@ typedef enum {
 typedef struct {
 	byte      data[QUEUE_SIZE];
 	size_t    length;
-	uint32_t  status;   // used for reading only
-	uint32_t  expectedLength;
+	uint32_t  index;    // for reading
 } message_queue_t;
 
 /**
@@ -109,6 +108,11 @@ void		RA_PlayerConnect(edict_t *ent);
 void		RA_PlayerDisconnect(edict_t *ent);
 void		RA_PlayerCommand(edict_t *ent);
 
+uint8_t     RA_ReadByte(void);
+uint16_t    RA_ReadShort(void);
+int32_t     RA_ReadLong(void);
+char        *RA_ReadString(void);
+void        RA_ReadData(void *out, size_t len);
 void		RA_WriteString(const char *fmt, ...);
 void		RA_WriteByte(uint8_t b);
 void		RA_WriteLong(uint32_t i);

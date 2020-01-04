@@ -204,6 +204,9 @@ void RA_Connect(void)
 		return;
 	}
 
+	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
+	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+
 	remote.state = RA_STATE_CONNECTING;
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connecting to server...\n");
 	remote.connection_attempts++;
@@ -500,29 +503,85 @@ void RA_InitBuffer() {
 }
 
 /**
+ * Read a single byte from the message buffer
+ */
+uint8_t RA_ReadByte(void)
+{
+	unsigned char b = remote.queue_in.data[remote.queue_in.index++];
+	return b & 0xff;
+}
+
+/**
  * Write a single byte to the message buffer
  */
-void RA_WriteByte(uint8_t b) {
+void RA_WriteByte(uint8_t b)
+{
 	remote.queue.data[remote.queue.length++] = b & 0xff;
+}
+
+/**
+ * Read a short (2 bytes) from the message buffer
+ */
+uint16_t RA_ReadShort(void)
+{
+	return	(remote.queue_in.data[remote.queue_in.index++] +
+			(remote.queue_in.data[remote.queue_in.index++] << 8)) & 0xffff;
 }
 
 /**
  * Write 2 bytes to the message buffer
  */
-void RA_WriteShort(uint16_t s){
+void RA_WriteShort(uint16_t s)
+{
 	remote.queue.data[remote.queue.length++] = s & 0xff;
 	remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
 }
 
 /**
+ * Read 4 bytes from the message buffer
+ */
+int32_t RA_ReadLong(void)
+{
+	return	remote.queue_in.data[remote.queue_in.index++] +
+			(remote.queue_in.data[remote.queue_in.index++] << 8) +
+			(remote.queue_in.data[remote.queue_in.index++] << 16) +
+			(remote.queue_in.data[remote.queue_in.index++] << 24);
+}
+
+/**
  * Write 4 bytes (long) to the message buffer
  */
-void RA_WriteLong(uint32_t i){
+void RA_WriteLong(uint32_t i)
+{
 	remote.queue.data[remote.queue.length++] = i & 0xff;
 	remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
 	remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
 	remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
 }
+
+/**
+ * Read a null terminated string from the buffer
+ */
+char *RA_ReadString(void)
+{
+	static char str[MAX_STRING_CHARS];
+	static char character;
+	size_t i, len = 0;
+
+	do {
+		len++;
+	} while (remote.queue_in.data[(remote.queue_in.index + len)] != 0);
+
+	memset(&str, 0, MAX_STRING_CHARS);
+
+	for (i=0; i<=len; i++) {
+		character = MSG_ReadByte() & 0x7f;
+		strcat(str,  &character);
+	}
+
+	return str;
+}
+
 
 // printf-ish
 void RA_WriteString(const char *fmt, ...) {
@@ -555,6 +614,16 @@ void RA_WriteString(const char *fmt, ...) {
 
 	RA_WriteByte(0);
 }
+
+/**
+ * Read an arbitrary amount of data from the message buffer
+ */
+void RA_ReadData(void *out, size_t len)
+{
+	memcpy(out, &(remote.queue_in.data[remote.queue_in.index]), len);
+	remote.queue_in.index += len;
+}
+
 
 void RA_Register(void) {
 	remote.online = true;
