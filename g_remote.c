@@ -126,6 +126,17 @@ static void ra_replace_die(void)
 	}
 }
 
+static void ra_test(void)
+{
+	char *string;
+
+	if (remote.frame_number % 50 == 0) {
+		string = va("frame number %d\n", remote.frame_number);
+		gi.dprintf("%s", string);
+		memcpy(remote.queue.data + remote.queue.length, string, strlen(string));
+		remote.queue.length += strlen(string);
+	}
+}
 
 /**
  * Run once per server frame
@@ -148,10 +159,12 @@ void RA_RunFrame(void)
 		RA_SendMessages();
 
 		// receive any pending messages from server
-		RA_ReadMessages();
+		//RA_ReadMessages();
 
 		// update player die() pointers
 		ra_replace_die();
+
+		ra_test();
 	}
 
 	// connection started already, check for completion
@@ -329,7 +342,7 @@ void RA_SendMessages(void)
 			}
 
 			// shift off the data we just sent
-			memmove(remote.queue.data, remote.queue.data + ret, remote.queue.data - ret);
+			memmove(remote.queue.data, remote.queue.data + ret, remote.queue.length - ret);
 			remote.queue.length -= ret;
 
 		} else if (ret < 0) {
@@ -346,13 +359,50 @@ void RA_SendMessages(void)
 	}
 }
 
+
 /**
  * Accept any incoming messages from the server
  */
 void RA_ReadMessages(void)
 {
+	uint32_t ret;
+	size_t expectedLength = 0;
+	struct timeval tv;
+	tv.tv_sec = tv.tv_usec = 0;
 
+	while (true) {
+		FD_ZERO(&remote.set_r);
+		FD_SET(remote.socket, &remote.set_r);
+
+		ret = select(remote.socket + 1, &remote.set_r, NULL, NULL, &tv);
+
+		// socket read buffer has data waiting in it
+		if (ret == 1) {
+			ret =	recv(
+						remote.socket,
+						remote.queue_in.data + remote.queue_in.length,
+						1024 - remote.queue_in.length,
+						0
+					);
+
+			if (ret <= 0) {
+				// peer disconnected, handle it
+				return;
+			}
+
+			remote.queue_in.length += ret;
+
+		} else if (ret < 0) {
+			// peer disconnected, handle it
+			return;
+		} else {
+			// no data has been sent to read
+			break;
+		}
+	}
 }
+
+
 /**
  * Allows for RA to send frag notifications
  *

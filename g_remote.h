@@ -71,6 +71,7 @@ typedef struct {
 	byte             msg[MAX_MSG_LEN];
 	uint16_t         msglen;
 	message_queue_t  queue;
+	message_queue_t  queue_in;
 } remote_t;
 
 
