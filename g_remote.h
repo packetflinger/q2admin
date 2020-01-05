@@ -51,6 +51,15 @@ typedef struct {
 } message_queue_t;
 
 /**
+ * For pinging the server, if no reply after x frames, assuming
+ * connection is broken and reconnect.
+ */
+typedef struct {
+	qboolean  waiting;
+	uint32_t  frame_sent;
+} ping_t;
+
+/**
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
@@ -75,27 +84,34 @@ typedef struct {
 	uint16_t         msglen;
 	message_queue_t  queue;
 	message_queue_t  queue_in;
+	ping_t           ping;
 } remote_t;
 
-
+/**
+ * Major client (q2server) to server (q2admin server)
+ * commands.
+ */
 typedef enum {
-	CMD_REGISTER,		// server
-	CMD_QUIT,			// server
-	CMD_CONNECT,		// player
-	CMD_DISCONNECT,		// player
+	CMD_CONNECT,       // player
+	CMD_DISCONNECT,    // player
 	CMD_PLAYERLIST,
 	CMD_PLAYERUPDATE,
 	CMD_PRINT,
-	CMD_TELEPORT,
-	CMD_INVITE,
-	CMD_SEEN,
-	CMD_WHOIS,
+	CMD_COMMAND,       // teleport, invite, etc
 	CMD_PLAYERS,
-	CMD_FRAG,
-	CMD_MAP,
-	CMD_AUTHORIZE,
-	CMD_HEARTBEAT
+	CMD_FRAG,          // someone fragged someone else
+	CMD_MAP,           // map changed
+	CMD_PING           //
 } remote_cmd_t;
+
+/**
+ * Sub commands. This are initiated by players
+ */
+typedef enum {
+	CMD_COMMAND_TELEPORT,
+	CMD_COMMAND_INVITE,
+	CMD_COMMAND_WHOIS
+} remote_cmd_command_t;
 
 void 		RA_Send(void);
 void		RA_Init(void);

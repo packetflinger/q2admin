@@ -134,8 +134,8 @@ static void ra_test(void)
 	if (remote.frame_number % 50 == 0) {
 		string = va("frame number %d\n", remote.frame_number);
 		gi.dprintf("Sending: %s", string);
-		memcpy(remote.queue.data + remote.queue.length, string, strlen(string));
-		remote.queue.length += strlen(string);
+
+		RA_WriteString("!! %s", string);
 	}
 }
 
@@ -185,8 +185,6 @@ void RA_Shutdown(void) {
 		return;
 	}
 
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Unregistering with remote admin server\n\n");
-	RA_Unregister();
 	closesocket(remote.socket);
 	remote.state = RA_STATE_DISCONNECTED;
 	freeaddrinfo(remote.addr);
@@ -624,7 +622,7 @@ void RA_ReadData(void *out, size_t len)
 	remote.queue_in.index += len;
 }
 
-
+/*
 void RA_Register(void) {
 	remote.online = true;
 	RA_WriteLong(remoteKey);
@@ -643,7 +641,7 @@ void RA_Unregister(void) {
 	RA_WriteByte(CMD_QUIT);
 	//RA_Send();
 }
-
+*/
 void RA_PlayerConnect(edict_t *ent) {
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
@@ -694,7 +692,8 @@ void RA_Teleport(uint8_t client_id)
 	}
 
 	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_TELEPORT);
+	RA_WriteByte(CMD_COMMAND);
+	RA_WriteByte(CMD_COMMAND_TELEPORT);
 	RA_WriteByte(client_id);
 	RA_WriteString("%s", srv);
 	//RA_Send();
@@ -715,7 +714,8 @@ void RA_Invite(uint8_t cl, const char *text)
 	}
 
 	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_INVITE);
+	RA_WriteByte(CMD_COMMAND);
+	RA_WriteByte(CMD_COMMAND_INVITE);
 	RA_WriteByte(cl);
 	RA_WriteString(text);
 	//RA_Send();
@@ -728,7 +728,8 @@ void RA_Whois(uint8_t cl, const char *name)
 	}
 
 	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_WHOIS);
+	RA_WriteByte(CMD_COMMAND);
+	RA_WriteByte(CMD_COMMAND_WHOIS);
 	RA_WriteByte(cl);
 	RA_WriteString(name);
 	//RA_Send();
@@ -756,6 +757,15 @@ void RA_Map(const char *mapname) {
 	//RA_Send();
 }
 
+/**
+ * Keep the connection alive, if no pong, assume dead
+ */
+void RA_Ping(void)
+{
+	RA_WriteByte(CMD_PING);
+}
+
+/*
 void RA_Authorize(const char *authkey) {
 	remote.online = true;
 	RA_WriteLong(-1);
@@ -770,6 +780,7 @@ void RA_HeartBeat(void) {
 	RA_WriteByte(CMD_HEARTBEAT);
 	//RA_Send();
 }
+*/
 
 /**
  * XOR part of the message with a secret key only known to this q2 server

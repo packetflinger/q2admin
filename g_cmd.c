@@ -3962,7 +3962,7 @@ void remoteOnlineRun(int startarg, edict_t *ent, int client) {
 
 void remoteRegisterRun(int startarg, edict_t *ent, int client) {
 	remote.online = TRUE; // hack to actually send the register cmd
-	RA_Register();
+	//RA_Register();
 	remote.online = FALSE;
 }
 
@@ -4016,6 +4016,6 @@ void remoteAuthorizeRun(int startarg, edict_t *ent, int client) {
 
 	gi.cprintf(ent, PRINT_HIGH, "Sending authorization request to RA server...check web interface for status\n");
 
-	RA_Authorize(gi.argv(2));
+	//RA_Authorize(gi.argv(2));
 }
 
