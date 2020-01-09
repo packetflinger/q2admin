@@ -3919,9 +3919,6 @@ void Cmd_Teleport_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	//RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
-
-	//gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
 
 	RA_Teleport(id);
 

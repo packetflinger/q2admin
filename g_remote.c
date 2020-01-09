@@ -140,6 +140,38 @@ static void ra_test(void)
 }
 
 /**
+ * Periodically ping the server to know if the connection is still open
+ */
+void RA_Ping(void)
+{
+	if (!remote.state == RA_STATE_CONNECTED) {
+		return;
+	}
+
+	// not time yet
+	if (remote.ping.frame_next > CURFRAME) {
+		return;
+	}
+
+	// there is already an outstanding ping
+	if (remote.ping.waiting) {
+		if (remote.ping.miss_count == PING_MISS_MAX) {
+			RA_DisconnectedPeer();
+			return;
+		}
+		remote.ping.miss_count++;
+	}
+
+	// state stuff
+	remote.ping.frame_sent = CURFRAME;
+	remote.ping.waiting = true;
+	remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
+
+	// send it
+	RA_WriteByte(CMD_PING);
+}
+
+/**
  * Run once per server frame
  *
  */
@@ -165,8 +197,8 @@ void RA_RunFrame(void)
 		// update player die() pointers
 		ra_replace_die();
 
-		// periodically send test data to be echo'd back
-		ra_test();
+		// periodically make sure connection is alive
+		RA_Ping();
 	}
 
 	// connection started already, check for completion
@@ -180,10 +212,18 @@ void RA_RunFrame(void)
 	}
 }
 
-void RA_Shutdown(void) {
+void RA_Shutdown(void)
+{
 	if (!remote.enabled) {
 		return;
 	}
+
+	/**
+	 * We have to call RA_SendMessages() specifically here because there won't be another
+	 * frame to send the buffered CMD_QUIT
+	 */
+	RA_WriteByte(CMD_QUIT);
+	RA_SendMessages();
 
 	closesocket(remote.socket);
 	remote.state = RA_STATE_DISCONNECTED;
@@ -202,6 +242,7 @@ void RA_Connect(void)
 		return;
 	}
 
+	// clear the in and out buffers
 	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
 	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
 
@@ -237,7 +278,7 @@ void RA_Connect(void)
 
 	/**
 	 * since we're non-blocking, the connection won't complete in this single server frame.
-	 * We have to select() for it on a later runframe
+	 * We have to select() for it on a later runframe. See RA_CheckConnection()
 	 */
 }
 
@@ -307,6 +348,8 @@ void RA_CheckConnection(void)
 		} else {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			remote.state = RA_STATE_CONNECTED;
+			remote.ping.frame_next = remote.frame_number + SECS_TO_FRAMES(10);
+			RA_SayHello();
 		}
 	}
 }
@@ -318,6 +361,11 @@ void RA_SendMessages(void)
 {
 	// nothing to send
 	if (!remote.queue.length) {
+		return;
+	}
+
+	// only once we're ready (unless trying to say hello)
+	if (!remote.ready && remote.queue.data[0] != CMD_HELLO) {
 		return;
 	}
 
@@ -406,19 +454,44 @@ void RA_ReadMessages(void)
  */
 void RA_ParseMessage(void)
 {
-	message_queue_t *in;
+	byte cmd;
 
 	// no data
 	if (!remote.queue_in.length) {
 		return;
 	}
 
-	in = &remote.queue_in;
+	cmd = RA_ReadByte();
 
-	gi.dprintf("msg: %s\n", (char *)in->data);
+	switch (cmd) {
+	case SCMD_PONG:
+		remote.ping.waiting = false;
+		break;
+	case SCMD_COMMAND:
+		RA_ParseCommand();
+		break;
+	case SCMD_HELLOACK:
+		remote.ready = true;
+		break;
+	case SCMD_SAYCLIENT:
+		RA_SayClient();
+		break;
+	}
 
 	// reset queue back to zero
 	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+}
+
+/**
+ * Server sent over a command
+ */
+void RA_ParseCommand(void)
+{
+	char *cmd;
+	cmd = RA_ReadString();
+
+	// cram it into the command buffer
+	gi.AddCommandString(cmd);
 }
 
 /**
@@ -468,6 +541,29 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 
 	// call the player's real die() function
 	proxyinfo[id].die(self, inflictor, attacker, damage, point);
+}
+
+/**
+ * Immediately after connecting, we have to say hi, giving the server our
+ * information. Once the server acknowledges we can start sending game data.
+ */
+void RA_SayHello(void)
+{
+	// don't bother if we're not fully connected yet
+	if (remote.state != RA_STATE_CONNECTED) {
+		return;
+	}
+
+	// we've already said hello
+	if (remote.ready) {
+		return;
+	}
+
+	RA_WriteByte(CMD_HELLO);
+	RA_WriteLong(remoteKey);
+	RA_WriteLong(Q2A_REVISION);
+	RA_WriteShort(remote.port);
+	RA_WriteByte(remote.maxclients);
 }
 
 
@@ -642,23 +738,23 @@ void RA_Unregister(void) {
 	//RA_Send();
 }
 */
-void RA_PlayerConnect(edict_t *ent) {
+void RA_PlayerConnect(edict_t *ent)
+{
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
-	RA_WriteLong(remoteKey);
+
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
-	//RA_Send();
 }
 
-void RA_PlayerDisconnect(edict_t *ent) {
+void RA_PlayerDisconnect(edict_t *ent)
+{
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
-	RA_WriteLong(remoteKey);
+
 	RA_WriteByte(CMD_DISCONNECT);
 	RA_WriteByte(cl);
-	//RA_Send();
 }
 
 void RA_PlayerCommand(edict_t *ent) {
@@ -671,11 +767,9 @@ void RA_Print(uint8_t level, char *text)
 		return;
 	}
 
-	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_PRINT);
 	RA_WriteByte(level);
 	RA_WriteString("%s",text);
-	//RA_Send();
 }
 
 void RA_Teleport(uint8_t client_id)
@@ -691,20 +785,17 @@ void RA_Teleport(uint8_t client_id)
 		srv = "";
 	}
 
-	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_COMMAND);
 	RA_WriteByte(CMD_COMMAND_TELEPORT);
 	RA_WriteByte(client_id);
 	RA_WriteString("%s", srv);
-	//RA_Send();
 }
 
-void RA_PlayerUpdate(uint8_t cl, const char *ui) {
-	RA_WriteLong(remoteKey);
+void RA_PlayerUpdate(uint8_t cl, const char *ui)
+{
 	RA_WriteByte(CMD_PLAYERUPDATE);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", ui);
-	//RA_Send();
 }
 
 void RA_Invite(uint8_t cl, const char *text)
@@ -713,12 +804,10 @@ void RA_Invite(uint8_t cl, const char *text)
 		return;
 	}
 
-	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_COMMAND);
 	RA_WriteByte(CMD_COMMAND_INVITE);
 	RA_WriteByte(cl);
 	RA_WriteString(text);
-	//RA_Send();
 }
 
 void RA_Whois(uint8_t cl, const char *name)
@@ -727,12 +816,10 @@ void RA_Whois(uint8_t cl, const char *name)
 		return;
 	}
 
-	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_COMMAND);
 	RA_WriteByte(CMD_COMMAND_WHOIS);
 	RA_WriteByte(cl);
 	RA_WriteString(name);
-	//RA_Send();
 }
 
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
@@ -741,46 +828,23 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
 		return;
 	}
 
-	RA_WriteLong(remoteKey);
 	RA_WriteByte(CMD_FRAG);
 	RA_WriteByte(victim);
 	RA_WriteString("%s", vname);
 	RA_WriteByte(attacker);
 	RA_WriteString("%s", aname);
-	//RA_Send();
 }
 
-void RA_Map(const char *mapname) {
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_MAP);
-	RA_WriteString("%s", mapname);
-	//RA_Send();
-}
 
 /**
- * Keep the connection alive, if no pong, assume dead
+ *
  */
-void RA_Ping(void)
+void RA_Map(const char *mapname)
 {
-	RA_WriteByte(CMD_PING);
+	RA_WriteByte(CMD_MAP);
+	RA_WriteString("%s", mapname);
 }
 
-/*
-void RA_Authorize(const char *authkey) {
-	remote.online = true;
-	RA_WriteLong(-1);
-	RA_WriteByte(CMD_AUTHORIZE);
-	RA_WriteString("%s", authkey);
-	//RA_Send();
-	remote.online = false;
-}
-
-void RA_HeartBeat(void) {
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_HEARTBEAT);
-	//RA_Send();
-}
-*/
 
 /**
  * XOR part of the message with a secret key only known to this q2 server
@@ -799,3 +863,28 @@ void RA_Encrypt(void) {
 	}
 }
 
+
+/**
+ * Write something to a client
+ */
+void RA_SayClient(void)
+{
+	uint8_t client_id;
+	uint8_t level;
+	char *string;
+	edict_t *ent;
+
+	client_id = RA_ReadByte();
+	level = RA_ReadByte();
+	string = RA_ReadString();
+
+	ent = proxyinfo[client_id].ent;
+
+
+	if (!ent) {
+		return;
+	}
+
+	gi.dprintf("sayclient to %s\n", ent->client->pers.netname);
+	gi.cprintf(ent, level, string);
+}

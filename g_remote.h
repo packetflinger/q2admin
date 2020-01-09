@@ -35,6 +35,9 @@ extern cvar_t		*udpport;
 
 #define MAX_MSG_LEN		1000
 
+#define PING_FREQ_SECS  10
+#define PING_MISS_MAX   3
+
 /**
  * The various states of the remote admin connection
  */
@@ -55,8 +58,10 @@ typedef struct {
  * connection is broken and reconnect.
  */
 typedef struct {
-	qboolean  waiting;
-	uint32_t  frame_sent;
+	qboolean  waiting;      // we sent a ping, waiting for a pong
+	uint32_t  frame_sent;   // when it was sent
+	uint32_t  frame_next;   // when to send the next one
+	uint8_t   miss_count;   // how many sent without a reply
 } ping_t;
 
 /**
@@ -68,6 +73,7 @@ typedef struct {
 	uint32_t         connect_retry_frame;
 	uint32_t         connection_attempts;
 	uint32_t         socket;
+	qboolean         ready;    // we've connected, said hello, and ready
 	fd_set           set_r;    // read
 	fd_set           set_w;    // write
 	fd_set           set_e;    // error
@@ -92,6 +98,9 @@ typedef struct {
  * commands.
  */
 typedef enum {
+	CMD_NULL,
+	CMD_HELLO,
+	CMD_QUIT,          // server quit
 	CMD_CONNECT,       // player
 	CMD_DISCONNECT,    // player
 	CMD_PLAYERLIST,
@@ -102,10 +111,21 @@ typedef enum {
 	CMD_FRAG,          // someone fragged someone else
 	CMD_MAP,           // map changed
 	CMD_PING           //
-} remote_cmd_t;
+} ra_client_cmd_t;
 
 /**
- * Sub commands. This are initiated by players
+ * Server to client commands
+ */
+typedef enum {
+	SCMD_NULL,
+	SCMD_HELLOACK,
+	SCMD_PONG,
+	SCMD_COMMAND,
+	SCMD_SAYCLIENT,
+} ra_server_cmd_t;
+
+/**
+ * Sub commands. These are initiated by players
  */
 typedef enum {
 	CMD_COMMAND_TELEPORT,
@@ -150,7 +170,9 @@ void        RA_CheckConnection(void);
 void        RA_SendMessages(void);
 void        RA_ReadMessages(void);
 void        RA_ParseMessage(void);
+void        RA_ParseCommand(void);
 void        RA_DisconnectedPeer(void);
+void        RA_Ping(void);
 
 extern remote_t remote;
 
