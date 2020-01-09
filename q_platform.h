@@ -36,11 +36,14 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #endif /*_WIN32*/
 
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <io.h>
 #include <direct.h>
 #include <winsock2.h>
+#include <winsock.h>
 #include <windows.h>
 #include <ws2tcpip.h>
+#define boolean        qboolean
 #else
 #include <dlfcn.h>
 #include <unistd.h>
@@ -48,6 +51,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/ioctl.h>
+#define closesocket     close
+#define ioctlsocket     ioctl
 #endif
 
 #ifdef _WIN32

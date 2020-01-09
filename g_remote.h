@@ -10,10 +10,16 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <fcntl.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
 #define NS_IN6ADDRSZ    16
+
+#define QUEUE_SIZE      0x55FF
+
+#define CURFRAME        (remote.frame_number)
+#define RECONNECT(t)    (CURFRAME + SECS_TO_FRAMES(t))
 
 extern cvar_t		*gamelib;
 extern cvar_t		*udpport;
@@ -29,41 +35,103 @@ extern cvar_t		*udpport;
 
 #define MAX_MSG_LEN		1000
 
+#define PING_FREQ_SECS  10
+#define PING_MISS_MAX   3
+
+/**
+ * The various states of the remote admin connection
+ */
+typedef enum {
+	RA_STATE_DISCONNECTED,
+	RA_STATE_CONNECTING,
+	RA_STATE_CONNECTED
+} ra_state_t;
+
 typedef struct {
-	uint8_t 		enabled;
-	uint32_t 		socket;
+	byte      data[QUEUE_SIZE];
+	size_t    length;
+	uint32_t  index;    // for reading
+} message_queue_t;
+
+/**
+ * For pinging the server, if no reply after x frames, assuming
+ * connection is broken and reconnect.
+ */
+typedef struct {
+	qboolean  waiting;      // we sent a ping, waiting for a pong
+	uint32_t  frame_sent;   // when it was sent
+	uint32_t  frame_next;   // when to send the next one
+	uint8_t   miss_count;   // how many sent without a reply
+} ping_t;
+
+/**
+ * Holds all info and state about the remote admin connection
+ */
+typedef struct {
+	uint8_t          enabled;
+	ra_state_t       state;
+	uint32_t         connect_retry_frame;
+	uint32_t         connection_attempts;
+	uint32_t         socket;
+	qboolean         ready;    // we've connected, said hello, and ready
+	fd_set           set_r;    // read
+	fd_set           set_w;    // write
+	fd_set           set_e;    // error
 	struct 	addrinfo *addr;
-	uint32_t		flags;
-	uint32_t		frame_number;
-	char			mapname[32];
-	uint32_t		next_report;
-	char			rcon_password[32];
-	uint8_t			maxclients;
-	uint16_t		port;
-	qboolean		online;
-	byte			msg[MAX_MSG_LEN];
-	uint16_t		msglen;
+	uint32_t         flags;
+	uint32_t         frame_number;
+	char             mapname[32];
+	uint32_t         next_report;
+	char             rcon_password[32];
+	uint8_t          maxclients;
+	uint16_t         port;
+	qboolean         online;
+	byte             msg[MAX_MSG_LEN];
+	uint16_t         msglen;
+	message_queue_t  queue;
+	message_queue_t  queue_in;
+	ping_t           ping;
 } remote_t;
 
-
+/**
+ * Major client (q2server) to server (q2admin server)
+ * commands.
+ */
 typedef enum {
-	CMD_REGISTER,		// server
-	CMD_QUIT,			// server
-	CMD_CONNECT,		// player
-	CMD_DISCONNECT,		// player
+	CMD_NULL,
+	CMD_HELLO,
+	CMD_QUIT,          // server quit
+	CMD_CONNECT,       // player
+	CMD_DISCONNECT,    // player
 	CMD_PLAYERLIST,
 	CMD_PLAYERUPDATE,
 	CMD_PRINT,
-	CMD_TELEPORT,
-	CMD_INVITE,
-	CMD_SEEN,
-	CMD_WHOIS,
+	CMD_COMMAND,       // teleport, invite, etc
 	CMD_PLAYERS,
-	CMD_FRAG,
-	CMD_MAP,
-	CMD_AUTHORIZE,
-	CMD_HEARTBEAT
-} remote_cmd_t;
+	CMD_FRAG,          // someone fragged someone else
+	CMD_MAP,           // map changed
+	CMD_PING           //
+} ra_client_cmd_t;
+
+/**
+ * Server to client commands
+ */
+typedef enum {
+	SCMD_NULL,
+	SCMD_HELLOACK,
+	SCMD_PONG,
+	SCMD_COMMAND,
+	SCMD_SAYCLIENT,
+} ra_server_cmd_t;
+
+/**
+ * Sub commands. These are initiated by players
+ */
+typedef enum {
+	CMD_COMMAND_TELEPORT,
+	CMD_COMMAND_INVITE,
+	CMD_COMMAND_WHOIS
+} remote_cmd_command_t;
 
 void 		RA_Send(void);
 void		RA_Init(void);
@@ -75,6 +143,11 @@ void		RA_PlayerConnect(edict_t *ent);
 void		RA_PlayerDisconnect(edict_t *ent);
 void		RA_PlayerCommand(edict_t *ent);
 
+uint8_t     RA_ReadByte(void);
+uint16_t    RA_ReadShort(void);
+int32_t     RA_ReadLong(void);
+char        *RA_ReadString(void);
+void        RA_ReadData(void *out, size_t len);
 void		RA_WriteString(const char *fmt, ...);
 void		RA_WriteByte(uint8_t b);
 void		RA_WriteLong(uint32_t i);
@@ -91,6 +164,15 @@ void		RA_Map(const char *mapname);
 void 		RA_Authorize(const char *authkey);
 void 		RA_HeartBeat(void);
 void		RA_Encrypt(void);
+
+void        RA_Connect(void);
+void        RA_CheckConnection(void);
+void        RA_SendMessages(void);
+void        RA_ReadMessages(void);
+void        RA_ParseMessage(void);
+void        RA_ParseCommand(void);
+void        RA_DisconnectedPeer(void);
+void        RA_Ping(void);
 
 extern remote_t remote;
 

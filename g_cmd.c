@@ -3920,9 +3920,6 @@ void Cmd_Teleport_f(edict_t *ent) {
 	}
 
 	uint8_t id = getEntOffset(ent) - 1;
-	//RA_Send(CMD_TELEPORT, "%d\\%s", id, gi.args());
-
-	//gi.cprintf(ent, PRINT_HIGH, "Teleport Usage: '%s <servername>'\n", remoteCmdTeleport);
 
 	RA_Teleport(id);
 
@@ -3963,7 +3960,7 @@ void remoteOnlineRun(int startarg, edict_t *ent, int client) {
 
 void remoteRegisterRun(int startarg, edict_t *ent, int client) {
 	remote.online = TRUE; // hack to actually send the register cmd
-	RA_Register();
+	//RA_Register();
 	remote.online = FALSE;
 }
 
@@ -4017,6 +4014,6 @@ void remoteAuthorizeRun(int startarg, edict_t *ent, int client) {
 
 	gi.cprintf(ent, PRINT_HIGH, "Sending authorization request to RA server...check web interface for status\n");
 
-	RA_Authorize(gi.argv(2));
+	//RA_Authorize(gi.argv(2));
 }
 
