@@ -301,13 +301,7 @@ void RA_CheckConnection(void)
 	FD_SET(remote.socket, &remote.set_e);
 
 	// check if connection is fully established
-	ret =	select(
-				(int)remote.socket + 1,
-				NULL,
-				&remote.set_w,
-				&remote.set_e,
-				&tv
-			);
+	ret =	select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
 
 	if (ret == 1) {
 
@@ -341,8 +335,7 @@ void RA_CheckConnection(void)
 		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
 
 		if (errno) {
-			gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: [%d] %s\n", errno, strerror(errno));
-			remote.connect_retry_frame = RECONNECT(60);
+			remote.connect_retry_frame = RECONNECT(30);
 			remote.state = RA_STATE_DISCONNECTED;
 			closesocket(remote.socket);
 		} else {
@@ -500,6 +493,9 @@ void RA_ParseCommand(void)
  */
 void RA_DisconnectedPeer(void)
 {
+	struct addrinfo *addr;
+	uint32_t flags;
+
 	if (!remote.enabled) {
 		return;
 	}
@@ -510,9 +506,16 @@ void RA_DisconnectedPeer(void)
 	}
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection reset...retrying in a few\n");
-	remote.state = RA_STATE_DISCONNECTED;
-	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
-	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+
+	// save the server address, but start over
+	addr = remote.addr;
+	flags = remote.flags;
+
+	q2a_memset(&remote, 0, sizeof(remote_t));
+
+	remote.addr = addr;
+	remote.enabled = 1;
+	remote.flags = flags;
 	remote.connect_retry_frame = RECONNECT(10);
 }
 
@@ -750,7 +753,6 @@ void RA_PlayerConnect(edict_t *ent)
 
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
-	RA_WriteShort(ent->client->ping);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
 }
 
