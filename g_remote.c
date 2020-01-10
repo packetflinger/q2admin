@@ -323,6 +323,7 @@ void RA_SendMessages(void)
 		FD_ZERO(&remote.set_w);
 		FD_SET(remote.socket, &remote.set_w);
 
+		// see if the socket is ready to send data
 		ret = select((int) remote.socket + 1, NULL, &remote.set_w, NULL, &tv);
 
 		// socket write buffer is ready, send
@@ -371,6 +372,7 @@ void RA_ReadMessages(void)
 		FD_ZERO(&remote.set_r);
 		FD_SET(remote.socket, &remote.set_r);
 
+		// see if there is data waiting in the buffer for us to read
 		ret = select(remote.socket + 1, &remote.set_r, NULL, NULL, &tv);
 
 		// socket read buffer has data waiting in it
@@ -412,6 +414,7 @@ void RA_ParseMessage(void)
 	switch (cmd) {
 	case SCMD_PONG:
 		remote.ping.waiting = false;
+		remote.ping.miss_count = 0;
 		break;
 	case SCMD_COMMAND:
 		RA_ParseCommand();
@@ -430,7 +433,7 @@ void RA_ParseMessage(void)
 }
 
 /**
- * Server sent over a command
+ * Server sent over a command.
  */
 void RA_ParseCommand(void)
 {
@@ -459,7 +462,7 @@ void RA_DisconnectedPeer(void)
 		return;
 	}
 
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection reset...retrying in a few\n");
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
 	// save the server address, but start over
 	addr = remote.addr;
@@ -704,26 +707,9 @@ void RA_ReadData(void *out, size_t len)
 	remote.queue_in.index += len;
 }
 
-/*
-void RA_Register(void) {
-	remote.online = true;
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_REGISTER);
-	RA_WriteLong(Q2A_REVISION);
-	RA_WriteShort(remote.port);
-	RA_WriteByte(remote.maxclients);
-	RA_WriteString("%s", remote.rcon_password);
-	RA_WriteString("%s", remote.mapname);
-	//RA_Send();
-	remote.online = false;
-}
-
-void RA_Unregister(void) {
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_QUIT);
-	//RA_Send();
-}
-*/
+/**
+ * Called when a player connects
+ */
 void RA_PlayerConnect(edict_t *ent)
 {
 	int8_t cl;
@@ -734,6 +720,9 @@ void RA_PlayerConnect(edict_t *ent)
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
 }
 
+/**
+ * Called when a player disconnects
+ */
 void RA_PlayerDisconnect(edict_t *ent)
 {
 	int8_t cl;
@@ -747,6 +736,10 @@ void RA_PlayerCommand(edict_t *ent) {
 	
 }
 
+/**
+ * Called for every broadcast print (bprintf), but only
+ * on dedicated servers
+ */
 void RA_Print(uint8_t level, char *text)
 {
 	if (!(remote.flags & RFL_CHAT)) {
@@ -758,6 +751,9 @@ void RA_Print(uint8_t level, char *text)
 	RA_WriteString("%s",text);
 }
 
+/**
+ * Called when a player issues the teleport command
+ */
 void RA_Teleport(uint8_t client_id)
 {
 	if (!(remote.flags & RFL_TELEPORT)) {
@@ -777,6 +773,10 @@ void RA_Teleport(uint8_t client_id)
 	RA_WriteString("%s", srv);
 }
 
+/**
+ * Called when a player changes part of their userinfo.
+ * ex: name, skin, gender, rate, etc
+ */
 void RA_PlayerUpdate(uint8_t cl, const char *ui)
 {
 	RA_WriteByte(CMD_PLAYERUPDATE);
@@ -784,6 +784,9 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
 	RA_WriteString("%s", ui);
 }
 
+/**
+ * Called when a player issues the invite command
+ */
 void RA_Invite(uint8_t cl, const char *text)
 {
 	if (!(remote.flags & RFL_INVITE)) {
@@ -796,6 +799,9 @@ void RA_Invite(uint8_t cl, const char *text)
 	RA_WriteString(text);
 }
 
+/**
+ * Called when a player issues the whois command
+ */
 void RA_Whois(uint8_t cl, const char *name)
 {
 	if (!(remote.flags & RFL_WHOIS)) {
@@ -808,6 +814,9 @@ void RA_Whois(uint8_t cl, const char *name)
 	RA_WriteString(name);
 }
 
+/**
+ * Called when a player dies
+ */
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
 	if (!(remote.flags & RFL_FRAGS)) {
@@ -821,9 +830,8 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
 	RA_WriteString("%s", aname);
 }
 
-
 /**
- *
+ * Called when the map changes
  */
 void RA_Map(const char *mapname)
 {
