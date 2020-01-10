@@ -1,42 +1,6 @@
 #include "g_local.h"
 
 remote_t remote;
-cvar_t	*udpport;
-
-/**
- * OBSOLETE, DON'T USE
- * Sends the contents of the msg buffer to the RA server
- *
- */
-void RA_Send() {
-
-	return; // while testing connection
-
-	if (!(remote.enabled && remote.online)) {
-		RA_InitBuffer();
-		return;
-	}
-
-	//RA_Encrypt();
-
-	int r = sendto(
-		remote.socket, 
-		remote.msg,
-		remote.msglen, 
-		MSG_DONTWAIT, 
-		remote.addr->ai_addr, 
-		remote.addr->ai_addrlen
-	);
-	
-	if (r == -1) {
-		gi.dprintf("[RA] error sending data: %s\n", strerror(errno));
-	}
-	
-	remote.next_report = remote.frame_number + SECS_TO_FRAMES(10);
-
-	// reset the msg buffer for the next one
-	RA_InitBuffer();
-}
 
 
 /**
@@ -127,17 +91,6 @@ static void ra_replace_die(void)
 	}
 }
 
-static void ra_test(void)
-{
-	char *string;
-
-	if (remote.frame_number % 50 == 0) {
-		string = va("frame number %d\n", remote.frame_number);
-		gi.dprintf("Sending: %s", string);
-
-		RA_WriteString("!! %s", string);
-	}
-}
 
 /**
  * Periodically ping the server to know if the connection is still open

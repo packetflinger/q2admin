@@ -22,7 +22,6 @@
 #define RECONNECT(t)    (CURFRAME + SECS_TO_FRAMES(t))
 
 extern cvar_t		*gamelib;
-extern cvar_t		*udpport;
 
 // Remote Admin flags
 #define RFL_FRAGS      1 << 0 	// 1
