@@ -465,6 +465,7 @@ void RA_ParseMessage(void)
 		break;
 	case SCMD_HELLOACK:
 		remote.ready = true;
+		RA_PlayerList();
 		break;
 	case SCMD_SAYCLIENT:
 		RA_SayClient();
@@ -519,6 +520,30 @@ void RA_DisconnectedPeer(void)
 	remote.connect_retry_frame = RECONNECT(10);
 }
 
+/**
+ * Send info about all the players connected
+ */
+void RA_PlayerList(void)
+{
+	uint8_t count, i;
+	count = 0;
+
+	for (i=0; i<remote.maxclients; i++) {
+		if (proxyinfo[i].inuse) {
+			count++;
+		}
+	}
+
+	RA_WriteByte(CMD_PLAYERLIST);
+	RA_WriteByte(count);
+
+	for (i=0; i<remote.maxclients; i++) {
+		if (proxyinfo[i].inuse) {
+			RA_WriteByte(i);
+			RA_WriteString("%s", proxyinfo[i].userinfo);
+		}
+	}
+}
 
 /**
  * Allows for RA to send frag notifications
@@ -888,11 +913,9 @@ void RA_SayClient(void)
 
 	ent = proxyinfo[client_id].ent;
 
-
 	if (!ent) {
 		return;
 	}
 
-	gi.dprintf("sayclient to %s\n", ent->client->pers.netname);
 	gi.cprintf(ent, level, string);
 }

@@ -173,6 +173,7 @@ void        RA_ParseMessage(void);
 void        RA_ParseCommand(void);
 void        RA_DisconnectedPeer(void);
 void        RA_Ping(void);
+void        RA_PlayerList(void);
 
 extern remote_t remote;
 

@@ -53,7 +53,6 @@ void remoteOfflineRun(int startarg, edict_t *ent, int client);
 void remoteResetRun(int startarg, edict_t *ent, int client);
 void remoteRegisterRun(int startarg, edict_t *ent, int client);
 void remotePlayerlistRun(int startarg, edict_t *ent, int client);
-void remotePlayersRun(int startarg, edict_t *ent, int client);
 void remoteAuthorizeRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
@@ -3965,27 +3964,7 @@ void remoteRegisterRun(int startarg, edict_t *ent, int client) {
 }
 
 void remotePlayerlistRun(int startarg, edict_t *ent, int client) {
-	uint8_t count, i;
-	count = 0;
-
-	for (i=0; i<remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
-			count++;
-		}
-	}
-
-	RA_WriteLong(remoteKey);
-	RA_WriteByte(CMD_PLAYERLIST);
-	RA_WriteByte(count);
-
-	for (i=0; i<remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
-			RA_WriteByte(i);
-			RA_WriteString("%s", proxyinfo[i].userinfo);
-		}
-	}
-
-	RA_Send();
+	RA_PlayerList();
 }
 
 
