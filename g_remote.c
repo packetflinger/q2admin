@@ -422,6 +422,7 @@ void RA_ParseMessage(void)
 	case SCMD_HELLOACK:
 		remote.ready = true;
 		RA_PlayerList();
+		RA_Map(remote.mapname);
 		break;
 	case SCMD_SAYCLIENT:
 		RA_SayClient();

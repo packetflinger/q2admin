@@ -646,8 +646,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     q2a_strncpy(remote.rcon_password, rconpassword->string, sizeof(remote.rcon_password));
 	remote.port = getport();
 	remote.frame_number = 0;
-	
-    STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
+
+	STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
 qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboolean* userInfoOverflow) {
@@ -1058,8 +1058,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
-			//RA_Send(CMD_CONNECT, "%d\\%s", client, userinfo);
-			RA_PlayerConnect(ent);
+            RA_PlayerConnect(ent);
         }
     }
 
