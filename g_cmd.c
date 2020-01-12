@@ -1444,14 +1444,14 @@ void Cmd_Invite_f(edict_t *ent) {
 }
 
 void Cmd_Remote_Status_f(edict_t *ent) {
-        switch (remote.online) {
+        /*switch (remote.online) {
         case FALSE:
                 gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
                 break;
         case TRUE:
                 gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
                 break;
-        }
+        }*/
 }
 
 void Cmd_Find_f(edict_t *ent) {
@@ -3938,7 +3938,7 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	} else {
 		q2a_strcpy(address, "none");
 	}
-	
+	/*
 	gi.cprintf(ent, PRINT_HIGH, 
 		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %d\n",
 		(remote.enabled) ? "yes" : "no",
@@ -3947,20 +3947,21 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 		remote.flags,
 		remoteKey
 	);
+	*/
 }
 
 void remoteOfflineRun(int startarg, edict_t *ent, int client) {
-	remote.online = FALSE;
+	//remote.online = FALSE;
 }
 
 void remoteOnlineRun(int startarg, edict_t *ent, int client) {
-	remote.online = TRUE;
+	//remote.online = TRUE;
 }
 
 void remoteRegisterRun(int startarg, edict_t *ent, int client) {
-	remote.online = TRUE; // hack to actually send the register cmd
+	//remote.online = TRUE; // hack to actually send the register cmd
 	//RA_Register();
-	remote.online = FALSE;
+	//remote.online = FALSE;
 }
 
 void remotePlayerlistRun(int startarg, edict_t *ent, int client) {

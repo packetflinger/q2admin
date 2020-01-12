@@ -41,15 +41,27 @@ void RA_Init() {
 		return;
 	}
 
+	pthread_create(&dnsthread, NULL, RA_LookupAddress, NULL);
+
+	// delay connection by a few seconds
+	remote.connect_retry_frame = RECONNECT(5);
+}
+
+/**
+ * Do a DNS lookup for remote server.
+ * This is done in a dedicated thread to prevent blocking
+ */
+void RA_LookupAddress(void)
+{
 	struct addrinfo hints, *res = 0;
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
-	
+
 	hints.ai_family         = AF_INET;   	// either v6 or v4
 	hints.ai_socktype       = SOCK_STREAM;	// TCP
 	hints.ai_protocol       = 0;
 	hints.ai_flags          = AI_ADDRCONFIG;
-	
+
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] looking up %s...", remoteAddr);
 
 	int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
@@ -62,13 +74,10 @@ void RA_Init() {
 		q2a_inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
 		gi.cprintf(NULL, PRINT_HIGH, "%s\n", address);
 	}
-	
+
 	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
-
-	// delay connection by a few seconds
-	remote.connect_retry_frame = RECONNECT(5);
 }
 
 /**
@@ -177,6 +186,17 @@ void RA_Shutdown(void)
 	 */
 	RA_WriteByte(CMD_QUIT);
 	RA_SendMessages();
+	RA_Disconnect();
+}
+
+/**
+ *
+ */
+void RA_Disconnect(void)
+{
+	if (remote.state != RA_STATE_CONNECTED) {
+		return;
+	}
 
 	closesocket(remote.socket);
 	remote.state = RA_STATE_DISCONNECTED;
@@ -413,8 +433,7 @@ void RA_ParseMessage(void)
 
 	switch (cmd) {
 	case SCMD_PONG:
-		remote.ping.waiting = false;
-		remote.ping.miss_count = 0;
+		RA_ParsePong();
 		break;
 	case SCMD_COMMAND:
 		RA_ParseCommand();
@@ -423,6 +442,9 @@ void RA_ParseMessage(void)
 		remote.ready = true;
 		RA_PlayerList();
 		RA_Map(remote.mapname);
+		break;
+	case SCMD_ERROR:
+		RA_ParseError();
 		break;
 	case SCMD_SAYCLIENT:
 		RA_SayClient();
@@ -443,6 +465,15 @@ void RA_ParseCommand(void)
 
 	// cram it into the command buffer
 	gi.AddCommandString(cmd);
+}
+
+/**
+ * Not really much to parse...
+ */
+void RA_ParsePong(void)
+{
+	remote.ping.waiting = false;
+	remote.ping.miss_count = 0;
 }
 
 /**
@@ -556,6 +587,33 @@ void RA_SayHello(void)
 	RA_WriteByte(remote.maxclients);
 }
 
+/**
+ * The server replied negatively to something
+ */
+void RA_ParseError(void)
+{
+	uint8_t client_id, reason_id;
+	char *reason;
+
+	client_id = RA_ReadByte(); // will be -1 if not player specific
+	reason_id = RA_ReadByte();
+	reason = RA_ReadString();
+
+	// Where to output the error msg
+	if (client_id == -1) {
+		gi.cprintf(NULL, PRINT_HIGH, "%s]n", reason);
+	} else {
+		gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
+	}
+
+	// serious enough to disconnect
+	if (reason_id >= 200) {
+		closesocket(remote.socket);
+		remote.ready = false;
+		remote.enabled = false;
+		freeaddrinfo(remote.addr);
+	}
+}
 
 /**
  * q2pro uses "net_port" while most other servers use "port". This

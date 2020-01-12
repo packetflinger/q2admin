@@ -21,7 +21,6 @@
 #define CURFRAME        (remote.frame_number)
 #define RECONNECT(t)    (CURFRAME + SECS_TO_FRAMES(t))
 
-extern cvar_t		*gamelib;
 
 // Remote Admin flags
 #define RFL_FRAGS      1 << 0 	// 1
@@ -84,7 +83,6 @@ typedef struct {
 	char             rcon_password[32];
 	uint8_t          maxclients;
 	uint16_t         port;
-	qboolean         online;
 	byte             msg[MAX_MSG_LEN];
 	uint16_t         msglen;
 	message_queue_t  queue;
@@ -118,6 +116,7 @@ typedef enum {
 typedef enum {
 	SCMD_NULL,
 	SCMD_HELLOACK,
+	SCMD_ERROR,
 	SCMD_PONG,
 	SCMD_COMMAND,
 	SCMD_SAYCLIENT,
@@ -173,7 +172,11 @@ void        RA_ParseCommand(void);
 void        RA_DisconnectedPeer(void);
 void        RA_Ping(void);
 void        RA_PlayerList(void);
+void        RA_LookupAddress(void);
 
-extern remote_t remote;
+extern remote_t  remote;
+extern cvar_t    *gamelib;
+
+pthread_t        dnsthread;
 
 #endif
