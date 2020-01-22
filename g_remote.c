@@ -65,7 +65,8 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
 		q2a_strcpy(remoteDNS, "64");
 	}
 
-	// save the first one of each address family
+	// save the first one of each address family, if more than 1, they're
+	// almost certainly in a random order anyway
 	for (;a != NULL; a = a->ai_next) {
 		if (!v4 && a->ai_family == AF_INET) {
 			v4 = a;
@@ -76,6 +77,7 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
 		}
 	}
 
+	// select one based on preference
 	if (remoteDNS[0] == '6' && v6) {
 		return v6;
 	} else if (remoteDNS[0] == '4' && v4) {
@@ -102,7 +104,6 @@ void RA_LookupAddress(void)
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 
-	//hints.ai_family         = AF_INET;   	 // v4 only
 	hints.ai_family         = AF_UNSPEC;     // either v6 or v4
 	hints.ai_socktype       = SOCK_STREAM;	 // TCP
 	hints.ai_protocol       = 0;
@@ -299,7 +300,6 @@ void RA_Connect(void)
 	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
 
 	remote.state = RA_STATE_CONNECTING;
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connecting to server...\n");
 	remote.connection_attempts++;
 
 	// create the socket
