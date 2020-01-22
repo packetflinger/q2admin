@@ -1204,6 +1204,7 @@ extern uint32_t remoteKey;
 extern char remoteAddr[256];
 extern int remotePort;
 extern int remoteFlags;
+extern char remoteDNS[3];
 extern qboolean remoteEnabled;
 extern char remoteCmdTeleport[15];
 extern char remoteCmdInvite[15];

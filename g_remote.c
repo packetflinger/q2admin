@@ -44,8 +44,51 @@ void RA_Init() {
 	pthread_create(&dnsthread, NULL, RA_LookupAddress, NULL);
 
 	// delay connection by a few seconds
-	remote.connect_retry_frame = RECONNECT(5);
+	remote.connect_retry_frame = FUTURE_FRAME(5);
 }
+
+
+/**
+ * getaddrinfo result is a linked-list of struct addrinfo.
+ * Figure out which result is the one we want (ipv6/ipv4)
+ */
+static struct addrinfo *select_addrinfo(struct addrinfo *a)
+{
+	static struct addrinfo *v4, *v6;
+
+	if (!a) {
+		return NULL;
+	}
+
+	// just in case it's set blank in the config
+	if (!remoteDNS[0]) {
+		q2a_strcpy(remoteDNS, "64");
+	}
+
+	// save the first one of each address family
+	for (;a != NULL; a = a->ai_next) {
+		if (!v4 && a->ai_family == AF_INET) {
+			v4 = a;
+		}
+
+		if (!v6 && a->ai_family == AF_INET6) {
+			v6 = a;
+		}
+	}
+
+	if (remoteDNS[0] == '6' && v6) {
+		return v6;
+	} else if (remoteDNS[0] == '4' && v4) {
+		return v4;
+	} else if (remoteDNS[1] == '6' && v6) {
+		return v6;
+	} else if (remoteDNS[1] == '4' && v4) {
+		return v4;
+	}
+
+	return NULL;
+}
+
 
 /**
  * Do a DNS lookup for remote server.
@@ -53,29 +96,64 @@ void RA_Init() {
  */
 void RA_LookupAddress(void)
 {
+	char str_address[40];
 	struct addrinfo hints, *res = 0;
+
 	memset(&hints, 0, sizeof(hints));
 	memset(&res, 0, sizeof(res));
 
-	hints.ai_family         = AF_INET;   	// either v6 or v4
-	hints.ai_socktype       = SOCK_STREAM;	// TCP
+	//hints.ai_family         = AF_INET;   	 // v4 only
+	hints.ai_family         = AF_UNSPEC;     // either v6 or v4
+	hints.ai_socktype       = SOCK_STREAM;	 // TCP
 	hints.ai_protocol       = 0;
-	hints.ai_flags          = AI_ADDRCONFIG;
+	hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capible
 
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] looking up %s...", remoteAddr);
+	// set to catch any specific errors
+	errno = 0;
 
+	// do the actual DNS lookup
 	int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
+
 	if (err != 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "error, disabling\n");
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
 		remote.enabled = 0;
 		return;
 	} else {
-		char address[INET_ADDRSTRLEN];
-		q2a_inet_ntop(res->ai_family, &((struct sockaddr_in *)res->ai_addr)->sin_addr, address, sizeof(address));
-		gi.cprintf(NULL, PRINT_HIGH, "%s\n", address);
+		memset(&remote.addr, 0, sizeof(struct addrinfo));
+
+		// getaddrinfo can return multiple mixed v4/v6 results, select an appropriate one
+		remote.addr = select_addrinfo(res);
+
+		if (!remote.addr) {
+			remote.enabled = 0;
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
+			return;
+		}
+
+		// for convenience
+		if (res->ai_family == AF_INET6) {
+			remote.ipv6 = true;
+		}
+
+		if (remote.addr->ai_family == AF_INET6) {
+			q2a_inet_ntop(
+					remote.addr->ai_family,
+					&((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
+					str_address,
+					sizeof(str_address)
+			);
+		} else {
+			q2a_inet_ntop(
+					remote.addr->ai_family,
+					&((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
+					str_address,
+					sizeof(str_address)
+			);
+		}
+
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server resolved to %s\n", str_address);
 	}
 
-	remote.addr = res;
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
 }
@@ -187,6 +265,8 @@ void RA_Shutdown(void)
 	RA_WriteByte(CMD_QUIT);
 	RA_SendMessages();
 	RA_Disconnect();
+
+	freeaddrinfo(remote.addr);
 }
 
 /**
@@ -200,7 +280,6 @@ void RA_Disconnect(void)
 
 	closesocket(remote.socket);
 	remote.state = RA_STATE_DISCONNECTED;
-	freeaddrinfo(remote.addr);
 }
 
 /**
@@ -223,7 +302,13 @@ void RA_Connect(void)
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connecting to server...\n");
 	remote.connection_attempts++;
 
-	remote.socket = socket(remote.addr->ai_family, remote.addr->ai_socktype, remote.addr->ai_protocol);
+	// create the socket
+	remote.socket = socket(
+			remote.addr->ai_family,
+			remote.addr->ai_socktype,
+			remote.addr->ai_protocol
+	);
+
 	if (remote.socket == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
 		remote.enabled = 0;
@@ -231,6 +316,7 @@ void RA_Connect(void)
 		return;
 	}
 
+// Make it non-blocking.
 // preferred method is using POSIX O_NONBLOCK, if available
 #if defined(O_NONBLOCK)
 	flags = 0;
@@ -243,7 +329,7 @@ void RA_Connect(void)
 	if (ret == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
 		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = RECONNECT(30);
+		remote.connect_retry_frame = FUTURE_FRAME(30);
 	}
 
 	// make the actual connection
@@ -274,7 +360,7 @@ void RA_CheckConnection(void)
 	FD_SET(remote.socket, &remote.set_e);
 
 	// check if connection is fully established
-	ret =	select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
+	ret = select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
 
 	if (ret == 1) {
 
@@ -298,7 +384,7 @@ void RA_CheckConnection(void)
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
 		closesocket(remote.socket);
 		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = RECONNECT(10);
+		remote.connect_retry_frame = FUTURE_FRAME(10);
 		return;
 	}
 
@@ -308,13 +394,14 @@ void RA_CheckConnection(void)
 		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
 
 		if (errno) {
-			remote.connect_retry_frame = RECONNECT(30);
+			remote.connect_retry_frame = FUTURE_FRAME(30);
 			remote.state = RA_STATE_DISCONNECTED;
 			closesocket(remote.socket);
 		} else {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			remote.state = RA_STATE_CONNECTED;
-			remote.ping.frame_next = remote.frame_number + SECS_TO_FRAMES(10);
+			remote.ping.frame_next = FUTURE_FRAME(10);
+			remote.connected_frame = CURFRAME;
 			RA_SayHello();
 		}
 	}
@@ -482,7 +569,7 @@ void RA_ParsePong(void)
  */
 void RA_DisconnectedPeer(void)
 {
-	struct addrinfo *addr;
+	struct addrinfo *a;
 	uint32_t flags;
 
 	if (!remote.enabled) {
@@ -497,15 +584,17 @@ void RA_DisconnectedPeer(void)
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
 	// save the server address, but start over
-	addr = remote.addr;
+	a = remote.addr;
 	flags = remote.flags;
+
+	freeaddrinfo(remote.addr);
 
 	q2a_memset(&remote, 0, sizeof(remote_t));
 
-	remote.addr = addr;
+	remote.addr = a;
 	remote.enabled = 1;
 	remote.flags = flags;
-	remote.connect_retry_frame = RECONNECT(10);
+	remote.connect_retry_frame = FUTURE_FRAME(10);
 }
 
 /**

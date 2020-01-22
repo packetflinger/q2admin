@@ -19,7 +19,9 @@
 #define QUEUE_SIZE      0x55FF
 
 #define CURFRAME        (remote.frame_number)
-#define RECONNECT(t)    (CURFRAME + SECS_TO_FRAMES(t))
+
+// arg in seconds
+#define FUTURE_FRAME(t)    (CURFRAME + SECS_TO_FRAMES(t))
 
 
 // Remote Admin flags
@@ -70,12 +72,15 @@ typedef struct {
 	ra_state_t       state;
 	uint32_t         connect_retry_frame;
 	uint32_t         connection_attempts;
+	uint32_t         connected_frame;  // the frame when we connected
 	uint32_t         socket;
 	qboolean         ready;    // we've connected, said hello, and ready
 	fd_set           set_r;    // read
 	fd_set           set_w;    // write
 	fd_set           set_e;    // error
-	struct 	addrinfo *addr;
+	//struct 	addrinfo *addr;
+	struct addrinfo  *addr;
+	qboolean         ipv6;
 	uint32_t         flags;
 	uint32_t         frame_number;
 	char             mapname[32];

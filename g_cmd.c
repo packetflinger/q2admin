@@ -48,12 +48,6 @@ void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
 void lockDownServerRun(int startarg, edict_t *ent, int client);
 void Cmd_Remote_Status_f(edict_t *ent);
 void remoteSettingsDisplay(int startarg, edict_t *ent, int client);
-void remoteOnlineRun(int startarg, edict_t *ent, int client);
-void remoteOfflineRun(int startarg, edict_t *ent, int client);
-void remoteResetRun(int startarg, edict_t *ent, int client);
-void remoteRegisterRun(int startarg, edict_t *ent, int client);
-void remotePlayerlistRun(int startarg, edict_t *ent, int client);
-void remoteAuthorizeRun(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -889,41 +883,6 @@ q2acmd_t q2aCommands[] = {
 		remoteSettingsDisplay,
 	},
 	{
-		"remote_authorize",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteAuthorizeRun,
-	},
-	{
-		"remote_offline",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteOfflineRun,
-	},
-	{
-		"remote_online",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteOnlineRun,
-	},
-	{
-		"remote_register",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteRegisterRun,
-	},
-	{
-		"remote_playerlist",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remotePlayerlistRun,
-	},
-	{
 		"remote_key",
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NUMBER,
@@ -946,6 +905,12 @@ q2acmd_t q2aCommands[] = {
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NUMBER,
 		&remoteFlags,
+	},
+	{
+		"remote_dnsorder",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		remoteDNS,
 	},
 	{
 		"remote_enabled",
@@ -976,13 +941,6 @@ q2acmd_t q2aCommands[] = {
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_STRING,
 		remoteCmdWhois,
-	},
-	{
-		"remote_reset",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteResetRun,
 	},
     {
         "resetrcon",
@@ -3926,7 +3884,56 @@ void Cmd_Teleport_f(edict_t *ent) {
 
 // Show the remote settings/status 
 void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
-	char address[INET_ADDRSTRLEN];
+	char addr[INET6_ADDRSTRLEN];
+	char addrstr[INET6_ADDRSTRLEN + 6];  // add room for port (:#####)
+
+	if (!remote.enabled) {
+		gi.cprintf(NULL, PRINT_HIGH, "remote admin is currently disabled\n");
+		return;
+	}
+
+	if (remote.state != RA_STATE_CONNECTED) {
+		gi.cprintf(NULL, PRINT_HIGH, "remote admin enabled, but not currently connected\n");
+		gi.cprintf(
+				NULL,
+				PRINT_HIGH,
+				"next connection attempt in %d seconds\n",
+				FRAMES_TO_SECS(remote.connect_retry_frame - CURFRAME)
+		);
+		return;
+	}
+
+	// get a string representation of the remote addr
+	if (remote.addr->ai_family == AF_INET6) {
+		q2a_inet_ntop(
+				remote.addr->ai_family,
+				&((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
+				addr,
+				sizeof(addr)
+		);
+
+		q2a_strcpy(
+				addrstr,
+				va("[%s]:%d", addr, (int)((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_port)
+		);
+	} else {
+		q2a_inet_ntop(
+				remote.addr->ai_family,
+				&((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
+				addr,
+				sizeof(addr)
+		);
+
+		q2a_strcpy(
+				addrstr,
+				va("[%s]:%d", addr, (int)((struct sockaddr_in *) remote.addr->ai_addr)->sin_port)
+		);
+	}
+
+	gi.cprintf(NULL, PRINT_HIGH, "Connected to %s\n", addrstr);
+	gi.cprintf(NULL, PRINT_HIGH, "Uptime: %d seconds\n", FRAMES_TO_SECS(CURFRAME - remote.connected_frame));
+
+/*	char address[INET_ADDRSTRLEN];
 	
 	if (remote.enabled) {
 		q2a_inet_ntop(
@@ -3938,6 +3945,7 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	} else {
 		q2a_strcpy(address, "none");
 	}
+	*/
 	/*
 	gi.cprintf(ent, PRINT_HIGH, 
 		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %d\n",
@@ -3950,50 +3958,4 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	*/
 }
 
-void remoteOfflineRun(int startarg, edict_t *ent, int client) {
-	//remote.online = FALSE;
-}
-
-void remoteOnlineRun(int startarg, edict_t *ent, int client) {
-	//remote.online = TRUE;
-}
-
-void remoteRegisterRun(int startarg, edict_t *ent, int client) {
-	//remote.online = TRUE; // hack to actually send the register cmd
-	//RA_Register();
-	//remote.online = FALSE;
-}
-
-void remotePlayerlistRun(int startarg, edict_t *ent, int client) {
-	RA_PlayerList();
-}
-
-
-void remoteResetRun(int startarg, edict_t *ent, int client) {
-	RA_Init();
-}
-
-/**
- * Used for pairing q2 server with remoteadmin account. Sends an auth message to the remoteadmin
- * server with the supplied key. Server owner can get the key from the remote admin web interface
- * during the add-a-server wizard
- *
- * argv(2) should be the key
- */
-void remoteAuthorizeRun(int startarg, edict_t *ent, int client) {
-
-	if (!remote.enabled) {
-		gi.cprintf(ent, PRINT_HIGH, "Remote Admin is currently disabled in your config\n");
-		return;
-	}
-
-	if (gi.argc() != 3) {
-		gi.cprintf(ent, PRINT_HIGH, "Usage: sv %s <authkey>\n", gi.argv(1));
-		return;
-	}
-
-	gi.cprintf(ent, PRINT_HIGH, "Sending authorization request to RA server...check web interface for status\n");
-
-	//RA_Authorize(gi.argv(2));
-}
 
