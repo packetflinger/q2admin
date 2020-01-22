@@ -106,7 +106,7 @@ void RA_LookupAddress(void)
 	hints.ai_family         = AF_UNSPEC;     // either v6 or v4
 	hints.ai_socktype       = SOCK_STREAM;	 // TCP
 	hints.ai_protocol       = 0;
-	hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capible
+	hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capable
 
 	// set to catch any specific errors
 	errno = 0;
