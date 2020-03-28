@@ -125,6 +125,7 @@ typedef enum {
 	SCMD_PONG,
 	SCMD_COMMAND,
 	SCMD_SAYCLIENT,
+	SCMD_SAYALL,
 } ra_server_cmd_t;
 
 /**

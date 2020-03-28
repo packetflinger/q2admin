@@ -536,6 +536,9 @@ void RA_ParseMessage(void)
 	case SCMD_SAYCLIENT:
 		RA_SayClient();
 		break;
+	case SCMD_SAYALL:
+		RA_SayAll();
+		break;
 	}
 
 	// reset queue back to zero
@@ -1027,4 +1030,34 @@ void RA_SayClient(void)
 	}
 
 	gi.cprintf(ent, level, string);
+}
+
+/**
+ * Say something to everyone on the server
+ */
+void RA_SayAll(void)
+{
+	uint8_t i;
+	char *string;
+
+	string = RA_ReadString();
+
+	for (i=0; i<remote.maxclients; i++) {
+		if (proxyinfo[i].inuse) {
+
+			/**
+			 * This way we send directly to the clients and
+			 * not to the dedicated server console triggering
+			 * a print to be sent back to the q2a server.
+			 *
+			 * Using gi.bprintf() instead would cause that.
+			 */
+			gi.cprintf(
+					proxyinfo[i].ent,
+					PRINT_CHAT,
+					"%s\n",
+					string
+			);
+		}
+	}
 }
