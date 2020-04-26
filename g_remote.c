@@ -185,6 +185,10 @@ static void ra_replace_die(void)
  */
 void RA_Ping(void)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	if (!remote.state == RA_STATE_CONNECTED) {
 		return;
 	}
@@ -412,6 +416,10 @@ void RA_CheckConnection(void)
  */
 void RA_SendMessages(void)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	// nothing to send
 	if (!remote.queue.length) {
 		return;
@@ -472,6 +480,10 @@ void RA_ReadMessages(void)
 	tv.tv_sec = tv.tv_usec = 0;
 	message_queue_t *in;
 
+	if (!remote.enabled) {
+		return;
+	}
+
 	// save some typing
 	in = &remote.queue_in;
 
@@ -510,6 +522,10 @@ void RA_ReadMessages(void)
 void RA_ParseMessage(void)
 {
 	byte cmd;
+
+	if (!remote.enabled) {
+		return;
+	}
 
 	// no data
 	if (!remote.queue_in.length) {
@@ -607,6 +623,10 @@ void RA_PlayerList(void)
 {
 	uint8_t count, i;
 	count = 0;
+
+	if (!remote.enabled) {
+		return;
+	}
 
 	for (i=0; i<remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
@@ -866,6 +886,10 @@ void RA_PlayerConnect(edict_t *ent)
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
 
+	if (!remote.enabled) {
+		return;
+	}
+
 	RA_WriteByte(CMD_CONNECT);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", proxyinfo[cl].userinfo);
@@ -878,6 +902,10 @@ void RA_PlayerDisconnect(edict_t *ent)
 {
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
+
+	if (!remote.enabled) {
+		return;
+	}
 
 	RA_WriteByte(CMD_DISCONNECT);
 	RA_WriteByte(cl);
@@ -897,6 +925,10 @@ void RA_Print(uint8_t level, char *text)
 		return;
 	}
 	
+	if (!remote.enabled) {
+		return;
+	}
+
 	RA_WriteByte(CMD_PRINT);
 	RA_WriteByte(level);
 	RA_WriteString("%s",text);
@@ -907,6 +939,10 @@ void RA_Print(uint8_t level, char *text)
  */
 void RA_Teleport(uint8_t client_id)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	if (!(remote.flags & RFL_TELEPORT)) {
 		return;
 	}
@@ -930,6 +966,10 @@ void RA_Teleport(uint8_t client_id)
  */
 void RA_PlayerUpdate(uint8_t cl, const char *ui)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	RA_WriteByte(CMD_PLAYERUPDATE);
 	RA_WriteByte(cl);
 	RA_WriteString("%s", ui);
@@ -940,6 +980,10 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void RA_Invite(uint8_t cl, const char *text)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	if (!(remote.flags & RFL_INVITE)) {
 		return;
 	}
@@ -955,6 +999,10 @@ void RA_Invite(uint8_t cl, const char *text)
  */
 void RA_Whois(uint8_t cl, const char *name)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	if (!(remote.flags & RFL_WHOIS)) {
 		return;
 	}
@@ -970,6 +1018,10 @@ void RA_Whois(uint8_t cl, const char *name)
  */
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	if (!(remote.flags & RFL_FRAGS)) {
 		return;
 	}
@@ -986,6 +1038,10 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
  */
 void RA_Map(const char *mapname)
 {
+	if (!remote.enabled) {
+		return;
+	}
+
 	RA_WriteByte(CMD_MAP);
 	RA_WriteString("%s", mapname);
 }
@@ -1019,6 +1075,10 @@ void RA_SayClient(void)
 	char *string;
 	edict_t *ent;
 
+	if (!remote.enabled) {
+		return;
+	}
+
 	client_id = RA_ReadByte();
 	level = RA_ReadByte();
 	string = RA_ReadString();
@@ -1039,6 +1099,10 @@ void RA_SayAll(void)
 {
 	uint8_t i;
 	char *string;
+
+	if (!remote.enabled) {
+		return;
+	}
 
 	string = RA_ReadString();
 
