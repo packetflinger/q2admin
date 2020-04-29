@@ -152,24 +152,26 @@ uint16_t    RA_ReadShort(void);
 int32_t     RA_ReadLong(void);
 char        *RA_ReadString(void);
 void        RA_ReadData(void *out, size_t len);
-void		RA_WriteString(const char *fmt, ...);
-void		RA_WriteByte(uint8_t b);
-void		RA_WriteLong(uint32_t i);
-void		RA_InitBuffer(void);
-uint16_t 	getport(void);
+void        RA_WriteString(const char *fmt, ...);
+void        RA_WriteByte(uint8_t b);
+void        RA_WriteLong(uint32_t i);
+void        RA_WriteShort(uint16_t s);
+void        RA_InitBuffer(void);
+uint16_t    getport(void);
 
-void 		RA_Print(uint8_t level, char *text);
-void 		RA_Teleport(uint8_t client_id);
-void		RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname);
-void		RA_PlayerUpdate(uint8_t cl, const char *ui);
-void		RA_Invite(uint8_t cl, const char *text);
-void		RA_Whois(uint8_t cl, const char *name);
-void		RA_Map(const char *mapname);
-void 		RA_Authorize(const char *authkey);
-void 		RA_HeartBeat(void);
-void		RA_Encrypt(void);
+void        RA_Print(uint8_t level, char *text);
+void        RA_Teleport(uint8_t client_id);
+void        RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname);
+void        RA_PlayerUpdate(uint8_t cl, const char *ui);
+void        RA_Invite(uint8_t cl, const char *text);
+void        RA_Whois(uint8_t cl, const char *name);
+void        RA_Map(const char *mapname);
+void        RA_Authorize(const char *authkey);
+void        RA_HeartBeat(void);
+void        RA_Encrypt(void);
 
 void        RA_Connect(void);
+void        RA_Disconnect(void);
 void        RA_CheckConnection(void);
 void        RA_SendMessages(void);
 void        RA_ReadMessages(void);
@@ -179,10 +181,16 @@ void        RA_DisconnectedPeer(void);
 void        RA_Ping(void);
 void        RA_PlayerList(void);
 void        RA_LookupAddress(void);
+void        G_StartThread(void *func, void *arg);
+void        RA_SayHello(void);
+void        RA_ParsePong(void);
+void        RA_ParseError(void);
+void        RA_SayClient(void);
+void        RA_SayAll(void);
+
 
 extern remote_t  remote;
 extern cvar_t    *gamelib;
 
-pthread_t        dnsthread;
 
 #endif

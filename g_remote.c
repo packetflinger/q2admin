@@ -41,7 +41,7 @@ void RA_Init() {
 		return;
 	}
 
-	pthread_create(&dnsthread, NULL, RA_LookupAddress, NULL);
+	G_StartThread(&RA_LookupAddress, NULL);
 
 	// delay connection by a few seconds
 	remote.connect_retry_frame = FUTURE_FRAME(5);
@@ -157,6 +157,16 @@ void RA_LookupAddress(void)
 
 	remote.flags = remoteFlags;
 	remote.enabled = 1;
+}
+
+void G_StartThread(void *func, void *arg) {
+#if _WIN32
+	DWORD tid;
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, 0, 0, &tid);
+#else
+	pthread_t dnsthread;
+	pthread_create(&dnsthread, 0, func, 0);
+#endif
 }
 
 /**

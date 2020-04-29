@@ -1434,7 +1434,6 @@ void Cmd_Remote_Players_f(edict_t *ent) {
         RA_WriteByte(CMD_PLAYERS);
         RA_WriteByte(id);
         RA_WriteString(gi.argv(1));
-        RA_Send();
 }
 
 void Cmd_Remote_Whois_f(edict_t *ent) {
