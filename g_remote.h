@@ -12,6 +12,11 @@
 #include <stdint.h>
 #include <fcntl.h>
 
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
+
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
 #define NS_IN6ADDRSZ    16
@@ -65,6 +70,18 @@ typedef struct {
 } ping_t;
 
 /**
+ * The network connection between the q2 server and the remote admin
+ * server is an SSL (TLS 1.2) link. Rather than encrypt/decrypt
+ * all messages between the servers, just encrypt the whole connection
+ */
+typedef struct {
+	SSL        *connection;
+	SSL_CTX    *context;
+	SSL_METHOD *method;
+	qboolean   connecting;
+} ssl_connection_t;
+
+/**
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
@@ -93,6 +110,10 @@ typedef struct {
 	message_queue_t  queue;
 	message_queue_t  queue_in;
 	ping_t           ping;
+
+	EVP_PKEY_CTX     *privkey_context;
+	EVP_PKEY         *privkey;
+	ssl_connection_t ssl;
 } remote_t;
 
 /**

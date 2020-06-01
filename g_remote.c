@@ -41,7 +41,23 @@ void RA_Init() {
 		return;
 	}
 
+	remote.enabled = 1;
+
 	G_StartThread(&RA_LookupAddress, NULL);
+
+	// load stuff required for SSL
+	OpenSSL_add_all_algorithms();
+	SSL_load_error_strings();
+	remote.ssl.method = TLSv1_2_method();
+	remote.ssl.context = SSL_CTX_new(remote.ssl.method);
+
+	if (!remote.ssl.context) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems creating SSL context...aborting\n");
+		remote.enabled = 0;
+		return;
+	}
+
+
 
 	// delay connection by a few seconds
 	remote.connect_retry_frame = FUTURE_FRAME(5);
@@ -293,7 +309,9 @@ void RA_Disconnect(void)
 		return;
 	}
 
+	SSL_free(remote.ssl.connection);
 	closesocket(remote.socket);
+	SSL_CTX_free(remote.ssl.context);
 	remote.state = RA_STATE_DISCONNECTED;
 }
 
@@ -303,6 +321,8 @@ void RA_Disconnect(void)
 void RA_Connect(void)
 {
 	int flags, ret;
+	char errmsg[200];
+	errmsg[0] = 0;
 
 	// only if we've waited long enough
 	if (remote.frame_number < remote.connect_retry_frame) {
@@ -347,7 +367,24 @@ void RA_Connect(void)
 	}
 
 	// make the actual connection
-	connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+	if (connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen) <= 0) {
+		gi.cprintf(NULL, PRINT_HIGH, "RA: connect failed\n");
+	}
+
+	if ((remote.ssl.connection = SSL_new(remote.ssl.context)) <= 0) {
+		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_new failed\n");
+	}
+
+	if (SSL_set_fd(remote.ssl.connection, remote.socket) <= 0) {
+		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_set_fd failed\n");
+	}
+
+	/*
+	if (SSL_connect(remote.ssl.connection) <= 0) {
+		ERR_error_string(ERR_get_error(), errmsg);
+		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_connect failed: %s\n", errmsg);
+	}
+	*/
 
 	/**
 	 * since we're non-blocking, the connection won't complete in this single server frame.
@@ -365,8 +402,11 @@ void RA_CheckConnection(void)
 	qboolean exception = false;
 	struct sockaddr_storage addr;
 	socklen_t len;
+	char errmsg[200];
 	struct timeval tv;
 	tv.tv_sec = tv.tv_usec = 0;
+	errmsg[0] = 0;
+	fd_set sslfd;
 
 	FD_ZERO(&remote.set_w);
 	FD_ZERO(&remote.set_e);
@@ -375,6 +415,35 @@ void RA_CheckConnection(void)
 
 	// check if connection is fully established
 	ret = select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
+
+	// SSL connection hasn't been established yet, keep trying
+	if (remote.ssl.connecting) {
+
+		// do SSL_connect()
+		if (SSL_connect(remote.ssl.connection) <= 0) {
+			switch(ERR_get_error()) {
+			case SSL_ERROR_WANT_READ:
+				gi.cprintf(NULL, PRINT_HIGH, "SSL Err: want_read\n");
+				//select(remote.socket + 1, &sslfd, NULL, NULL, NULL);
+				break;
+			case SSL_ERROR_WANT_WRITE:
+				gi.cprintf(NULL, PRINT_HIGH, "SSL Err: want_write\n");
+				//select(remote.socket + 1, NULL, &sslfd, NULL, NULL);
+				break;
+			}
+		} else {
+			gi.cprintf(NULL, PRINT_HIGH, "SSL connected\n");
+			remote.state = RA_STATE_CONNECTED;
+			remote.ssl.connecting = false;
+			remote.connected_frame = CURFRAME;
+			remote.ping.frame_next = FUTURE_FRAME(30);
+
+			RA_SayHello();
+		}
+
+		return;
+	}
+
 
 	if (ret == 1) {
 
@@ -413,10 +482,16 @@ void RA_CheckConnection(void)
 			closesocket(remote.socket);
 		} else {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
-			remote.state = RA_STATE_CONNECTED;
-			remote.ping.frame_next = FUTURE_FRAME(10);
-			remote.connected_frame = CURFRAME;
-			RA_SayHello();
+			//remote.state = RA_STATE_CONNECTED;
+			//remote.ping.frame_next = FUTURE_FRAME(10);
+			//remote.connected_frame = CURFRAME;
+			//RA_SayHello();
+
+			remote.ssl.connecting = true;
+			//if (SSL_connect(remote.ssl.connection) <= 0) {
+			//	ERR_error_string(ERR_get_error(), errmsg);
+			//	gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_connect failed: %s\n", errmsg);
+			//}
 		}
 	}
 }
@@ -453,8 +528,8 @@ void RA_SendMessages(void)
 
 		// socket write buffer is ready, send
 		if (ret == 1) {
-			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
-
+			//ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
+			ret = SSL_write(remote.ssl.connection, remote.queue.data, remote.queue.length);
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
 				return;
@@ -506,7 +581,8 @@ void RA_ReadMessages(void)
 
 		// socket read buffer has data waiting in it
 		if (ret == 1) {
-			ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+			//ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+			ret = SSL_read(remote.ssl.connection, in->data + in->length, QUEUE_SIZE - 1);
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
 				return;

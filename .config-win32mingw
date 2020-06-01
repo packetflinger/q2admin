@@ -1,3 +1,4 @@
+TARGET = gamex86.dll
 CONFIG_WINDOWS = 1
 
 PREFIX = i686-w64-mingw32-
