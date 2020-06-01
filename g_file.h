@@ -36,6 +36,6 @@ void url_rewind(URL_FILE *file);
 qboolean GetURLContents(char *url);
 
 /* we use a global one for convenience */
-CURLM *multi_handle;
+extern CURLM *multi_handle;
 
 URL_FILE * url_fopen(char *url, const char *operation);
