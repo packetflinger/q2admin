@@ -633,3 +633,16 @@ char *Q_strcasestr(const char *s1, const char *s2)
     return NULL;
 }
 
+void printdata(byte *data, int size)
+{
+	int i;
+
+	for (i = 0; i < size; i++){
+	    if (i > 0)
+	    	gi.dprintf(":");
+
+	    gi.dprintf("%02X", data[i]);
+	}
+	gi.dprintf("\n");
+}
+

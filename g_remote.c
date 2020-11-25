@@ -43,21 +43,26 @@ void RA_Init() {
 
 	remote.enabled = 1;
 
+	// set the challenge to random garbage. Server will encrypt and send back
+	RAND_bytes(&remote.challenge[0], CHALLENGE_LEN);
+
 	G_StartThread(&RA_LookupAddress, NULL);
 
 	// load stuff required for SSL
-	OpenSSL_add_all_algorithms();
-	SSL_load_error_strings();
-	remote.ssl.method = TLSv1_2_method();
-	remote.ssl.context = SSL_CTX_new(remote.ssl.method);
+	if (remoteTLS) {
+		OpenSSL_add_all_algorithms();
+		SSL_load_error_strings();
+		remote.ssl.method = TLSv1_2_method();
+		remote.ssl.context = SSL_CTX_new(remote.ssl.method);
 
-	if (!remote.ssl.context) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems creating SSL context...aborting\n");
-		remote.enabled = 0;
-		return;
+		if (!remote.ssl.context) {
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems creating SSL context...aborting\n");
+			remote.enabled = 0;
+			return;
+		}
 	}
 
-
+	gi.cprintf(NULL, PRINT_HIGH, "[RA] using public key: %s\n", remoteServerPublicKey);
 
 	// delay connection by a few seconds
 	remote.connect_retry_frame = FUTURE_FRAME(5);
@@ -309,10 +314,14 @@ void RA_Disconnect(void)
 		return;
 	}
 
-	SSL_free(remote.ssl.connection);
+	if (remote.encrypted) {
+		SSL_free(remote.ssl.connection);
+		SSL_CTX_free(remote.ssl.context);
+	}
+
 	closesocket(remote.socket);
-	SSL_CTX_free(remote.ssl.context);
 	remote.state = RA_STATE_DISCONNECTED;
+	remote.connect_retry_frame = FUTURE_FRAME(10);
 }
 
 /**
@@ -367,24 +376,23 @@ void RA_Connect(void)
 	}
 
 	// make the actual connection
-	if (connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen) <= 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "RA: connect failed\n");
+	ret = connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+	switch (ret) {
+	case EINPROGRESS:  // normal behavior for non-blocking socket
+		break;
+	default:
+		perror("connect() issues");
 	}
 
-	if ((remote.ssl.connection = SSL_new(remote.ssl.context)) <= 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_new failed\n");
-	}
+	if (remoteTLS) {
+		if ((remote.ssl.connection = SSL_new(remote.ssl.context)) <= 0) {
+			gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_new failed\n");
+		}
 
-	if (SSL_set_fd(remote.ssl.connection, remote.socket) <= 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_set_fd failed\n");
+		if (SSL_set_fd(remote.ssl.connection, remote.socket) <= 0) {
+			gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_set_fd failed\n");
+		}
 	}
-
-	/*
-	if (SSL_connect(remote.ssl.connection) <= 0) {
-		ERR_error_string(ERR_get_error(), errmsg);
-		gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_connect failed: %s\n", errmsg);
-	}
-	*/
 
 	/**
 	 * since we're non-blocking, the connection won't complete in this single server frame.
@@ -424,15 +432,13 @@ void RA_CheckConnection(void)
 			switch(ERR_get_error()) {
 			case SSL_ERROR_WANT_READ:
 				gi.cprintf(NULL, PRINT_HIGH, "SSL Err: want_read\n");
-				//select(remote.socket + 1, &sslfd, NULL, NULL, NULL);
 				break;
 			case SSL_ERROR_WANT_WRITE:
 				gi.cprintf(NULL, PRINT_HIGH, "SSL Err: want_write\n");
-				//select(remote.socket + 1, NULL, &sslfd, NULL, NULL);
 				break;
 			}
 		} else {
-			gi.cprintf(NULL, PRINT_HIGH, "SSL connected\n");
+			gi.cprintf(NULL, PRINT_HIGH, "[RA] SSL connected\n");
 			remote.state = RA_STATE_CONNECTED;
 			remote.ssl.connecting = false;
 			remote.connected_frame = CURFRAME;
@@ -474,24 +480,23 @@ void RA_CheckConnection(void)
 	// we need to make sure it's actually connected
 	if (connected) {
 		errno = 0;
-		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
+		getpeername(remote.socket, (struct sockaddr *) &addr, &len);
 
 		if (errno) {
 			remote.connect_retry_frame = FUTURE_FRAME(30);
 			remote.state = RA_STATE_DISCONNECTED;
 			closesocket(remote.socket);
 		} else {
-			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
-			//remote.state = RA_STATE_CONNECTED;
-			//remote.ping.frame_next = FUTURE_FRAME(10);
-			//remote.connected_frame = CURFRAME;
-			//RA_SayHello();
+			if (remoteTLS) {
+				remote.ssl.connecting = true;
+			} else {
+				gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
+				remote.state = RA_STATE_CONNECTED;
+				remote.connected_frame = CURFRAME;
+				remote.ping.frame_next = FUTURE_FRAME(30);
 
-			remote.ssl.connecting = true;
-			//if (SSL_connect(remote.ssl.connection) <= 0) {
-			//	ERR_error_string(ERR_get_error(), errmsg);
-			//	gi.cprintf(NULL, PRINT_HIGH, "RA: SSL_connect failed: %s\n", errmsg);
-			//}
+				RA_SayHello();
+			}
 		}
 	}
 }
@@ -528,8 +533,12 @@ void RA_SendMessages(void)
 
 		// socket write buffer is ready, send
 		if (ret == 1) {
-			//ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
-			ret = SSL_write(remote.ssl.connection, remote.queue.data, remote.queue.length);
+			if (remoteTLS) {
+				ret = SSL_write(remote.ssl.connection, remote.queue.data, remote.queue.length);
+			} else {
+				ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
+			}
+
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
 				return;
@@ -581,8 +590,12 @@ void RA_ReadMessages(void)
 
 		// socket read buffer has data waiting in it
 		if (ret == 1) {
-			//ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
-			ret = SSL_read(remote.ssl.connection, in->data + in->length, QUEUE_SIZE - 1);
+			if (remoteTLS) {
+				ret = SSL_read(remote.ssl.connection, in->data + in->length, QUEUE_SIZE - 1);
+			} else {
+				ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+			}
+
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
 				return;
@@ -590,6 +603,7 @@ void RA_ReadMessages(void)
 
 			in->length += ret;
 		} else if (ret < 0) {
+			perror(va("%s select", __FUNCTION__));
 			RA_DisconnectedPeer();
 			return;
 		} else {
@@ -620,6 +634,8 @@ void RA_ParseMessage(void)
 
 	cmd = RA_ReadByte();
 
+	gi.cprintf(NULL, PRINT_HIGH, "read byte: %d\n", cmd);
+
 	switch (cmd) {
 	case SCMD_PONG:
 		RA_ParsePong();
@@ -628,9 +644,9 @@ void RA_ParseMessage(void)
 		RA_ParseCommand();
 		break;
 	case SCMD_HELLOACK:
-		remote.ready = true;
-		RA_PlayerList();
-		RA_Map(remote.mapname);
+		RA_CheckTrust();
+		//RA_PlayerList();
+		//RA_Map(remote.mapname);
 		break;
 	case SCMD_ERROR:
 		RA_ParseError();
@@ -714,6 +730,10 @@ void RA_PlayerList(void)
 		return;
 	}
 
+	if (!remote.trusted) {
+		return;
+	}
+
 	for (i=0; i<remote.maxclients; i++) {
 		if (proxyinfo[i].inuse) {
 			count++;
@@ -783,6 +803,7 @@ void RA_SayHello(void)
 	RA_WriteLong(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
+	RA_WriteData(&remote.challenge[0], CHALLENGE_LEN);
 }
 
 /**
@@ -953,6 +974,12 @@ void RA_WriteString(const char *fmt, ...) {
 	}
 
 	RA_WriteByte(0);
+}
+
+void RA_WriteData(void *in, size_t len)
+{
+	memcpy(&(remote.queue.data[remote.queue.length]), in, len);
+	remote.queue.length += len;
 }
 
 /**
@@ -1209,5 +1236,66 @@ void RA_SayAll(void)
 					string
 			);
 		}
+	}
+}
+
+/**
+ * Check if server keys match, if so, trust the server
+ *
+ * This is called on the response to the HELLO message when initially connecting
+ */
+void RA_CheckTrust(void)
+{
+	RSA *publickey;
+	FILE *fp;
+	size_t plaintextlen;
+	int cypherlen;
+	byte cypher[256];
+	char plaintext[CHALLENGE_LEN];
+
+	cypherlen = RA_ReadShort();
+
+	// read the encrypted challenge from server
+	RA_ReadData(&cypher[0], cypherlen);
+
+	printdata(&cypher, cypherlen);
+
+	Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, remoteServerPublicKey);
+	fp = fopen(buffer, "rb");
+
+	if (!fp) {
+		gi.cprintf(NULL, PRINT_HIGH, "-- problems with file: %s\n", buffer);
+	}
+
+	publickey = PEM_read_RSAPublicKey(fp, NULL, NULL, NULL);
+
+	if (publickey) {
+		// decrypt what the server sent using it's public key
+		plaintextlen = RSA_public_decrypt(CHALLENGE_LEN, &cypher[0], &plaintext[0], publickey, RSA_PKCS1_PADDING);
+		if (plaintextlen == -1) {
+			char *rsaerr;
+			ERR_error_string(ERR_get_error(), rsaerr);
+			gi.dprintf("Error: %s\n", rsaerr);
+		}
+		gi.dprintf("decrypted len: %d\n", plaintextlen);
+		RSA_free(publickey);
+	} else {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] problems with public key\n");
+	}
+	fclose(fp);
+
+	printdata(&remote.challenge, CHALLENGE_LEN);
+	printdata(&plaintext, plaintextlen);
+
+	// if it matches, server should be trusted
+	if (strcmp(plaintext, remote.challenge) == 0) {
+		remote.trusted = true;
+		remote.ready = true;
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] server trusted\n");
+	} else {
+
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] server authentication failed - invalid challenge returned: \"%s\" != \"%s\"\n", remote.challenge, plaintext);
+		remote.enabled = false;
+		RA_Disconnect();
 	}
 }

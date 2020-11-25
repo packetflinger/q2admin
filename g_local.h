@@ -1210,6 +1210,10 @@ extern char remoteCmdTeleport[15];
 extern char remoteCmdInvite[15];
 extern char remoteCmdSeen[15];
 extern char remoteCmdWhois[15];
+extern char remotePublicKey[256];
+extern char remotePrivateKey[256];
+extern char remoteServerPublicKey[256];
+extern qboolean remoteTLS;
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
@@ -1504,6 +1508,7 @@ qboolean getLogicalValue(char *arg);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 void q_strupr(char *c);
 qboolean wildcard_match(char *pattern, char *haystack);
+void printdata(byte *data, int size);
 
 // zb_ban.c
 void banRun(int startarg, edict_t *ent, int client);

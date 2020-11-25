@@ -889,6 +889,30 @@ q2acmd_t q2aCommands[] = {
 		&remoteKey,
 	},
 	{
+		"remote_public_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		&remotePublicKey,
+	},
+	{
+		"remote_private_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		&remotePrivateKey,
+	},
+	{
+		"remote_server_public_key",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_STRING,
+		&remoteServerPublicKey,
+	},
+	{
+		"remote_tls",
+		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+		CMDTYPE_LOGICAL,
+		&remoteTLS,
+	},
+	{
 		"remote_port",
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
 		CMDTYPE_NUMBER,

@@ -16,6 +16,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
+#include <openssl/rand.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
@@ -42,6 +43,7 @@
 
 #define PING_FREQ_SECS  10
 #define PING_MISS_MAX   3
+#define CHALLENGE_LEN   8
 
 /**
  * The various states of the remote admin connection
@@ -114,6 +116,9 @@ typedef struct {
 	EVP_PKEY_CTX     *privkey_context;
 	EVP_PKEY         *privkey;
 	ssl_connection_t ssl;
+	unsigned char    challenge[8];    // for trusting RA server
+	qboolean         trusted;         // server auth successed
+	qboolean         encrypted;       // whether this connection is TLS or not
 } remote_t;
 
 /**
@@ -208,6 +213,8 @@ void        RA_ParsePong(void);
 void        RA_ParseError(void);
 void        RA_SayClient(void);
 void        RA_SayAll(void);
+
+void        RA_CheckTrust();
 
 
 extern remote_t  remote;

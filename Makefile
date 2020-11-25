@@ -26,7 +26,7 @@ RM ?= rm -f
 
 CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD $(GLIB_CFLAGS) $(INCLUDES)
 LDFLAGS ?= -shared $(GLIB_LDFLAGS)
-LIBS ?= -lcurl -lm -ldl -lcrypto
+LIBS ?= -lcurl -lm -ldl -lssl -lcrypto
 
 ifdef CONFIG_WINDOWS
     CFLAGS += -DQ2ADMINCLIB=1
