@@ -11,6 +11,9 @@
 #include <errno.h>
 #include <stdint.h>
 #include <fcntl.h>
+#include <openssl/rsa.h>
+#include <openssl/bn.h>
+#include <openssl/pem.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
@@ -65,11 +68,34 @@ typedef struct {
 } ping_t;
 
 /**
+ * Authenticating with a Remote Admin server is a 4-way handshake.
+ * These describe those levels
+ */
+typedef enum {
+	RA_AUTH_SENT_CL_NONCE,
+	RA_AUTH_REC_KEY,
+	RA_AUTH_SENT_SV_NONCE,
+	RA_AUTH_REC_ACK,
+} ra_auth_t;
+
+typedef struct {
+	qboolean  trusted;         // is the server trusted?
+	ra_auth_t authstage;
+	byte      cl_nonce[16];    // random data
+	byte      sv_nonce[16];    // random data
+	byte      aeskey[16];      // shared encryption key (128bit)
+	RSA       *rsa_pu;         // our public key
+	RSA       *rsa_pr;         // our private key
+	RSA       *rsa_sv_pu;      // RA server's public key
+} ra_connection_t;
+
+/**
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
 	uint8_t          enabled;
 	ra_state_t       state;
+	ra_connection_t  connection;
 	uint32_t         connect_retry_frame;
 	uint32_t         connection_attempts;
 	uint32_t         connected_frame;  // the frame when we connected

@@ -61,6 +61,10 @@ char remoteCmdInvite[15] = "!invite";
 char remoteCmdSeen[15] = "!seen";
 char remoteCmdWhois[15] = "!whois";
 
+char remotePublicKey[256] = "q2a_public.pem";
+char remotePrivateKey[256] = "q2a_private.pem";
+char remoteServerPublicKey[256] = "q2a_server_public.pem";
+
 
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
