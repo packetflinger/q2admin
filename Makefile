@@ -53,6 +53,7 @@ OBJS := g_anticheat.o \
 		g_base64.o \
 		g_checkvar.o \
 		g_cmd.o \
+		g_crypto.o \
 		g_disable.o \
 		g_file.o \
 		g_flood.o \

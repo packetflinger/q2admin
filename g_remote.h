@@ -54,6 +54,17 @@ typedef enum {
 	RA_STATE_CONNECTED
 } ra_state_t;
 
+/**
+ * Authenticating with a Remote Admin server is a 4-way handshake.
+ * These describe those levels
+ */
+typedef enum {
+	RA_AUTH_SENT_CL_NONCE,
+	RA_AUTH_REC_KEY,
+	RA_AUTH_SENT_SV_NONCE,
+	RA_AUTH_REC_ACK,
+} ra_auth_t;
+
 typedef struct {
 	byte      data[QUEUE_SIZE];
 	size_t    length;
@@ -82,6 +93,18 @@ typedef struct {
 	SSL_METHOD *method;
 	qboolean   connecting;
 } ssl_connection_t;
+
+
+typedef struct {
+	qboolean  trusted;         // is the server trusted?
+	ra_auth_t authstage;
+	byte      cl_nonce[16];    // random data
+	byte      sv_nonce[16];    // random data
+	byte      aeskey[16];      // shared encryption key (128bit)
+	RSA       *rsa_pu;         // our public key
+	RSA       *rsa_pr;         // our private key
+	RSA       *rsa_sv_pu;      // RA server's public key
+} ra_connection_t;
 
 /**
  * Holds all info and state about the remote admin connection
@@ -119,6 +142,7 @@ typedef struct {
 	unsigned char    challenge[8];    // for trusting RA server
 	qboolean         trusted;         // server auth successed
 	qboolean         encrypted;       // whether this connection is TLS or not
+	ra_connection_t  connection;
 } remote_t;
 
 /**
