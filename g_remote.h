@@ -14,6 +14,7 @@
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
@@ -80,6 +81,7 @@ typedef enum {
 
 typedef struct {
 	qboolean  trusted;         // is the server trusted?
+	qboolean  encrypted;       // should we encrypt?
 	ra_auth_t authstage;
 	byte      cl_nonce[16];    // random data
 	byte      sv_nonce[16];    // random data
@@ -182,6 +184,7 @@ void        RA_WriteString(const char *fmt, ...);
 void        RA_WriteByte(uint8_t b);
 void        RA_WriteLong(uint32_t i);
 void        RA_WriteShort(uint16_t s);
+void        RA_WriteData(const void *data, size_t length);
 void        RA_InitBuffer(void);
 uint16_t    getport(void);
 

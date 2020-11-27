@@ -1378,6 +1378,31 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_NUMBER,
         &whois_active
     },
+	{
+		"remote_encryption",
+		CMDWHERE_CFGFILE, // you can't change this on the fly, config only
+		CMDTYPE_LOGICAL,
+		//&remoteEncryption
+		&remote.connection.encrypted
+	},
+	{
+		"remote_private_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remotePrivateKey
+	},
+	{
+		"remote_public_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remotePublicKey
+	},
+	{
+		"remote_sv_public_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remoteServerPublicKey
+	},
 };
 
 //===================================================================

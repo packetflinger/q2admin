@@ -1210,6 +1210,10 @@ extern char remoteCmdTeleport[15];
 extern char remoteCmdInvite[15];
 extern char remoteCmdSeen[15];
 extern char remoteCmdWhois[15];
+extern qboolean remoteEncrypt;
+extern char remotePrivateKey[256];
+extern char remotePublicKey[256];
+extern char remoteServerPublicKey[256];
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;

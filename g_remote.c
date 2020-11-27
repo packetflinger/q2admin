@@ -702,11 +702,15 @@ void RA_SayHello(void)
 		return;
 	}
 
+	// random data to check server auth
+	RAND_bytes(&remote.connection.cl_nonce[0], sizeof(remote.connection.cl_nonce));
+
 	RA_WriteByte(CMD_HELLO);
 	RA_WriteLong(remoteKey);
 	RA_WriteLong(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
+	RA_WriteData(&remote.connection.cl_nonce[0], sizeof(remote.connection.cl_nonce));
 }
 
 /**
@@ -821,6 +825,17 @@ void RA_WriteLong(uint32_t i)
 	remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
 	remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
 	remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
+}
+
+/**
+ * Write an arbitrary amount of data from the message buffer
+ */
+void RA_WriteData(const void *data, size_t length)
+{
+	uint32_t i;
+	for (i=0; i<length; i++) {
+		RA_WriteByte(((byte *) data)[i]);
+	}
 }
 
 /**
