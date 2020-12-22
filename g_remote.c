@@ -26,6 +26,10 @@ void RA_Init() {
 	
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
+	if (!G_LoadKeys()) {
+		// disable remote
+	}
+
 	if (!rconpassword->string[0]) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] rcon_password is blank...disabling\n");
 		return;
@@ -544,6 +548,7 @@ void RA_ParseMessage(void)
 
 	cmd = RA_ReadByte();
 
+	printf("msg: %d\n", cmd);
 	switch (cmd) {
 	case SCMD_PONG:
 		RA_ParsePong();
@@ -552,6 +557,7 @@ void RA_ParseMessage(void)
 		RA_ParseCommand();
 		break;
 	case SCMD_HELLOACK:
+		RA_VerifyServerAuth();
 		remote.ready = true;
 		RA_PlayerList();
 		RA_Map(remote.mapname);
@@ -569,6 +575,52 @@ void RA_ParseMessage(void)
 
 	// reset queue back to zero
 	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+}
+
+/**
+ * Decrypt the nonce sent back from the server and check if it matches
+ */
+qboolean RA_VerifyServerAuth(void)
+{
+	FILE *fp;
+	uint16_t cipherlen;
+	byte challenge_cipher[RSA_LEN];
+	byte challenge_plain[CHALLENGE_LEN];
+	RSA *rsa;
+
+	cipherlen = RA_ReadShort();
+	RA_ReadData(&challenge_cipher[0], cipherlen);
+	RA_ReadData(&remote.connection.sv_nonce[0], CHALLENGE_LEN);
+
+	// decrypt the server's challenge response
+	//G_PublicDecrypt(&remote.connection.rsa_sv_pu, &challenge_plain[0], &challenge_cipher[0]);
+
+	//sprintf(path, "%s/%s", gamedir->string, remoteServerPublicKey);
+	fp = fopen(va("%s/%s", gamedir->string, remoteServerPublicKey), "rb");
+	if (!fp) {
+		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", remoteServerPublicKey);
+		return false;
+	}
+	rsa = RSA_new();
+	rsa = PEM_read_RSA_PUBKEY(fp, &rsa, NULL, NULL);
+	printf("rsa=%d\n", rsa);
+	fclose(fp);
+
+	G_RSAError();
+
+	int result = RSA_public_decrypt(256, &challenge_cipher[0], &challenge_plain[0], rsa, RSA_PKCS1_PADDING);
+
+	printf("decrypt result: %d\n", result);
+	RSA_free(rsa);
+
+	// compare
+	if (memcmp(&challenge_plain[0], &remote.connection.cl_nonce[0], CHALLENGE_LEN) == 0) {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
+		return true;
+	} else {
+		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
+		return false;
+	}
 }
 
 /**
@@ -710,6 +762,7 @@ void RA_SayHello(void)
 	RA_WriteLong(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
+	RA_WriteByte(remote.connection.encrypted ? 1 : 0);
 	RA_WriteData(&remote.connection.cl_nonce[0], sizeof(remote.connection.cl_nonce));
 }
 

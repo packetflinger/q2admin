@@ -15,6 +15,7 @@
 #include <openssl/bn.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
+#include <openssl/err.h>
 
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
@@ -41,6 +42,9 @@
 
 #define PING_FREQ_SECS  10
 #define PING_MISS_MAX   3
+
+#define RSA_LEN         256  // bytes, 2048 bits
+#define CHALLENGE_LEN   16   // bytes
 
 /**
  * The various states of the remote admin connection
@@ -216,6 +220,9 @@ void        RA_ParsePong(void);
 void        RA_ParseError(void);
 void        RA_SayClient(void);
 void        RA_SayAll(void);
+qboolean    G_LoadKeys(void);
+qboolean    RA_VerifyServerAuth(void);
+void        G_RSAError(void);
 
 
 extern remote_t  remote;
