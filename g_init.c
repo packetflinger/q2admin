@@ -557,41 +557,51 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         ReadSpawnFile(buffer, TRUE);
 
         qboolean replaceteam;
+        qboolean entremoved;
 
         // parse out all the turned off entities...
         while (1) {
-            char *com_tok;
-            char *classnamepos;
-            char *teampos;
+            char *com_tok = 0;
+            char *classnamepos = 0;
+            char *teampos = 0;
             char keyname[256];
 
             // parse the opening brace
             com_tok = COM_Parse(&entities, NULL);
-            if (!entities)
+            if (!entities) {
                 break;
-            if (com_tok[0] != '{')
+            }
+
+            if (com_tok[0] != '{') {
                 break;
+            }
 
             replaceteam = false;
+            entremoved = false;
 
             // go through all the dictionary pairs
             while (1) {
                 // parse key
                 com_tok = COM_Parse(&entities, &classnamepos);
-                if (com_tok[0] == '}')
+                if (com_tok[0] == '}') {
                     break;
-                if (!entities)
+                }
+
+                if (!entities) {
                     break;
+                }
 
                 q2a_strncpy(keyname, com_tok, sizeof (keyname) - 1);
 
                 // parse value
                 com_tok = COM_Parse(&entities, NULL);
-                if (!entities)
+                if (!entities) {
                     break;
+                }
 
-                if (com_tok[0] == '}') // {
+                if (com_tok[0] == '}') {
                     break;
+                }
 
                 if (q2a_strcmp(keyname, "team") == 0) {
                 	teampos = classnamepos;
@@ -599,13 +609,15 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 }
 
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
-                    classnamepos[0] = '_'; // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
+                    // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
+                    classnamepos[0] = '_';
                     // side-effect: it may cause error messages on the console screen depending on the mod...
+                    entremoved = true;
                 }
             }
 
-            // if teamed, change 'team' entry to '_eam' to unlink it from the rest
-			if (teampos && replaceteam) {
+            // if teamed and removed, change 'team' entry to '_eam' to unlink it from the rest
+			if (teampos && replaceteam && entremoved) {
 				teampos[0] = '_';
 				teampos = 0;
 				replaceteam = false;
