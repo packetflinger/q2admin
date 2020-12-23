@@ -22,9 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-game_import_t gi;		// server access from q2admin
-game_export_t ge;		// q2admin access from server
-game_export_t *ge_mod;	// game access from q2admin
+game_import_t gi;       // server access from q2admin
+game_export_t ge;       // q2admin access from server
+game_export_t *ge_mod;  // game access from q2admin
 
 cvar_t *rcon_password;
 cvar_t *gamedir;
@@ -49,17 +49,17 @@ char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
 char gmapname[MAX_QPATH];
 char version[256];
 
-uint32_t remoteKey = 0;
-char remoteAddr[256] = "127.0.0.1";
-int remotePort = 9988;
-int remoteFlags = 1024;
-char remoteDNS[3] = "64";    // ipv6 first, then ipv4
-qboolean remoteEnabled = FALSE;
+uint32_t remoteKey          = 0;
+char remoteAddr[256]        = "127.0.0.1";
+int remotePort              = 9988;
+int remoteFlags             = 1024;
+char remoteDNS[3]           = "64";    // ipv6 first, then ipv4
+qboolean remoteEnabled      = FALSE;
 char encryptionKey[1400];
-char remoteCmdTeleport[15] = "!teleport";
-char remoteCmdInvite[15] = "!invite";
-char remoteCmdSeen[15] = "!seen";
-char remoteCmdWhois[15] = "!whois";
+char remoteCmdTeleport[15]  = "!teleport";
+char remoteCmdInvite[15]    = "!invite";
+char remoteCmdSeen[15]      = "!seen";
+char remoteCmdWhois[15]     = "!whois";
 
 
 int USERINFOCHANGE_TIME = 60;
@@ -82,13 +82,11 @@ qboolean q2a_command_check = false;
 qboolean do_vid_restart = false;
 qboolean private_command_kick = false;
 
-
 qboolean dllloaded = FALSE;
 
 qboolean zbotdetect = TRUE;
 qboolean mapcfgexec = FALSE;
 qboolean checkClientIpAddress = TRUE;
-
 
 qboolean nameChangeFloodProtect = FALSE;
 int nameChangeFloodProtectNum = 5;
@@ -102,9 +100,10 @@ int skinChangeFloodProtectSec = 2;
 int skinChangeFloodProtectSilence = 10;
 char skinChangeFloodProtectMsg[256];
 
-struct chatflood_s floodinfo ={
+struct chatflood_s floodinfo = {
     FALSE, 5, 2, 10
 };
+
 char chatFloodProtectMsg[256];
 
 
@@ -217,7 +216,8 @@ COM_Parse
 Parse a token out of a string
 ==============
  */
-char *COM_Parse(char **data_p, char **command_p) {
+char *COM_Parse(char **data_p, char **command_p)
+{
     int c;
     int len;
     char *data;
@@ -243,8 +243,10 @@ skipwhite:
 
     // skip // comments
     if (c == '/' && data[1] == '/') {
-        while (*data && *data != '\n')
+        while (*data && *data != '\n') {
             data++;
+        }
+
         goto skipwhite;
     }
 
@@ -294,7 +296,11 @@ skipwhite:
     return com_token;
 }
 
-char * FindIpAddressInUserInfo(char * userinfo, qboolean* userInfoOverflow) {
+/**
+ * Get the IPv4 address from the userinfo string
+ */
+char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow)
+{
     char *ip = Info_ValueForKey(userinfo, "ip");
 
     if (userInfoOverflow) {
@@ -302,7 +308,7 @@ char * FindIpAddressInUserInfo(char * userinfo, qboolean* userInfoOverflow) {
     }
 
     if (*ip == 0) {
-        char * ipuserinfo = userinfo + q2a_strlen(userinfo);
+        char *ipuserinfo = userinfo + q2a_strlen(userinfo);
 
         // find the last '\\'
         while (ipuserinfo > userinfo && *ipuserinfo != '\\') {
@@ -325,7 +331,11 @@ char * FindIpAddressInUserInfo(char * userinfo, qboolean* userInfoOverflow) {
     return ip;
 }
 
-void InitGame(void) {
+/**
+ * Called when the server is initialized
+ */
+void InitGame(void)
+{
     int i;
 
     INITPERFORMANCE(1);
@@ -333,8 +343,9 @@ void InitGame(void) {
 
     proxyinfo = NULL;
 
-    if (!dllloaded)
-    	return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode < 100) {
         gi.dprintf("(Q2Admin runlevel %d)\n", q2adminrunmode);
@@ -348,11 +359,11 @@ void InitGame(void) {
 
     STARTPERFORMANCE(1);
     STARTPERFORMANCE(2);
-	
-	/* Be carefull with all functions called from this one (like dprintf_internal) 
-	to not use proxyinfo pointer because it's not initialized yet. -Harven */
+    
+    /* Be carefull with all functions called from this one (like dprintf_internal) 
+    to not use proxyinfo pointer because it's not initialized yet. -Harven */
     ge_mod->Init(); 
-	
+    
     STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
 
     G_MergeEdicts();
@@ -424,7 +435,7 @@ void InitGame(void) {
         proxyinfo[i].votescast = 0;
         proxyinfo[i].votetimeout = 0;
         proxyinfo[i].checked_hacked_exe = 0;
-		proxyinfo[i].ent = 0;
+        proxyinfo[i].ent = 0;
 
         removeClientCommands(i);
     }
@@ -443,7 +454,11 @@ void InitGame(void) {
     RA_Init();
 }
 
-void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
+/**
+ *
+ */
+void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
+{
     int len, currentlen;
     FILE *motdptr;
     int i;
@@ -451,14 +466,16 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
         G_MergeEdicts();
         return;
     }
-	
+    
     STARTPERFORMANCE(1);
 
     for (i = -1; i < maxclients->value; i++) {
@@ -604,8 +621,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 }
 
                 if (q2a_strcmp(keyname, "team") == 0) {
-                	teampos = classnamepos;
-                	replaceteam = true;
+                    teampos = classnamepos;
+                    replaceteam = true;
                 }
 
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
@@ -617,11 +634,11 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             }
 
             // if teamed and removed, change 'team' entry to '_eam' to unlink it from the rest
-			if (teampos && replaceteam && entremoved) {
-				teampos[0] = '_';
-				teampos = 0;
-				replaceteam = false;
-			}
+            if (teampos && replaceteam && entremoved) {
+                teampos[0] = '_';
+                teampos = 0;
+                replaceteam = false;
+            }
         }
     }
 
@@ -657,13 +674,17 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     remote.maxclients = (int) maxclients->value;
     q2a_strncpy(remote.mapname, mapname, sizeof(remote.mapname));
     q2a_strncpy(remote.rcon_password, rconpassword->string, sizeof(remote.rcon_password));
-	remote.port = getport();
-	remote.frame_number = 0;
+    remote.port = getport();
+    remote.frame_number = 0;
 
-	STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
+    STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
-qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboolean* userInfoOverflow) {
+/**
+ *
+ */
+qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboolean* userInfoOverflow)
+{
     char *ip = FindIpAddressInUserInfo(userinfo, userInfoOverflow);
 
     if (*ip) {
@@ -730,7 +751,11 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
     return FALSE;
 }
 
-qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
+/**
+ *
+ */
+qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2)
+{
     if (reconnect_checklevel) {
         char *cp1 = FindIpAddressInUserInfo(userinfo1, 0);
         char *cp2 = FindIpAddressInUserInfo(userinfo2, 0);
@@ -774,7 +799,11 @@ qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
     return (q2a_strcmp(userinfo1, userinfo2) == 0);
 }
 
-qboolean checkReconnectList(char *username) {
+/**
+ *
+ */
+qboolean checkReconnectList(char *username)
+{
     unsigned int i;
 
     for (i = 0; i < maxclients->value; i++) {
@@ -787,7 +816,11 @@ qboolean checkReconnectList(char *username) {
     return TRUE;
 }
 
-qboolean ClientConnect(edict_t *ent, char *userinfo) {
+/**
+ * Called when a new player first connects to the server, before entering the game
+ */
+qboolean ClientConnect(edict_t *ent, char *userinfo)
+{
     int client;
     char *s;
     char *skinname;
@@ -898,7 +931,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
-	proxyinfo[client].ent = ent;
+    proxyinfo[client].ent = ent;
     removeClientCommands(client);
 
     ret = 1;
@@ -1093,7 +1126,11 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     return ret;
 }
 
-qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
+/**
+ *
+ */
+qboolean checkForNameChange(int client, edict_t *ent, char *userinfo)
+{
     char *s = Info_ValueForKey(userinfo, "name");
     char oldname[sizeof (proxyinfo[client].name)];
     char newname[sizeof (proxyinfo[client].name)];
@@ -1136,8 +1173,9 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
         q2a_strcpy(proxyinfo[client].name, newname);
 
         if (whois_active) {
-            if (proxyinfo[client].userid == -1)
+            if (proxyinfo[client].userid == -1) {
                 whois_adduser(client, ent);
+            }
             whois_newname(client, ent);
         }
 
@@ -1190,7 +1228,11 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
     return TRUE;
 }
 
-qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
+/**
+ *
+ */
+qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo)
+{
     char *s = Info_ValueForKey(userinfo, "skin");
     char oldskin[sizeof (proxyinfo[client].skin)];
     char newskin[sizeof (proxyinfo[client].skin)];
@@ -1210,7 +1252,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                 } else {
                     int secleft = (int) (proxyinfo[client].skinchangetimeout - ltime) + 1;
 
-                    //          q2a_strcpy(ent->client->pers.netskin, proxyinfo[client].skin);
+                    // q2a_strcpy(ent->client->pers.netskin, proxyinfo[client].skin);
                     addCmdQueue(client, QCMD_CHANGESKIN, 0, 0, 0);
 
                     gi.cprintf(ent, PRINT_HIGH, "%d seconds of skin change silence left.\n", secleft);
@@ -1258,7 +1300,11 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     return TRUE;
 }
 
-void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
+/**
+ * Client changed something (name, skin, rate, hand, etc)
+ */
+void ClientUserinfoChanged(edict_t *ent, char *userinfo)
+{
     int client;
     qboolean passon;
 
@@ -1271,7 +1317,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientUserinfoChanged(ent, userinfo);
@@ -1285,8 +1333,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0);
 
-    if (stringContains(userinfo, "\\skon\\")) //zgh_frk check
-    {
+    //zgh_frk check
+    if (stringContains(userinfo, "\\skon\\")) {
         gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
         Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
         gi.AddCommandString(tmptext);
@@ -1346,11 +1394,12 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             }
 
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, timescaleuserdisplay);
-        } else
+        } else {
             if (timescaledetect) {
-            if (proxyinfo[client].timescale != 1) {
-                //if its not 1, make it so
-                addCmdQueue(client, QCMD_SETTIMESCALE, 0, 0, 0);
+                if (proxyinfo[client].timescale != 1) {
+                    //if its not 1, make it so
+                    addCmdQueue(client, QCMD_SETTIMESCALE, 0, 0, 0);
+                }
             }
         }
     } else {
@@ -1372,10 +1421,11 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             gi.bprintf(PRINT_HIGH, (PRV_KICK_MSG, proxyinfo[client].name));
             
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, (PRV_KICK_MSG, proxyinfo[client].name));
-        } else
+        } else {
             if (maxfpsallowed) {
-            if (proxyinfo[client].maxfps > maxfpsallowed) {
-                addCmdQueue(client, QCMD_SETMAXFPS, 0, 0, 0);
+                if (proxyinfo[client].maxfps > maxfpsallowed) {
+                    addCmdQueue(client, QCMD_SETMAXFPS, 0, 0, 0);
+                }
             }
         }
     } else {
@@ -1462,17 +1512,23 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     proxyinfo[client].next_report = 0;
 
     RA_PlayerUpdate(client, proxyinfo[client].userinfo);
-	
+    
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
 
-void ClientDisconnect(edict_t *ent) {
+/**
+ * Called when a client is disconnected or quits
+ */
+void ClientDisconnect(edict_t *ent)
+{
     int client;
 
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientDisconnect(ent);
@@ -1484,10 +1540,12 @@ void ClientDisconnect(edict_t *ent) {
 
     client = getEntOffset(ent) - 1;
 
-    if (client >= maxclients->value) return;
+    if (client >= maxclients->value) {
+        return;
+    }
 
-	RA_PlayerDisconnect(ent);
-	
+    RA_PlayerDisconnect(ent);
+    
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
         ge_mod->ClientDisconnect(ent);
@@ -1566,17 +1624,23 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].q2a_bypass = 0;
     proxyinfo[client].vid_restart = false;
     proxyinfo[client].userid = -1;
-	
+    
     STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
 }
 
-void ClientBegin(edict_t *ent) {
+/**
+ * Called when a client is actually spawned into the game
+ */
+void ClientBegin(edict_t *ent)
+{
     int client;
     FILE *q2logfile;
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientBegin(ent);
@@ -1642,7 +1706,7 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
-	
+    
 
     if (num_q2a_admins) {
         addCmdQueue(client, QCMD_SPAMBYPASS, 60 + (10 * random()), 0, 0);
@@ -1694,16 +1758,22 @@ void ClientBegin(edict_t *ent) {
         }
     }
 
-	//RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
-	
+    //RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
+    
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
     STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);
 }
 
-void WriteGame(char *filename, qboolean autosave) {
+/**
+ *
+ */
+void WriteGame(char *filename, qboolean autosave)
+{
     INITPERFORMANCE(1);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->WriteGame(filename, autosave);
@@ -1719,10 +1789,16 @@ void WriteGame(char *filename, qboolean autosave) {
     STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
 }
 
-void ReadGame(char *filename) {
+/**
+ *
+ */
+void ReadGame(char *filename)
+{
     INITPERFORMANCE(1);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ReadGame(filename);
@@ -1738,10 +1814,16 @@ void ReadGame(char *filename) {
     STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
 }
 
-void WriteLevel(char *filename) {
+/**
+ *
+ */
+void WriteLevel(char *filename)
+{
     INITPERFORMANCE(1);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->WriteLevel(filename);
@@ -1757,10 +1839,16 @@ void WriteLevel(char *filename) {
     STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
 }
 
-void ReadLevel(char *filename) {
+/**
+ *
+ */
+void ReadLevel(char *filename)
+{
     INITPERFORMANCE(1);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ReadLevel(filename);
@@ -1775,4 +1863,3 @@ void ReadLevel(char *filename) {
 
     STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);
 }
-
