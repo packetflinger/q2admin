@@ -144,7 +144,8 @@ typedef enum {
 	CMD_PLAYERS,
 	CMD_FRAG,          // someone fragged someone else
 	CMD_MAP,           // map changed
-	CMD_PING           //
+	CMD_PING,          //
+	CMD_AUTH
 } ra_client_cmd_t;
 
 /**

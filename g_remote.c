@@ -27,7 +27,7 @@ void RA_Init() {
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
 	if (!G_LoadKeys()) {
-		// disable remote
+	    remote.enabled = 0;
 	}
 
 	if (!rconpassword->string[0]) {
@@ -559,8 +559,8 @@ void RA_ParseMessage(void)
 	case SCMD_HELLOACK:
 		RA_VerifyServerAuth();
 		remote.ready = true;
-		RA_PlayerList();
-		RA_Map(remote.mapname);
+		//RA_PlayerList();
+		//RA_Map(remote.mapname);
 		break;
 	case SCMD_ERROR:
 		RA_ParseError();
@@ -582,45 +582,50 @@ void RA_ParseMessage(void)
  */
 qboolean RA_VerifyServerAuth(void)
 {
+    ra_connection_t *c;
 	FILE *fp;
 	uint16_t cipherlen;
 	byte challenge_cipher[RSA_LEN];
 	byte challenge_plain[CHALLENGE_LEN];
 	RSA *rsa;
+	qboolean servertrusted = false;
+
+	c = &remote.connection;
 
 	cipherlen = RA_ReadShort();
 	RA_ReadData(&challenge_cipher[0], cipherlen);
-	RA_ReadData(&remote.connection.sv_nonce[0], CHALLENGE_LEN);
+	RA_ReadData(&c->sv_nonce[0], CHALLENGE_LEN);
+
+	//printf("cipherlen: %d\ncipher: %s\nrsa: %d\n", cipherlen, challenge_cipher, remote.connection.rsa_sv_pu);
 
 	// decrypt the server's challenge response
-	//G_PublicDecrypt(&remote.connection.rsa_sv_pu, &challenge_plain[0], &challenge_cipher[0]);
-
-	//sprintf(path, "%s/%s", gamedir->string, remoteServerPublicKey);
-	fp = fopen(va("%s/%s", gamedir->string, remoteServerPublicKey), "rb");
-	if (!fp) {
-		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", remoteServerPublicKey);
-		return false;
-	}
-	rsa = RSA_new();
-	rsa = PEM_read_RSA_PUBKEY(fp, &rsa, NULL, NULL);
-	printf("rsa=%d\n", rsa);
-	fclose(fp);
-
-	G_RSAError();
-
-	int result = RSA_public_decrypt(256, &challenge_cipher[0], &challenge_plain[0], rsa, RSA_PKCS1_PADDING);
-
-	printf("decrypt result: %d\n", result);
-	RSA_free(rsa);
+	G_PublicDecrypt(c->rsa_sv_pu, &challenge_plain[0], &challenge_cipher[0]);
+	//printf("nonce: %s\ndecrypted: %s\n", remote.connection.cl_nonce, challenge_plain);
 
 	// compare
-	if (memcmp(&challenge_plain[0], &remote.connection.cl_nonce[0], CHALLENGE_LEN) == 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
-		return true;
-	} else {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
-		return false;
+	if (memcmp(&challenge_plain[0], &c->cl_nonce[0], CHALLENGE_LEN) == 0) {
+	    servertrusted = true;
 	}
+
+	// encrypt the server's nonce and send back to auth ourself
+	if (servertrusted) {
+	    memset(&challenge_cipher[0], 0, RSA_LEN);
+	    G_PrivateEncrypt(c->rsa_pr, &challenge_cipher[0], &c->sv_nonce[0]);
+	    RA_WriteLong(CMD_AUTH);
+	    RA_WriteShort(RSA_size(c->rsa_pr));
+	    RA_WriteData(&challenge_cipher[0], RSA_size(c->rsa_pr));
+	}
+
+	// at this point we already trust the server, so start using the AES encryption key sent to us
+
+
+	if (servertrusted) {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
+        return true;
+    } else {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
+        return false;
+    }
 }
 
 /**

@@ -1,6 +1,9 @@
 #include "g_local.h"
 
-void G_GenerateKeyPair(void)
+/**
+ *
+ */
+void G_GenerateKeyPair(int bits)
 {
 	FILE *fp;
 	RSA *rsa;
@@ -14,14 +17,14 @@ void G_GenerateKeyPair(void)
 	e = BN_new();
 
 	BN_set_word(e, RSA_F4);
-	RSA_generate_key_ex(rsa, 2048, e, NULL);
+	RSA_generate_key_ex(rsa, bits, e, NULL);
 
-	sprintf(filename, "public-%d.pem", seconds);
+	snprintf(filename, sizeof(filename), "public-%d.pem", seconds);
 	fp = fopen(filename, "wb");
 	PEM_write_RSAPublicKey(fp, rsa);
 	fclose(fp);
 
-	sprintf(filename, "private-%d.pem", seconds);
+	snprintf(filename, sizeof(filename), "private-%d.pem", seconds);
 	fp = fopen(filename, "wb");
 	PEM_write_RSAPrivateKey(fp, rsa, NULL, NULL, 0, NULL, NULL);
 	fclose(fp);
@@ -36,7 +39,7 @@ void G_GenerateKeyPair(void)
 qboolean G_LoadKeys(void)
 {
 	FILE *fp;
-	//ra_connection_t *c = &remote.connection;
+	ra_connection_t *c = &remote.connection;
 	char path[200];
 
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
@@ -48,46 +51,80 @@ qboolean G_LoadKeys(void)
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
 		return false;
 	}
-	remote.connection.rsa_pr = RSA_new();
-	remote.connection.rsa_pr = PEM_read_RSAPrivateKey(fp, &remote.connection.rsa_pr, NULL, NULL);
+	c->rsa_pr = RSA_new();
+	c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
 	fclose(fp);
+
+	if (!c->rsa_pr) {
+	    gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key\n");
+	    return false;
+	}
+
 
 	// then our public key
 	sprintf(path, "%s/%s", gamedir->string, remotePublicKey);
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		RSA_free(remote.connection.rsa_pr);
+		RSA_free(c->rsa_pr);
 		return false;
 	}
-	remote.connection.rsa_pu = RSA_new();
-	remote.connection.rsa_pu = PEM_read_RSA_PUBKEY(fp, &remote.connection.rsa_pu, NULL, NULL);
+	c->rsa_pu = RSA_new();
+	c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
 	fclose(fp);
+
+	if (!c->rsa_pu) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key\n");
+        RSA_free(c->rsa_pr);
+        return false;
+    }
 
 	// last the remote admin server's public key
 	sprintf(path, "%s/%s", gamedir->string, remoteServerPublicKey);
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		RSA_free(remote.connection.rsa_pr);
-		RSA_free(remote.connection.rsa_pu);
+		RSA_free(c->rsa_pr);
+		RSA_free(c->rsa_pu);
 		return false;
 	}
-	remote.connection.rsa_sv_pu = RSA_new();
-	remote.connection.rsa_sv_pu = PEM_read_RSA_PUBKEY(fp, &remote.connection.rsa_sv_pu, NULL, NULL);
+	c->rsa_sv_pu = RSA_new();
+	c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
 	fclose(fp);
+
+	if (!c->rsa_sv_pu) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
+        RSA_free(c->rsa_pr);
+        RSA_free(c->rsa_pu);
+        return false;
+    }
 
 	gi.cprintf(NULL, PRINT_HIGH, "OK\n");
 
 	return true;
 }
 
+/**
+ * Wrapper
+ */
 void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
 {
 	int result;
-	result = RSA_public_decrypt(256, src, dest, key, RSA_PKCS1_PADDING);
+	result = RSA_public_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
 }
 
+/**
+ * Wrapper
+ */
+void G_PrivateEncrypt(RSA *key, byte *dest, byte *src)
+{
+    int result;
+    result = RSA_private_encrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
+}
+
+/**
+ *
+ */
 void G_RSAError()
 {
 	int error = 0;
