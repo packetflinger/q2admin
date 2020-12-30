@@ -30,6 +30,8 @@ void RA_Init() {
 	    remote.enabled = 0;
 	}
 
+	remote.connection.encrypted = remoteEncryption;
+
 	if (!rconpassword->string[0]) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] rcon_password is blank...disabling\n");
 		return;
@@ -457,6 +459,7 @@ void RA_SendMessages(void)
 
 		// socket write buffer is ready, send
 		if (ret == 1) {
+		    //hexDump("Sending", remote.queue.data, remote.queue.length);
 			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
 
 			if (ret <= 0) {
@@ -546,9 +549,9 @@ void RA_ParseMessage(void)
 		return;
 	}
 
+	hexDump("Data from Server", remote.queue_in.data, remote.queue_in.length);
 	cmd = RA_ReadByte();
 
-	printf("msg: %d\n", cmd);
 	switch (cmd) {
 	case SCMD_PONG:
 		RA_ParsePong();
@@ -587,39 +590,47 @@ qboolean RA_VerifyServerAuth(void)
 	uint16_t cipherlen;
 	byte challenge_cipher[RSA_LEN];
 	byte challenge_plain[CHALLENGE_LEN];
+	byte aeskey_cipher[RSA_LEN];
+	byte aeskey_plain[AESKEY_LEN];
+	byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
 	RSA *rsa;
 	qboolean servertrusted = false;
+	size_t result;
 
 	c = &remote.connection;
 
 	cipherlen = RA_ReadShort();
-	RA_ReadData(&challenge_cipher[0], cipherlen);
-	RA_ReadData(&c->sv_nonce[0], CHALLENGE_LEN);
+	RA_ReadData(challenge_cipher, cipherlen);
 
-	//printf("cipherlen: %d\ncipher: %s\nrsa: %d\n", cipherlen, challenge_cipher, remote.connection.rsa_sv_pu);
+	if (remoteEncryption) {
+	    RA_ReadData(aeskey_cipher, RSA_LEN);
+	}
 
-	// decrypt the server's challenge response
-	G_PublicDecrypt(c->rsa_sv_pu, &challenge_plain[0], &challenge_cipher[0]);
-	//printf("nonce: %s\ndecrypted: %s\n", remote.connection.cl_nonce, challenge_plain);
+	RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+	G_PublicDecrypt(c->rsa_sv_pu, challenge_plain, challenge_cipher);
 
-	// compare
-	if (memcmp(&challenge_plain[0], &c->cl_nonce[0], CHALLENGE_LEN) == 0) {
+	if (memcmp(challenge_plain, c->cl_nonce, CHALLENGE_LEN) == 0) {
 	    servertrusted = true;
 	}
 
-	// encrypt the server's nonce and send back to auth ourself
+	// encrypt the server's nonce and send back to auth ourselves
 	if (servertrusted) {
 	    memset(&challenge_cipher[0], 0, RSA_LEN);
-	    G_PrivateEncrypt(c->rsa_pr, &challenge_cipher[0], &c->sv_nonce[0]);
-	    RA_WriteLong(CMD_AUTH);
+	    G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
 	    RA_WriteShort(RSA_size(c->rsa_pr));
-	    RA_WriteData(&challenge_cipher[0], RSA_size(c->rsa_pr));
-	}
+	    RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
 
-	// at this point we already trust the server, so start using the AES encryption key sent to us
+	    result = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
+	    if (!result) {
+	        gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems decrypting symmetric key sent from server\n");
+	    }
 
+	    memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
+	    memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
 
-	if (servertrusted) {
+	    //hexDump("AES Key", c->aeskey, AESKEY_LEN);
+	    //hexDump("AES IV", c->iv, AESBLOCK_LEN);
+
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
         return true;
     } else {
@@ -760,15 +771,15 @@ void RA_SayHello(void)
 	}
 
 	// random data to check server auth
-	RAND_bytes(&remote.connection.cl_nonce[0], sizeof(remote.connection.cl_nonce));
+	RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 
 	RA_WriteByte(CMD_HELLO);
 	RA_WriteLong(remoteKey);
 	RA_WriteLong(Q2A_REVISION);
 	RA_WriteShort(remote.port);
 	RA_WriteByte(remote.maxclients);
-	RA_WriteByte(remote.connection.encrypted ? 1 : 0);
-	RA_WriteData(&remote.connection.cl_nonce[0], sizeof(remote.connection.cl_nonce));
+	RA_WriteByte(remoteEncryption ? 1 : 0);
+	RA_WriteData(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 }
 
 /**

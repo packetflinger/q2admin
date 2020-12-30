@@ -43,8 +43,10 @@
 #define PING_FREQ_SECS  10
 #define PING_MISS_MAX   3
 
-#define RSA_LEN         256  // bytes, 2048 bits
-#define CHALLENGE_LEN   16   // bytes
+#define RSA_LEN         256 // bytes, 2048 bits
+#define CHALLENGE_LEN   16  // bytes
+#define AESKEY_LEN      16  // bytes, 128 bits
+#define AESBLOCK_LEN    16  // bytes, 128 bits
 
 /**
  * The various states of the remote admin connection
@@ -84,15 +86,17 @@ typedef enum {
 } ra_auth_t;
 
 typedef struct {
-	qboolean  trusted;         // is the server trusted?
-	qboolean  encrypted;       // should we encrypt?
+	qboolean  trusted;      // is the server trusted?
+	qboolean  encrypted;    // should we encrypt?
 	ra_auth_t authstage;
-	byte      cl_nonce[16];    // random data
-	byte      sv_nonce[16];    // random data
-	byte      aeskey[16];      // shared encryption key (128bit)
-	RSA       *rsa_pu;         // our public key
-	RSA       *rsa_pr;         // our private key
-	RSA       *rsa_sv_pu;      // RA server's public key
+	byte      cl_nonce[CHALLENGE_LEN];  // random data
+	byte      sv_nonce[CHALLENGE_LEN];  // random data
+	byte      aeskey[AESKEY_LEN];       // shared encryption key (128bit)
+	byte      iv[AESBLOCK_LEN];         // aes block size
+	RSA       *rsa_pu;      // our public key
+	RSA       *rsa_pr;      // our private key
+	RSA       *rsa_sv_pu;   // RA server's public key
+	EVP_CIPHER_CTX  *ctx;   // sym encryption context
 } ra_connection_t;
 
 /**
@@ -224,6 +228,7 @@ void        RA_SayAll(void);
 qboolean    G_LoadKeys(void);
 qboolean    RA_VerifyServerAuth(void);
 void        G_RSAError(void);
+void        hexDump (char *desc, void *addr, int len);
 
 
 extern remote_t  remote;
