@@ -754,6 +754,10 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 /**
  * Immediately after connecting, we have to say hi, giving the server our
  * information. Once the server acknowledges we can start sending game data.
+ *
+ * The last section of data is a random nonce. The server will encrypt this
+ * and send it back to us. We then decrypt and check if it matches, if so,
+ * the server is who we think it is and is considered trusted.
  */
 void RA_SayHello(void)
 {
