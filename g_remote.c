@@ -23,27 +23,25 @@ void RA_Init() {
 		gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
 		return;
 	}
-	
+	remote.state = RA_STATE_DISCONNECTED;
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
 	if (!G_LoadKeys()) {
-	    remote.enabled = 0;
+	    remote.state = RA_STATE_DISABLED;
+	    return;
 	}
 
 	remote.connection.encrypted = remoteEncryption;
-
-	if (!rconpassword->string[0]) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] rcon_password is blank...disabling\n");
-		return;
-	}
 	
 	if (!remoteAddr[0]) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
+		remote.state = RA_STATE_DISABLED;
 		return;
 	}
 
 	if (!remotePort) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
+		remote.state = RA_STATE_DISABLED;
 		return;
 	}
 
@@ -123,7 +121,7 @@ void RA_LookupAddress(void)
 
 	if (err != 0) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
-		remote.enabled = 0;
+		remote.state = RA_STATE_DISABLED;
 		return;
 	} else {
 		memset(&remote.addr, 0, sizeof(struct addrinfo));
@@ -132,14 +130,14 @@ void RA_LookupAddress(void)
 		remote.addr = select_addrinfo(res);
 
 		if (!remote.addr) {
-			remote.enabled = 0;
+		    remote.state = RA_STATE_DISABLED;
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
 			return;
 		}
 
 		// for convenience
 		if (res->ai_family == AF_INET6) {
-			remote.ipv6 = true;
+			remote.connection.ipv6 = true;
 		}
 
 		if (remote.addr->ai_family == AF_INET6) {
@@ -162,7 +160,7 @@ void RA_LookupAddress(void)
 	}
 
 	remote.flags = remoteFlags;
-	remote.enabled = 1;
+	remote.state = RA_STATE_DISCONNECTED;
 }
 
 void G_StartThread(void *func, void *arg) {
@@ -201,11 +199,11 @@ static void ra_replace_die(void)
  */
 void RA_Ping(void)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
-	if (!remote.state == RA_STATE_CONNECTED) {
+	if (!remote.state < RA_STATE_CONNECTED) {
 		return;
 	}
 
@@ -242,12 +240,12 @@ void RA_RunFrame(void)
 	remote.frame_number++;
 
 	// remote admin is disabled, don't do anything
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
 	// everything we need to do while RA is connected
-	if (remote.state == RA_STATE_CONNECTED) {
+	if (remote.state >= RA_STATE_CONNECTED) {
 
 		// send any buffered messages to the server
 		RA_SendMessages();
@@ -275,7 +273,7 @@ void RA_RunFrame(void)
 
 void RA_Shutdown(void)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -295,7 +293,7 @@ void RA_Shutdown(void)
  */
 void RA_Disconnect(void)
 {
-	if (remote.state != RA_STATE_CONNECTED) {
+	if (remote.state < RA_STATE_CONNECTED) {
 		return;
 	}
 
@@ -331,8 +329,7 @@ void RA_Connect(void)
 
 	if (remote.socket == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
-		remote.enabled = 0;
-		remote.state = RA_STATE_DISCONNECTED;
+		remote.state = RA_STATE_DISABLED;
 		return;
 	}
 
@@ -432,7 +429,7 @@ void RA_CheckConnection(void)
  */
 void RA_SendMessages(void)
 {
-	if (!remote.enabled) {
+	if (remote.state < RA_STATE_CONNECTING) {
 		return;
 	}
 
@@ -442,9 +439,9 @@ void RA_SendMessages(void)
 	}
 
 	// only once we're ready (unless trying to say hello)
-	if (!remote.ready && remote.queue.data[0] != CMD_HELLO) {
-		return;
-	}
+	//if (!remote.ready && remote.queue.data[0] != CMD_HELLO) {
+		//return;
+	//}
 
 	uint32_t ret;
 	struct timeval tv;
@@ -497,7 +494,7 @@ void RA_ReadMessages(void)
 	tv.tv_sec = tv.tv_usec = 0;
 	message_queue_t *in;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -540,7 +537,7 @@ void RA_ParseMessage(void)
 {
 	byte cmd;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -549,7 +546,10 @@ void RA_ParseMessage(void)
 		return;
 	}
 
-	hexDump("Data from Server", remote.queue_in.data, remote.queue_in.length);
+	if (RFL(DEBUG)) {
+	    hexDump("Data from Server", remote.queue_in.data, remote.queue_in.length);
+	}
+
 	cmd = RA_ReadByte();
 
 	switch (cmd) {
@@ -561,7 +561,7 @@ void RA_ParseMessage(void)
 		break;
 	case SCMD_HELLOACK:
 		RA_VerifyServerAuth();
-		remote.ready = true;
+		//remote.ready = true;
 		//RA_PlayerList();
 		//RA_Map(remote.mapname);
 		break;
@@ -632,6 +632,7 @@ qboolean RA_VerifyServerAuth(void)
 	    //hexDump("AES IV", c->iv, AESBLOCK_LEN);
 
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
+        remote.state = RA_STATE_TRUSTED;
         return true;
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
@@ -669,12 +670,12 @@ void RA_DisconnectedPeer(void)
 	struct addrinfo *a;
 	uint32_t flags;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
 	// only work on connections that were considered connected
-	if (!remote.state == RA_STATE_CONNECTED) {
+	if (!remote.state >= RA_STATE_CONNECTED) {
 		return;
 	}
 
@@ -689,7 +690,7 @@ void RA_DisconnectedPeer(void)
 	q2a_memset(&remote, 0, sizeof(remote_t));
 
 	remote.addr = a;
-	remote.enabled = 1;
+	remote.state = RA_STATE_DISCONNECTED;
 	remote.flags = flags;
 	remote.connect_retry_frame = FUTURE_FRAME(10);
 }
@@ -702,7 +703,7 @@ void RA_PlayerList(void)
 	uint8_t count, i;
 	count = 0;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -761,14 +762,14 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 void RA_SayHello(void)
 {
 	// don't bother if we're not fully connected yet
-	if (remote.state != RA_STATE_CONNECTED) {
+	if (remote.state == RA_STATE_TRUSTED) {
 		return;
 	}
 
 	// we've already said hello
-	if (remote.ready) {
-		return;
-	}
+	//if (remote.ready) {
+		//return;
+	//}
 
 	// random data to check server auth
 	RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
@@ -804,8 +805,7 @@ void RA_ParseError(void)
 	// serious enough to disconnect
 	if (reason_id >= 200) {
 		closesocket(remote.socket);
-		remote.ready = false;
-		remote.enabled = false;
+		remote.state = RA_STATE_DISABLED;
 		freeaddrinfo(remote.addr);
 	}
 }
@@ -950,7 +950,7 @@ void RA_WriteString(const char *fmt, ...) {
 		return;
 	}
 	
-	if (len > MAX_MSG_LEN - remote.msglen) {
+	if (len > MAX_MSG_LEN - remote.queue.length) {
 		RA_WriteByte(0);
 		return;
 	}
@@ -980,7 +980,7 @@ void RA_PlayerConnect(edict_t *ent)
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -997,7 +997,7 @@ void RA_PlayerDisconnect(edict_t *ent)
 	int8_t cl;
 	cl = getEntOffset(ent) - 1;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1019,7 +1019,7 @@ void RA_Print(uint8_t level, char *text)
 		return;
 	}
 	
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1033,7 +1033,7 @@ void RA_Print(uint8_t level, char *text)
  */
 void RA_Teleport(uint8_t client_id)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1060,7 +1060,7 @@ void RA_Teleport(uint8_t client_id)
  */
 void RA_PlayerUpdate(uint8_t cl, const char *ui)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1074,7 +1074,7 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void RA_Invite(uint8_t cl, const char *text)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1093,7 +1093,7 @@ void RA_Invite(uint8_t cl, const char *text)
  */
 void RA_Whois(uint8_t cl, const char *name)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1112,7 +1112,7 @@ void RA_Whois(uint8_t cl, const char *name)
  */
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1132,7 +1132,7 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
  */
 void RA_Map(const char *mapname)
 {
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1169,7 +1169,7 @@ void RA_SayClient(void)
 	char *string;
 	edict_t *ent;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 
@@ -1194,7 +1194,7 @@ void RA_SayAll(void)
 	uint8_t i;
 	char *string;
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		return;
 	}
 

@@ -3910,12 +3910,12 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	char addr[INET6_ADDRSTRLEN];
 	char addrstr[INET6_ADDRSTRLEN + 6];  // add room for port (:#####)
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin is currently disabled\n");
 		return;
 	}
 
-	if (remote.state != RA_STATE_CONNECTED) {
+	if (remote.state < RA_STATE_CONNECTED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin enabled, but not currently connected\n");
 		gi.cprintf(
 				NULL,

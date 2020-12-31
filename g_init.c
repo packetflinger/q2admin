@@ -679,7 +679,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
 
     remote.maxclients = (int) maxclients->value;
     q2a_strncpy(remote.mapname, mapname, sizeof(remote.mapname));
-    q2a_strncpy(remote.rcon_password, rconpassword->string, sizeof(remote.rcon_password));
     remote.port = getport();
     remote.frame_number = 0;
 

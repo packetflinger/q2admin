@@ -36,7 +36,8 @@
 #define RFL_INVITE     1 << 3	// 8
 #define RFL_FIND       1 << 4	// 16
 #define RFL_WHOIS      1 << 5	// 32
-#define RFL_DEBUG      1 << 11	// 2047
+#define RFL_DEBUG      1 << 11	// 1024
+#define RFL(f)      ((remote.flags & RFL_##f) != 0)
 
 #define MAX_MSG_LEN		1000
 
@@ -52,10 +53,14 @@
  * The various states of the remote admin connection
  */
 typedef enum {
-	RA_STATE_DISCONNECTED,
-	RA_STATE_CONNECTING,
-	RA_STATE_CONNECTED
+    RA_STATE_DISABLED,      // not using RA at all
+	RA_STATE_DISCONNECTED,  // will try to connect when possible
+	RA_STATE_CONNECTING,    // mid connection
+	RA_STATE_CONNECTED,     // connected
+	RA_STATE_TRUSTED        // authenticated and ready to go
 } ra_state_t;
+
+#define STATE(s)    (remote.state == RA_STATE_##s)
 
 typedef struct {
 	byte      data[QUEUE_SIZE];
@@ -86,7 +91,9 @@ typedef enum {
 } ra_auth_t;
 
 typedef struct {
-	qboolean  trusted;      // is the server trusted?
+    uint32_t    socket;
+    qboolean    ipv6;
+	qboolean    trusted;      // is the server trusted?
 	qboolean  encrypted;    // should we encrypt?
 	ra_auth_t authstage;
 	byte      cl_nonce[CHALLENGE_LEN];  // random data
@@ -103,29 +110,25 @@ typedef struct {
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
-	uint8_t          enabled;
 	ra_state_t       state;
 	ra_connection_t  connection;
 	uint32_t         connect_retry_frame;
 	uint32_t         connection_attempts;
 	uint32_t         connected_frame;  // the frame when we connected
 	uint32_t         socket;
-	qboolean         ready;    // we've connected, said hello, and ready
 	fd_set           set_r;    // read
 	fd_set           set_w;    // write
 	fd_set           set_e;    // error
-	//struct 	addrinfo *addr;
 	struct addrinfo  *addr;
 	qboolean         ipv6;
 	uint32_t         flags;
 	uint32_t         frame_number;
 	char             mapname[32];
-	uint32_t         next_report;
-	char             rcon_password[32];
+	//uint32_t         next_report;
 	uint8_t          maxclients;
 	uint16_t         port;
-	byte             msg[MAX_MSG_LEN];
-	uint16_t         msglen;
+	//byte             msg[MAX_MSG_LEN];
+	//uint16_t         msglen;
 	message_queue_t  queue;
 	message_queue_t  queue_in;
 	ping_t           ping;
