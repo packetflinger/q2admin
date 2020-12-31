@@ -577,26 +577,25 @@ void RA_ParseMessage(void)
 }
 
 /**
- * Decrypt the nonce sent back from the server and check if it matches
+ * 1. Decrypt the nonce sent back from the server and check if it matches
+ * 2. If the encryption is requested, parse the AES 128 key and IV
+ * 3. Read the plaintext nonce from the server, encrypt and send back
+ *    to auth the client
  */
 qboolean RA_VerifyServerAuth(void)
 {
     ra_connection_t *c;
-    FILE *fp;
-    uint16_t cipherlen;
+    uint16_t len;
     byte challenge_cipher[RSA_LEN];
     byte challenge_plain[CHALLENGE_LEN];
     byte aeskey_cipher[RSA_LEN];
-    byte aeskey_plain[AESKEY_LEN];
     byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
-    RSA *rsa;
     qboolean servertrusted = false;
-    size_t result;
 
     c = &remote.connection;
 
-    cipherlen = RA_ReadShort();
-    RA_ReadData(challenge_cipher, cipherlen);
+    len = RA_ReadShort();
+    RA_ReadData(challenge_cipher, len);
 
     if (remoteEncryption) {
         RA_ReadData(aeskey_cipher, RSA_LEN);
@@ -616,8 +615,8 @@ qboolean RA_VerifyServerAuth(void)
         RA_WriteShort(RSA_size(c->rsa_pr));
         RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
 
-        result = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
-        if (!result) {
+        len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
+        if (!len) {
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems decrypting symmetric key sent from server\n");
         }
 
