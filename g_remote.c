@@ -434,11 +434,6 @@ void RA_SendMessages(void)
         return;
     }
 
-    // only once we're ready (unless trying to say hello)
-    //if (!remote.ready && remote.queue.data[0] != CMD_HELLO) {
-        //return;
-    //}
-
     uint32_t ret;
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
@@ -948,10 +943,9 @@ void RA_WriteString(const char *fmt, ...) {
         RA_WriteByte(0);
         return;
     }
-    
-    // perhaps don't convert to consolechars...
+
     for (i=0; i<len; i++) {
-        remote.queue.data[remote.queue.length++] = str[i] | 0x80;
+        remote.queue.data[remote.queue.length++] = str[i];
     }
 
     RA_WriteByte(0);
