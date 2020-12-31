@@ -437,18 +437,43 @@ void RA_SendMessages(void)
     uint32_t ret;
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
+    ra_connection_t *c;
+    message_queue_t *q;
+    byte *e;
+    size_t len;
+
+    c = &remote.connection;
+    q = &remote.queue;
 
     while (true) {
-        FD_ZERO(&remote.connection.set_w);
-        FD_SET(remote.connection.socket, &remote.connection.set_w);
+        FD_ZERO(&c->set_w);
+        FD_SET(c->socket, &c->set_w);
 
         // see if the socket is ready to send data
-        ret = select((int) remote.connection.socket + 1, NULL, &remote.connection.set_w, NULL, &tv);
+        ret = select((int) c->socket + 1, NULL, &c->set_w, NULL, &tv);
 
         // socket write buffer is ready, send
         if (ret == 1) {
-            //hexDump("Sending", remote.queue.data, remote.queue.length);
-            ret = send(remote.connection.socket, remote.queue.data, remote.queue.length, 0);
+
+            hexDump("Original", q->data, q->length);
+
+            if (c->trusted) {
+
+            }
+            if (c->encrypted && remote.state == RA_STATE_TRUSTED) {
+                printf("this should be encrypted\n");
+                e = malloc(q->length);
+                len = G_SymmetricEncrypt(e, q->data, q->length);
+                hexDump("Encrypted", e, len);
+                memset(q, 0, sizeof(message_queue_t));
+                memcpy(q->data, e, len);
+                q->length = len;
+                free(e);
+            }
+
+            hexDump("Sending", q->data, q->length);
+
+            ret = send(c->socket, q->data, q->length, 0);
 
             if (ret <= 0) {
                 RA_DisconnectedPeer();
@@ -456,8 +481,8 @@ void RA_SendMessages(void)
             }
 
             // shift off the data we just sent
-            memmove(remote.queue.data, remote.queue.data + ret, remote.queue.length - ret);
-            remote.queue.length -= ret;
+            memmove(q->data, q->data + ret, q->length - ret);
+            q->length -= ret;
 
         } else if (ret < 0) {
             RA_DisconnectedPeer();
@@ -467,7 +492,7 @@ void RA_SendMessages(void)
         }
 
         // processed the whole queue, we're done for now
-        if (!remote.queue.length) {
+        if (!q->length) {
             break;
         }
     }
@@ -609,6 +634,7 @@ qboolean RA_VerifyServerAuth(void)
         G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
         RA_WriteShort(RSA_size(c->rsa_pr));
         RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
+        RA_SendMessages();
 
         len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
         if (!len) {
@@ -617,6 +643,9 @@ qboolean RA_VerifyServerAuth(void)
 
         memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
         memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
+
+        c->ctx = EVP_CIPHER_CTX_new();
+        EVP_EncryptInit_ex(c->ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
 
         //hexDump("AES Key", c->aeskey, AESKEY_LEN);
         //hexDump("AES IV", c->iv, AESBLOCK_LEN);
