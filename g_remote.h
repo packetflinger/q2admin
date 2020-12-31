@@ -115,7 +115,7 @@ typedef struct {
     RSA     *rsa_pr;      // our private key
     RSA     *rsa_sv_pu;   // RA server's public key
 
-    EVP_CIPHER_CTX *ctx;  // sym encryption context
+    EVP_CIPHER_CTX *ctx;  // aes encryption context
 
     fd_set  set_r;    // read
     fd_set  set_w;    // write
