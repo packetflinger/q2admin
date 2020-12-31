@@ -670,7 +670,7 @@ void RA_DisconnectedPeer(void)
     }
 
     // only work on connections that were considered connected
-    if (!remote.state >= RA_STATE_CONNECTED) {
+    if (remote.state >= RA_STATE_CONNECTED) {
         return;
     }
 
