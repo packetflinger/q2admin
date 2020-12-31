@@ -131,7 +131,6 @@ typedef struct {
     uint32_t         connect_retry_frame;
     uint32_t         connection_attempts;
     uint32_t         connected_frame;  // the frame when we connected
-    uint32_t         socket;
     struct addrinfo  *addr;
     uint32_t         flags;
     uint32_t         frame_number;

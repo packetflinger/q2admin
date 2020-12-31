@@ -12,7 +12,7 @@ remote_t remote;
 void RA_Init() {
 	
 	// we're already connected
-	if (remote.socket) {
+	if (remote.connection.socket) {
 		return;
 	}
 
@@ -293,7 +293,7 @@ void RA_Disconnect(void)
 		return;
 	}
 
-	closesocket(remote.socket);
+	closesocket(remote.connection.socket);
 	remote.state = RA_STATE_DISCONNECTED;
 }
 
@@ -317,13 +317,13 @@ void RA_Connect(void)
 	remote.connection_attempts++;
 
 	// create the socket
-	remote.socket = socket(
+	remote.connection.socket = socket(
 			remote.addr->ai_family,
 			remote.addr->ai_socktype,
 			remote.addr->ai_protocol
 	);
 
-	if (remote.socket == -1) {
+	if (remote.connection.socket == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
 		remote.state = RA_STATE_DISABLED;
 		return;
@@ -333,10 +333,10 @@ void RA_Connect(void)
 // preferred method is using POSIX O_NONBLOCK, if available
 #if defined(O_NONBLOCK)
 	flags = 0;
-	ret = fcntl(remote.socket, F_SETFL, flags | O_NONBLOCK);
+	ret = fcntl(remote.connection.socket, F_SETFL, flags | O_NONBLOCK);
 #else
 	flags = 1;
-	ret = ioctlsocket(remote.socket, FIONBIO, (long unsigned int *) &flags);
+	ret = ioctlsocket(remote.connection.socket, FIONBIO, (long unsigned int *) &flags);
 #endif
 
 	if (ret == -1) {
@@ -346,7 +346,7 @@ void RA_Connect(void)
 	}
 
 	// make the actual connection
-	connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+	connect(remote.connection.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
 
 	/**
 	 * since we're non-blocking, the connection won't complete in this single server frame.
@@ -369,11 +369,11 @@ void RA_CheckConnection(void)
 
 	FD_ZERO(&remote.connection.set_w);
 	FD_ZERO(&remote.connection.set_e);
-	FD_SET(remote.socket, &remote.connection.set_w);
-	FD_SET(remote.socket, &remote.connection.set_e);
+	FD_SET(remote.connection.socket, &remote.connection.set_w);
+	FD_SET(remote.connection.socket, &remote.connection.set_e);
 
 	// check if connection is fully established
-	ret = select((int)remote.socket + 1, NULL, &remote.connection.set_w, &remote.connection.set_e, &tv);
+	ret = select((int)remote.connection.socket + 1, NULL, &remote.connection.set_w, &remote.connection.set_e, &tv);
 
 	if (ret == 1) {
 
@@ -382,20 +382,20 @@ void RA_CheckConnection(void)
 		socklen_t len;
 
 		len = sizeof(number);
-		getsockopt(remote.socket, SOL_SOCKET, SO_ERROR, &number, &len);
+		getsockopt(remote.connection.socket, SOL_SOCKET, SO_ERROR, &number, &len);
 		if (number == 0) {
 			connected = true;
 		} else {
 			exception = true;
 		}
 #else
-		if (FD_ISSET(remote.socket, &remote.connection.set_w)) {
+		if (FD_ISSET(remote.connection.socket, &remote.connection.set_w)) {
 			connected = true;
 		}
 #endif
 	} else if (ret == -1) {
 		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
-		closesocket(remote.socket);
+		closesocket(remote.connection.socket);
 		remote.state = RA_STATE_DISCONNECTED;
 		remote.connect_retry_frame = FUTURE_FRAME(10);
 		return;
@@ -404,12 +404,12 @@ void RA_CheckConnection(void)
 	// we need to make sure it's actually connected
 	if (connected) {
 		errno = 0;
-		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
+		getpeername(remote.connection.socket, (struct sockaddr *)&addr, &len);
 
 		if (errno) {
 			remote.connect_retry_frame = FUTURE_FRAME(30);
 			remote.state = RA_STATE_DISCONNECTED;
-			closesocket(remote.socket);
+			closesocket(remote.connection.socket);
 		} else {
 			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
 			remote.state = RA_STATE_CONNECTED;
@@ -445,15 +445,15 @@ void RA_SendMessages(void)
 
 	while (true) {
 		FD_ZERO(&remote.connection.set_w);
-		FD_SET(remote.socket, &remote.connection.set_w);
+		FD_SET(remote.connection.socket, &remote.connection.set_w);
 
 		// see if the socket is ready to send data
-		ret = select((int) remote.socket + 1, NULL, &remote.connection.set_w, NULL, &tv);
+		ret = select((int) remote.connection.socket + 1, NULL, &remote.connection.set_w, NULL, &tv);
 
 		// socket write buffer is ready, send
 		if (ret == 1) {
 		    //hexDump("Sending", remote.queue.data, remote.queue.length);
-			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
+			ret = send(remote.connection.socket, remote.queue.data, remote.queue.length, 0);
 
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
@@ -499,14 +499,14 @@ void RA_ReadMessages(void)
 
 	while (true) {
 		FD_ZERO(&remote.connection.set_r);
-		FD_SET(remote.socket, &remote.connection.set_r);
+		FD_SET(remote.connection.socket, &remote.connection.set_r);
 
 		// see if there is data waiting in the buffer for us to read
-		ret = select(remote.socket + 1, &remote.connection.set_r, NULL, NULL, &tv);
+		ret = select(remote.connection.socket + 1, &remote.connection.set_r, NULL, NULL, &tv);
 
 		// socket read buffer has data waiting in it
 		if (ret == 1) {
-			ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+			ret = recv(remote.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
 			if (ret <= 0) {
 				RA_DisconnectedPeer();
 				return;
@@ -800,7 +800,7 @@ void RA_ParseError(void)
 
 	// serious enough to disconnect
 	if (reason_id >= 200) {
-		closesocket(remote.socket);
+		closesocket(remote.connection.socket);
 		remote.state = RA_STATE_DISABLED;
 		freeaddrinfo(remote.addr);
 	}
