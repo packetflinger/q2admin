@@ -762,11 +762,6 @@ void RA_SayHello(void)
         return;
     }
 
-    // we've already said hello
-    //if (remote.ready) {
-        //return;
-    //}
-
     // random data to check server auth
     RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 
