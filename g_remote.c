@@ -367,13 +367,13 @@ void RA_CheckConnection(void)
 	struct timeval tv;
 	tv.tv_sec = tv.tv_usec = 0;
 
-	FD_ZERO(&remote.set_w);
-	FD_ZERO(&remote.set_e);
-	FD_SET(remote.socket, &remote.set_w);
-	FD_SET(remote.socket, &remote.set_e);
+	FD_ZERO(&remote.connection.set_w);
+	FD_ZERO(&remote.connection.set_e);
+	FD_SET(remote.socket, &remote.connection.set_w);
+	FD_SET(remote.socket, &remote.connection.set_e);
 
 	// check if connection is fully established
-	ret = select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
+	ret = select((int)remote.socket + 1, NULL, &remote.connection.set_w, &remote.connection.set_e, &tv);
 
 	if (ret == 1) {
 
@@ -389,7 +389,7 @@ void RA_CheckConnection(void)
 			exception = true;
 		}
 #else
-		if (FD_ISSET(remote.socket, &remote.set_w)) {
+		if (FD_ISSET(remote.socket, &remote.connection.set_w)) {
 			connected = true;
 		}
 #endif
@@ -444,11 +444,11 @@ void RA_SendMessages(void)
 	tv.tv_sec = tv.tv_usec = 0;
 
 	while (true) {
-		FD_ZERO(&remote.set_w);
-		FD_SET(remote.socket, &remote.set_w);
+		FD_ZERO(&remote.connection.set_w);
+		FD_SET(remote.socket, &remote.connection.set_w);
 
 		// see if the socket is ready to send data
-		ret = select((int) remote.socket + 1, NULL, &remote.set_w, NULL, &tv);
+		ret = select((int) remote.socket + 1, NULL, &remote.connection.set_w, NULL, &tv);
 
 		// socket write buffer is ready, send
 		if (ret == 1) {
@@ -498,11 +498,11 @@ void RA_ReadMessages(void)
 	in = &remote.queue_in;
 
 	while (true) {
-		FD_ZERO(&remote.set_r);
-		FD_SET(remote.socket, &remote.set_r);
+		FD_ZERO(&remote.connection.set_r);
+		FD_SET(remote.socket, &remote.connection.set_r);
 
 		// see if there is data waiting in the buffer for us to read
-		ret = select(remote.socket + 1, &remote.set_r, NULL, NULL, &tv);
+		ret = select(remote.socket + 1, &remote.connection.set_r, NULL, NULL, &tv);
 
 		// socket read buffer has data waiting in it
 		if (ret == 1) {

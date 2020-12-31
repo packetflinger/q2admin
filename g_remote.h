@@ -104,6 +104,9 @@ typedef struct {
 	RSA       *rsa_pr;      // our private key
 	RSA       *rsa_sv_pu;   // RA server's public key
 	EVP_CIPHER_CTX  *ctx;   // sym encryption context
+	fd_set           set_r;    // read
+	fd_set           set_w;    // write
+	fd_set           set_e;    // error
 } ra_connection_t;
 
 /**
@@ -116,19 +119,15 @@ typedef struct {
 	uint32_t         connection_attempts;
 	uint32_t         connected_frame;  // the frame when we connected
 	uint32_t         socket;
-	fd_set           set_r;    // read
-	fd_set           set_w;    // write
+
+
 	fd_set           set_e;    // error
 	struct addrinfo  *addr;
-	qboolean         ipv6;
 	uint32_t         flags;
 	uint32_t         frame_number;
 	char             mapname[32];
-	//uint32_t         next_report;
 	uint8_t          maxclients;
 	uint16_t         port;
-	//byte             msg[MAX_MSG_LEN];
-	//uint16_t         msglen;
 	message_queue_t  queue;
 	message_queue_t  queue_in;
 	ping_t           ping;
