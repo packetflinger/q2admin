@@ -199,7 +199,7 @@ static void ra_replace_die(void)
  */
 void RA_Ping(void)
 {
-    if (!remote.state < RA_STATE_CONNECTED) {
+    if (remote.state < RA_STATE_CONNECTED) {
         return;
     }
 
