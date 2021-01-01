@@ -230,14 +230,14 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
     int dest_len = 0;
     int written = 0;
 
-    if (!(c || c->ctx)) {
+    if (!(c || c->e_ctx)) {
         return 0;
     }
 
-    EVP_EncryptUpdate(c->ctx, dest + dest_len, &dest_len, src, src_len);
+    EVP_EncryptUpdate(c->e_ctx, dest + dest_len, &dest_len, src, src_len);
     written += dest_len;
 
-    EVP_EncryptFinal_ex(c->ctx, dest + dest_len, &dest_len);
+    EVP_EncryptFinal_ex(c->e_ctx, dest + dest_len, &dest_len);
     written += dest_len;
 
     return written;
@@ -252,14 +252,14 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     int dest_len = 0;
     int written = 0;
 
-    if (!(c || c->ctx)) {
+    if (!(c || c->d_ctx)) {
         return 0;
     }
 
-    EVP_DecryptUpdate(c->ctx, dest + dest_len, &dest_len, src, src_len);
+    EVP_DecryptUpdate(c->d_ctx, dest + dest_len, &dest_len, src, src_len);
     written += dest_len;
 
-    EVP_DecryptFinal_ex(c->ctx, dest + dest_len, &dest_len);
+    EVP_DecryptFinal_ex(c->d_ctx, dest + dest_len, &dest_len);
     written += dest_len;
 
     return written;

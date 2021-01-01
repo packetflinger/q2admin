@@ -455,23 +455,18 @@ void RA_SendMessages(void)
         // socket write buffer is ready, send
         if (ret == 1) {
 
-            hexDump("Original", q->data, q->length);
+            //hexDump("Original", q->data, q->length);
 
-            if (c->trusted) {
-
-            }
             if (c->encrypted && remote.state == RA_STATE_TRUSTED) {
-                printf("this should be encrypted\n");
                 e = malloc(q->length);
                 len = G_SymmetricEncrypt(e, q->data, q->length);
-                hexDump("Encrypted", e, len);
                 memset(q, 0, sizeof(message_queue_t));
                 memcpy(q->data, e, len);
                 q->length = len;
                 free(e);
             }
 
-            hexDump("Sending", q->data, q->length);
+            //hexDump("Sending", q->data, q->length);
 
             ret = send(c->socket, q->data, q->length, 0);
 
@@ -622,6 +617,7 @@ qboolean RA_VerifyServerAuth(void)
     }
 
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+
     G_PublicDecrypt(c->rsa_sv_pu, challenge_plain, challenge_cipher);
 
     if (memcmp(challenge_plain, c->cl_nonce, CHALLENGE_LEN) == 0) {
@@ -630,7 +626,7 @@ qboolean RA_VerifyServerAuth(void)
 
     // encrypt the server's nonce and send back to auth ourselves
     if (servertrusted) {
-        memset(&challenge_cipher[0], 0, RSA_LEN);
+        memset(challenge_cipher, 0, RSA_LEN);
         G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
         RA_WriteShort(RSA_size(c->rsa_pr));
         RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
@@ -644,8 +640,11 @@ qboolean RA_VerifyServerAuth(void)
         memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
         memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
 
-        c->ctx = EVP_CIPHER_CTX_new();
-        EVP_EncryptInit_ex(c->ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
+        c->e_ctx = EVP_CIPHER_CTX_new();
+        EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
+
+        c->d_ctx = EVP_CIPHER_CTX_new();
+        EVP_EncryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
 
         //hexDump("AES Key", c->aeskey, AESKEY_LEN);
         //hexDump("AES IV", c->iv, AESBLOCK_LEN);
