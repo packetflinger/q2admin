@@ -298,6 +298,23 @@ void RA_Disconnect(void)
 }
 
 /**
+ * Get the frame number at which we should try another connection.
+ * Increase the interval as attempts increase without a connection.
+ */
+static uint32_t next_connect_frame(void)
+{
+    if (remote.connection_attempts < 12) {  // 2 minutes
+        return FUTURE_FRAME(10);
+    } else if (remote.connection_attempts < 20) { // 10 minutes
+        return FUTURE_FRAME(30);
+    } else if (remote.connection_attempts < 50) { // 30 minutes
+        return FUTURE_FRAME(60);
+    } else {
+        return FUTURE_FRAME(120);
+    }
+}
+
+/**
  * Make the connection to the remote admin server
  */
 void RA_Connect(void)
@@ -326,9 +343,8 @@ void RA_Connect(void)
     if (remote.connection.socket == -1) {
         perror("connect");
         errno = 0;
-        remote.connect_retry_frame = FUTURE_FRAME(5);
-        //gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
-        //remote.state = RA_STATE_DISABLED;
+        remote.connect_retry_frame = next_connect_frame();
+
         return;
     }
 
@@ -702,6 +718,7 @@ qboolean RA_VerifyServerAuth(void)
 
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
         remote.state = RA_STATE_TRUSTED;
+        remote.connection_attempts = 0;
         return true;
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
