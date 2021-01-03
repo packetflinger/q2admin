@@ -736,34 +736,13 @@ void RA_ParsePong(void)
  */
 void RA_DisconnectedPeer(void)
 {
-    struct addrinfo *a;
-    uint32_t flags;
-    ra_connection_t c;
-
-    if (remote.state == RA_STATE_DISABLED) {
-        return;
-    }
-
-    // only work on connections that were considered connected
     if (remote.state < RA_STATE_CONNECTED) {
         return;
     }
 
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
-    // save the server address, but start over
-    a = remote.addr;
-    flags = remote.flags;
-    c = remote.connection;
-
-    //freeaddrinfo(remote.addr);
-
-    //q2a_memset(&remote, 0, sizeof(remote_t));
-
-    //remote.addr = a;
     remote.state = RA_STATE_DISCONNECTED;
-    //remote.flags = flags;
-    //remote.connection = c;
     remote.connect_retry_frame = FUTURE_FRAME(10);
 }
 
