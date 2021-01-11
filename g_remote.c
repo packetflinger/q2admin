@@ -612,10 +612,20 @@ void RA_ReadMessages(void)
 }
 
 /**
+ * The server has let us know we are trusted.
+ */
+void RA_Trusted(void)
+{
+    gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection Trusted\n");
+    remote.state = RA_STATE_TRUSTED;
+}
+
+/**
  * Parse a newly received message and act accordingly
  */
 void RA_ParseMessage(void)
 {
+    message_queue_t *msg = &remote.queue_in;
     byte cmd;
 
     if (remote.state == RA_STATE_DISABLED) {
@@ -629,30 +639,35 @@ void RA_ParseMessage(void)
 
     //hexDump("New Message", remote.queue_in.data, remote.queue_in.length);
 
-    cmd = RA_ReadByte();
+    while (msg->index < msg->length) {
+        cmd = RA_ReadByte();
 
-    switch (cmd) {
-    case SCMD_PONG:
-        RA_ParsePong();
-        break;
-    case SCMD_COMMAND:
-        RA_ParseCommand();
-        break;
-    case SCMD_HELLOACK:
-        RA_VerifyServerAuth();
-        //remote.ready = true;
-        //RA_PlayerList();
-        //RA_Map(remote.mapname);
-        break;
-    case SCMD_ERROR:
-        RA_ParseError();
-        break;
-    case SCMD_SAYCLIENT:
-        RA_SayClient();
-        break;
-    case SCMD_SAYALL:
-        RA_SayAll();
-        break;
+        switch (cmd) {
+        case SCMD_PONG:
+            RA_ParsePong();
+            break;
+        case SCMD_COMMAND:
+            RA_ParseCommand();
+            break;
+        case SCMD_HELLOACK:
+            RA_VerifyServerAuth();
+            //remote.ready = true;
+            //RA_PlayerList();
+            //RA_Map(remote.mapname);
+            break;
+        case SCMD_TRUSTED:
+            RA_Trusted();
+            break;
+        case SCMD_ERROR:
+            RA_ParseError();
+            break;
+        case SCMD_SAYCLIENT:
+            RA_SayClient();
+            break;
+        case SCMD_SAYALL:
+            RA_SayAll();
+            break;
+        }
     }
 
     // reset queue back to zero
@@ -696,6 +711,7 @@ qboolean RA_VerifyServerAuth(void)
     if (servertrusted) {
         q2a_memset(challenge_cipher, 0, RSA_LEN);
         G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
+        RA_WriteByte(CMD_AUTH);
         RA_WriteShort(RSA_size(c->rsa_pr));
         RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
         RA_SendMessages();
@@ -711,17 +727,19 @@ qboolean RA_VerifyServerAuth(void)
 
             c->e_ctx = EVP_CIPHER_CTX_new();
             c->d_ctx = EVP_CIPHER_CTX_new();
-
-            //hexDump("AES Key", c->aeskey, AESKEY_LEN);
-            //hexDump("AES IV", c->iv, AESBLOCK_LEN);
         }
 
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server Trusted\n");
-        remote.state = RA_STATE_TRUSTED;
         remote.connection_attempts = 0;
+        remote.connection.auth_fail_count = 0;
         return true;
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
+        remote.connection.auth_fail_count++;
+
+        if (remote.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
+            gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
+            remote.state = RA_STATE_DISABLED;
+        }
         return false;
     }
 }
@@ -858,15 +876,18 @@ void RA_ParseError(void)
     uint8_t client_id, reason_id;
     char *reason;
 
+    gi.dprintf("parsing error\n");
+
     client_id = RA_ReadByte(); // will be -1 if not player specific
     reason_id = RA_ReadByte();
     reason = RA_ReadString();
 
     // Where to output the error msg
     if (client_id == -1) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s]n", reason);
+        gi.cprintf(NULL, PRINT_HIGH, "%s\n", reason);
     } else {
-        gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
+        //gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
+        gi.cprintf(NULL, PRINT_HIGH, "error msg here\n");
     }
 
     // serious enough to disconnect

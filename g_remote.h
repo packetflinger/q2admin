@@ -48,6 +48,7 @@
 #define CHALLENGE_LEN   16  // bytes
 #define AESKEY_LEN      16  // bytes, 128 bits
 #define AESBLOCK_LEN    16  // bytes, 128 bits
+#define AUTH_FAIL_LIMIT 3   // stop trying after
 
 
 /**
@@ -104,6 +105,7 @@ typedef struct {
     qboolean    trusted;      // is the server trusted?
     qboolean    encrypted;    // should we encrypt?
     ra_auth_t   authstage;
+    uint8_t     auth_fail_count;
 
     // auth and encryption stuff
     byte    cl_nonce[CHALLENGE_LEN];  // random data
@@ -177,6 +179,8 @@ typedef enum {
     SCMD_COMMAND,
     SCMD_SAYCLIENT,
     SCMD_SAYALL,
+    SCMD_AUTH,
+    SCMD_TRUSTED,
 } ra_server_cmd_t;
 
 
