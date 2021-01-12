@@ -859,6 +859,7 @@ void RA_SayHello(void)
     // random data to check server auth
     RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 
+    RA_WriteLong(1);    // we're a normal client
     RA_WriteByte(CMD_HELLO);
     RA_WriteLong(remoteKey);
     RA_WriteLong(Q2A_REVISION);
