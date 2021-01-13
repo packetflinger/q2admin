@@ -17,6 +17,9 @@
 #include <openssl/rand.h>
 #include <openssl/err.h>
 
+#define MAGIC_CLIENT    (('C' << 24) + ('A' << 16) + ('2' << 8) + 'Q')
+#define MAGIC_PEER      (('P' << 24) + ('A' << 16) + ('2' << 8) + 'Q')
+
 #define NS_INT16SZ      2
 #define NS_INADDRSZ     4
 #define NS_IN6ADDRSZ    16
