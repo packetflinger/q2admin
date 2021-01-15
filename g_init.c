@@ -682,6 +682,10 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     remote.port = getport();
     remote.frame_number = 0;
 
+    if (remote.state == RA_STATE_TRUSTED) {
+        RA_Map(mapname);
+    }
+
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }
 

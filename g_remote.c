@@ -1060,6 +1060,40 @@ void RA_ReadData(void *out, size_t len)
     remote.queue_in.index += len;
 }
 
+
+/**
+ * Build a new info string containing just want we need:
+ *  name, ip, skin, fov
+ */
+static char *ra_userinfo(uint8_t player_index)
+{
+    static char newuserinfo[MAX_INFO_STRING];
+    char *value;
+
+    memset(newuserinfo, 0, MAX_INFO_STRING);
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
+    if (value) {
+        q2a_strcpy(newuserinfo, va("\\name\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\ip\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\skin\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\fov\\%s", value));
+    }
+
+    return newuserinfo;
+}
+
 /**
  * Called when a player connects
  */
@@ -1074,7 +1108,7 @@ void RA_PlayerConnect(edict_t *ent)
 
     RA_WriteByte(CMD_CONNECT);
     RA_WriteByte(cl);
-    RA_WriteString("%s", proxyinfo[cl].userinfo);
+    RA_WriteString("%s", ra_userinfo(cl));
 }
 
 /**
@@ -1154,7 +1188,7 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
 
     RA_WriteByte(CMD_PLAYERUPDATE);
     RA_WriteByte(cl);
-    RA_WriteString("%s", ui);
+    RA_WriteString("%s", ra_userinfo(cl));
 }
 
 /**
@@ -1220,7 +1254,7 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
  */
 void RA_Map(const char *mapname)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
