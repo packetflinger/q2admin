@@ -1215,7 +1215,7 @@ void RA_Invite(uint8_t cl, const char *text)
  */
 void RA_Whois(uint8_t cl, const char *name)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
