@@ -1234,7 +1234,7 @@ void RA_Whois(uint8_t cl, const char *name)
  */
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
