@@ -1196,7 +1196,7 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void RA_Invite(uint8_t cl, const char *text)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
