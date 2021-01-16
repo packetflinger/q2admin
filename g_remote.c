@@ -750,6 +750,12 @@ qboolean RA_VerifyServerAuth(void)
 void RA_ParseCommand(void)
 {
     char *cmd;
+
+    // we should never get here if we're not trusted, but just in case
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
+
     cmd = RA_ReadString();
 
     // cram it into the command buffer
