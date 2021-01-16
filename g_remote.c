@@ -789,7 +789,7 @@ void RA_PlayerList(void)
     uint8_t count, i;
     count = 0;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
@@ -1102,7 +1102,7 @@ void RA_PlayerConnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
@@ -1119,7 +1119,7 @@ void RA_PlayerDisconnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
@@ -1137,11 +1137,11 @@ void RA_PlayerCommand(edict_t *ent) {
  */
 void RA_Print(uint8_t level, char *text)
 {
-    if (!(remote.flags & RFL_CHAT)) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
     
-    if (remote.state == RA_STATE_DISABLED) {
+    if (!(remote.flags & RFL_CHAT)) {
         return;
     }
 
@@ -1155,7 +1155,7 @@ void RA_Print(uint8_t level, char *text)
  */
 void RA_Teleport(uint8_t client_id)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
@@ -1182,7 +1182,7 @@ void RA_Teleport(uint8_t client_id)
  */
 void RA_PlayerUpdate(uint8_t cl, const char *ui)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
