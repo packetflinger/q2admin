@@ -1312,21 +1312,22 @@ void RA_SayAll(void)
     string = RA_ReadString();
 
     for (i=0; i<remote.maxclients; i++) {
-        if (proxyinfo[i].inuse) {
-
-            /**
-             * This way we send directly to the clients and
-             * not to the dedicated server console triggering
-             * a print to be sent back to the q2a server.
-             *
-             * Using gi.bprintf() instead would cause that.
-             */
-            gi.cprintf(
-                    proxyinfo[i].ent,
-                    PRINT_CHAT,
-                    "%s\n",
-                    string
-            );
+        if (!proxyinfo[i].inuse) {
+            continue;
         }
+
+        /**
+         * This way we send directly to the clients and
+         * not to the dedicated server console triggering
+         * a print to be sent back to the q2a server.
+         *
+         * Using gi.bprintf() instead would cause that.
+         */
+        gi.cprintf(
+                proxyinfo[i].ent,
+                PRINT_CHAT,
+                "%s\n",
+                string
+        );
     }
 }
