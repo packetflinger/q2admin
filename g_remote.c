@@ -53,6 +53,40 @@ void RA_Init() {
 
 
 /**
+ * Build a new info string containing just want we need:
+ *  name, ip, skin, fov
+ */
+static char *ra_userinfo(uint8_t player_index)
+{
+    static char newuserinfo[MAX_INFO_STRING];
+    char *value;
+
+    memset(newuserinfo, 0, MAX_INFO_STRING);
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
+    if (value) {
+        q2a_strcpy(newuserinfo, va("\\name\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\ip\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\skin\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\fov\\%s", value));
+    }
+
+    return newuserinfo;
+}
+
+
+/**
  * getaddrinfo result is a linked-list of struct addrinfo.
  * Figure out which result is the one we want (ipv6/ipv4)
  */
@@ -811,7 +845,7 @@ void RA_PlayerList(void)
     for (i=0; i<remote.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             RA_WriteByte(i);
-            RA_WriteString("%s", proxyinfo[i].userinfo);
+            RA_WriteString("%s", ra_userinfo(i));
         }
     }
 }
@@ -1066,39 +1100,6 @@ void RA_ReadData(void *out, size_t len)
     remote.queue_in.index += len;
 }
 
-
-/**
- * Build a new info string containing just want we need:
- *  name, ip, skin, fov
- */
-static char *ra_userinfo(uint8_t player_index)
-{
-    static char newuserinfo[MAX_INFO_STRING];
-    char *value;
-
-    memset(newuserinfo, 0, MAX_INFO_STRING);
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
-    if (value) {
-        q2a_strcpy(newuserinfo, va("\\name\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
-    if (value) {
-        q2a_strcat(newuserinfo, va("\\ip\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
-    if (value) {
-        q2a_strcat(newuserinfo, va("\\skin\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
-    if (value) {
-        q2a_strcat(newuserinfo, va("\\fov\\%s", value));
-    }
-
-    return newuserinfo;
-}
 
 /**
  * Called when a player connects
