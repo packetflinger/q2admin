@@ -1280,7 +1280,7 @@ void RA_SayClient(void)
     char *string;
     edict_t *ent;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
@@ -1305,7 +1305,7 @@ void RA_SayAll(void)
     uint8_t i;
     char *string;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
