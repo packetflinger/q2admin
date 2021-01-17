@@ -1271,24 +1271,6 @@ void RA_Map(const char *mapname)
 
 
 /**
- * XOR part of the message with a secret key only known to this q2 server
- * and the remote admin server.
- */
-void RA_Encrypt(void) {
-    uint16_t i;
-
-    /*
-     * Start 4 bytes into the message. We need the remoteKey (first 4 bytes)
-     * to be unencrypted so we know which server the message is from and
-     * we can pick the appropriate key to decrypt the rest of the message
-     */
-    for (i=3; i<remote.queue.length; i++) {
-        remote.queue.data[i] ^= encryptionKey[i];
-    }
-}
-
-
-/**
  * Write something to a client
  */
 void RA_SayClient(void)

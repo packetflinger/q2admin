@@ -55,7 +55,6 @@ int remotePort              = 9988;
 int remoteFlags             = 1024;
 char remoteDNS[3]           = "64";    // ipv6 first, then ipv4
 qboolean remoteEnabled      = FALSE;
-char encryptionKey[1400];
 char remoteCmdTeleport[15]  = "!teleport";
 char remoteCmdInvite[15]    = "!invite";
 char remoteCmdSeen[15]      = "!seen";
