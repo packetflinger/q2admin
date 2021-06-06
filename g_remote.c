@@ -685,12 +685,11 @@ void RA_ParseMessage(void)
             break;
         case SCMD_HELLOACK:
             RA_VerifyServerAuth();
-            //remote.ready = true;
-            //RA_PlayerList();
-            //RA_Map(remote.mapname);
             break;
-        case SCMD_TRUSTED:
+        case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
             RA_Trusted();
+            RA_Map(remote.mapname);
+            RA_PlayerList();
             break;
         case SCMD_ERROR:
             RA_ParseError();
@@ -865,6 +864,10 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
     uint8_t aid = getEntOffset(attacker) - 1;
     gitem_t *weapon;
 
+    proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    return;
+
+    /*
     if (self->deadflag != DEAD_DEAD) {
         if (strcmp(attacker->classname,"player") == 0) {
             RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
@@ -879,6 +882,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 
     // call the player's real die() function
     proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    */
 }
 
 /**
