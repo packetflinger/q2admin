@@ -529,7 +529,7 @@ void RA_SendMessages(void)
 
         // socket write buffer is ready, send
         if (ret) {
-            if (c->encrypted && remote.state == RA_STATE_TRUSTED) {
+            if (c->encrypted && c->have_keys) {
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
@@ -628,7 +628,7 @@ void RA_ReadMessages(void)
             in->length += ret;
 
             // decrypt if necessary
-            if (remote.connection.encrypted && remote.state == RA_STATE_TRUSTED) {
+            if (remote.connection.encrypted && remote.connection.have_keys) {
                 memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
@@ -757,6 +757,8 @@ qboolean RA_VerifyServerAuth(void)
 
             q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
             q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
+
+            c->have_keys = true;
 
             c->e_ctx = EVP_CIPHER_CTX_new();
             c->d_ctx = EVP_CIPHER_CTX_new();

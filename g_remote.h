@@ -105,8 +105,9 @@ typedef enum {
 typedef struct {
     uint32_t    socket;
     qboolean    ipv6;
-    qboolean    trusted;      // is the server trusted?
-    qboolean    encrypted;    // should we encrypt?
+    qboolean    trusted;    // is the server trusted?
+    qboolean    encrypted;  // should we encrypt?
+    qboolean    have_keys;  // do we have the shared keys?
     ra_auth_t   authstage;
     uint8_t     auth_fail_count;
 
