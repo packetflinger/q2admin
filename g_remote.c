@@ -819,6 +819,11 @@ void RA_DisconnectedPeer(void)
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
     remote.state = RA_STATE_DISCONNECTED;
+    remote.connection.trusted = false;
+    remote.connection.have_keys = false;
+    memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
+    memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
+
     remote.connect_retry_frame = FUTURE_FRAME(10);
 }
 
