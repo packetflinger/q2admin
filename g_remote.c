@@ -229,6 +229,18 @@ static void ra_replace_die(void)
 
 
 /**
+ *
+ */
+void debug_print(char *str)
+{
+    if (!RFL(DEBUG)) {
+        return;
+    }
+
+    gi.cprintf(NULL, PRINT_HIGH, "%s\n", str);
+}
+
+/**
  * Periodically ping the server to know if the connection is still open
  */
 void RA_Ping(void)
@@ -700,6 +712,9 @@ void RA_ParseMessage(void)
         case SCMD_SAYALL:
             RA_SayAll();
             break;
+        case SCMD_KEY:
+            RA_RotateKeys();
+            break;
         }
     }
 
@@ -804,6 +819,21 @@ void RA_ParsePong(void)
 {
     remote.ping.waiting = false;
     remote.ping.miss_count = 0;
+}
+
+/**
+ * The server sent us new symmetric encryption keys, parse them and
+ * start using them
+ */
+void RA_RotateKeys(void)
+{
+    ra_connection_t *c;
+    c = &remote.connection;
+
+    RA_ReadData(c->aeskey, AESKEY_LEN);
+    RA_ReadData(c->iv, AESBLOCK_LEN);
+
+    //debug_print("[RA] Encryption keys changed");
 }
 
 /**

@@ -185,6 +185,7 @@ typedef enum {
     SCMD_SAYALL,
     SCMD_AUTH,
     SCMD_TRUSTED,
+    SCMD_KEY,
 } ra_server_cmd_t;
 
 
@@ -253,6 +254,8 @@ qboolean    G_LoadKeys(void);
 qboolean    RA_VerifyServerAuth(void);
 void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
+void        RA_RotateKeys(void);
+void        debug_print(char *str);
 
 
 extern remote_t  remote;
