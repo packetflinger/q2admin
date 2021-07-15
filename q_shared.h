@@ -66,6 +66,10 @@ typedef enum {
 	qtrue
 } qboolean;
 
+#ifndef min
+#define min(x,y) ((x) < (y)) ? (x) : (y)
+#endif
+
 #ifndef NULL
 #define NULL ((void *)0)
 #endif
