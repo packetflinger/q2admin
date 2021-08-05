@@ -854,7 +854,8 @@ void RA_DisconnectedPeer(void)
     memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
     memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
 
-    remote.connect_retry_frame = FUTURE_FRAME(10);
+    // try reconnecting a reasonably random amount of time later
+    remote.connect_retry_frame = FUTURE_FRAME(10) + ((rand() & 0xf) * 2);
 }
 
 /**
