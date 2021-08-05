@@ -836,7 +836,7 @@ and global variables
  */
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
-	cvar_t *gamelib;
+    cvar_t *gamelib;
 
     dllloaded = FALSE;
     gi = *import;
