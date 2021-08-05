@@ -18,14 +18,17 @@ endif
 GLIB_CFLAGS ?= $(shell pkg-config --cflags glib-2.0)
 GLIB_LDFLAGS ?= $(shell pkg-config --libs glib-2.0)
 
+SSL_CFLAGS ?= $(shell pkg-config --cflags openssl)
+SSL_LDFLAGS ?= $(shell pkg-config --libs openssl)
+
 CC ?= gcc
 LD ?= ld
 WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
 
-CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD $(GLIB_CFLAGS) $(INCLUDES)
-LDFLAGS ?= -shared $(GLIB_LDFLAGS)
+CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD $(GLIB_CFLAGS) $(SSL_CFLAGS) $(INCLUDES)
+LDFLAGS ?= -shared $(GLIB_LDFLAGS) $(SSL_LDFLAGS)
 LIBS ?= -lcurl -lm -ldl
 
 ifdef CONFIG_WINDOWS
@@ -34,7 +37,7 @@ ifdef CONFIG_WINDOWS
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
 else
-    CFLAGS += -fPIC -ffast-math -w -DLINUX 
+    CFLAGS += -fPIC -ffast-math -w -DLINUX
 endif
 
 CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
