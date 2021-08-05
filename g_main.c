@@ -8,7 +8,7 @@ of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
 
@@ -62,9 +62,9 @@ void ShutdownGame(void) {
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
         STARTPERFORMANCE(2);
     }
-	
+
 	RA_Shutdown();
-	
+
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
     ge_mod->Shutdown();
@@ -184,7 +184,7 @@ void G_RunFrame(void) {
                     addCmdQueue(client, QCMD_STARTUPTEST, 2, 0, 0);
                     proxyinfo[client].clientcommand |= CCMD_STARTUPTEST;
                 } else if (command == QCMD_STARTUPTEST) {
-                
+
                     addCmdQueue(client, QCMD_EXECMAPCFG, 5, 0, 0);
                     if (do_franck_check) {
                         stuffcmd(ent, "riconnect; roconnect; connect; set frkq2 disconnect; set quake2frk disconnect; set q2frk disconnect\n");
@@ -198,7 +198,7 @@ void G_RunFrame(void) {
                     }
 
                     addCmdQueue(client, QCMD_SHOWMOTD, 0, 0, 0);
-                   
+
                     if (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED) {
                         break;
                     }
@@ -432,7 +432,7 @@ void G_RunFrame(void) {
                 if (disconnectuser) {
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
                 }
-            }  							
+            }
             else if (command == QCMD_TESTSTANDARDPROXY) {
                 if (private_commands[0].command[0]) {
                     addCmdQueue(client, QCMD_PRIVATECOMMAND, 10, 0, 0);
@@ -695,7 +695,7 @@ void G_RunFrame(void) {
                                     proxyinfo[client].pmod_noreply_count++;
                                     if (proxyinfo[client].pmod_noreply_count > max_pmod_noreply)
                                     {
-                                            gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);	          
+                                            gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);
                                             sprintf(buffer,client_msg,version_check);
                                             gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
                                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
@@ -703,7 +703,7 @@ void G_RunFrame(void) {
                             }
                             else if (proxyinfo[client].pmod != 1)
                             {
-                                    gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);	          
+                                    gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);
                                     sprintf(buffer,client_msg,version_check);
                                     gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
                                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
@@ -776,8 +776,7 @@ void G_RunFrame(void) {
                 if (zbotmotd[0]) {
                     gi.centerprintf(ent, motd);
                 }
-            }
-            else if (command == QCMD_RUNVOTECMD) {
+            } else if (command == QCMD_RUNVOTECMD) {
                 gi.AddCommandString(cmdpassedvote);
             } else if (command == QCMD_TESTTIMESCALE) {
                 if (timescaledetect) {
@@ -813,7 +812,7 @@ void G_RunFrame(void) {
             }
         }
     }
-	
+
     if (client >= maxclients->value) {
         client = -1;
     }
@@ -834,7 +833,7 @@ void G_RunFrame(void) {
 /*
 =================
 GetGameAPI
- 
+
 Returns a pointer to the structure with all entry points
 and global variables
 =================
@@ -845,7 +844,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
     dllloaded = FALSE;
     gi = *import;
-    
+
     q2a_strcpy(version, "r");
     q2a_strcat(version, Q2A_COMMIT);
 
@@ -942,12 +941,12 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     zbot_teststring_test2[4] = '0' + (int) (9.9 * random());
     zbot_testchar1 = '0' + (int) (9.9 * random());
     zbot_testchar2 = '0' + (int) (9.9 * random());
-	
+
 	// take cvar first, then gamelibrary from config, then old game.real.ext
 	gamelib = gi.cvar("gamelib", (*gamelibrary) ? gamelibrary : DLLNAME, CVAR_LATCH);
-	
+
 	snprintf(dllname, sizeof(dllname), "%s/%s", moddir, gamelib->string);
-	
+
 #if defined(_WIN32) || defined(_WIN64)
 
 	hdll = LoadLibrary(dllname);
