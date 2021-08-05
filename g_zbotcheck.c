@@ -75,7 +75,7 @@ qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd) {
             if (!proxyinfo[client].zbc_jitter)
                 proxyinfo[client].zbc_jitter_time = ltime;
             if (proxyinfo[client].zbc_jitter++ >= zbc_jittermax)
-                return true;
+                return qtrue;
         }
         proxyinfo[client].zbc_jitter_last = ltime;
     }
@@ -85,5 +85,5 @@ qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd) {
     if (ltime > (proxyinfo[client].zbc_jitter_time + zbc_jittertime))
         proxyinfo[client].zbc_jitter = 0;
 
-    return false;
+    return qfalse;
 }

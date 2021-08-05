@@ -651,10 +651,10 @@ int ADMIN_process_command(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & 8) {
         //Level 4 commands
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), true);
+            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), qtrue);
             done = 1;
         } else if (strcmp(gi.argv(0), "!dumpuser_any") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), false);
+            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), qfalse);
             done = 1;
         }
     }
@@ -732,7 +732,7 @@ void stuff_private_commands(int client, edict_t *ent) {
             Q_snprintf(temp, sizeof(temp), "%s\r\n", private_commands[i].command);
             stuffcmd(ent, temp);
         }
-        proxyinfo[client].private_command_got[i] = false;
+        proxyinfo[client].private_command_got[i] = qfalse;
     }
 }
 
@@ -756,7 +756,7 @@ void whois_dumpdetails(int client, edict_t *ent, int userid);
 user_details* whois_details;
 int WHOIS_COUNT = 0;
 int whois_active = 0;
-qboolean timers_active = false;
+qboolean timers_active = qfalse;
 int timers_min_seconds = 10;
 int timers_max_seconds = 180;
 

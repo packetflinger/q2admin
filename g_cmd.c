@@ -2720,7 +2720,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             if (private_commands[i].command[0]) {
                 if (Q_stricmp(proxyinfo[client].lastcmd, private_commands[i].command) == 0) {
                     //we got a response on this command and don't spam
-                    proxyinfo[client].private_command_got[i] = true;
+                    proxyinfo[client].private_command_got[i] = qtrue;
                     return FALSE;
                 }
             }
@@ -2806,7 +2806,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         if (proxyinfo[client].pmodver > ltime) {
             if (gl_driver_check & 1) {
                 if (q2a_strstr(gi.args(), "Q2ADMIN_GL_DRIVER_CHECK")) {
-                    dont_print = true;
+                    dont_print = qtrue;
                     //got gl_driver response
                     if (strlen(proxyinfo[client].gl_driver)) {
                         //we have a response
@@ -2816,14 +2816,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                             //if they dont
                             q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                             proxyinfo[client].gl_driver_changes++;
-                            dont_print = false;
+                            dont_print = qfalse;
                             if (gl_driver_check & 4)
                                 gi.dprintf("%s %s.\n", proxyinfo[client].name, gi.args());
                         }
                     } else {
                         q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                         proxyinfo[client].gl_driver_changes++;
-                        dont_print = false;
+                        dont_print = qfalse;
                         if (gl_driver_check & 4)
                             gi.dprintf("%s %s.\n", proxyinfo[client].name, gi.args());
                     }

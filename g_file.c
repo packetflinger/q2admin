@@ -469,13 +469,13 @@ qboolean GetURLContents(char *url) {
 
 			curl_easy_cleanup(curl);
 
-			return true;
+			return qtrue;
 		} else {
 			free(s.ptr);
 			gi.dprintf("%s\n", errbuf);
-			return false;
+			return qfalse;
 		}
 	}
 
-	return false;
+	return qfalse;
 }

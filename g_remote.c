@@ -171,7 +171,7 @@ void RA_LookupAddress(void)
 
         // for convenience
         if (res->ai_family == AF_INET6) {
-            remote.connection.ipv6 = true;
+            remote.connection.ipv6 = qtrue;
         }
 
         if (remote.addr->ai_family == AF_INET6) {
@@ -265,7 +265,7 @@ void RA_Ping(void)
 
     // state stuff
     remote.ping.frame_sent = CURFRAME;
-    remote.ping.waiting = true;
+    remote.ping.waiting = qtrue;
     remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
     // send it
@@ -437,8 +437,8 @@ void RA_CheckConnection(void)
 {
     ra_connection_t *c;
     uint32_t ret;
-    qboolean connected = false;
-    qboolean exception = false;
+    qboolean connected = qfalse;
+    qboolean exception = qfalse;
     struct sockaddr_storage addr;
     socklen_t len;
     struct timeval tv;
@@ -463,13 +463,13 @@ void RA_CheckConnection(void)
         len = sizeof(number);
         getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &len);
         if (number == 0) {
-            connected = true;
+            connected = qtrue;
         } else {
-            exception = true;
+            exception = qtrue;
         }
 #else
         if (FD_ISSET(c->socket, &c->set_w)) {
-            connected = true;
+            connected = qtrue;
         }
 #endif
     }
@@ -526,7 +526,7 @@ void RA_SendMessages(void)
     c = &remote.connection;
     q = &remote.queue;
 
-    while (true) {
+    while (qtrue) {
         FD_ZERO(&c->set_w);
         FD_SET(c->socket, &c->set_w);
 
@@ -601,7 +601,7 @@ void RA_ReadMessages(void)
     // save some typing
     in = &remote.queue_in;
 
-    while (true) {
+    while (qtrue) {
         FD_ZERO(&remote.connection.set_r);
         FD_SET(remote.connection.socket, &remote.connection.set_r);
 
@@ -736,7 +736,7 @@ qboolean RA_VerifyServerAuth(void)
     byte challenge_plain[CHALLENGE_LEN];
     byte aeskey_cipher[RSA_LEN];
     byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
-    qboolean servertrusted = false;
+    qboolean servertrusted = qfalse;
 
     c = &remote.connection;
 
@@ -752,7 +752,7 @@ qboolean RA_VerifyServerAuth(void)
     G_PublicDecrypt(c->rsa_sv_pu, challenge_plain, challenge_cipher);
 
     if (memcmp(challenge_plain, c->cl_nonce, CHALLENGE_LEN) == 0) {
-        servertrusted = true;
+        servertrusted = qtrue;
     }
 
     // encrypt the server's nonce and send back to auth ourselves
@@ -773,7 +773,7 @@ qboolean RA_VerifyServerAuth(void)
             q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
             q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
 
-            c->have_keys = true;
+            c->have_keys = qtrue;
 
             c->e_ctx = EVP_CIPHER_CTX_new();
             c->d_ctx = EVP_CIPHER_CTX_new();
@@ -781,7 +781,7 @@ qboolean RA_VerifyServerAuth(void)
 
         remote.connection_attempts = 0;
         remote.connection.auth_fail_count = 0;
-        return true;
+        return qtrue;
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
         remote.connection.auth_fail_count++;
@@ -790,7 +790,7 @@ qboolean RA_VerifyServerAuth(void)
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
             remote.state = RA_STATE_DISABLED;
         }
-        return false;
+        return qfalse;
     }
 }
 
@@ -817,7 +817,7 @@ void RA_ParseCommand(void)
  */
 void RA_ParsePong(void)
 {
-    remote.ping.waiting = false;
+    remote.ping.waiting = qfalse;
     remote.ping.miss_count = 0;
 }
 
@@ -849,8 +849,8 @@ void RA_DisconnectedPeer(void)
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
     remote.state = RA_STATE_DISCONNECTED;
-    remote.connection.trusted = false;
-    remote.connection.have_keys = false;
+    remote.connection.trusted = qfalse;
+    remote.connection.have_keys = qfalse;
     memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
     memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
 

@@ -37,9 +37,9 @@ lrconcmd_t;
 lrconcmd_t lrconcmds[LRCON_MAXCMDS];
 int maxlrcon_cmds = 0;
 
-qboolean rcon_random_password = true;
+qboolean rcon_random_password = qtrue;
 
-qboolean rcon_insecure = true;
+qboolean rcon_insecure = qtrue;
 
 int lrcon_timeout = 2;
 char orginal_rcon_password[50];

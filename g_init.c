@@ -64,7 +64,7 @@ char remotePublicKey[256] = "q2a_public.pem";
 char remotePrivateKey[256] = "q2a_private.pem";
 char remoteServerPublicKey[256] = "q2a_server_public.pem";
 
-qboolean remoteEncryption = false;
+qboolean remoteEncryption = qfalse;
 
 
 int USERINFOCHANGE_TIME = 60;
@@ -82,10 +82,10 @@ char client_msg[256];
 char serverip[256] = {""};
 char lanip[256] = {""};
 
-qboolean do_franck_check = true;
-qboolean q2a_command_check = false;
-qboolean do_vid_restart = false;
-qboolean private_command_kick = false;
+qboolean do_franck_check = qtrue;
+qboolean q2a_command_check = qfalse;
+qboolean do_vid_restart = qfalse;
+qboolean private_command_kick = qfalse;
 
 qboolean dllloaded = FALSE;
 
@@ -309,7 +309,7 @@ char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow)
     char *ip = Info_ValueForKey(userinfo, "ip");
 
     if (userInfoOverflow) {
-        *userInfoOverflow = false;
+        *userInfoOverflow = qfalse;
     }
 
     if (*ip == 0) {
@@ -326,7 +326,7 @@ char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow)
                 *(ipuserinfo - 1) == 'p') {
 
             if (userInfoOverflow) {
-                *userInfoOverflow = true;
+                *userInfoOverflow = qtrue;
             }
 
             return ipuserinfo + 1;
@@ -403,7 +403,7 @@ void InitGame(void)
         proxyinfo[i].msec_start = 0;
         proxyinfo[i].msec_count = 0;
         proxyinfo[i].msec_last = 0;
-        proxyinfo[i].show_fps = false;
+        proxyinfo[i].show_fps = qfalse;
         proxyinfo[i].frames_count = 0;
         proxyinfo[i].timescale = 0;
         proxyinfo[i].q2a_admin = 0;
@@ -423,7 +423,7 @@ void InitGame(void)
         proxyinfo[i].pmodver = 0;
         proxyinfo[i].gl_driver[0] = 0;
         proxyinfo[i].gl_driver_changes = 0;
-        proxyinfo[i].vid_restart = false;
+        proxyinfo[i].vid_restart = qfalse;
         proxyinfo[i].userid = -1;
         proxyinfo[i].inuse = 0;
         proxyinfo[i].admin = 0;
@@ -492,7 +492,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
             proxyinfo[i].msec_start = 0;
             proxyinfo[i].timescale = 0;
             proxyinfo[i].frames_count = 0;
-            proxyinfo[i].show_fps = false;
+            proxyinfo[i].show_fps = qfalse;
             proxyinfo[i].msec_last = 0;
             proxyinfo[i].msec_count = 0;
             proxyinfo[i].q2a_admin = 0;
@@ -598,8 +598,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
                 break;
             }
 
-            replaceteam = false;
-            entremoved = false;
+            replaceteam = qfalse;
+            entremoved = qfalse;
 
             // go through all the dictionary pairs
             while (1) {
@@ -627,14 +627,14 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
 
                 if (q2a_strcmp(keyname, "team") == 0) {
                     teampos = classnamepos;
-                    replaceteam = true;
+                    replaceteam = qtrue;
                 }
 
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
                     // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
                     classnamepos[0] = '_';
                     // side-effect: it may cause error messages on the console screen depending on the mod...
-                    entremoved = true;
+                    entremoved = qtrue;
                 }
             }
 
@@ -642,7 +642,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
             if (teampos && replaceteam && entremoved) {
                 teampos[0] = '_';
                 teampos = 0;
-                replaceteam = false;
+                replaceteam = qfalse;
             }
         }
     }
@@ -909,7 +909,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     proxyinfo[client].enteredgame = ltime;
     proxyinfo[client].msec_bad = 0;
     proxyinfo[client].msec_start = 0;
-    proxyinfo[client].show_fps = false;
+    proxyinfo[client].show_fps = qfalse;
     proxyinfo[client].msec_last = 0;
     proxyinfo[client].msec_count = 0;
     proxyinfo[client].timescale = 0;
@@ -917,7 +917,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     proxyinfo[client].q2a_admin = 0;
     proxyinfo[client].q2a_bypass = 0;
     proxyinfo[client].userid = -1;
-    proxyinfo[client].vid_restart = false;
+    proxyinfo[client].vid_restart = qfalse;
     proxyinfo[client].inuse = 0;
     proxyinfo[client].admin = 0;
     proxyinfo[client].clientcommand = 0;
@@ -1625,12 +1625,12 @@ void ClientDisconnect(edict_t *ent)
     proxyinfo[client].msec_start = 0;
     proxyinfo[client].timescale = 0;
     proxyinfo[client].frames_count = 0;
-    proxyinfo[client].show_fps = false;
+    proxyinfo[client].show_fps = qfalse;
     proxyinfo[client].msec_last = 0;
     proxyinfo[client].msec_count = 0;
     proxyinfo[client].q2a_admin = 0;
     proxyinfo[client].q2a_bypass = 0;
-    proxyinfo[client].vid_restart = false;
+    proxyinfo[client].vid_restart = qfalse;
     proxyinfo[client].userid = -1;
     
     STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
@@ -1684,7 +1684,7 @@ void ClientBegin(edict_t *ent)
         proxyinfo[client].msec_start = 0;
         proxyinfo[client].timescale = 0;
         proxyinfo[client].frames_count = 0;
-        proxyinfo[client].show_fps = false;
+        proxyinfo[client].show_fps = qfalse;
         proxyinfo[client].msec_last = 0;
         proxyinfo[client].msec_count = 0;
         proxyinfo[client].q2a_admin = 0;

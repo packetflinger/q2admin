@@ -49,7 +49,7 @@ qboolean G_LoadKeys(void)
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		return false;
+		return qfalse;
 	}
 	c->rsa_pr = RSA_new();
 	c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
@@ -57,7 +57,7 @@ qboolean G_LoadKeys(void)
 
 	if (!c->rsa_pr) {
 	    gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key\n");
-	    return false;
+	    return qfalse;
 	}
 
 
@@ -67,7 +67,7 @@ qboolean G_LoadKeys(void)
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
 		RSA_free(c->rsa_pr);
-		return false;
+		return qfalse;
 	}
 	c->rsa_pu = RSA_new();
 	c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
@@ -76,7 +76,7 @@ qboolean G_LoadKeys(void)
 	if (!c->rsa_pu) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key\n");
         RSA_free(c->rsa_pr);
-        return false;
+        return qfalse;
     }
 
 	// last the remote admin server's public key
@@ -86,7 +86,7 @@ qboolean G_LoadKeys(void)
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
 		RSA_free(c->rsa_pr);
 		RSA_free(c->rsa_pu);
-		return false;
+		return qfalse;
 	}
 	c->rsa_sv_pu = RSA_new();
 	c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
@@ -96,12 +96,12 @@ qboolean G_LoadKeys(void)
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
         RSA_free(c->rsa_pr);
         RSA_free(c->rsa_pu);
-        return false;
+        return qfalse;
     }
 
 	gi.cprintf(NULL, PRINT_HIGH, "OK\n");
 
-	return true;
+	return qtrue;
 }
 
 /**

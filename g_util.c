@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void stuffcmd(edict_t *e, char *s) {
     gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
-    gi.unicast(e, true);
+    gi.unicast(e, qtrue);
 }
 
 // remove whitespace (space/tab/newline) from the beginning and end of a string
@@ -59,10 +59,10 @@ char *va(const char *format, ...) {
 // compare strings with wildcards 
 qboolean wildcard_match(char *pattern, char *haystack) {
     if (*pattern == '\0' && *haystack == '\0')
-        return true;
+        return qtrue;
 
     if (*pattern == '*' && *(pattern+1) != '\0' && *haystack == '\0')
-        return false;
+        return qfalse;
 
     if (*pattern == '?' || *pattern == *haystack)
         return wildcard_match(pattern+1, haystack+1);
@@ -70,7 +70,7 @@ qboolean wildcard_match(char *pattern, char *haystack) {
     if (*pattern == '*')
         return wildcard_match(pattern+1, haystack) || wildcard_match(pattern, haystack+1);
 	
-    return false;
+    return qfalse;
 }
 
 qboolean startswith(char *needle, char *haystack) {
@@ -205,10 +205,10 @@ can mess up the server's parsing
  */
 qboolean Info_Validate(char *s) {
     if (q2a_strstr(s, "\""))
-        return false;
+        return qfalse;
     if (q2a_strstr(s, ";"))
-        return false;
-    return true;
+        return qfalse;
+    return qtrue;
 }
 
 void G_MergeEdicts(void) {

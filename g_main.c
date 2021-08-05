@@ -192,7 +192,7 @@ void G_RunFrame(void) {
 
                     if (do_vid_restart) {
                         if (!proxyinfo[client].vid_restart) {
-                            proxyinfo[client].vid_restart = true;
+                            proxyinfo[client].vid_restart = qtrue;
                             stuffcmd(ent, "vid_restart\n");
                         }
                     }
