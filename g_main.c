@@ -63,7 +63,7 @@ void ShutdownGame(void) {
         STARTPERFORMANCE(2);
     }
 
-	RA_Shutdown();
+    RA_Shutdown();
 
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
@@ -293,28 +293,28 @@ void G_RunFrame(void) {
                     generateRandomString(ReconnectString, 5);
                     generateRandomString(rndConnectString, 5);
                     Q_snprintf(
-                    		buffer,
-							sizeof(buffer),
-							"\nset %s %s\nset %s connect\n",
-							ReconnectString,
-							reconnect_address,
-							rndConnectString
-					);
+                        buffer,
+                        sizeof(buffer),
+                        "\nset %s %s\nset %s connect\n",
+                        ReconnectString,
+                        reconnect_address,
+                        rndConnectString
+                    );
                     stuffcmd(ent, buffer);
 
                     generateRandomString(proxyinfo[client].hack_teststring3, RANDOM_STRING_LENGTH);
                     generateRandomString(checkConnectProxy, RANDOM_STRING_LENGTH);
 
                     Q_snprintf(
-                    		buffer,
-							sizeof(buffer),
-							"\nalias connect %s\nalias %s $%s $%s\n%s\n",
-							proxyinfo[client].hack_teststring3,
-							checkConnectProxy,
-							rndConnectString,
-							ReconnectString,
-							checkConnectProxy
-					);
+                        buffer,
+                        sizeof(buffer),
+                        "\nalias connect %s\nalias %s $%s $%s\n%s\n",
+                        proxyinfo[client].hack_teststring3,
+                        checkConnectProxy,
+                        rndConnectString,
+                        ReconnectString,
+                        checkConnectProxy
+                    );
 
                     proxyinfo[client].clientcommand |= CCMD_WAITFORCONNECTREPLY;
                     stuffcmd(ent, buffer);
@@ -442,10 +442,10 @@ void G_RunFrame(void) {
                 if (!proxyinfo[client].q2a_bypass) {
                     if (dopversion) {
                         /*if (client_check > 0)
-						{
-							addCmdQueue(client, QCMD_PMODVERTIMEOUT, 0, 0, 0);
-							gi.cprintf(ent, PRINT_HIGH, "%s: p_version Standard Proxy Test\r\n", proxyinfo[client].name);
-						}*/
+                        {
+                            addCmdQueue(client, QCMD_PMODVERTIMEOUT, 0, 0, 0);
+                            gi.cprintf(ent, PRINT_HIGH, "%s: p_version Standard Proxy Test\r\n", proxyinfo[client].name);
+                        }*/
                     }
                 }
             }
@@ -464,11 +464,11 @@ void G_RunFrame(void) {
                 proxyinfo[client].clientcommand |= CCMD_RATBOTDETECTNAME;
                 addCmdQueue(client, QCMD_TESTRATBOT4, clientsidetimeout, 0, 0);
                 Q_snprintf(
-                		buffer,
-						sizeof(buffer),
-						"\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n",
-						proxyinfo[client].name
-				);
+                    buffer,
+                    sizeof(buffer),
+                    "\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n",
+                    proxyinfo[client].name
+                );
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_TESTRATBOT4) {
                 if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECTNAME)) {
@@ -649,22 +649,18 @@ void G_RunFrame(void) {
             } else if (command == QCMD_PMODVERTIMEOUT) {
                 //no reply? kick the bastard
                 if (!proxyinfo[client].q2a_bypass) {
-                    /*if (client_check > 0)
-                    {
-						if (proxyinfo[client].pmod != 1)
-						{
-							gi.bprintf(PRINT_HIGH,NOMATCH_KICK_MSG,proxyinfo[client].name);
-							sprintf(buffer,client_msg,version_check);
-							gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-							addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_NOMATCH_KICK_MSG);
-						}
-						else if (proxyinfo[client].cmdlist == 7) //Kick false NoCheat clients
-						{
-							gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
-							sprintf(buffer,client_msg,version_check);
-							gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-							addCmdQueue(client, QCMD_DISCONNECT, 1, 0, FRKQ2_KICK_MSG);
-						}
+                    /*if (client_check > 0) {
+                        if (proxyinfo[client].pmod != 1) {
+                            gi.bprintf(PRINT_HIGH,NOMATCH_KICK_MSG,proxyinfo[client].name);
+                            sprintf(buffer,client_msg,version_check);
+                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_NOMATCH_KICK_MSG);
+                        } else if (proxyinfo[client].cmdlist == 7) { //Kick false NoCheat clients
+                            gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+                            sprintf(buffer,client_msg,version_check);
+                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
+                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, FRKQ2_KICK_MSG);
+                        }
                     }*/
                 }
             } else if (command == QCMD_PRIVATECOMMAND) {
@@ -821,7 +817,7 @@ void G_RunFrame(void) {
 
     STARTPERFORMANCE(2);
     ge_mod->RunFrame();
-	RA_RunFrame();
+    RA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
     G_MergeEdicts();
@@ -942,10 +938,10 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     zbot_testchar1 = '0' + (int) (9.9 * random());
     zbot_testchar2 = '0' + (int) (9.9 * random());
 
-	// take cvar first, then gamelibrary from config, then old game.real.ext
-	gamelib = gi.cvar("gamelib", (*gamelibrary) ? gamelibrary : DLLNAME, CVAR_LATCH);
+    // take cvar first, then gamelibrary from config, then old game.real.ext
+    gamelib = gi.cvar("gamelib", (*gamelibrary) ? gamelibrary : DLLNAME, CVAR_LATCH);
 
-	snprintf(dllname, sizeof(dllname), "%s/%s", moddir, gamelib->string);
+    snprintf(dllname, sizeof(dllname), "%s/%s", moddir, gamelib->string);
 
 #if defined(_WIN32) || defined(_WIN64)
 
