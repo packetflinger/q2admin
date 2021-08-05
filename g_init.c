@@ -55,11 +55,16 @@ int remotePort              = 9988;
 int remoteFlags             = 1024;
 char remoteDNS[3]           = "64";    // ipv6 first, then ipv4
 qboolean remoteEnabled      = FALSE;
-char encryptionKey[1400];
 char remoteCmdTeleport[15]  = "!teleport";
 char remoteCmdInvite[15]    = "!invite";
 char remoteCmdSeen[15]      = "!seen";
 char remoteCmdWhois[15]     = "!whois";
+
+char remotePublicKey[256] = "q2a_public.pem";
+char remotePrivateKey[256] = "q2a_private.pem";
+char remoteServerPublicKey[256] = "q2a_server_public.pem";
+
+qboolean remoteEncryption = false;
 
 
 int USERINFOCHANGE_TIME = 60;
@@ -673,9 +678,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
 
     remote.maxclients = (int) maxclients->value;
     q2a_strncpy(remote.mapname, mapname, sizeof(remote.mapname));
-    q2a_strncpy(remote.rcon_password, rconpassword->string, sizeof(remote.rcon_password));
     remote.port = getport();
     remote.frame_number = 0;
+
+    if (remote.state == RA_STATE_TRUSTED) {
+        RA_Map(mapname);
+    }
 
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
 }

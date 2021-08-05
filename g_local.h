@@ -1199,7 +1199,6 @@ extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
 
-extern char encryptionKey[1400];
 extern uint32_t remoteKey;
 extern char remoteAddr[256];
 extern int remotePort;
@@ -1210,6 +1209,10 @@ extern char remoteCmdTeleport[15];
 extern char remoteCmdInvite[15];
 extern char remoteCmdSeen[15];
 extern char remoteCmdWhois[15];
+extern qboolean remoteEncryption;
+extern char remotePrivateKey[256];
+extern char remotePublicKey[256];
+extern char remoteServerPublicKey[256];
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;

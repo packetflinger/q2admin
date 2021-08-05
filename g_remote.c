@@ -10,41 +10,79 @@ remote_t remote;
  *
  */
 void RA_Init() {
-	
-	// we're already connected
-	if (remote.socket) {
-		return;
-	}
+    
+    // we're already connected
+    if (remote.connection.socket) {
+        return;
+    }
 
-	memset(&remote, 0, sizeof(remote));
-	maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
-	
-	if (!remoteEnabled) {
-		gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
-		return;
-	}
-	
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
+    memset(&remote, 0, sizeof(remote));
+    maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
+    
+    if (!remoteEnabled) {
+        gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
+        return;
+    }
+    remote.state = RA_STATE_DISCONNECTED;
+    gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
-	if (!rconpassword->string[0]) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] rcon_password is blank...disabling\n");
-		return;
-	}
-	
-	if (!remoteAddr[0]) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
-		return;
-	}
+    if (!G_LoadKeys()) {
+        remote.state = RA_STATE_DISABLED;
+        return;
+    }
 
-	if (!remotePort) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
-		return;
-	}
+    remote.connection.encrypted = remoteEncryption;
+    
+    if (!remoteAddr[0]) {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
+        remote.state = RA_STATE_DISABLED;
+        return;
+    }
 
-	G_StartThread(&RA_LookupAddress, NULL);
+    if (!remotePort) {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
+        remote.state = RA_STATE_DISABLED;
+        return;
+    }
 
-	// delay connection by a few seconds
-	remote.connect_retry_frame = FUTURE_FRAME(5);
+    G_StartThread(&RA_LookupAddress, NULL);
+
+    // delay connection by a few seconds
+    remote.connect_retry_frame = FUTURE_FRAME(5);
+}
+
+
+/**
+ * Build a new info string containing just want we need:
+ *  name, ip, skin, fov
+ */
+static char *ra_userinfo(uint8_t player_index)
+{
+    static char newuserinfo[MAX_INFO_STRING];
+    char *value;
+
+    memset(newuserinfo, 0, MAX_INFO_STRING);
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
+    if (value) {
+        q2a_strcpy(newuserinfo, va("\\name\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\ip\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\skin\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
+    if (value) {
+        q2a_strcat(newuserinfo, va("\\fov\\%s", value));
+    }
+
+    return newuserinfo;
 }
 
 
@@ -54,41 +92,41 @@ void RA_Init() {
  */
 static struct addrinfo *select_addrinfo(struct addrinfo *a)
 {
-	static struct addrinfo *v4, *v6;
+    static struct addrinfo *v4, *v6;
 
-	if (!a) {
-		return NULL;
-	}
+    if (!a) {
+        return NULL;
+    }
 
-	// just in case it's set blank in the config
-	if (!remoteDNS[0]) {
-		q2a_strcpy(remoteDNS, "64");
-	}
+    // just in case it's set blank in the config
+    if (!remoteDNS[0]) {
+        q2a_strcpy(remoteDNS, "64");
+    }
 
-	// save the first one of each address family, if more than 1, they're
-	// almost certainly in a random order anyway
-	for (;a != NULL; a = a->ai_next) {
-		if (!v4 && a->ai_family == AF_INET) {
-			v4 = a;
-		}
+    // save the first one of each address family, if more than 1, they're
+    // almost certainly in a random order anyway
+    for (;a != NULL; a = a->ai_next) {
+        if (!v4 && a->ai_family == AF_INET) {
+            v4 = a;
+        }
 
-		if (!v6 && a->ai_family == AF_INET6) {
-			v6 = a;
-		}
-	}
+        if (!v6 && a->ai_family == AF_INET6) {
+            v6 = a;
+        }
+    }
 
-	// select one based on preference
-	if (remoteDNS[0] == '6' && v6) {
-		return v6;
-	} else if (remoteDNS[0] == '4' && v4) {
-		return v4;
-	} else if (remoteDNS[1] == '6' && v6) {
-		return v6;
-	} else if (remoteDNS[1] == '4' && v4) {
-		return v4;
-	}
+    // select one based on preference
+    if (remoteDNS[0] == '6' && v6) {
+        return v6;
+    } else if (remoteDNS[0] == '4' && v4) {
+        return v4;
+    } else if (remoteDNS[1] == '6' && v6) {
+        return v6;
+    } else if (remoteDNS[1] == '4' && v4) {
+        return v4;
+    }
 
-	return NULL;
+    return NULL;
 }
 
 
@@ -98,74 +136,74 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
  */
 void RA_LookupAddress(void)
 {
-	char str_address[40];
-	struct addrinfo hints, *res = 0;
+    char str_address[40];
+    struct addrinfo hints, *res = 0;
 
-	memset(&hints, 0, sizeof(hints));
-	memset(&res, 0, sizeof(res));
+    memset(&hints, 0, sizeof(hints));
+    memset(&res, 0, sizeof(res));
 
-	hints.ai_family         = AF_UNSPEC;     // either v6 or v4
-	hints.ai_socktype       = SOCK_STREAM;	 // TCP
-	hints.ai_protocol       = 0;
-	hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capable
+    hints.ai_family         = AF_UNSPEC;     // either v6 or v4
+    hints.ai_socktype       = SOCK_STREAM;     // TCP
+    hints.ai_protocol       = 0;
+    hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capable
 
-	// set to catch any specific errors
-	errno = 0;
+    // set to catch any specific errors
+    errno = 0;
 
-	// do the actual DNS lookup
-	int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
+    // do the actual DNS lookup
+    int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
 
-	if (err != 0) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
-		remote.enabled = 0;
-		return;
-	} else {
-		memset(&remote.addr, 0, sizeof(struct addrinfo));
+    if (err != 0) {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
+        remote.state = RA_STATE_DISABLED;
+        return;
+    } else {
+        memset(&remote.addr, 0, sizeof(struct addrinfo));
 
-		// getaddrinfo can return multiple mixed v4/v6 results, select an appropriate one
-		remote.addr = select_addrinfo(res);
+        // getaddrinfo can return multiple mixed v4/v6 results, select an appropriate one
+        remote.addr = select_addrinfo(res);
 
-		if (!remote.addr) {
-			remote.enabled = 0;
-			gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
-			return;
-		}
+        if (!remote.addr) {
+            remote.state = RA_STATE_DISABLED;
+            gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
+            return;
+        }
 
-		// for convenience
-		if (res->ai_family == AF_INET6) {
-			remote.ipv6 = true;
-		}
+        // for convenience
+        if (res->ai_family == AF_INET6) {
+            remote.connection.ipv6 = true;
+        }
 
-		if (remote.addr->ai_family == AF_INET6) {
-			q2a_inet_ntop(
-					remote.addr->ai_family,
-					&((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
-					str_address,
-					sizeof(str_address)
-			);
-		} else {
-			q2a_inet_ntop(
-					remote.addr->ai_family,
-					&((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
-					str_address,
-					sizeof(str_address)
-			);
-		}
+        if (remote.addr->ai_family == AF_INET6) {
+            q2a_inet_ntop(
+                    remote.addr->ai_family,
+                    &((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
+                    str_address,
+                    sizeof(str_address)
+            );
+        } else {
+            q2a_inet_ntop(
+                    remote.addr->ai_family,
+                    &((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
+                    str_address,
+                    sizeof(str_address)
+            );
+        }
 
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Server resolved to %s\n", str_address);
-	}
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server resolved to %s\n", str_address);
+    }
 
-	remote.flags = remoteFlags;
-	remote.enabled = 1;
+    remote.flags = remoteFlags;
+    remote.state = RA_STATE_DISCONNECTED;
 }
 
 void G_StartThread(void *func, void *arg) {
 #if _WIN32
-	DWORD tid;
-	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, 0, 0, &tid);
+    DWORD tid;
+    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, 0, 0, &tid);
 #else
-	pthread_t dnsthread;
-	pthread_create(&dnsthread, 0, func, 0);
+    pthread_t dnsthread;
+    pthread_create(&dnsthread, 0, func, 0);
 #endif
 }
 
@@ -175,55 +213,63 @@ void G_StartThread(void *func, void *arg) {
  */
 static void ra_replace_die(void)
 {
-	static uint8_t i;
+    static uint8_t i;
 
-	for (i=0; i<=remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
+    for (i=0; i<=remote.maxclients; i++) {
+        if (proxyinfo[i].inuse) {
 
-			// replace player edict's die() pointer
-			if (proxyinfo[i].ent && *proxyinfo[i].ent->die != PlayerDie_Internal) {
-				proxyinfo[i].die = *proxyinfo[i].ent->die;
-				proxyinfo[i].ent->die = &PlayerDie_Internal;
-			}
-		}
-	}
+            // replace player edict's die() pointer
+            if (proxyinfo[i].ent && *proxyinfo[i].ent->die != PlayerDie_Internal) {
+                proxyinfo[i].die = *proxyinfo[i].ent->die;
+                proxyinfo[i].ent->die = &PlayerDie_Internal;
+            }
+        }
+    }
 }
 
+
+/**
+ *
+ */
+void debug_print(char *str)
+{
+    if (!RFL(DEBUG)) {
+        return;
+    }
+
+    gi.cprintf(NULL, PRINT_HIGH, "%s\n", str);
+}
 
 /**
  * Periodically ping the server to know if the connection is still open
  */
 void RA_Ping(void)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_CONNECTED) {
+        return;
+    }
 
-	if (!remote.state == RA_STATE_CONNECTED) {
-		return;
-	}
+    // not time yet
+    if (remote.ping.frame_next > CURFRAME) {
+        return;
+    }
 
-	// not time yet
-	if (remote.ping.frame_next > CURFRAME) {
-		return;
-	}
+    // there is already an outstanding ping
+    if (remote.ping.waiting) {
+        if (remote.ping.miss_count == PING_MISS_MAX) {
+            RA_DisconnectedPeer();
+            return;
+        }
+        remote.ping.miss_count++;
+    }
 
-	// there is already an outstanding ping
-	if (remote.ping.waiting) {
-		if (remote.ping.miss_count == PING_MISS_MAX) {
-			RA_DisconnectedPeer();
-			return;
-		}
-		remote.ping.miss_count++;
-	}
+    // state stuff
+    remote.ping.frame_sent = CURFRAME;
+    remote.ping.waiting = true;
+    remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
-	// state stuff
-	remote.ping.frame_sent = CURFRAME;
-	remote.ping.waiting = true;
-	remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
-
-	// send it
-	RA_WriteByte(CMD_PING);
+    // send it
+    RA_WriteByte(CMD_PING);
 }
 
 /**
@@ -232,56 +278,56 @@ void RA_Ping(void)
  */
 void RA_RunFrame(void)
 {
-	// keep some time
-	remote.frame_number++;
+    // keep some time
+    remote.frame_number++;
 
-	// remote admin is disabled, don't do anything
-	if (!remote.enabled) {
-		return;
-	}
+    // remote admin is disabled, don't do anything
+    if (remote.state == RA_STATE_DISABLED) {
+        return;
+    }
 
-	// everything we need to do while RA is connected
-	if (remote.state == RA_STATE_CONNECTED) {
+    // everything we need to do while RA is connected
+    if (remote.state >= RA_STATE_CONNECTED) {
 
-		// send any buffered messages to the server
-		RA_SendMessages();
+        // send any buffered messages to the server
+        RA_SendMessages();
 
-		// receive any pending messages from server
-		RA_ReadMessages();
+        // receive any pending messages from server
+        RA_ReadMessages();
 
-		// update player die() pointers
-		ra_replace_die();
+        // update player die() pointers
+        ra_replace_die();
 
-		// periodically make sure connection is alive
-		RA_Ping();
-	}
+        // periodically make sure connection is alive
+        RA_Ping();
+    }
 
-	// connection started already, check for completion
-	if (remote.state == RA_STATE_CONNECTING) {
-		RA_CheckConnection();
-	}
+    // connection started already, check for completion
+    if (remote.state == RA_STATE_CONNECTING) {
+        RA_CheckConnection();
+    }
 
-	// we're not connected, try again
-	if (remote.state == RA_STATE_DISCONNECTED) {
-		RA_Connect();
-	}
+    // we're not connected, try again
+    if (remote.state == RA_STATE_DISCONNECTED) {
+        RA_Connect();
+    }
 }
 
 void RA_Shutdown(void)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state == RA_STATE_DISABLED) {
+        return;
+    }
 
-	/**
-	 * We have to call RA_SendMessages() specifically here because there won't be another
-	 * frame to send the buffered CMD_QUIT
-	 */
-	RA_WriteByte(CMD_QUIT);
-	RA_SendMessages();
-	RA_Disconnect();
+    /**
+     * We have to call RA_SendMessages() specifically here because there won't be another
+     * frame to send the buffered CMD_QUIT
+     */
+    RA_WriteByte(CMD_QUIT);
+    RA_SendMessages();
+    RA_Disconnect();
 
-	freeaddrinfo(remote.addr);
+    freeaddrinfo(remote.addr);
 }
 
 /**
@@ -289,12 +335,29 @@ void RA_Shutdown(void)
  */
 void RA_Disconnect(void)
 {
-	if (remote.state != RA_STATE_CONNECTED) {
-		return;
-	}
+    if (remote.state < RA_STATE_CONNECTED) {
+        return;
+    }
 
-	closesocket(remote.socket);
-	remote.state = RA_STATE_DISCONNECTED;
+    closesocket(remote.connection.socket);
+    remote.state = RA_STATE_DISCONNECTED;
+}
+
+/**
+ * Get the frame number at which we should try another connection.
+ * Increase the interval as attempts increase without a connection.
+ */
+static uint32_t next_connect_frame(void)
+{
+    if (remote.connection_attempts < 12) {  // 2 minutes
+        return FUTURE_FRAME(10);
+    } else if (remote.connection_attempts < 20) { // 10 minutes
+        return FUTURE_FRAME(30);
+    } else if (remote.connection_attempts < 50) { // 30 minutes
+        return FUTURE_FRAME(60);
+    } else {
+        return FUTURE_FRAME(120);
+    }
 }
 
 /**
@@ -302,57 +365,69 @@ void RA_Disconnect(void)
  */
 void RA_Connect(void)
 {
-	int flags, ret;
+    int flags, ret;
 
-	// only if we've waited long enough
-	if (remote.frame_number < remote.connect_retry_frame) {
-		return;
-	}
+    // only if we've waited long enough
+    if (remote.frame_number < remote.connect_retry_frame) {
+        return;
+    }
 
-	// clear the in and out buffers
-	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
-	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+    // clear the in and out buffers
+    q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
 
-	remote.state = RA_STATE_CONNECTING;
-	remote.connection_attempts++;
+    remote.state = RA_STATE_CONNECTING;
+    remote.connection_attempts++;
 
-	// create the socket
-	remote.socket = socket(
-			remote.addr->ai_family,
-			remote.addr->ai_socktype,
-			remote.addr->ai_protocol
-	);
+    // create the socket
+    remote.connection.socket = socket(
+            remote.addr->ai_family,
+            remote.addr->ai_socktype,
+            remote.addr->ai_protocol
+    );
 
-	if (remote.socket == -1) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Unable to open socket to %s:%d...disabling\n", remoteAddr, remotePort);
-		remote.enabled = 0;
-		remote.state = RA_STATE_DISCONNECTED;
-		return;
-	}
+    if (remote.connection.socket == -1) {
+        perror("connect");
+        errno = 0;
+        remote.connect_retry_frame = next_connect_frame();
+
+        return;
+    }
 
 // Make it non-blocking.
 // preferred method is using POSIX O_NONBLOCK, if available
 #if defined(O_NONBLOCK)
-	flags = 0;
-	ret = fcntl(remote.socket, F_SETFL, flags | O_NONBLOCK);
+    flags = 0;
+    ret = fcntl(remote.connection.socket, F_SETFL, flags | O_NONBLOCK);
 #else
-	flags = 1;
-	ret = ioctlsocket(remote.socket, FIONBIO, (long unsigned int *) &flags);
+    flags = 1;
+    ret = ioctlsocket(remote.connection.socket, FIONBIO, (long unsigned int *) &flags);
 #endif
 
-	if (ret == -1) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
-		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = FUTURE_FRAME(30);
-	}
+    if (ret == -1) {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
+        remote.state = RA_STATE_DISCONNECTED;
+        remote.connect_retry_frame = FUTURE_FRAME(30);
+    }
 
-	// make the actual connection
-	connect(remote.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+    errno = 0;
 
-	/**
-	 * since we're non-blocking, the connection won't complete in this single server frame.
-	 * We have to select() for it on a later runframe. See RA_CheckConnection()
-	 */
+    // make the actual connection
+    ret = connect(remote.connection.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+
+    if (ret == -1) {
+        if (errno == EINPROGRESS) {
+            // expected
+        } else {
+            perror("[RA] connect error");
+            errno = 0;
+        }
+    }
+
+    /**
+     * since we're non-blocking, the connection won't complete in this single server frame.
+     * We have to select() for it on a later runframe. See RA_CheckConnection()
+     */
 }
 
 /**
@@ -360,65 +435,71 @@ void RA_Connect(void)
  */
 void RA_CheckConnection(void)
 {
-	uint32_t ret;
-	qboolean connected = false;
-	qboolean exception = false;
-	struct sockaddr_storage addr;
-	socklen_t len;
-	struct timeval tv;
-	tv.tv_sec = tv.tv_usec = 0;
+    ra_connection_t *c;
+    uint32_t ret;
+    qboolean connected = false;
+    qboolean exception = false;
+    struct sockaddr_storage addr;
+    socklen_t len;
+    struct timeval tv;
+    tv.tv_sec = tv.tv_usec = 0;
 
-	FD_ZERO(&remote.set_w);
-	FD_ZERO(&remote.set_e);
-	FD_SET(remote.socket, &remote.set_w);
-	FD_SET(remote.socket, &remote.set_e);
+    c = &remote.connection;
 
-	// check if connection is fully established
-	ret = select((int)remote.socket + 1, NULL, &remote.set_w, &remote.set_e, &tv);
+    FD_ZERO(&c->set_w);
+    FD_ZERO(&c->set_e);
+    FD_SET(c->socket, &c->set_w);
+    FD_SET(c->socket, &c->set_e);
 
-	if (ret == 1) {
+    // check if connection is fully established
+    ret = select((int)c->socket + 1, NULL, &c->set_w, &c->set_e, &tv);
+
+    if (ret) {
 
 #ifdef LINUX
-		uint32_t number;
-		socklen_t len;
+        uint32_t number;
+        socklen_t len;
 
-		len = sizeof(number);
-		getsockopt(remote.socket, SOL_SOCKET, SO_ERROR, &number, &len);
-		if (number == 0) {
-			connected = true;
-		} else {
-			exception = true;
-		}
+        len = sizeof(number);
+        getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &len);
+        if (number == 0) {
+            connected = true;
+        } else {
+            exception = true;
+        }
 #else
-		if (FD_ISSET(remote.socket, &remote.set_w)) {
-			connected = true;
-		}
+        if (FD_ISSET(c->socket, &c->set_w)) {
+            connected = true;
+        }
 #endif
-	} else if (ret == -1) {
-		gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
-		closesocket(remote.socket);
-		remote.state = RA_STATE_DISCONNECTED;
-		remote.connect_retry_frame = FUTURE_FRAME(10);
-		return;
-	}
+    }
 
-	// we need to make sure it's actually connected
-	if (connected) {
-		errno = 0;
-		getpeername(remote.socket, (struct sockaddr *)&addr, &len);
+    if (ret == -1) {
+        perror("CheckConnection");
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
+        closesocket(c->socket);
+        remote.state = RA_STATE_DISCONNECTED;
+        remote.connect_retry_frame = FUTURE_FRAME(10);
+        return;
+    }
 
-		if (errno) {
-			remote.connect_retry_frame = FUTURE_FRAME(30);
-			remote.state = RA_STATE_DISCONNECTED;
-			closesocket(remote.socket);
-		} else {
-			gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
-			remote.state = RA_STATE_CONNECTED;
-			remote.ping.frame_next = FUTURE_FRAME(10);
-			remote.connected_frame = CURFRAME;
-			RA_SayHello();
-		}
-	}
+    // we need to make sure it's actually connected
+    if (connected) {
+        errno = 0;
+        getpeername(c->socket, (struct sockaddr *)&addr, &len);
+
+        if (errno) {
+            remote.connect_retry_frame = FUTURE_FRAME(30);
+            remote.state = RA_STATE_DISCONNECTED;
+            closesocket(c->socket);
+        } else {
+            gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
+            remote.state = RA_STATE_CONNECTED;
+            remote.ping.frame_next = FUTURE_FRAME(10);
+            remote.connected_frame = CURFRAME;
+            RA_SayHello();
+        }
+    }
 }
 
 /**
@@ -426,56 +507,77 @@ void RA_CheckConnection(void)
  */
 void RA_SendMessages(void)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_CONNECTING) {
+        return;
+    }
 
-	// nothing to send
-	if (!remote.queue.length) {
-		return;
-	}
+    // nothing to send
+    if (!remote.queue.length) {
+        return;
+    }
 
-	// only once we're ready (unless trying to say hello)
-	if (!remote.ready && remote.queue.data[0] != CMD_HELLO) {
-		return;
-	}
+    uint32_t ret;
+    struct timeval tv;
+    tv.tv_sec = tv.tv_usec = 0;
+    ra_connection_t *c;
+    message_queue_t *q;
+    message_queue_t e;
 
-	uint32_t ret;
-	struct timeval tv;
-	tv.tv_sec = tv.tv_usec = 0;
+    c = &remote.connection;
+    q = &remote.queue;
 
-	while (true) {
-		FD_ZERO(&remote.set_w);
-		FD_SET(remote.socket, &remote.set_w);
+    while (true) {
+        FD_ZERO(&c->set_w);
+        FD_SET(c->socket, &c->set_w);
 
-		// see if the socket is ready to send data
-		ret = select((int) remote.socket + 1, NULL, &remote.set_w, NULL, &tv);
+        // see if the socket is ready to send data
+        ret = select((int) c->socket + 1, NULL, &c->set_w, NULL, &tv);
+        if (ret == -1) {
+            //if (errno != EINTR) {
+                perror("send select");
+            //}
+            errno = 0;
+        }
 
-		// socket write buffer is ready, send
-		if (ret == 1) {
-			ret = send(remote.socket, remote.queue.data, remote.queue.length, 0);
+        // socket write buffer is ready, send
+        if (ret) {
+            if (c->encrypted && c->have_keys) {
+                memset(&e, 0, sizeof(message_queue_t));
+                e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
+                memset(q, 0, sizeof(message_queue_t));
+                memcpy(q->data, e.data, e.length);
+                q->length = e.length;
+            }
 
-			if (ret <= 0) {
-				RA_DisconnectedPeer();
-				return;
-			}
+            //hexDump("Sending", q->data, q->length);
 
-			// shift off the data we just sent
-			memmove(remote.queue.data, remote.queue.data + ret, remote.queue.length - ret);
-			remote.queue.length -= ret;
+            ret = send(c->socket, q->data, q->length, 0);
+            if (ret == -1) {
+                if (errno == EPIPE) {
+                    gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
+                    RA_DisconnectedPeer();
+                    errno = 0;
+                    break;
+                }
 
-		} else if (ret < 0) {
-			RA_DisconnectedPeer();
-			return;
-		} else {
-			break;
-		}
+                perror("send error");
+                errno = 0;
+            } else {
 
-		// processed the whole queue, we're done for now
-		if (!remote.queue.length) {
-			break;
-		}
-	}
+                // shift off the data we just sent
+                memmove(q->data, q->data + ret, q->length - ret);
+                q->length -= ret;
+            }
+
+        } else {
+            break;
+        }
+
+        // processed the whole queue, we're done for now
+        if (!q->length) {
+            break;
+        }
+    }
 }
 
 
@@ -484,46 +586,84 @@ void RA_SendMessages(void)
  */
 void RA_ReadMessages(void)
 {
-	uint32_t ret;
-	size_t expectedLength = 0;
-	struct timeval tv;
-	tv.tv_sec = tv.tv_usec = 0;
-	message_queue_t *in;
+    uint32_t ret;
+    size_t expectedLength = 0;
+    struct timeval tv;
+    message_queue_t *in;
+    message_queue_t dec;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_CONNECTING) {
+        return;
+    }
 
-	// save some typing
-	in = &remote.queue_in;
+    tv.tv_sec = tv.tv_usec = 0;
 
-	while (true) {
-		FD_ZERO(&remote.set_r);
-		FD_SET(remote.socket, &remote.set_r);
+    // save some typing
+    in = &remote.queue_in;
 
-		// see if there is data waiting in the buffer for us to read
-		ret = select(remote.socket + 1, &remote.set_r, NULL, NULL, &tv);
+    while (true) {
+        FD_ZERO(&remote.connection.set_r);
+        FD_SET(remote.connection.socket, &remote.connection.set_r);
 
-		// socket read buffer has data waiting in it
-		if (ret == 1) {
-			ret = recv(remote.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
-			if (ret <= 0) {
-				RA_DisconnectedPeer();
-				return;
-			}
+        // see if there is data waiting in the buffer for us to read
+        ret = select(remote.connection.socket + 1, &remote.connection.set_r, NULL, NULL, &tv);
+        if (ret == -1) {
+            if (errno != EINTR) {
+                perror("select");
+                RA_DisconnectedPeer();
+                errno = 0;
+                return;
+            }
 
-			in->length += ret;
-		} else if (ret < 0) {
-			RA_DisconnectedPeer();
-			return;
-		} else {
-			// no data has been sent to read
-			break;
-		}
-	}
+            errno = 0;
+        }
 
-	// if we made it here, we have the whole message, parse it
-	RA_ParseMessage();
+        // socket read buffer has data waiting in it
+        if (ret) {
+            ret = recv(remote.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+
+            if (ret == 0) {
+                RA_DisconnectedPeer();
+                return;
+            }
+
+            if (ret == -1) {
+                if (errno != EINTR) {
+                    perror("recv");
+                    RA_DisconnectedPeer();
+                    return;
+                }
+
+                errno = 0;
+            }
+
+            in->length += ret;
+
+            // decrypt if necessary
+            if (remote.connection.encrypted && remote.connection.have_keys) {
+                memset(&dec, 0, sizeof(message_queue_t));
+                dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
+                memset(in->data, 0, in->length);
+                memcpy(in->data, dec.data, dec.length);
+                in->length = dec.length;
+            }
+        } else {
+            // no data has been sent to read
+            break;
+        }
+    }
+
+    // if we made it here, we have the whole message, parse it
+    RA_ParseMessage();
+}
+
+/**
+ * The server has let us know we are trusted.
+ */
+void RA_Trusted(void)
+{
+    gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection Trusted\n");
+    remote.state = RA_STATE_TRUSTED;
 }
 
 /**
@@ -531,44 +671,127 @@ void RA_ReadMessages(void)
  */
 void RA_ParseMessage(void)
 {
-	byte cmd;
+    message_queue_t *msg = &remote.queue_in;
+    byte cmd;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state == RA_STATE_DISABLED) {
+        return;
+    }
 
-	// no data
-	if (!remote.queue_in.length) {
-		return;
-	}
+    // no data
+    if (!remote.queue_in.length) {
+        return;
+    }
 
-	cmd = RA_ReadByte();
+    //hexDump("New Message", remote.queue_in.data, remote.queue_in.length);
 
-	switch (cmd) {
-	case SCMD_PONG:
-		RA_ParsePong();
-		break;
-	case SCMD_COMMAND:
-		RA_ParseCommand();
-		break;
-	case SCMD_HELLOACK:
-		remote.ready = true;
-		RA_PlayerList();
-		RA_Map(remote.mapname);
-		break;
-	case SCMD_ERROR:
-		RA_ParseError();
-		break;
-	case SCMD_SAYCLIENT:
-		RA_SayClient();
-		break;
-	case SCMD_SAYALL:
-		RA_SayAll();
-		break;
-	}
+    while (msg->index < msg->length) {
+        cmd = RA_ReadByte();
 
-	// reset queue back to zero
-	q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+        switch (cmd) {
+        case SCMD_PONG:
+            RA_ParsePong();
+            break;
+        case SCMD_COMMAND:
+            RA_ParseCommand();
+            break;
+        case SCMD_HELLOACK:
+            RA_VerifyServerAuth();
+            break;
+        case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
+            RA_Trusted();
+            RA_Map(remote.mapname);
+            RA_PlayerList();
+            break;
+        case SCMD_ERROR:
+            RA_ParseError();
+            break;
+        case SCMD_SAYCLIENT:
+            RA_SayClient();
+            break;
+        case SCMD_SAYALL:
+            RA_SayAll();
+            break;
+        case SCMD_KEY:
+            RA_RotateKeys();
+            break;
+        }
+    }
+
+    // reset queue back to zero
+    q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+}
+
+/**
+ * 1. Decrypt the nonce sent back from the server and check if it matches
+ * 2. If the encryption is requested, parse the AES 128 key and IV
+ * 3. Read the plaintext nonce from the server, encrypt and send back
+ *    to auth the client
+ */
+qboolean RA_VerifyServerAuth(void)
+{
+    ra_connection_t *c;
+    uint16_t len;
+    byte challenge_cipher[RSA_LEN];
+    byte challenge_plain[CHALLENGE_LEN];
+    byte aeskey_cipher[RSA_LEN];
+    byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
+    qboolean servertrusted = false;
+
+    c = &remote.connection;
+
+    len = RA_ReadShort();
+    RA_ReadData(challenge_cipher, len);
+
+    if (remoteEncryption) {
+        RA_ReadData(aeskey_cipher, RSA_LEN);
+    }
+
+    RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+
+    G_PublicDecrypt(c->rsa_sv_pu, challenge_plain, challenge_cipher);
+
+    if (memcmp(challenge_plain, c->cl_nonce, CHALLENGE_LEN) == 0) {
+        servertrusted = true;
+    }
+
+    // encrypt the server's nonce and send back to auth ourselves
+    if (servertrusted) {
+        q2a_memset(challenge_cipher, 0, RSA_LEN);
+        G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
+        RA_WriteByte(CMD_AUTH);
+        RA_WriteShort(RSA_size(c->rsa_pr));
+        RA_WriteData(challenge_cipher, RSA_size(c->rsa_pr));
+        RA_SendMessages();
+
+        if (remoteEncryption) {
+            len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
+            if (!len) {
+                gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems decrypting symmetric key sent from server\n");
+            }
+
+            q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
+            q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
+
+            c->have_keys = true;
+
+            c->e_ctx = EVP_CIPHER_CTX_new();
+            c->d_ctx = EVP_CIPHER_CTX_new();
+        }
+
+        remote.connection_attempts = 0;
+        remote.connection.auth_fail_count = 0;
+        return true;
+    } else {
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
+        remote.connection.auth_fail_count++;
+
+        if (remote.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
+            gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
+            remote.state = RA_STATE_DISABLED;
+        }
+        return false;
+    }
 }
 
 /**
@@ -576,11 +799,17 @@ void RA_ParseMessage(void)
  */
 void RA_ParseCommand(void)
 {
-	char *cmd;
-	cmd = RA_ReadString();
+    char *cmd;
 
-	// cram it into the command buffer
-	gi.AddCommandString(cmd);
+    // we should never get here if we're not trusted, but just in case
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
+
+    cmd = RA_ReadString();
+
+    // cram it into the command buffer
+    gi.AddCommandString(cmd);
 }
 
 /**
@@ -588,8 +817,23 @@ void RA_ParseCommand(void)
  */
 void RA_ParsePong(void)
 {
-	remote.ping.waiting = false;
-	remote.ping.miss_count = 0;
+    remote.ping.waiting = false;
+    remote.ping.miss_count = 0;
+}
+
+/**
+ * The server sent us new symmetric encryption keys, parse them and
+ * start using them
+ */
+void RA_RotateKeys(void)
+{
+    ra_connection_t *c;
+    c = &remote.connection;
+
+    RA_ReadData(c->aeskey, AESKEY_LEN);
+    RA_ReadData(c->iv, AESBLOCK_LEN);
+
+    //debug_print("[RA] Encryption keys changed");
 }
 
 /**
@@ -598,32 +842,19 @@ void RA_ParsePong(void)
  */
 void RA_DisconnectedPeer(void)
 {
-	struct addrinfo *a;
-	uint32_t flags;
+    if (remote.state < RA_STATE_CONNECTED) {
+        return;
+    }
 
-	if (!remote.enabled) {
-		return;
-	}
+    gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
-	// only work on connections that were considered connected
-	if (!remote.state == RA_STATE_CONNECTED) {
-		return;
-	}
+    remote.state = RA_STATE_DISCONNECTED;
+    remote.connection.trusted = false;
+    remote.connection.have_keys = false;
+    memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
+    memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
 
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
-
-	// save the server address, but start over
-	a = remote.addr;
-	flags = remote.flags;
-
-	freeaddrinfo(remote.addr);
-
-	q2a_memset(&remote, 0, sizeof(remote_t));
-
-	remote.addr = a;
-	remote.enabled = 1;
-	remote.flags = flags;
-	remote.connect_retry_frame = FUTURE_FRAME(10);
+    remote.connect_retry_frame = FUTURE_FRAME(10);
 }
 
 /**
@@ -631,28 +862,28 @@ void RA_DisconnectedPeer(void)
  */
 void RA_PlayerList(void)
 {
-	uint8_t count, i;
-	count = 0;
+    uint8_t count, i;
+    count = 0;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	for (i=0; i<remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
-			count++;
-		}
-	}
+    for (i=0; i<remote.maxclients; i++) {
+        if (proxyinfo[i].inuse) {
+            count++;
+        }
+    }
 
-	RA_WriteByte(CMD_PLAYERLIST);
-	RA_WriteByte(count);
+    RA_WriteByte(CMD_PLAYERLIST);
+    RA_WriteByte(count);
 
-	for (i=0; i<remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
-			RA_WriteByte(i);
-			RA_WriteString("%s", proxyinfo[i].userinfo);
-		}
-	}
+    for (i=0; i<remote.maxclients; i++) {
+        if (proxyinfo[i].inuse) {
+            RA_WriteByte(i);
+            RA_WriteString("%s", ra_userinfo(i));
+        }
+    }
 }
 
 /**
@@ -666,47 +897,57 @@ void RA_PlayerList(void)
  * point is where on the map the damage was dealt
  */
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
-	uint8_t id = getEntOffset(self) - 1;
-	uint8_t aid = getEntOffset(attacker) - 1;
-	gitem_t *weapon;
+    uint8_t id = getEntOffset(self) - 1;
+    uint8_t aid = getEntOffset(attacker) - 1;
+    gitem_t *weapon;
 
-	if (self->deadflag != DEAD_DEAD) {
-		if (strcmp(attacker->classname,"player") == 0) {
-			RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
-		} else {
-			RA_Frag(id, aid, proxyinfo[id].name, "");
-		}
-	}
+    proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    return;
 
-	weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
+    /*
+    if (self->deadflag != DEAD_DEAD) {
+        if (strcmp(attacker->classname,"player") == 0) {
+            RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
+        } else {
+            RA_Frag(id, aid, proxyinfo[id].name, "");
+        }
+    }
 
-	gi.dprintf("MOD: %s\n", weapon->classname);
+    weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
 
-	// call the player's real die() function
-	proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    gi.dprintf("MOD: %s\n", weapon->classname);
+
+    // call the player's real die() function
+    proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    */
 }
 
 /**
  * Immediately after connecting, we have to say hi, giving the server our
  * information. Once the server acknowledges we can start sending game data.
+ *
+ * The last section of data is a random nonce. The server will encrypt this
+ * and send it back to us. We then decrypt and check if it matches, if so,
+ * the server is who we think it is and is considered trusted.
  */
 void RA_SayHello(void)
 {
-	// don't bother if we're not fully connected yet
-	if (remote.state != RA_STATE_CONNECTED) {
-		return;
-	}
+    // don't bother if we're not fully connected yet
+    if (remote.state == RA_STATE_TRUSTED) {
+        return;
+    }
 
-	// we've already said hello
-	if (remote.ready) {
-		return;
-	}
+    // random data to check server auth
+    RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 
-	RA_WriteByte(CMD_HELLO);
-	RA_WriteLong(remoteKey);
-	RA_WriteLong(Q2A_REVISION);
-	RA_WriteShort(remote.port);
-	RA_WriteByte(remote.maxclients);
+    RA_WriteLong(MAGIC_CLIENT);
+    RA_WriteByte(CMD_HELLO);
+    RA_WriteLong(remoteKey);
+    RA_WriteLong(Q2A_REVISION);
+    RA_WriteShort(remote.port);
+    RA_WriteByte(remote.maxclients);
+    RA_WriteByte(remoteEncryption ? 1 : 0);
+    RA_WriteData(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 }
 
 /**
@@ -714,27 +955,29 @@ void RA_SayHello(void)
  */
 void RA_ParseError(void)
 {
-	uint8_t client_id, reason_id;
-	char *reason;
+    uint8_t client_id, reason_id;
+    char *reason;
 
-	client_id = RA_ReadByte(); // will be -1 if not player specific
-	reason_id = RA_ReadByte();
-	reason = RA_ReadString();
+    gi.dprintf("parsing error\n");
 
-	// Where to output the error msg
-	if (client_id == -1) {
-		gi.cprintf(NULL, PRINT_HIGH, "%s]n", reason);
-	} else {
-		gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
-	}
+    client_id = RA_ReadByte(); // will be -1 if not player specific
+    reason_id = RA_ReadByte();
+    reason = RA_ReadString();
 
-	// serious enough to disconnect
-	if (reason_id >= 200) {
-		closesocket(remote.socket);
-		remote.ready = false;
-		remote.enabled = false;
-		freeaddrinfo(remote.addr);
-	}
+    // Where to output the error msg
+    if (client_id == -1) {
+        gi.cprintf(NULL, PRINT_HIGH, "%s\n", reason);
+    } else {
+        //gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
+        gi.cprintf(NULL, PRINT_HIGH, "error msg here\n");
+    }
+
+    // serious enough to disconnect
+    if (reason_id >= 200) {
+        closesocket(remote.connection.socket);
+        remote.state = RA_STATE_DISABLED;
+        freeaddrinfo(remote.addr);
+    }
 }
 
 /**
@@ -742,28 +985,28 @@ void RA_ParseError(void)
  * returns the value regardless.
  */
 uint16_t getport(void) {
-	static cvar_t *port;
+    static cvar_t *port;
 
-	port = gi.cvar("port", "0", 0);
-	if ((int) port->value) {
-		return (int) port->value;
-	}
-	
-	port = gi.cvar("net_port", "0", 0);
-	if ((int) port->value) {
-		return (int) port->value;
-	}
-	
-	// fallback to default
-	port = gi.cvar("port", "27910", 0);
-	return (int) port->value;
+    port = gi.cvar("port", "0", 0);
+    if ((int) port->value) {
+        return (int) port->value;
+    }
+    
+    port = gi.cvar("net_port", "0", 0);
+    if ((int) port->value) {
+        return (int) port->value;
+    }
+    
+    // fallback to default
+    port = gi.cvar("port", "27910", 0);
+    return (int) port->value;
 }
 
 /**
  * Reset the outgoing message buffer to zero to start a new msg
  */
 void RA_InitBuffer() {
-	q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
 }
 
 /**
@@ -771,8 +1014,8 @@ void RA_InitBuffer() {
  */
 uint8_t RA_ReadByte(void)
 {
-	unsigned char b = remote.queue_in.data[remote.queue_in.index++];
-	return b & 0xff;
+    unsigned char b = remote.queue_in.data[remote.queue_in.index++];
+    return b & 0xff;
 }
 
 /**
@@ -780,7 +1023,7 @@ uint8_t RA_ReadByte(void)
  */
 void RA_WriteByte(uint8_t b)
 {
-	remote.queue.data[remote.queue.length++] = b & 0xff;
+    remote.queue.data[remote.queue.length++] = b & 0xff;
 }
 
 /**
@@ -788,8 +1031,8 @@ void RA_WriteByte(uint8_t b)
  */
 uint16_t RA_ReadShort(void)
 {
-	return	(remote.queue_in.data[remote.queue_in.index++] +
-			(remote.queue_in.data[remote.queue_in.index++] << 8)) & 0xffff;
+    return    (remote.queue_in.data[remote.queue_in.index++] +
+            (remote.queue_in.data[remote.queue_in.index++] << 8)) & 0xffff;
 }
 
 /**
@@ -797,8 +1040,8 @@ uint16_t RA_ReadShort(void)
  */
 void RA_WriteShort(uint16_t s)
 {
-	remote.queue.data[remote.queue.length++] = s & 0xff;
-	remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
+    remote.queue.data[remote.queue.length++] = s & 0xff;
+    remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
 }
 
 /**
@@ -806,10 +1049,10 @@ void RA_WriteShort(uint16_t s)
  */
 int32_t RA_ReadLong(void)
 {
-	return	remote.queue_in.data[remote.queue_in.index++] +
-			(remote.queue_in.data[remote.queue_in.index++] << 8) +
-			(remote.queue_in.data[remote.queue_in.index++] << 16) +
-			(remote.queue_in.data[remote.queue_in.index++] << 24);
+    return    remote.queue_in.data[remote.queue_in.index++] +
+            (remote.queue_in.data[remote.queue_in.index++] << 8) +
+            (remote.queue_in.data[remote.queue_in.index++] << 16) +
+            (remote.queue_in.data[remote.queue_in.index++] << 24);
 }
 
 /**
@@ -817,10 +1060,21 @@ int32_t RA_ReadLong(void)
  */
 void RA_WriteLong(uint32_t i)
 {
-	remote.queue.data[remote.queue.length++] = i & 0xff;
-	remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
-	remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
-	remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
+    remote.queue.data[remote.queue.length++] = i & 0xff;
+    remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
+    remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
+    remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
+}
+
+/**
+ * Write an arbitrary amount of data from the message buffer
+ */
+void RA_WriteData(const void *data, size_t length)
+{
+    uint32_t i;
+    for (i=0; i<length; i++) {
+        RA_WriteByte(((byte *) data)[i]);
+    }
 }
 
 /**
@@ -828,55 +1082,54 @@ void RA_WriteLong(uint32_t i)
  */
 char *RA_ReadString(void)
 {
-	static char str[MAX_STRING_CHARS];
-	static char character;
-	size_t i, len = 0;
+    static char str[MAX_STRING_CHARS];
+    static char character;
+    size_t i, len = 0;
 
-	do {
-		len++;
-	} while (remote.queue_in.data[(remote.queue_in.index + len)] != 0);
+    do {
+        len++;
+    } while (remote.queue_in.data[(remote.queue_in.index + len)] != 0);
 
-	memset(&str, 0, MAX_STRING_CHARS);
+    memset(&str, 0, MAX_STRING_CHARS);
 
-	for (i=0; i<=len; i++) {
-		character = RA_ReadByte() & 0x7f;
-		strcat(str,  &character);
-	}
+    for (i=0; i<=len; i++) {
+        character = RA_ReadByte() & 0x7f;
+        strcat(str,  &character);
+    }
 
-	return str;
+    return str;
 }
 
 
 // printf-ish
 void RA_WriteString(const char *fmt, ...) {
-	
-	uint16_t i;
-	size_t len;
-	char str[MAX_MSG_LEN];
-	va_list argptr;
-	
-	va_start(argptr, fmt);
+    
+    uint16_t i;
+    size_t len;
+    char str[MAX_MSG_LEN];
+    va_list argptr;
+    
+    va_start(argptr, fmt);
     len = vsnprintf(str, sizeof(str), fmt, argptr);
-	va_end(argptr);
+    va_end(argptr);
 
-	len = strlen(str);
-	
-	if (!str || len == 0) {
-		RA_WriteByte(0);
-		return;
-	}
-	
-	if (len > MAX_MSG_LEN - remote.msglen) {
-		RA_WriteByte(0);
-		return;
-	}
-	
-	// perhaps don't convert to consolechars...
-	for (i=0; i<len; i++) {
-		remote.queue.data[remote.queue.length++] = str[i] | 0x80;
-	}
+    len = strlen(str);
+    
+    if (!str || len == 0) {
+        RA_WriteByte(0);
+        return;
+    }
+    
+    if (len > MAX_MSG_LEN - remote.queue.length) {
+        RA_WriteByte(0);
+        return;
+    }
 
-	RA_WriteByte(0);
+    for (i=0; i<len; i++) {
+        remote.queue.data[remote.queue.length++] = str[i];
+    }
+
+    RA_WriteByte(0);
 }
 
 /**
@@ -884,25 +1137,26 @@ void RA_WriteString(const char *fmt, ...) {
  */
 void RA_ReadData(void *out, size_t len)
 {
-	memcpy(out, &(remote.queue_in.data[remote.queue_in.index]), len);
-	remote.queue_in.index += len;
+    memcpy(out, &(remote.queue_in.data[remote.queue_in.index]), len);
+    remote.queue_in.index += len;
 }
+
 
 /**
  * Called when a player connects
  */
 void RA_PlayerConnect(edict_t *ent)
 {
-	int8_t cl;
-	cl = getEntOffset(ent) - 1;
+    int8_t cl;
+    cl = getEntOffset(ent) - 1;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	RA_WriteByte(CMD_CONNECT);
-	RA_WriteByte(cl);
-	RA_WriteString("%s", proxyinfo[cl].userinfo);
+    RA_WriteByte(CMD_CONNECT);
+    RA_WriteByte(cl);
+    RA_WriteString("%s", ra_userinfo(cl));
 }
 
 /**
@@ -910,19 +1164,19 @@ void RA_PlayerConnect(edict_t *ent)
  */
 void RA_PlayerDisconnect(edict_t *ent)
 {
-	int8_t cl;
-	cl = getEntOffset(ent) - 1;
+    int8_t cl;
+    cl = getEntOffset(ent) - 1;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	RA_WriteByte(CMD_DISCONNECT);
-	RA_WriteByte(cl);
+    RA_WriteByte(CMD_DISCONNECT);
+    RA_WriteByte(cl);
 }
 
 void RA_PlayerCommand(edict_t *ent) {
-	
+    
 }
 
 /**
@@ -931,17 +1185,17 @@ void RA_PlayerCommand(edict_t *ent) {
  */
 void RA_Print(uint8_t level, char *text)
 {
-	if (!(remote.flags & RFL_CHAT)) {
-		return;
-	}
-	
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
+    
+    if (!(remote.flags & RFL_CHAT)) {
+        return;
+    }
 
-	RA_WriteByte(CMD_PRINT);
-	RA_WriteByte(level);
-	RA_WriteString("%s",text);
+    RA_WriteByte(CMD_PRINT);
+    RA_WriteByte(level);
+    RA_WriteString("%s",text);
 }
 
 /**
@@ -949,25 +1203,25 @@ void RA_Print(uint8_t level, char *text)
  */
 void RA_Teleport(uint8_t client_id)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	if (!(remote.flags & RFL_TELEPORT)) {
-		return;
-	}
+    if (!(remote.flags & RFL_TELEPORT)) {
+        return;
+    }
 
-	char *srv;
-	if (gi.argc() > 1) {
-		srv = gi.argv(1);
-	} else {
-		srv = "";
-	}
+    char *srv;
+    if (gi.argc() > 1) {
+        srv = gi.argv(1);
+    } else {
+        srv = "";
+    }
 
-	RA_WriteByte(CMD_COMMAND);
-	RA_WriteByte(CMD_COMMAND_TELEPORT);
-	RA_WriteByte(client_id);
-	RA_WriteString("%s", srv);
+    RA_WriteByte(CMD_COMMAND);
+    RA_WriteByte(CMD_COMMAND_TELEPORT);
+    RA_WriteByte(client_id);
+    RA_WriteString("%s", srv);
 }
 
 /**
@@ -976,13 +1230,13 @@ void RA_Teleport(uint8_t client_id)
  */
 void RA_PlayerUpdate(uint8_t cl, const char *ui)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	RA_WriteByte(CMD_PLAYERUPDATE);
-	RA_WriteByte(cl);
-	RA_WriteString("%s", ui);
+    RA_WriteByte(CMD_PLAYERUPDATE);
+    RA_WriteByte(cl);
+    RA_WriteString("%s", ra_userinfo(cl));
 }
 
 /**
@@ -990,18 +1244,18 @@ void RA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void RA_Invite(uint8_t cl, const char *text)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	if (!(remote.flags & RFL_INVITE)) {
-		return;
-	}
+    if (!(remote.flags & RFL_INVITE)) {
+        return;
+    }
 
-	RA_WriteByte(CMD_COMMAND);
-	RA_WriteByte(CMD_COMMAND_INVITE);
-	RA_WriteByte(cl);
-	RA_WriteString(text);
+    RA_WriteByte(CMD_COMMAND);
+    RA_WriteByte(CMD_COMMAND_INVITE);
+    RA_WriteByte(cl);
+    RA_WriteString(text);
 }
 
 /**
@@ -1009,18 +1263,18 @@ void RA_Invite(uint8_t cl, const char *text)
  */
 void RA_Whois(uint8_t cl, const char *name)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	if (!(remote.flags & RFL_WHOIS)) {
-		return;
-	}
+    if (!(remote.flags & RFL_WHOIS)) {
+        return;
+    }
 
-	RA_WriteByte(CMD_COMMAND);
-	RA_WriteByte(CMD_COMMAND_WHOIS);
-	RA_WriteByte(cl);
-	RA_WriteString(name);
+    RA_WriteByte(CMD_COMMAND);
+    RA_WriteByte(CMD_COMMAND_WHOIS);
+    RA_WriteByte(cl);
+    RA_WriteString(name);
 }
 
 /**
@@ -1028,19 +1282,19 @@ void RA_Whois(uint8_t cl, const char *name)
  */
 void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	if (!(remote.flags & RFL_FRAGS)) {
-		return;
-	}
+    if (!(remote.flags & RFL_FRAGS)) {
+        return;
+    }
 
-	RA_WriteByte(CMD_FRAG);
-	RA_WriteByte(victim);
-	RA_WriteString("%s", vname);
-	RA_WriteByte(attacker);
-	RA_WriteString("%s", aname);
+    RA_WriteByte(CMD_FRAG);
+    RA_WriteByte(victim);
+    RA_WriteString("%s", vname);
+    RA_WriteByte(attacker);
+    RA_WriteString("%s", aname);
 }
 
 /**
@@ -1048,30 +1302,12 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
  */
 void RA_Map(const char *mapname)
 {
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	RA_WriteByte(CMD_MAP);
-	RA_WriteString("%s", mapname);
-}
-
-
-/**
- * XOR part of the message with a secret key only known to this q2 server
- * and the remote admin server.
- */
-void RA_Encrypt(void) {
-	uint16_t i;
-
-	/*
-	 * Start 4 bytes into the message. We need the remoteKey (first 4 bytes)
-	 * to be unencrypted so we know which server the message is from and
-	 * we can pick the appropriate key to decrypt the rest of the message
-	 */
-	for (i=3; i<remote.queue.length; i++) {
-		remote.queue.data[i] ^= encryptionKey[i];
-	}
+    RA_WriteByte(CMD_MAP);
+    RA_WriteString("%s", mapname);
 }
 
 
@@ -1080,26 +1316,26 @@ void RA_Encrypt(void) {
  */
 void RA_SayClient(void)
 {
-	uint8_t client_id;
-	uint8_t level;
-	char *string;
-	edict_t *ent;
+    uint8_t client_id;
+    uint8_t level;
+    char *string;
+    edict_t *ent;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	client_id = RA_ReadByte();
-	level = RA_ReadByte();
-	string = RA_ReadString();
+    client_id = RA_ReadByte();
+    level = RA_ReadByte();
+    string = RA_ReadString();
 
-	ent = proxyinfo[client_id].ent;
+    ent = proxyinfo[client_id].ent;
 
-	if (!ent) {
-		return;
-	}
+    if (!ent) {
+        return;
+    }
 
-	gi.cprintf(ent, level, string);
+    gi.cprintf(ent, level, string);
 }
 
 /**
@@ -1107,31 +1343,32 @@ void RA_SayClient(void)
  */
 void RA_SayAll(void)
 {
-	uint8_t i;
-	char *string;
+    uint8_t i;
+    char *string;
 
-	if (!remote.enabled) {
-		return;
-	}
+    if (remote.state < RA_STATE_TRUSTED) {
+        return;
+    }
 
-	string = RA_ReadString();
+    string = RA_ReadString();
 
-	for (i=0; i<remote.maxclients; i++) {
-		if (proxyinfo[i].inuse) {
+    for (i=0; i<remote.maxclients; i++) {
+        if (!proxyinfo[i].inuse) {
+            continue;
+        }
 
-			/**
-			 * This way we send directly to the clients and
-			 * not to the dedicated server console triggering
-			 * a print to be sent back to the q2a server.
-			 *
-			 * Using gi.bprintf() instead would cause that.
-			 */
-			gi.cprintf(
-					proxyinfo[i].ent,
-					PRINT_CHAT,
-					"%s\n",
-					string
-			);
-		}
-	}
+        /**
+         * This way we send directly to the clients and
+         * not to the dedicated server console triggering
+         * a print to be sent back to the q2a server.
+         *
+         * Using gi.bprintf() instead would cause that.
+         */
+        gi.cprintf(
+                proxyinfo[i].ent,
+                PRINT_CHAT,
+                "%s\n",
+                string
+        );
+    }
 }

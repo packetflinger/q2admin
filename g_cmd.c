@@ -432,12 +432,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_LOGICAL,
         &displayzbotuser
     },
-	{
-		"encryption_key",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		encryptionKey
-	},
     {
         "entity_classname_offset",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1378,6 +1372,30 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_NUMBER,
         &whois_active
     },
+	{
+		"remote_encryption",
+		CMDWHERE_CFGFILE, // you can't change this on the fly, config only
+		CMDTYPE_LOGICAL,
+		&remoteEncryption
+	},
+	{
+		"remote_private_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remotePrivateKey
+	},
+	{
+		"remote_public_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remotePublicKey
+	},
+	{
+		"remote_sv_public_key",
+		CMDWHERE_CFGFILE,
+		CMDTYPE_STRING,
+		&remoteServerPublicKey
+	},
 };
 
 //===================================================================
@@ -3208,6 +3226,28 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     return TRUE;
 }
 
+void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
+    if (gi.argc() > startarg) {
+        qboolean newcl_pitchspeed_enable = getLogicalValue(gi.argv(startarg));
+        int clienti;
+
+        if (newcl_pitchspeed_enable && !cl_pitchspeed_enable) {
+            cl_pitchspeed_enable = newcl_pitchspeed_enable;
+
+            // check and set each client...
+            for (clienti = 0; clienti < maxclients->value; clienti++) {
+                if (proxyinfo[clienti].rate > maxrateallowed) {
+                    addCmdQueue(client, QCMD_SETUPCL_PITCHSPEED, 0, 0, 0);
+                }
+            }
+        } else {
+            cl_pitchspeed_enable = newcl_pitchspeed_enable;
+        }
+    }
+
+    gi.cprintf(ent, PRINT_HIGH, "cl_pitchspeed_enable = %s\n", cl_pitchspeed_enable ? "Yes" : "No");
+}
+
 void ClientCommand(edict_t *ent) {
 	char *cmd;
 	cmd = gi.argv(0);
@@ -3419,28 +3459,6 @@ void minrateallowedRun(int startarg, edict_t *ent, int client) {
     } else {
         gi.cprintf(ent, PRINT_HIGH, "minrate = %d\n", minrateallowed);
     }
-}
-
-void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
-    if (gi.argc() > startarg) {
-        qboolean newcl_pitchspeed_enable = getLogicalValue(gi.argv(startarg));
-        int clienti;
-
-        if (newcl_pitchspeed_enable && !cl_pitchspeed_enable) {
-            cl_pitchspeed_enable = newcl_pitchspeed_enable;
-
-            // check and set each client...
-            for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].rate > maxrateallowed) {
-                    addCmdQueue(client, QCMD_SETUPCL_PITCHSPEED, 0, 0, 0);
-                }
-            }
-        } else {
-            cl_pitchspeed_enable = newcl_pitchspeed_enable;
-        }
-    }
-
-    gi.cprintf(ent, PRINT_HIGH, "cl_pitchspeed_enable = %s\n", cl_pitchspeed_enable ? "Yes" : "No");
 }
 
 void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client) {
@@ -3869,7 +3887,8 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
 }
 
-void Cmd_Teleport_f(edict_t *ent) {
+void Cmd_Teleport_f(edict_t *ent)
+{
 	if (!(remote.flags & RFL_TELEPORT)) {
 		gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
 		return;
@@ -3878,7 +3897,6 @@ void Cmd_Teleport_f(edict_t *ent) {
 	uint8_t id = getEntOffset(ent) - 1;
 
 	RA_Teleport(id);
-
 }
 
 // Show the remote settings/status 
@@ -3886,12 +3904,12 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	char addr[INET6_ADDRSTRLEN];
 	char addrstr[INET6_ADDRSTRLEN + 6];  // add room for port (:#####)
 
-	if (!remote.enabled) {
+	if (remote.state == RA_STATE_DISABLED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin is currently disabled\n");
 		return;
 	}
 
-	if (remote.state != RA_STATE_CONNECTED) {
+	if (remote.state < RA_STATE_CONNECTED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin enabled, but not currently connected\n");
 		gi.cprintf(
 				NULL,
