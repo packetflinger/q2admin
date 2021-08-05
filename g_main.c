@@ -945,46 +945,46 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
 #if defined(_WIN32) || defined(_WIN64)
 
-	hdll = LoadLibrary(dllname);
-	if (hdll == NULL) {
-		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
-		Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
+    hdll = LoadLibrary(dllname);
+    if (hdll == NULL) {
+        gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
+        Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
 
-		hdll = LoadLibrary(dllname);
-		if (hdll == NULL) {
-			gi.error("Unable to load game DLL %s\n", dllname);
-			return &ge;
-		}
-	}
+        hdll = LoadLibrary(dllname);
+        if (hdll == NULL) {
+            gi.error("Unable to load game DLL %s\n", dllname);
+            return &ge;
+        }
+    }
 
-	getapi = (GAMEAPI *) GetProcAddress(hdll, "GetGameAPI");
-	if (getapi == NULL) {
-		FreeLibrary(hdll);
-		gi.error("No GetGameApi() entry in DLL %s.\n", dllname);
-		return &ge;
-	}
+    getapi = (GAMEAPI *) GetProcAddress(hdll, "GetGameAPI");
+    if (getapi == NULL) {
+        FreeLibrary(hdll);
+        gi.error("No GetGameApi() entry in DLL %s.\n", dllname);
+        return &ge;
+    }
 #else
-	int loadtype;
-	loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
+    int loadtype;
+    loadtype = soloadlazy ? RTLD_LAZY : RTLD_NOW;
 
-	hdll = dlopen(dllname, loadtype);
-	if (hdll == NULL) {
-		gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
-		Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
+    hdll = dlopen(dllname, loadtype);
+    if (hdll == NULL) {
+        gi.cprintf(NULL, PRINT_HIGH, "Unable to load %s, trying from baseq2 directory\n", dllname);
+        Q_snprintf(dllname, sizeof(dllname), "baseq2/%s", gamelib->string);
 
-		hdll = dlopen(dllname, loadtype);
-		if (hdll == NULL) {
-			gi.error("Unable to load game library %s\n", dllname);
-			return &ge;
-		}
-	}
+        hdll = dlopen(dllname, loadtype);
+        if (hdll == NULL) {
+            gi.error("Unable to load game library %s\n", dllname);
+            return &ge;
+        }
+    }
 
-	getapi = (GAMEAPI *) dlsym(hdll, "GetGameAPI");
-	if (getapi == NULL) {
-		dlclose(hdll);
-		gi.error("No GetGameApi() entry in game library %s.\n", dllname);
-		return &ge;
-	}
+    getapi = (GAMEAPI *) dlsym(hdll, "GetGameAPI");
+    if (getapi == NULL) {
+        dlclose(hdll);
+        gi.error("No GetGameApi() entry in game library %s.\n", dllname);
+        return &ge;
+    }
 #endif
 
     gi.cprintf(NULL, PRINT_HIGH, "Q2Admin %s -> %s\n", version, dllname);
