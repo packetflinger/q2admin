@@ -2879,102 +2879,91 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
                 return FALSE;
             }
+
             //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-            /*else if(play_team_enable && startContains(args, "!t"))  // play_team
-                    {
-                            args += 2;
-                            SKIPBLANK(args);
-							
-                            if(*args && q2a_strchr(args, ';') == NULL)
-                                    {
-                                            if ( printmessageonplaycmds )
-                                                    {
-                                                            sprintf(buffer, "say_team \"Playing Team Sound %s\"\n", args);
-                                                            stuffcmd(ent, buffer);
-                                                    }
-                                            sprintf(buffer, "say_team \"swpplay %s\"\n", args);
-                                            stuffcmd(ent, buffer);
-                                    }
-                            else
-                                    {
-                                            gi.cprintf(ent, PRINT_HIGH, "say !t wavfile\n");
-                                    }
-								
-                            return FALSE;
+            /*
+            else if (play_team_enable && startContains(args, "!t")) // play_team
+            {
+                args += 2;
+                SKIPBLANK(args);
+
+                if (*args && q2a_strchr(args, ';') == NULL) {
+                    if (printmessageonplaycmds) {
+                        sprintf(buffer, "say_team \"Playing Team Sound %s\"\n",
+                                args);
+                        stuffcmd(ent, buffer);
                     }
-            else if(play_all_enable && startContains(args, "!a"))  // play_all
-                    {
-                            args += 2;
-                            SKIPBLANK(args);
-							
-                            if(*args && q2a_strchr(args, ';') == NULL)
-                                    {
-                                            if ( printmessageonplaycmds )
-                                                    {
-                                                            sprintf(buffer, "say \"Playing Sound %s\"\n", args);
-                                                            stuffcmd(ent, buffer);
-                                                    }
-                                            sprintf(buffer, "play %s\n", args);
-									
-                                            for(clienti = 0; clienti < maxclients->value; clienti++)
-                                                    {
-                                                            if(proxyinfo[clienti].inuse)
-                                                                    {
-                                                                            stuffcmd(getEnt((clienti + 1)), buffer);
-                                                                    }
-                                                    }
-                                    }
-                            else
-                                    {
-                                            gi.cprintf(ent, PRINT_HIGH, "say !a wavfile\n");
-                                    }
-								
-                            return FALSE;
+                    sprintf(buffer, "say_team \"swpplay %s\"\n", args);
+                    stuffcmd(ent, buffer);
+                } else {
+                    gi.cprintf(ent, PRINT_HIGH, "say !t wavfile\n");
+                }
+
+                return FALSE;
+            } else if (play_all_enable && startContains(args, "!a")) // play_all
+            {
+                args += 2;
+                SKIPBLANK(args);
+
+                if (*args && q2a_strchr(args, ';') == NULL) {
+                    if (printmessageonplaycmds) {
+                        sprintf(buffer, "say \"Playing Sound %s\"\n", args);
+                        stuffcmd(ent, buffer);
                     }
-            else if(play_person_enable && startContains(args, "!w"))  // play_person
-                    {
-                            char *txt;
-							
-                            args += 2;
-                            SKIPBLANK(args);
-							
-                            enti = getClientFromArg(client, ent, &clienti, args, &txt);
-							
-                            if(enti)
-                                    {
-                                            if(q2a_strlen(txt) > sizeof(buffer) - 10)
-                                                    {
-                                                            txt[sizeof(buffer) - 10] = 0;
-                                                    }
-										
-                                            if(q2a_strchr(args, ';') == NULL)
-                                                    {
-                                                            if ( printmessageonplaycmds )
-                                                                    {
-                                                                            sprintf(buffer, "(%s)(private play sound to: %s) %s\n", proxyinfo[client].name, proxyinfo[clienti].name, txt);
-                                                                            cprintf_internal(NULL, PRINT_CHAT, "%s", buffer);
-                                                                            cprintf_internal(ent, PRINT_CHAT, "%s", buffer);
-													
-                                                                            sprintf(buffer, "(%s)(private play sound) %s\n", proxyinfo[client].name, txt);
-                                                                            cprintf_internal(enti, PRINT_CHAT, "%s", buffer);
-                                                                    }
-												
-                                                            sprintf(buffer, "play %s\n", txt);
-                                                            stuffcmd(enti, buffer);
-                                                    }
-                                            else
-                                                    {
-                                                            gi.cprintf(ent, PRINT_HIGH, "say !w [LIKE/RE/CL] name wavfile\n");
-                                                    }
-                                    }
-                            else
-                                    {
-                                            gi.cprintf(ent, PRINT_HIGH, "say !w [LIKE/RE/CL] name wavfile\n");
-                                    }
-								
-                            return FALSE;
+                    sprintf(buffer, "play %s\n", args);
+
+                    for (clienti = 0; clienti < maxclients->value; clienti++) {
+                        if (proxyinfo[clienti].inuse) {
+                            stuffcmd(getEnt((clienti + 1)), buffer);
+                        }
                     }
-             */
+                } else {
+                    gi.cprintf(ent, PRINT_HIGH, "say !a wavfile\n");
+                }
+
+                return FALSE;
+            } else if (play_person_enable && startContains(args, "!w")) // play_person
+            {
+                char *txt;
+
+                args += 2;
+                SKIPBLANK(args);
+
+                enti = getClientFromArg(client, ent, &clienti, args, &txt);
+
+                if (enti) {
+                    if (q2a_strlen(txt) > sizeof(buffer) - 10) {
+                        txt[sizeof(buffer) - 10] = 0;
+                    }
+
+                    if (q2a_strchr(args, ';') == NULL) {
+                        if (printmessageonplaycmds) {
+                            sprintf(buffer,
+                                    "(%s)(private play sound to: %s) %s\n",
+                                    proxyinfo[client].name,
+                                    proxyinfo[clienti].name, txt);
+                            cprintf_internal(NULL, PRINT_CHAT, "%s", buffer);
+                            cprintf_internal(ent, PRINT_CHAT, "%s", buffer);
+
+                            sprintf(buffer, "(%s)(private play sound) %s\n",
+                                    proxyinfo[client].name, txt);
+                            cprintf_internal(enti, PRINT_CHAT, "%s", buffer);
+                        }
+
+                        sprintf(buffer, "play %s\n", txt);
+                        stuffcmd(enti, buffer);
+                    } else {
+                        gi.cprintf(ent, PRINT_HIGH,
+                                "say !w [LIKE/RE/CL] name wavfile\n");
+                    }
+                } else {
+                    gi.cprintf(ent, PRINT_HIGH,
+                            "say !w [LIKE/RE/CL] name wavfile\n");
+                }
+
+                return FALSE;
+            }
+            */
             //r1ch 2005-01-26 disable hugely buggy commands BEGIN
         }
     } else if (checkforfloodcmds(cmd)) {
