@@ -52,6 +52,7 @@
 #define AESKEY_LEN      16  // bytes, 128 bits
 #define AESBLOCK_LEN    16  // bytes, 128 bits
 #define AUTH_FAIL_LIMIT 3   // stop trying after
+#define DIGEST_LEN      (SHA256_DIGEST_LENGTH)
 
 
 /**
