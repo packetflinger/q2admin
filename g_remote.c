@@ -767,20 +767,20 @@ qboolean RA_VerifyServerAuth(void)
 {
     ra_connection_t *c;
     uint16_t len;
-    byte challenge_cipher[RSA_LEN];
     byte digest[DIGEST_LEN];
     byte aeskey_cipher[RSA_LEN];
     byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
     qboolean servertrusted = qfalse;
     int verified;
-    byte sig[RSA_LEN];
+    byte signature[RSA_LEN];
     unsigned int siglen;
     int chalsigned;
 
     c = &remote.connection;
 
+    q2a_memset(signature, 0, RSA_LEN);
     len = RA_ReadShort();
-    RA_ReadData(challenge_cipher, len);
+    RA_ReadData(signature, len);
 
     if (remoteEncryption) {
         RA_ReadData(aeskey_cipher, RSA_LEN);
@@ -789,22 +789,23 @@ qboolean RA_VerifyServerAuth(void)
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
     q2a_memset(digest, 0, DIGEST_LEN);
     G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
-    verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, challenge_cipher, len, c->rsa_sv_pu);
+    verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
 
     if (verified) {
         servertrusted = qtrue;
         printf("[RA] server signature verified\n");
     } else {
-        printf("Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        printf("[RA] Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
 
     // encrypt the server's nonce and send back to auth ourselves
     if (servertrusted) {
         q2a_memset(digest, 0, DIGEST_LEN);
+        q2a_memset(signature, 0, RSA_LEN);
         G_SHA256Hash(digest, c->sv_nonce, CHALLENGE_LEN);
         //hexDump("Digest", digest, DIGEST_LEN);
 
-        chalsigned = RSA_sign(NID_sha256, digest, DIGEST_LEN, sig, &siglen, c->rsa_pr);
+        chalsigned = RSA_sign(NID_sha256, digest, DIGEST_LEN, signature, &siglen, c->rsa_pr);
         if (!chalsigned) {
 
         }
@@ -813,7 +814,7 @@ qboolean RA_VerifyServerAuth(void)
 
         RA_WriteByte(CMD_AUTH);
         RA_WriteShort(siglen);
-        RA_WriteData(sig, siglen);
+        RA_WriteData(signature, siglen);
         RA_SendMessages();
 
         if (remoteEncryption) {
