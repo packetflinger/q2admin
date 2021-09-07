@@ -768,59 +768,48 @@ qboolean RA_VerifyServerAuth(void)
     ra_connection_t *c;
     uint16_t len;
     byte challenge_cipher[RSA_LEN];
-    //byte challenge_plain[CHALLENGE_LEN];
-    byte challenge_hash1[SHA256_DIGEST_LENGTH];
-    byte challenge_hash2[SHA256_DIGEST_LENGTH];
+    byte digest[DIGEST_LEN];
     byte aeskey_cipher[RSA_LEN];
     byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
     qboolean servertrusted = qfalse;
     int verified;
-    qboolean authentic;
+    byte sig[RSA_LEN];
+    unsigned int siglen;
+    int chalsigned;
 
     c = &remote.connection;
 
     len = RA_ReadShort();
     RA_ReadData(challenge_cipher, len);
-    //hexDump("Challenge Cipher", challenge_cipher, len);
 
     if (remoteEncryption) {
         RA_ReadData(aeskey_cipher, RSA_LEN);
     }
 
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+    q2a_memset(digest, 0, DIGEST_LEN);
+    G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
+    verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, challenge_cipher, len, c->rsa_sv_pu);
 
-    //G_PublicDecrypt(c->rsa_sv_pu, challenge_hash1, challenge_cipher);
-    G_SHA256Hash(challenge_hash2, c->cl_nonce, CHALLENGE_LEN);
-    //hexDump("digest", challenge_hash2, SHA256_DIGEST_LENGTH);
-    //hexDump("Sv_nonce", c->sv_nonce, CHALLENGE_LEN);
-
-    //verified = RSAVerifySignature(c->rsa_sv_pu, challenge_hash2, SHA256_DIGEST_LENGTH, challenge_cipher, 256, &authentic);
-    verified = RSA_verify(NID_sha256, challenge_hash2, SHA256_DIGEST_LENGTH, challenge_cipher, 256, c->rsa_sv_pu);
     if (verified) {
-    	servertrusted = qtrue;
-    	printf("[RA] server signature verified\n");
+        servertrusted = qtrue;
+        printf("[RA] server signature verified\n");
     } else {
-    	printf("Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        printf("Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
-    //G_SHA256Hash(challenge_hash2, c->cl_nonce, CHALLENGE_LEN);
-
-    //if (memcmp(challenge_hash1, challenge_hash2, SHA256_DIGEST_LENGTH) == 0) {
-    //    servertrusted = qtrue;
-    //}
 
     // encrypt the server's nonce and send back to auth ourselves
     if (servertrusted) {
-        q2a_memset(challenge_cipher, 0, RSA_LEN);
-        byte challenge_digest[SHA256_DIGEST_LENGTH];
-        G_SHA256Hash(challenge_digest, c->sv_nonce, CHALLENGE_LEN);
-        hexDump("Digest", challenge_digest, SHA256_DIGEST_LENGTH);
-        //byte sig = malloc(RSA_size(c->rsa_pr) + 1000);
-        byte sig[3000];
-        unsigned int siglen;
-        int chalsigned = RSA_sign(NID_sha256, challenge_digest, SHA256_DIGEST_LENGTH, sig, &siglen, c->rsa_pr);
-        //G_PrivateEncrypt(c->rsa_pr, challenge_cipher, c->sv_nonce, CHALLENGE_LEN);
-        //G_PrivateEncrypt(c->rsa_pr, challenge_cipher, challenge_digest, SHA256_DIGEST_LENGTH);
-        hexDump("Signature", sig, RSA_LEN);
+        q2a_memset(digest, 0, DIGEST_LEN);
+        G_SHA256Hash(digest, c->sv_nonce, CHALLENGE_LEN);
+        //hexDump("Digest", digest, DIGEST_LEN);
+
+        chalsigned = RSA_sign(NID_sha256, digest, DIGEST_LEN, sig, &siglen, c->rsa_pr);
+        if (!chalsigned) {
+
+        }
+
+        //hexDump("Signature", sig, RSA_LEN);
 
         RA_WriteByte(CMD_AUTH);
         RA_WriteShort(siglen);
@@ -830,16 +819,16 @@ qboolean RA_VerifyServerAuth(void)
         if (remoteEncryption) {
             len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
             if (!len) {
-                gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems decrypting symmetric key sent from server\n");
+                gi.cprintf(NULL, PRINT_HIGH, "[RA] couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
+                remoteEncryption = qfalse;
+                c->have_keys = qfalse;
+            } else {
+                q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
+                q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
+                c->have_keys = qtrue;
+                c->e_ctx = EVP_CIPHER_CTX_new();
+                c->d_ctx = EVP_CIPHER_CTX_new();
             }
-
-            q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
-            q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
-
-            c->have_keys = qtrue;
-
-            c->e_ctx = EVP_CIPHER_CTX_new();
-            c->d_ctx = EVP_CIPHER_CTX_new();
         }
 
         remote.connection_attempts = 0;
