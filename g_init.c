@@ -124,7 +124,6 @@ qboolean displaynamechange = TRUE;
 qboolean disconnectuserimpulse = FALSE;
 int maximpulses = 1;
 
-char moddir[256];
 
 qboolean displayimpulses = FALSE;
 

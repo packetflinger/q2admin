@@ -45,6 +45,8 @@ char zbot_testchar2;
 
 qboolean soloadlazy;
 
+char moddir[256];
+
 void ShutdownGame(void) {
 
     INITPERFORMANCE(1);
