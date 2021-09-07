@@ -45,7 +45,7 @@ qboolean G_LoadKeys(void)
 	gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
 
 	// first load our private key
-	sprintf(path, "%s/%s", gamedir->string, remotePrivateKey);
+	sprintf(path, "%s/%s", moddir, remotePrivateKey);
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
@@ -62,7 +62,7 @@ qboolean G_LoadKeys(void)
 
 
 	// then our public key
-	sprintf(path, "%s/%s", gamedir->string, remotePublicKey);
+	sprintf(path, "%s/%s", moddir, remotePublicKey);
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
@@ -71,6 +71,7 @@ qboolean G_LoadKeys(void)
 	}
 	c->rsa_pu = RSA_new();
 	c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
+	//c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
 	fclose(fp);
 
 	if (!c->rsa_pu) {
@@ -80,7 +81,7 @@ qboolean G_LoadKeys(void)
     }
 
 	// last the remote admin server's public key
-	sprintf(path, "%s/%s", gamedir->string, remoteServerPublicKey);
+	sprintf(path, "%s/%s", moddir, remoteServerPublicKey);
 	fp = fopen(path, "rb");
 	if (!fp) {
 		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
@@ -110,7 +111,8 @@ qboolean G_LoadKeys(void)
 void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
 {
 	int result;
-	result = RSA_public_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
+	//result = RSA_public_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
+	result = RSA_public_decrypt(RSA_size(key), src, dest, key, 0); // dont pad
 }
 
 
@@ -265,4 +267,14 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     written += dest_len;
 
     return written;
+}
+
+void G_SHA256Hash(byte *dest, byte *src, size_t src_len)
+{
+	byte hash[SHA256_DIGEST_LENGTH];
+	SHA256_CTX sha256;
+	SHA256_Init(&sha256);
+	SHA256_Update(&sha256, src, src_len);
+	SHA256_Final(hash, &sha256);
+	memcpy(dest, hash, SHA256_DIGEST_LENGTH);
 }
