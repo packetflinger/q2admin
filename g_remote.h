@@ -256,6 +256,8 @@ void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
 void        RA_RotateKeys(void);
 void        debug_print(char *str);
+void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
+
 
 
 extern remote_t  remote;
