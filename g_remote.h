@@ -225,7 +225,7 @@ uint16_t    getport(void);
 
 void        RA_Print(uint8_t level, char *text);
 void        RA_Teleport(uint8_t client_id);
-void        RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname);
+void        RA_Frag(uint8_t victim, uint8_t attacker);
 void        RA_PlayerUpdate(uint8_t cl, const char *ui);
 void        RA_Invite(uint8_t cl, const char *text);
 void        RA_Whois(uint8_t cl, const char *name);

@@ -1199,7 +1199,8 @@ extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
 
-extern uint32_t remoteKey;
+//extern uint32_t remoteKey;
+extern char remoteUUID[37];
 extern char remoteAddr[256];
 extern int remotePort;
 extern int remoteFlags;

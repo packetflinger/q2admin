@@ -49,7 +49,8 @@ char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
 char gmapname[MAX_QPATH];
 char version[256];
 
-uint32_t remoteKey          = 0;
+//uint32_t remoteKey          = 0;
+char remoteUUID[37];
 char remoteAddr[256]        = "127.0.0.1";
 int remotePort              = 9988;
 int remoteFlags             = 1024;

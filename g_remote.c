@@ -787,15 +787,16 @@ qboolean RA_VerifyServerAuth(void)
     }
 
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+    //hexDump("data read", c->sv_nonce, CHALLENGE_LEN);
     q2a_memset(digest, 0, DIGEST_LEN);
     G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
     verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
 
     if (verified) {
         servertrusted = qtrue;
-        printf("[RA] server signature verified\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] server signature verified\n");
     } else {
-        printf("[RA] Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
 
     // encrypt the server's nonce and send back to auth ourselves
@@ -955,25 +956,24 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
     uint8_t aid = getEntOffset(attacker) - 1;
     gitem_t *weapon;
 
-    proxyinfo[id].die(self, inflictor, attacker, damage, point);
-    return;
+    //proxyinfo[id].die(self, inflictor, attacker, damage, point);
+    //return;
 
-    /*
+
     if (self->deadflag != DEAD_DEAD) {
         if (strcmp(attacker->classname,"player") == 0) {
-            RA_Frag(id, aid, proxyinfo[id].name, proxyinfo[aid].name);
+            RA_Frag(id, aid);
         } else {
-            RA_Frag(id, aid, proxyinfo[id].name, "");
+            RA_Frag(id, aid);
         }
     }
 
-    weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
+    //weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
 
-    gi.dprintf("MOD: %s\n", weapon->classname);
+    //gi.dprintf("MOD: %s\n", weapon->classname);
 
     // call the player's real die() function
     proxyinfo[id].die(self, inflictor, attacker, damage, point);
-    */
 }
 
 /**
@@ -996,7 +996,7 @@ void RA_SayHello(void)
 
     RA_WriteLong(MAGIC_CLIENT);
     RA_WriteByte(CMD_HELLO);
-    RA_WriteLong(remoteKey);
+    RA_WriteString(remoteUUID);
     RA_WriteLong(Q2A_REVISION);
     RA_WriteShort(remote.port);
     RA_WriteByte(remote.maxclients);
@@ -1334,7 +1334,7 @@ void RA_Whois(uint8_t cl, const char *name)
 /**
  * Called when a player dies
  */
-void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *aname)
+void RA_Frag(uint8_t victim, uint8_t attacker)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1346,9 +1346,7 @@ void RA_Frag(uint8_t victim, uint8_t attacker, const char *vname, const char *an
 
     RA_WriteByte(CMD_FRAG);
     RA_WriteByte(victim);
-    RA_WriteString("%s", vname);
     RA_WriteByte(attacker);
-    RA_WriteString("%s", aname);
 }
 
 /**
@@ -1397,13 +1395,14 @@ void RA_SayClient(void)
  */
 void RA_SayAll(void)
 {
-    uint8_t i;
+    uint8_t i, level;
     char *string;
 
     if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
+    level = RA_ReadByte();
     string = RA_ReadString();
 
     for (i=0; i<remote.maxclients; i++) {
@@ -1420,7 +1419,7 @@ void RA_SayAll(void)
          */
         gi.cprintf(
                 proxyinfo[i].ent,
-                PRINT_CHAT,
+                level,
                 "%s\n",
                 string
         );

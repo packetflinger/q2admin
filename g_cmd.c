@@ -877,10 +877,10 @@ q2acmd_t q2aCommands[] = {
 		remoteSettingsDisplay,
 	},
 	{
-		"remote_key",
+		"remote_uuid",
 		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NUMBER,
-		&remoteKey,
+		CMDTYPE_STRING,
+		&remoteUUID,
 	},
 	{
 		"remote_port",
@@ -1448,10 +1448,10 @@ void Cmd_Remote_Players_f(edict_t *ent) {
 
         uint8_t id = getEntOffset(ent) - 1;
 
-        RA_WriteLong(remoteKey);
-        RA_WriteByte(CMD_PLAYERS);
-        RA_WriteByte(id);
-        RA_WriteString(gi.argv(1));
+        //RA_WriteLong(remoteKey);
+        //RA_WriteByte(CMD_PLAYERS);
+        //RA_WriteByte(id);
+        //RA_WriteString(gi.argv(1));
 }
 
 void Cmd_Remote_Whois_f(edict_t *ent) {
