@@ -56,7 +56,7 @@ qboolean G_LoadKeys(void)
 	fclose(fp);
 
 	if (!c->rsa_pr) {
-	    gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key\n");
+	    gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
 	    return qfalse;
 	}
 
@@ -71,11 +71,17 @@ qboolean G_LoadKeys(void)
 	}
 	c->rsa_pu = RSA_new();
 	c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
-	//c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
+
+	// if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
+	if (!c->rsa_pu) {
+	    //c->rsa_pu = PEM_read_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
+	    c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
+	}
+
 	fclose(fp);
 
 	if (!c->rsa_pu) {
-        gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key\n");
+        gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
         RSA_free(c->rsa_pr);
         return qfalse;
     }
