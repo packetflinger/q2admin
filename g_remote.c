@@ -896,6 +896,8 @@ void RA_RotateKeys(void)
  */
 void RA_DisconnectedPeer(void)
 {
+    uint8_t secs;
+
     if (remote.state < RA_STATE_CONNECTED) {
         return;
     }
@@ -909,7 +911,12 @@ void RA_DisconnectedPeer(void)
     memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
 
     // try reconnecting a reasonably random amount of time later
-    remote.connect_retry_frame = FUTURE_FRAME(10) + ((rand() & 0xf) * 2);
+    srand((unsigned) time(NULL));
+    secs = rand() & 0xff;
+    remote.connect_retry_frame = FUTURE_FRAME(10) + secs;
+    gi.cprintf(NULL, PRINT_HIGH, "Trying to reconnect in %d seconds\n",
+        FRAMES_TO_SECS(remote.connect_retry_frame - remote.frame_number)
+    );
 }
 
 /**
