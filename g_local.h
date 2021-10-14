@@ -323,6 +323,8 @@ extern edict_t *g_edicts;
 #define random()                       ((rand () & 0x7fff) / ((float)0x7fff))
 #define crandom()                      (2.0 * (random() - 0.5))
 
+#define clamp(x,y,z)                   ((x)<(y)?(x)=(y):(x)>(z)?(x)=(z):(x))
+
 #define world                          (&g_edicts[0])
 
 // item spawnflags
