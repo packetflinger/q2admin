@@ -44,7 +44,7 @@
 
 #define MAX_MSG_LEN     1000
 
-#define PING_FREQ_SECS  10
+#define PING_FREQ_SECS  40
 #define PING_MISS_MAX   3
 
 #define RSA_LEN         256 // bytes, 2048 bits
