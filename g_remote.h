@@ -51,6 +51,7 @@
 #define CHALLENGE_LEN   16  // bytes
 #define AESKEY_LEN      16  // bytes, 128 bits
 #define AESBLOCK_LEN    16  // bytes, 128 bits
+#define AES_IV_LEN      16
 #define AUTH_FAIL_LIMIT 3   // stop trying after
 #define DIGEST_LEN      (SHA256_DIGEST_LENGTH)
 
@@ -116,7 +117,7 @@ typedef struct {
     byte    cl_nonce[CHALLENGE_LEN];  // random data
     byte    sv_nonce[CHALLENGE_LEN];  // random data
     byte    aeskey[AESKEY_LEN];       // shared encryption key (128bit)
-    byte    iv[AESBLOCK_LEN];         // aes block size
+    byte    iv[AES_IV_LEN];        // GCM IV is 12 bytes
 
     RSA     *rsa_pu;      // our public key
     RSA     *rsa_pr;      // our private key

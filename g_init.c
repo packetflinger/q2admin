@@ -42,6 +42,23 @@ cvar_t *q2adminanticheat_file;
 cvar_t *q2adminhashlist_enable;
 cvar_t *q2adminhashlist_dir;
 
+// for per-map entity substitutions
+cvar_t *tune_spawn_railgun;
+cvar_t *tune_spawn_bfg;
+cvar_t *tune_spawn_quad;
+cvar_t *tune_spawn_invulnerability;
+cvar_t *tune_spawn_powershield;
+cvar_t *tune_spawn_megahealth;
+cvar_t *tune_spawn_rocketlauncher;
+cvar_t *tune_spawn_hyperblaster;
+cvar_t *tune_spawn_grenadelauncher;
+cvar_t *tune_spawn_chaingun;
+cvar_t *tune_spawn_machinegun;
+cvar_t *tune_spawn_supershotgun;
+cvar_t *tune_spawn_shotgun;
+cvar_t *tune_spawn_machinegun;
+cvar_t *tune_spawn_grenades;
+
 qboolean quake2dirsupport = TRUE;
 
 char dllname[256];
@@ -460,6 +477,110 @@ void InitGame(void)
 }
 
 /**
+ * Substitute a single edict in the entities string.
+ *
+ * newents: the new entity string (the destination)
+ * sub: the replacement (supplied via cvar)
+ * needle: what we're looking for
+ * token: what we have
+ * found: a match was found and substituted
+ */
+void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, qboolean *found) {
+	if (sub->string[0] && (!Q_stricmp(needle, token))) {
+		q2a_strcat(newents, va("\"%s\"\n", sub->string));
+		gi.cprintf(NULL, PRINT_HIGH, "Entity swap: %s > %s\n", needle, sub->string);
+		*found = qtrue;
+	}
+}
+/**
+ * Make a new entity string making any needed substitutions based on cvars
+ */
+void SubstituteEntities(char *newents, char *oldents)
+{
+	qboolean replaced;
+
+	tune_spawn_railgun = gi.cvar("tune_spawn_railgun", "", CVAR_GENERAL);
+	tune_spawn_bfg = gi.cvar("tune_spawn_bfg", "", CVAR_GENERAL);
+	tune_spawn_quad = gi.cvar("tune_spawn_quad", "", CVAR_GENERAL);
+	tune_spawn_invulnerability = gi.cvar("tune_spawn_invulnerability", "", CVAR_GENERAL);
+	tune_spawn_powershield = gi.cvar("tune_spawn_powershield", "", CVAR_GENERAL);
+	tune_spawn_megahealth = gi.cvar("tune_spawn_megahealth", "", CVAR_GENERAL);
+	tune_spawn_rocketlauncher = gi.cvar("tune_spawn_rocketlauncher", "", CVAR_GENERAL);
+	tune_spawn_hyperblaster = gi.cvar("tune_spawn_hyperblaster", "", CVAR_GENERAL);
+	tune_spawn_grenadelauncher = gi.cvar("tune_spawn_grenadelauncher", "", CVAR_GENERAL);
+	tune_spawn_chaingun = gi.cvar("tune_spawn_chaingun", "", CVAR_GENERAL);
+	tune_spawn_machinegun = gi.cvar("tune_spawn_machinegun", "", CVAR_GENERAL);
+	tune_spawn_supershotgun = gi.cvar("tune_spawn_supershotgun", "", CVAR_GENERAL);
+	tune_spawn_shotgun = gi.cvar("tune_spawn_shotgun", "", CVAR_GENERAL);
+	tune_spawn_machinegun = gi.cvar("tune_spawn_machinegun", "", CVAR_GENERAL);
+	tune_spawn_grenades = gi.cvar("tune_spawn_grenades ", "", CVAR_GENERAL);
+
+	while (1) {
+		char *com_tok = 0;
+		char *classnamepos = 0;
+
+		// parse the opening brace
+		com_tok = COM_Parse(&oldents, NULL);
+		if (!oldents) {
+			break;
+		}
+
+		q2a_strcat(newents, va("%s\n", com_tok));
+
+		if (com_tok[0] != '{') {
+			break;
+		}
+
+		// go through all the dictionary pairs
+		while (1) {
+			// parse key
+			com_tok = COM_Parse(&oldents, &classnamepos);
+			if (com_tok[0] == '}') {
+				q2a_strcat(newents, va("%s\n", com_tok));
+				break;
+			}
+
+			if (!oldents) {
+				break;
+			}
+
+			q2a_strcat(newents, va("\"%s\" ", com_tok));
+
+			// parse value
+			com_tok = COM_Parse(&oldents, NULL);
+			if (!oldents) {
+				break;
+			}
+
+			replaced = qfalse;
+			SubstituteEntity(newents, tune_spawn_quad, "item_quad", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_invulnerability, "item_invulnerability", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_powershield, "item_power_shield", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_megahealth, "item_health_mega", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_bfg, "weapon_bfg", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_railgun, "weapon_railgun", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_rocketlauncher, "weapon_rocketlauncher", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_hyperblaster, "weapon_hyperblaster", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_grenadelauncher, "weapon_grenadelauncher", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_chaingun, "weapon_chaingun", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_machinegun, "weapon_machinegun", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_supershotgun, "weapon_supershotgun", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_shotgun, "weapon_shotgun", com_tok, &replaced);
+			SubstituteEntity(newents, tune_spawn_grenades, "ammo_grenades", com_tok, &replaced);
+
+			// add the original token if it wasn't replaced
+			if (replaced == qfalse) {
+				q2a_strcat(newents, va("\"%s\"\n", com_tok));
+			}
+
+			if (com_tok[0] == '}') {
+				break;
+			}
+		}
+	}
+}
+
+/**
  *
  */
 void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
@@ -583,6 +704,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
 
         // parse out all the turned off entities...
         while (1) {
+            //gi.cprintf(NULL, PRINT_HIGH, "%s\n", entstr);
             char *com_tok = 0;
             char *classnamepos = 0;
             char *teampos = 0;
@@ -593,6 +715,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
             if (!entities) {
                 break;
             }
+
+            //q2a_strcat(entstr, va("%s\n", com_tok));
 
             if (com_tok[0] != '{') {
                 break;
@@ -647,9 +771,17 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
         }
     }
 
+    int entsize = strlen(backupentities) + 500;
+    char *entstr;
+    entstr = gi.TagMalloc(entsize, TAG_GAME);
+    SubstituteEntities(entstr, backupentities);
+    //SubstituteEntities("{}", backupentities);
+
     STARTPERFORMANCE(2);
-    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
+    ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
+
+    gi.TagFree(entstr);
 
     G_MergeEdicts();
 

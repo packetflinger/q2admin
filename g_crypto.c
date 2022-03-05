@@ -5,32 +5,32 @@
  */
 void G_GenerateKeyPair(int bits)
 {
-	FILE *fp;
-	RSA *rsa;
-	BIGNUM *e;
-	time_t seconds;
-	char filename[64];
+    FILE *fp;
+    RSA *rsa;
+    BIGNUM *e;
+    time_t seconds;
+    char filename[64];
 
-	time(&seconds);
+    time(&seconds);
 
-	rsa = RSA_new();
-	e = BN_new();
+    rsa = RSA_new();
+    e = BN_new();
 
-	BN_set_word(e, RSA_F4);
-	RSA_generate_key_ex(rsa, bits, e, NULL);
+    BN_set_word(e, RSA_F4);
+    RSA_generate_key_ex(rsa, bits, e, NULL);
 
-	snprintf(filename, sizeof(filename), "public-%d.pem", seconds);
-	fp = fopen(filename, "wb");
-	PEM_write_RSAPublicKey(fp, rsa);
-	fclose(fp);
+    snprintf(filename, sizeof(filename), "public-%d.pem", seconds);
+    fp = fopen(filename, "wb");
+    PEM_write_RSAPublicKey(fp, rsa);
+    fclose(fp);
 
-	snprintf(filename, sizeof(filename), "private-%d.pem", seconds);
-	fp = fopen(filename, "wb");
-	PEM_write_RSAPrivateKey(fp, rsa, NULL, NULL, 0, NULL, NULL);
-	fclose(fp);
+    snprintf(filename, sizeof(filename), "private-%d.pem", seconds);
+    fp = fopen(filename, "wb");
+    PEM_write_RSAPrivateKey(fp, rsa, NULL, NULL, 0, NULL, NULL);
+    fclose(fp);
 
-	BN_free(e);
-	RSA_free(rsa);
+    BN_free(e);
+    RSA_free(rsa);
 }
 
 /**
@@ -38,77 +38,75 @@ void G_GenerateKeyPair(int bits)
  */
 qboolean G_LoadKeys(void)
 {
-	FILE *fp;
-	ra_connection_t *c = &remote.connection;
-	char path[200];
+    FILE *fp;
+    ra_connection_t *c = &remote.connection;
+    char path[200];
 
-	gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
+    gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
 
-	// first load our private key
-	sprintf(path, "%s/%s", moddir, remotePrivateKey);
-	fp = fopen(path, "rb");
-	if (!fp) {
-		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		return qfalse;
-	}
-	c->rsa_pr = RSA_new();
-	c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
-	fclose(fp);
+    // first load our private key
+    sprintf(path, "%s/%s", moddir, remotePrivateKey);
+    fp = fopen(path, "rb");
+    if (!fp) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
+        return qfalse;
+    }
+    c->rsa_pr = RSA_new();
+    c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
+    fclose(fp);
 
-	if (!c->rsa_pr) {
-	    gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
-	    return qfalse;
-	}
+    if (!c->rsa_pr) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
+        return qfalse;
+    }
 
+    // then our public key
+    sprintf(path, "%s/%s", moddir, remotePublicKey);
+    fp = fopen(path, "rb");
+    if (!fp) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
+        RSA_free(c->rsa_pr);
+        return qfalse;
+    }
+    c->rsa_pu = RSA_new();
+    c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
 
-	// then our public key
-	sprintf(path, "%s/%s", moddir, remotePublicKey);
-	fp = fopen(path, "rb");
-	if (!fp) {
-		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		RSA_free(c->rsa_pr);
-		return qfalse;
-	}
-	c->rsa_pu = RSA_new();
-	c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
+    // if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
+    if (!c->rsa_pu) {
+        c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
+    }
 
-	// if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
-	if (!c->rsa_pu) {
-	    //c->rsa_pu = PEM_read_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
-	    c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
-	}
+    fclose(fp);
 
-	fclose(fp);
-
-	if (!c->rsa_pu) {
+    if (!c->rsa_pu) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
         RSA_free(c->rsa_pr);
         return qfalse;
     }
 
-	// last the remote admin server's public key
-	sprintf(path, "%s/%s", moddir, remoteServerPublicKey);
-	fp = fopen(path, "rb");
-	if (!fp) {
-		gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-		RSA_free(c->rsa_pr);
-		RSA_free(c->rsa_pu);
-		return qfalse;
-	}
-	c->rsa_sv_pu = RSA_new();
-	c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
-	fclose(fp);
+    // last the remote admin server's public key
+    sprintf(path, "%s/%s", moddir, remoteServerPublicKey);
+    fp = fopen(path, "rb");
+    if (!fp) {
+        gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
+        RSA_free(c->rsa_pr);
+        RSA_free(c->rsa_pu);
+        return qfalse;
+    }
+    c->rsa_sv_pu = RSA_new();
+    c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
+    fclose(fp);
 
-	if (!c->rsa_sv_pu) {
+    if (!c->rsa_sv_pu) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
         RSA_free(c->rsa_pr);
         RSA_free(c->rsa_pu);
         return qfalse;
     }
 
-	gi.cprintf(NULL, PRINT_HIGH, "OK\n");
+    gi.cprintf(NULL, PRINT_HIGH, "OK\n");
 
-	return qtrue;
+    return qtrue;
 }
 
 /**
@@ -116,22 +114,17 @@ qboolean G_LoadKeys(void)
  */
 void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
 {
-	int result;
-	//result = RSA_public_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
-	result = RSA_public_decrypt(RSA_size(key), src, dest, key, 0); // dont pad
+    int result;
+    result = RSA_public_decrypt(RSA_size(key), src, dest, key, 0); // dont pad
 }
-
 
 /**
  * Wrapper - decrypt ciphertext using our private key
- *
- * This should be used when Q2A server encrypts data with our public key
  */
 
 size_t G_PrivateDecrypt(byte *dest, byte *src)
 {
     RSA *key = remote.connection.rsa_pr;
-    byte *to;
 
     if (!key) {
         return 0;
@@ -140,6 +133,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src)
     int result = RSA_private_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
 
     if (result <= 0) {
+    	gi.cprintf(NULL, PRINT_HIGH, "Error: %d\n", result);
         return 0;
     }
 
@@ -160,16 +154,15 @@ void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len)
  */
 void G_RSAError()
 {
-	int error = 0;
-	char *msg;
+    int error = 0;
+    char *msg;
 
-	//SSL_load_error_strings();
-	ERR_load_crypto_strings();
+    ERR_load_crypto_strings();
 
-	while ((error = ERR_get_error()) != 0) {
-		ERR_error_string(error, msg);
-		printf("Error (%d): %s\n", error, msg);
-	}
+    while ((error = ERR_get_error()) != 0) {
+        ERR_error_string(error, msg);
+        printf("Error (%d): %s\n", error, msg);
+    }
 }
 
 /**
@@ -230,7 +223,10 @@ void hexDump (char *desc, void *addr, int len)
 
 
 /**
+ * Encrypt a buffer using 128bit AES
  *
+ * This is called automatically from RA_SendMessages() if we're
+ * set to encrypt traffic in the config
  */
 size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
 {
@@ -253,7 +249,10 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
 }
 
 /**
+ * Decrypt a buffer using 128 bit AES
  *
+ * Called automatically from RA_ReadMessages() if we're
+ * set to encrypt traffic in the config
  */
 size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
 {
@@ -277,10 +276,10 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
 
 void G_SHA256Hash(byte *dest, byte *src, size_t src_len)
 {
-	byte hash[SHA256_DIGEST_LENGTH];
-	SHA256_CTX sha256;
-	SHA256_Init(&sha256);
-	SHA256_Update(&sha256, src, src_len);
-	SHA256_Final(hash, &sha256);
-	memcpy(dest, hash, SHA256_DIGEST_LENGTH);
+    byte hash[SHA256_DIGEST_LENGTH];
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+    SHA256_Update(&sha256, src, src_len);
+    SHA256_Final(hash, &sha256);
+    memcpy(dest, hash, SHA256_DIGEST_LENGTH);
 }

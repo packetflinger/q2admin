@@ -541,15 +541,13 @@ void RA_SendMessages(void)
 
         // socket write buffer is ready, send
         if (ret) {
-            if (c->encrypted && c->have_keys) {
+            if (c->encrypted && c->have_keys && remote.state == RA_STATE_TRUSTED) {
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
                 memcpy(q->data, e.data, e.length);
                 q->length = e.length;
             }
-
-            //hexDump("Sending", q->data, q->length);
 
             ret = send(c->socket, q->data, q->length, 0);
             if (ret == -1) {
@@ -563,12 +561,10 @@ void RA_SendMessages(void)
                 perror("send error");
                 errno = 0;
             } else {
-
                 // shift off the data we just sent
                 memmove(q->data, q->data + ret, q->length - ret);
                 q->length -= ret;
             }
-
         } else {
             break;
         }
@@ -640,7 +636,7 @@ void RA_ReadMessages(void)
             in->length += ret;
 
             // decrypt if necessary
-            if (remote.connection.encrypted && remote.connection.have_keys) {
+            if (remote.connection.encrypted && remote.connection.have_keys && remote.state == RA_STATE_TRUSTED) {
                 memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
@@ -769,7 +765,7 @@ qboolean RA_VerifyServerAuth(void)
     uint16_t len;
     byte digest[DIGEST_LEN];
     byte aeskey_cipher[RSA_LEN];
-    byte key_plus_iv[AESKEY_LEN + AESBLOCK_LEN];
+    byte key_plus_iv[AESKEY_LEN + AES_IV_LEN];
     qboolean servertrusted = qfalse;
     int verified;
     byte signature[RSA_LEN];
@@ -784,6 +780,7 @@ qboolean RA_VerifyServerAuth(void)
 
     if (remoteEncryption) {
         RA_ReadData(aeskey_cipher, RSA_LEN);
+        hexDump("aescipher", aeskey_cipher, RSA_LEN);
     }
 
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
@@ -826,7 +823,9 @@ qboolean RA_VerifyServerAuth(void)
                 c->have_keys = qfalse;
             } else {
                 q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
-                q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AESBLOCK_LEN);
+                q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AES_IV_LEN);
+                hexDump("key:", c->aeskey, AESKEY_LEN);
+                hexDump("iv:", c->iv, AES_IV_LEN);
                 c->have_keys = qtrue;
                 c->e_ctx = EVP_CIPHER_CTX_new();
                 c->d_ctx = EVP_CIPHER_CTX_new();
