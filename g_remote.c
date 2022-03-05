@@ -780,18 +780,17 @@ qboolean RA_VerifyServerAuth(void)
 
     if (remoteEncryption) {
         RA_ReadData(aeskey_cipher, RSA_LEN);
-        hexDump("aescipher", aeskey_cipher, RSA_LEN);
     }
 
     RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
-    //hexDump("data read", c->sv_nonce, CHALLENGE_LEN);
+
     q2a_memset(digest, 0, DIGEST_LEN);
     G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
     verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
 
     if (verified) {
         servertrusted = qtrue;
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] server signature verified\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server signature verified\n");
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
@@ -801,14 +800,11 @@ qboolean RA_VerifyServerAuth(void)
         q2a_memset(digest, 0, DIGEST_LEN);
         q2a_memset(signature, 0, RSA_LEN);
         G_SHA256Hash(digest, c->sv_nonce, CHALLENGE_LEN);
-        //hexDump("Digest", digest, DIGEST_LEN);
 
         chalsigned = RSA_sign(NID_sha256, digest, DIGEST_LEN, signature, &siglen, c->rsa_pr);
         if (!chalsigned) {
 
         }
-
-        //hexDump("Signature", sig, RSA_LEN);
 
         RA_WriteByte(CMD_AUTH);
         RA_WriteShort(siglen);
@@ -824,8 +820,7 @@ qboolean RA_VerifyServerAuth(void)
             } else {
                 q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
                 q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AES_IV_LEN);
-                hexDump("key:", c->aeskey, AESKEY_LEN);
-                hexDump("iv:", c->iv, AES_IV_LEN);
+
                 c->have_keys = qtrue;
                 c->e_ctx = EVP_CIPHER_CTX_new();
                 c->d_ctx = EVP_CIPHER_CTX_new();
