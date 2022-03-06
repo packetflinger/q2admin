@@ -711,6 +711,9 @@ void RA_ParseMessage(void)
         case SCMD_KEY:
             RA_RotateKeys();
             break;
+        case SCMD_GETPLAYERS:
+            RA_PlayerList();
+            break;
         }
     }
 
