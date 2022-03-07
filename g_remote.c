@@ -63,23 +63,28 @@ static char *ra_userinfo(uint8_t player_index)
 
     memset(newuserinfo, 0, MAX_INFO_STRING);
     value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
-    if (value) {
+    if (*value) {
         q2a_strcpy(newuserinfo, va("\\name\\%s", value));
     }
 
     value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
-    if (value) {
+    if (*value) {
         q2a_strcat(newuserinfo, va("\\ip\\%s", value));
     }
 
     value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
-    if (value) {
+    if (*value) {
         q2a_strcat(newuserinfo, va("\\skin\\%s", value));
     }
 
     value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
-    if (value) {
+    if (*value) {
         q2a_strcat(newuserinfo, va("\\fov\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "phash");
+    if (*value) {
+        q2a_strcat(newuserinfo, va("\\phash\\%s", value));
     }
 
     return newuserinfo;
