@@ -1639,27 +1639,28 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
 
     // scrap obituaries for frags to send to remote admin server
     if (printlevel == PRINT_MEDIUM) {
-    	/**
-    	 * There doesn't seem to be a way of getting the means-of-death
-    	 * for a frag. I've hijacked all player entities' *die() function
-    	 * pointer to capture when a frag happens, but it only give you
-    	 * the victim and attacker edicts. Since edict_s is game-specific,
-    	 * we can't even figure out what gun the attacker is holding at
-    	 * frag-time because we don't know the offset for the weapon gitem_t
-    	 * in the client structure.
-    	 *
-    	 * We can scrape the obituary here, but that requires comparing text,
-    	 * which again is game-specific and could be anything. Not only that,
-    	 * but by doing it here, we can't pinpoint the actual victim and attacker,
-    	 * we have to match by comparing names, and if more than 1 player has
-    	 * the same name (which is allowed) we'll never know who is who.
-    	 *
-    	 * So which is better? Getting a basic idea of means-of-death but
-    	 * possibly not knowing who it applies to, or knowing definitely who
-    	 * fragged who, but not how?
-    	 *
-    	 * -claire (Dec. 22, 2019)
-    	 */
+        /**
+         * There doesn't seem to be a way of getting the means-of-death
+         * for a frag. I've hijacked all player entities' *die() function
+         * pointer to capture when a frag happens, but it only give you
+         * the victim and attacker edicts. Since edict_s is game-specific,
+         * we can't even figure out what gun the attacker is holding at
+         * frag-time because we don't know the offset for the weapon gitem_t
+         * in the client structure.
+         *
+         * We can scrape the obituary here, but that requires comparing text,
+         * which again is game-specific and could be anything. Not only that,
+         * but by doing it here, we can't pinpoint the actual victim and attacker,
+         * we have to match by comparing names, and if more than 1 player has
+         * the same name (which is allowed) we'll never know who is who.
+         *
+         * So which is better? Getting a basic idea of means-of-death but
+         * possibly not knowing who it applies to, or knowing definitely who
+         * fragged who, but not how?
+         *
+         * -claire (Dec. 22, 2019)
+         */
+        RA_Print(printlevel, cbuffer);
     }
 
     if (q2a_strcmp(mutedText, cbuffer) == 0) {
