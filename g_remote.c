@@ -888,8 +888,6 @@ void RA_RotateKeys(void)
 
     RA_ReadData(c->aeskey, AESKEY_LEN);
     RA_ReadData(c->iv, AESBLOCK_LEN);
-
-    //debug_print("[RA] Encryption keys changed");
 }
 
 /**
