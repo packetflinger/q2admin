@@ -2412,8 +2412,9 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     //int clienti;
     //r1ch 2005-01-26 disable hugely buggy commands END
 
-    if (client >= maxclients->value)
-    	return FALSE;
+    if (client >= maxclients->value) {
+        return FALSE;
+    }
 
     cmd = gi.argv(0);
 
@@ -3263,35 +3264,35 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-	if (Q_stricmp(cmd, remoteCmdTeleport) == 0) {
-		Cmd_Teleport_f(ent);
-		return;
-	}
-	
-	if (Q_stricmp(cmd, remoteCmdInvite) == 0) {
-		Cmd_Invite_f(ent);
-		return;
-	}
+    if (Q_stricmp(cmd, remoteCmdTeleport) == 0) {
+        Cmd_Teleport_f(ent);
+        return;
+    }
 
-	if (Q_stricmp(cmd, remoteCmdSeen) == 0) {
-		Cmd_Find_f(ent);
-		return;
-	}
+    if (Q_stricmp(cmd, remoteCmdInvite) == 0) {
+        Cmd_Invite_f(ent);
+        return;
+    }
 
-	if (Q_stricmp(cmd, remoteCmdWhois) == 0) {
-		Cmd_Remote_Whois_f(ent);
-		return;
-	}
+    if (Q_stricmp(cmd, remoteCmdSeen) == 0) {
+        Cmd_Find_f(ent);
+        return;
+    }
 
-	if (Q_stricmp(cmd, "!rastatus") == 0) {
-		Cmd_Remote_Status_f(ent);
-		return;
-	}
+    if (Q_stricmp(cmd, remoteCmdWhois) == 0) {
+        Cmd_Remote_Whois_f(ent);
+        return;
+    }
 
-	if (Q_stricmp(cmd, "!players") == 0) {
-		Cmd_Remote_Players_f(ent);
-		return;
-	}
+    if (Q_stricmp(cmd, "!rastatus") == 0) {
+        Cmd_Remote_Status_f(ent);
+        return;
+    }
+
+    if (Q_stricmp(cmd, "!players") == 0) {
+        Cmd_Remote_Players_f(ent);
+        return;
+    }
 
     //Custom frkq2 check
     if ((do_franck_check) && (
