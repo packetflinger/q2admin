@@ -3240,8 +3240,8 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
 }
 
 void ClientCommand(edict_t *ent) {
-	char *cmd;
-	cmd = gi.argv(0);
+    char *cmd;
+    cmd = gi.argv(0);
 
     int clientnum = getEntOffset(ent) - 1;
     qboolean checkforfloodafter = FALSE;
@@ -3250,8 +3250,9 @@ void ClientCommand(edict_t *ent) {
     INITPERFORMANCE(1);
     INITPERFORMANCE(2);
 
-    if (!dllloaded) return;
-
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ClientCommand(ent);
