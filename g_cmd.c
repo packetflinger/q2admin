@@ -2639,7 +2639,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
         if (Q_stricmp(cmd, "alias") == 0) {
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
-            hackDetected(ent, client);
+            //hackDetected(ent, client);
             return FALSE;
         }
 
@@ -2653,7 +2653,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             }
             if (sameip == 1) {
                 proxyinfo[client].hacked_disconnect = 0;
-                hackDetected(ent, client);
+                //hackDetected(ent, client);
                 return FALSE;
             }
             proxyinfo[client].hacked_disconnect = 0;
@@ -2673,7 +2673,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring1) == 0) {
-            hackDetected(ent, client);
+            //hackDetected(ent, client);
             return FALSE;
         }
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring2) == 0) {
