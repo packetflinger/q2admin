@@ -2426,7 +2426,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (*(rcon_password->string)) {
-        if (strstr(response, rcon_password->string)) {
+        if (q2a_strstr(response, rcon_password->string)) {
             snprintf(abuffer, sizeof (abuffer) - 1, "EXPLOIT - %s", response);
             abuffer[sizeof (abuffer) - 1] = 0;
             logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
@@ -2591,6 +2591,9 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
     }
 
+    // cmd ~= "q2start[0-9][0-9]" or
+    // cmd ~= "q2e[0-9][0]9" or
+    // cmd ~= ".FU[0-9][0-9]."
     if ((startContains(cmd, ZBOT_TESTSTRING_TEST1_OLD) && isdigit(cmd[7]) && isdigit(cmd[8]) && cmd[9] == 0) ||
             (startContains(cmd, ZBOT_TESTSTRING_TEST2_OLD) && isdigit(cmd[3]) && isdigit(cmd[4]) && cmd[5] == 0) ||
             (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2 && isdigit(cmd[3]) && isdigit(cmd[4]) && (cmd[7] == 0 || cmd[8] == 0))) {
@@ -2605,13 +2608,13 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
 
         Q_snprintf(
-        		text,
-				sizeof(text),
-				"I(%d) Cmd(%s) Exp(%s) (unexcepted cmd)",
-				proxyinfo[client].charindex,
-				cmd,
-				proxyinfo[client].teststr
-		);
+            text,
+            sizeof(text),
+            "I(%d) Cmd(%s) Exp(%s) (unexcepted cmd)",
+            proxyinfo[client].charindex,
+            cmd,
+            proxyinfo[client].teststr
+        );
         logEvent(LT_INTERNALWARN, client, ent, text, IW_UNEXCEPTEDCMD, 0.0);
 
         // clear retries just in case...
@@ -2623,13 +2626,13 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
 
         Q_snprintf(
-        		text,
-				sizeof(text),
-				"I(%d) Cmd(%s) Exp(%s) (unknown cmd)",
-				proxyinfo[client].charindex,
-				cmd,
-				proxyinfo[client].teststr
-		);
+            text,
+            sizeof(text),
+            "I(%d) Cmd(%s) Exp(%s) (unknown cmd)",
+            proxyinfo[client].charindex,
+            cmd,
+            proxyinfo[client].teststr
+        );
         logEvent(LT_INTERNALWARN, client, ent, text, IW_UNKNOWNCMD, 0.0);
     }
 
@@ -2656,6 +2659,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             proxyinfo[client].hacked_disconnect = 0;
         }
 
+        // client doesn't send "rate" with userinfo
         if (proxyinfo[client].checked_hacked_exe == 0) {
             char *ratte = Info_ValueForKey(proxyinfo[client].userinfo, "rate");
             proxyinfo[client].checked_hacked_exe = 1;
@@ -2708,10 +2712,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             Q_stricmp(cmd, "referee") == 0 ||
             Q_stricmp(cmd, "ref") == 0 ||
             stringContains(cmd, "r_") == 1) {
-        //r1ch 2005-05-11: snprintf to avoid buffer overflow BEGIN
         snprintf(abuffer, sizeof (abuffer) - 1, "REFEREE - %s: %s", cmd, gi.argv(1));
         abuffer[sizeof (abuffer) - 1] = 0;
-        //r1ch 2005-05-11: snprintf to avoid buffer overflow END
         logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
         gi.dprintf("%s\n", abuffer);
     }
@@ -2733,13 +2735,17 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         q2a_strncpy(stemp, gi.args(), sizeof(stemp));
         slen = strlen(stemp);
         cnt = 0;
+
         for (i = 0; i < slen; i++) {
             if (stemp[i] == '%') {
                 cnt++;
             }
         }
-        if (cnt > 5)
+
+        if (cnt > 5) {
             return FALSE;
+        }
+
         //this check is for non standard p_Ver/p_mod replies
         //pooy, check return string to match q2ace response
         //if they normal, dont spam
@@ -2982,8 +2988,9 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     if (cmd[0] == '!') {
         if (proxyinfo[client].q2a_admin) {
             q2a_admin_command = ADMIN_process_command(ent, client);
-            if (q2a_admin_command)
+            if (q2a_admin_command) {
                 return FALSE;
+            }
         }
 
         if (Q_stricmp(cmd, "!admin") == 0) {
