@@ -124,8 +124,12 @@ $(TARGET): $(OBJS)
 
 clean:
 	$(E) [CLEAN]
-	$(Q)$(RM) *.o *.d $(TARGET)
+	$(Q)$(RM) *.o *.d $(TARGET) genkeys
 
 strip: $(TARGET)
 	$(E) [STRIP]
 	$(Q)$(STRIP) $(TARGET)
+
+genkeys:
+	$(E) [CC] genkeys
+	$(Q)$(CC) -o genkeys genkeys.c -lcrypto
