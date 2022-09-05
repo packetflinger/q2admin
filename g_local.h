@@ -962,10 +962,11 @@ typedef struct {
     int blocklist;
     int speedfreeze;
     int enteredgame;
-	void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
-	edict_t *ent;	// the actual entity
-	int remote_reported;
-	int next_report;
+    void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+    edict_t *ent;	// the actual entity
+    int remote_reported;
+    int next_report;
+    int stifle_frame;
 } proxyinfo_t;
 
 typedef struct {
@@ -975,30 +976,33 @@ typedef struct {
 
 #define MAXDETECTRETRIES   3
 
-#define CCMD_STARTUPTEST			0x000001
-#define CCMD_ZPROXYCHECK2			0x000002
-#define CCMD_ZBOTDETECTED			0x000004
-#define CCMD_BANNED					0x000008
-#define CCMD_NCSILENCE				0x000010
-#define CCMD_KICKED					0x000020
-#define CCMD_SELECTED				0x000040
-#define CCMD_CSILENCE				0x000080
-#define CCMD_PCSILENCE				0x000100
-#define CCMD_VOTED					0x000200
-#define CCMD_VOTEYES				0x000400
-#define CCMD_NITRO2PROXY			0x000800
-#define CCMD_RATBOTDETECT			0x001000
-#define CCMD_RATBOTDETECTNAME		0x002000
-#define CCMD_ZBOTCLEAR				0x004000
-#define CCMD_RBOTCLEAR				0x008000
-#define CCMD_SCSILENCE				0x010000
-#define CCMD_RECONNECT				0x020000
-#define CCMD_ALIASCHECKSTARTED		0x040000
-#define CCMD_WAITFORALIASREPLY1		0x080000
-#define CCMD_WAITFORALIASREPLY2		0x100000
-#define CCMD_WAITFORCONNECTREPLY	0x200000
-#define CCMD_REMEMBERHACK			0x400000
-#define CCMD_CLIENTOVERFLOWED		0x800000
+#define CCMD_STARTUPTEST            0x00000001
+#define CCMD_ZPROXYCHECK2           0x00000002
+#define CCMD_ZBOTDETECTED           0x00000004
+#define CCMD_BANNED                 0x00000008
+#define CCMD_NCSILENCE              0x00000010  // name change silence
+#define CCMD_KICKED                 0x00000020
+#define CCMD_SELECTED               0x00000040
+#define CCMD_CSILENCE               0x00000080  // temporarily muted
+#define CCMD_PCSILENCE              0x00000100  // permanently muted
+#define CCMD_VOTED                  0x00000200
+#define CCMD_VOTEYES                0x00000400
+#define CCMD_NITRO2PROXY            0x00000800
+#define CCMD_RATBOTDETECT           0x00001000
+#define CCMD_RATBOTDETECTNAME       0x00002000
+#define CCMD_ZBOTCLEAR              0x00004000
+#define CCMD_RBOTCLEAR              0x00008000
+#define CCMD_SCSILENCE              0x00010000  // skin change silence
+#define CCMD_RECONNECT              0x00020000
+#define CCMD_ALIASCHECKSTARTED      0x00040000
+#define CCMD_WAITFORALIASREPLY1     0x00080000
+#define CCMD_WAITFORALIASREPLY2     0x00100000
+#define CCMD_WAITFORCONNECTREPLY    0x00200000
+#define CCMD_REMEMBERHACK           0x00400000
+#define CCMD_CLIENTOVERFLOWED       0x00800000
+#define CCMD_STIFLED                0x01000000  // half-muted
+
+#define STIFLE_TIME                 SECS_TO_FRAMES(60)
 
 #define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
 #define BANCHECK     (CCMD_BANNED | CCMD_RECONNECT)

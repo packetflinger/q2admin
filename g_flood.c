@@ -193,10 +193,12 @@ qboolean checkforfloodcmds(char *cp) {
 //===================================================================
 
 qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
+    // permanently muted
     if (proxyinfo[client].clientcommand & CCMD_PCSILENCE) {
         return TRUE;
     }
 
+    // temp mute
     if (proxyinfo[client].clientcommand & CCMD_CSILENCE) {
         if (proxyinfo[client].chattimeout < ltime) {
             proxyinfo[client].clientcommand &= ~CCMD_CSILENCE;
@@ -208,6 +210,20 @@ qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
             }
 
             return TRUE;
+        }
+    }
+
+    // half muted (can talk once per timespan)
+    if (proxyinfo[client].clientcommand & CCMD_STIFLED) {
+        if (proxyinfo[client].stifle_frame > lframenum) {
+            if (displayMsg) {
+                int secleft = (int) (proxyinfo[client].chattimeout - ltime) + 1;
+                gi.cprintf(ent, PRINT_HIGH, "%d seconds of chat silence left.\n", secleft);
+            }
+            return TRUE;
+        } else {
+            proxyinfo[client].stifle_frame = lframenum + STIFLE_TIME;
+            return FALSE;
         }
     }
 
