@@ -1049,6 +1049,13 @@ q2acmd_t q2aCommands[] = {
         &spawnentities_internal_enable
     },
     {
+        "stifle",
+        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        stifleRun
+    },
+    {
         "stuff",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
