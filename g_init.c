@@ -774,8 +774,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     int entsize = strlen(backupentities) + 500;
     char *entstr;
     entstr = gi.TagMalloc(entsize, TAG_GAME);
-    SubstituteEntities(entstr, backupentities);
-    //SubstituteEntities("{}", backupentities);
+    //SubstituteEntities(entstr, backupentities);
 
     STARTPERFORMANCE(2);
     ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
