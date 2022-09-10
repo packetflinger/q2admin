@@ -777,7 +777,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     //SubstituteEntities(entstr, backupentities);
 
     STARTPERFORMANCE(2);
-    ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
+    //ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
+    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
     gi.TagFree(entstr);
