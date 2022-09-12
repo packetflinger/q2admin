@@ -784,10 +784,10 @@ struct chatflood_s {
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define BANLISTREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
-#define ANTICHEATEXCEPTIONREMOTEFILE      "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
-#define ANTICHEATEXCEPTIONLOCALFILE      "ac.cfg"
-#define HASHLISTREMOTEDIR      "http://www.q2admin.net/server"
+#define BANLISTREMOTEFILE               "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
+#define ANTICHEATEXCEPTIONREMOTEFILE    "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
+#define ANTICHEATEXCEPTIONLOCALFILE     "ac.cfg"
+#define HASHLISTREMOTEDIR               "http://www.q2admin.net/server"
 
 #define BANLISTFILE     "q2a_ban.cfg"
 #define BYPASSFILE      "q2a_bypass.cfg"
