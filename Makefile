@@ -30,7 +30,7 @@ RM ?= rm -f
 CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD -DCURL_STATICLIB $(GLIB_CFLAGS) $(SSL_CFLAGS) $(INCLUDES)
 LDFLAGS ?= -shared $(GLIB_LDFLAGS) $(SSL_LDFLAGS)
 #LIBS ?= -lcurl -lm -ldl
-LIBS=deps/$(CPU)/libcurl.a-7.82.0 deps/$(CPU)/libcrypto.a-1.1.1n -lpthread
+LIBS=deps/$(CPU)/libcurl.a deps/$(CPU)/libcrypto.a -lpthread
 
 ifdef CONFIG_WINDOWS
     CFLAGS += -DQ2ADMINCLIB=1
