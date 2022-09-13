@@ -882,6 +882,18 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     rcon_password = gi.cvar("rcon_password", "", 0);
     q2aconfig = gi.cvar("q2aconfig", CFGFILE, CVAR_GENERAL);
 
+    // override default config files
+    configfile_ban = gi.cvar("q2a_banfile", BANLISTFILE, CVAR_LATCH);
+    configfile_bypass = gi.cvar("q2a_bypassfile", BYPASSFILE, CVAR_LATCH);
+    configfile_cvar = gi.cvar("q2a_cvarfile", CHECKVARFILE, CVAR_LATCH);
+    configfile_disable = gi.cvar("q2a_disablefile", DISABLEFILE, CVAR_LATCH);
+    configfile_flood = gi.cvar("q2a_floodfile", FLOODFILE, CVAR_LATCH);
+    configfile_login = gi.cvar("q2a_loginfile", LOGINFILE, CVAR_LATCH);
+    configfile_log = gi.cvar("q2a_logfile", LOGLISTFILE, CVAR_LATCH);
+    configfile_rcon = gi.cvar("q2a_rconfile", LRCONFILE, CVAR_LATCH);
+    configfile_spawn = gi.cvar("q2a_spawnfile", SPAWNFILE, CVAR_LATCH);
+    configfile_vote = gi.cvar("q2a_votefile", VOTEFILE, CVAR_LATCH);
+
     q2adminbantxt = gi.cvar("q2adminbantxt", "", 0);
     q2adminbanremotetxt_enable = gi.cvar("q2adminbanremotetxt_enable", "0", 0);
     q2adminbanremotetxt = gi.cvar("q2adminbanremotetxt_file", "", 0);

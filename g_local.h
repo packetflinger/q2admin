@@ -1189,7 +1189,17 @@ extern cvar_t *rcon_password,
               *tune_spawn_supershotgun,
               *tune_spawn_shotgun,
               *tune_spawn_machinegun,
-              *tune_spawn_grenades;
+              *tune_spawn_grenades,
+              *configfile_ban,
+              *configfile_bypass,
+              *configfile_cvar,
+              *configfile_disable,
+              *configfile_flood,
+              *configfile_login,
+              *configfile_log,
+              *configfile_rcon,
+              *configfile_spawn,
+              *configfile_vote;
 
 extern char dllname[256];
 extern char gamelibrary[MAX_QPATH];

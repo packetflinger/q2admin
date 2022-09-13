@@ -174,16 +174,16 @@ void readCheckVarLists(void) {
     qboolean ret;
 
     maxcheckvars = 0;
-    ret = ReadCheckVarFile(CHECKVARFILE);
+    ret = ReadCheckVarFile(configfile_cvar->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, CHECKVARFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cvar->string);
     if (ReadCheckVarFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " CHECKVARFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, CHECKVARFILE " could not be found", IW_CHECKVARSETUPLOAD, 0.0);
+        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_cvar->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_cvar), IW_CHECKVARSETUPLOAD, 0.0);
     }
 }
 

@@ -140,16 +140,16 @@ void readFloodLists(void) {
 
     freeFloodLists();
 
-    ret = ReadFloodFile(FLOODFILE);
+    ret = ReadFloodFile(configfile_flood->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, FLOODFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_flood->string);
     if (ReadFloodFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " FLOODFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, FLOODFILE " could not be found", IW_FLOODSETUPLOAD, 0.0);
+        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_flood->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_flood->string), IW_FLOODSETUPLOAD, 0.0);
     }
 }
 

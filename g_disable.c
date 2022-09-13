@@ -144,16 +144,16 @@ void readDisableLists(void) {
 
     freeDisableLists();
 
-    ret = ReadDisableFile(DISABLEFILE);
+    ret = ReadDisableFile(configfile_disable->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, DISABLEFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_disable->string);
     if (ReadDisableFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " DISABLEFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, DISABLEFILE " could not be found", IW_DISABLESETUPLOAD, 0.0);
+        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_disable->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_disable->string), IW_DISABLESETUPLOAD, 0.0);
     }
 }
 

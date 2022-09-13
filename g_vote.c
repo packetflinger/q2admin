@@ -160,16 +160,16 @@ void readVoteLists(void) {
 
     freeVoteLists();
 
-    ret = ReadVoteFile(VOTEFILE);
+    ret = ReadVoteFile(configfile_vote->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, VOTEFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_vote->string);
     if (ReadVoteFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " VOTEFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, VOTEFILE " could not be found", IW_VOTESETUPLOAD, 0.0);
+        gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_vote->string), IW_VOTESETUPLOAD, 0.0);
     }
 }
 

@@ -434,7 +434,7 @@ void Read_Admin_cfg(void) {
     char name[256];
     int i, i2;
 
-    Q_snprintf(name, sizeof(name), "%s/%s", moddir, LOGINFILE);
+    Q_snprintf(name, sizeof(name), "%s/%s", moddir, configfile_login->string);
 
     f = fopen(name, "rb");
     if (!f) {
@@ -460,7 +460,7 @@ void Read_Admin_cfg(void) {
 
 file2:
     ;
-    Q_snprintf(name, sizeof(name), "%s/%s", moddir, BYPASSFILE);
+    Q_snprintf(name, sizeof(name), "%s/%s", moddir, configfile_bypass->string);
 
     f = fopen(name, "rb");
     if (!f) {

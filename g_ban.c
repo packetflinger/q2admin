@@ -1120,32 +1120,20 @@ void freeBanLists(void) {
 }
 
 void readBanLists(void) {
-    char cfgFile[100];
     char cfgRemoteFileEnabled[100];
-
     qboolean ret;
-
-    if (!q2adminbantxt || isBlank(q2adminbantxt->string)) {
-        q2a_strncpy(cfgFile, BANLISTFILE, sizeof(cfgFile));
-    } else {
-        q2a_strncpy(cfgFile, q2adminbantxt->string, sizeof(cfgFile));
-    }
-
 
     freeBanLists();
 
-    ret = ReadBanFile(cfgFile);
-
-
-
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, cfgFile);
+    ret = ReadBanFile(configfile_ban->string);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_ban->string);
     if (ReadBanFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " BANLISTFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, BANLISTFILE " could not be found", IW_BANSETUPLOAD, 0.0);
+        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_ban->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0);
     }
 
     q2a_strncpy(cfgRemoteFileEnabled, q2adminbanremotetxt_enable->string, sizeof(cfgRemoteFileEnabled));
@@ -1941,9 +1929,9 @@ void banRun(int startarg, edict_t *ent, int client) {
             FILE *banlistfptr;
 
             if (save == 1) {
-                q2a_strncpy(buffer, BANLISTFILE, sizeof(buffer));
+                q2a_strncpy(buffer, configfile_ban->string, sizeof(buffer));
             } else {
-                Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
+                Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_ban->string);
             }
 
             banlistfptr = fopen(buffer, "at");
@@ -2532,9 +2520,9 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         FILE *banlistfptr;
 
         if (save == 1) {
-            q2a_strncpy(buffer, BANLISTFILE, sizeof(buffer));
+            q2a_strncpy(buffer, configfile_ban->string, sizeof(buffer));
         } else {
-            Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, BANLISTFILE);
+            Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_ban->string);
         }
 
         banlistfptr = fopen(buffer, "at");

@@ -181,16 +181,16 @@ void readLRconLists(void) {
 
     freeLRconLists();
 
-    ret = ReadLRconFile(LRCONFILE);
+    ret = ReadLRconFile(configfile_rcon->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, LRCONFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_rcon->string);
     if (ReadLRconFile(buffer)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " LRCONFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, LRCONFILE " could not be found", IW_LRCONSETUPLOAD, 0.0);
+        gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_rcon->string), IW_LRCONSETUPLOAD, 0.0);
     }
 }
 

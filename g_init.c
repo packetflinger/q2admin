@@ -59,6 +59,17 @@ cvar_t *tune_spawn_shotgun;
 cvar_t *tune_spawn_machinegun;
 cvar_t *tune_spawn_grenades;
 
+cvar_t *configfile_ban;
+cvar_t *configfile_bypass;
+cvar_t *configfile_cvar;
+cvar_t *configfile_disable;
+cvar_t *configfile_flood;
+cvar_t *configfile_login;
+cvar_t *configfile_log;
+cvar_t *configfile_rcon;
+cvar_t *configfile_spawn;
+cvar_t *configfile_vote;
+
 qboolean quake2dirsupport = TRUE;
 
 char dllname[256];

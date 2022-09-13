@@ -182,16 +182,16 @@ void readSpawnLists(void) {
 
     freeSpawnLists();
 
-    ret = ReadSpawnFile(SPAWNFILE, FALSE);
+    ret = ReadSpawnFile(configfile_spawn->string, FALSE);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, SPAWNFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_spawn->string);
     if (ReadSpawnFile(buffer, FALSE)) {
         ret = TRUE;
     }
 
     if (!ret) {
-        gi.dprintf("WARNING: " SPAWNFILE " could not be found\n");
-        logEvent(LT_INTERNALWARN, 0, NULL, SPAWNFILE " could not be found", IW_SPAWNSETUPLOAD, 0.0);
+        gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_spawn->string), IW_SPAWNSETUPLOAD, 0.0);
     }
 }
 

@@ -293,17 +293,16 @@ void loadLogList(void) {
         logtypes[i].log = FALSE;
     }
 
-    ret = loadLogListFile(LOGLISTFILE);
+    ret = loadLogListFile(configfile_log->string);
 
-    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, LOGLISTFILE);
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_log->string);
     if (loadLogListFile(buffer)) {
         ret = TRUE;
     }
 
 
     if (!ret) {
-        gi.dprintf("WARNING: " LOGLISTFILE " could not be found\n");
-        //    logEvent(LT_INTERNALWARN, 0, NULL, LOGLISTFILE " could not be found", IW_LOGSETUPLOAD, 0.0);
+        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_log->string);
     }
 }
 
