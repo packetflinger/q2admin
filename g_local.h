@@ -1107,42 +1107,42 @@ enum zb_logtypesenum {
     LT_PRIVATELOG, 
 };
 
-#define IW_UNEXCEPTEDCMD		1
-#define IW_UNKNOWNCMD			2
-#define IW_ZBOTDETECT			3
-#define IW_STARTUP				4
-#define IW_STARTUPTEST			5
-#define IW_ZBOTTEST				6
-#define IW_OVERFLOWDETECT		7
-#define IW_STARTUPFAIL			8
-#define IW_Q2ADMINCFGLOAD		9
-#define IW_LOGSETUPLOAD			10
-#define IW_BANSETUPLOAD			11
-#define IW_LRCONSETUPLOAD		12
-#define IW_FLOODSETUPLOAD		13
-#define IW_SPAWNSETUPLOAD		14
-#define IW_VOTESETUPLOAD		15
-#define IW_ZBCHECK				16
-#define IW_DISABLESETUPLOAD		17
-#define IW_CHECKVARSETUPLOAD	18
-#define IW_INVALIDIPADDRESS		19
+#define IW_UNEXCEPTEDCMD        1
+#define IW_UNKNOWNCMD           2
+#define IW_ZBOTDETECT           3
+#define IW_STARTUP              4
+#define IW_STARTUPTEST          5
+#define IW_ZBOTTEST             6
+#define IW_OVERFLOWDETECT       7
+#define IW_STARTUPFAIL          8
+#define IW_Q2ADMINCFGLOAD       9
+#define IW_LOGSETUPLOAD         10
+#define IW_BANSETUPLOAD         11
+#define IW_LRCONSETUPLOAD       12
+#define IW_FLOODSETUPLOAD       13
+#define IW_SPAWNSETUPLOAD       14
+#define IW_VOTESETUPLOAD        15
+#define IW_ZBCHECK              16
+#define IW_DISABLESETUPLOAD     17
+#define IW_CHECKVARSETUPLOAD    18
+#define IW_INVALIDIPADDRESS     19
 
-#define MINIMUMTIMEOUT   5
-#define MAXSTARTTRY    500
+#define MINIMUMTIMEOUT  5
+#define MAXSTARTTRY     500
 
-#define getEntOffset(ent)  (((char *)ent - (char *)ge.edicts) / ge.edict_size)
-#define getEnt(entnum)   (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
+#define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
+#define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
 // where the command can't be run?
-#define CMDWHERE_CFGFILE		0x01
-#define CMDWHERE_CLIENTCONSOLE	0x02
-#define CMDWHERE_SERVERCONSOLE	0x04
+#define CMDWHERE_CFGFILE        0x01
+#define CMDWHERE_CLIENTCONSOLE  0x02
+#define CMDWHERE_SERVERCONSOLE  0x04
 
 // type of command
-#define CMDTYPE_NONE		0
-#define CMDTYPE_LOGICAL		1
-#define CMDTYPE_NUMBER		2
-#define CMDTYPE_STRING		3
+#define CMDTYPE_NONE        0
+#define CMDTYPE_LOGICAL     1   // boolean
+#define CMDTYPE_NUMBER      2
+#define CMDTYPE_STRING      3
 
 typedef void CMDRUNFUNC(int startarg, edict_t *ent, int client);
 typedef void CMDINITFUNC(char *arg);
@@ -1156,9 +1156,9 @@ typedef struct {
     CMDINITFUNC *initfunc;
 } q2acmd_t;
 
-extern game_import_t gi;		// server access from inside game lib
-extern game_export_t ge;		// game access from inside server
-extern game_export_t *ge_mod;	// real game access from inside proxy game lib
+extern game_import_t gi;        // server access from inside game lib
+extern game_export_t ge;        // game access from inside server
+extern game_export_t *ge_mod;   // real game access from inside proxy game lib
 
 extern cvar_t *rcon_password,
               *gamedir,
@@ -1291,14 +1291,14 @@ extern int zbc_jittermax;
 extern int zbc_jittertime;
 extern int zbc_jittermove;
 
-#define ZBOT_TESTSTRING1   "q2startxx\n"
+#define ZBOT_TESTSTRING1            "q2startxx\n"
 
-#define ZBOT_TESTSTRING_TEST1  "q2startxx"
-#define ZBOT_TESTSTRING_TEST2  "q2exx"
-#define ZBOT_TESTSTRING_TEST3  ".please.disconnect.all.bots"
+#define ZBOT_TESTSTRING_TEST1       "q2startxx"
+#define ZBOT_TESTSTRING_TEST2       "q2exx"
+#define ZBOT_TESTSTRING_TEST3       ".please.disconnect.all.bots"
 
-#define ZBOT_TESTSTRING_TEST1_OLD "q2start"
-#define ZBOT_TESTSTRING_TEST2_OLD "q2e"
+#define ZBOT_TESTSTRING_TEST1_OLD   "q2start"
+#define ZBOT_TESTSTRING_TEST2_OLD   "q2e"
 
 extern char zbot_teststring1[];
 extern char zbot_teststring_test1[];
@@ -1490,21 +1490,21 @@ void *q2a_memset(void *dest, int c, size_t count);
 
 #else
 
-#define q2a_strcpy   strcpy
-#define q2a_strncpy   strncpy
-#define q2a_strcat   strcat
-#define q2a_strcmp   strcmp
-#define q2a_strstr   strstr
-#define q2a_strchr   strchr
-#define q2a_strlen   strlen
+#define q2a_strcpy  strcpy
+#define q2a_strncpy strncpy
+#define q2a_strcat  strcat
+#define q2a_strcmp  strcmp
+#define q2a_strstr  strstr
+#define q2a_strchr  strchr
+#define q2a_strlen  strlen
 
-#define q2a_atoi   atoi
-#define q2a_atof   atof
+#define q2a_atoi    atoi
+#define q2a_atof    atof
 
-#define q2a_memcmp   memcmp
-#define q2a_memcpy   memcpy
-#define q2a_memmove   memmove
-#define q2a_memset   memset
+#define q2a_memcmp  memcmp
+#define q2a_memcpy  memcpy
+#define q2a_memmove memmove
+#define q2a_memset  memset
 
 #endif
 const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
@@ -1686,7 +1686,7 @@ void checkVariableValid(edict_t *ent, int client, char *value);
 // md4.c
 unsigned Com_BlockChecksum(void *buffer, int length);
 
-void	PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
+void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
 extern char client_msg[256];
 extern qboolean private_command_kick;
@@ -1705,29 +1705,29 @@ typedef struct {
 
 // should be set at build time in Makefile
 #ifndef Q2A_COMMIT
-#define Q2A_COMMIT		"00~000000"
-#define Q2A_REVISION	0
+#define Q2A_COMMIT      "00~000000"
+#define Q2A_REVISION    0
 #endif
 
 #define DEFAULTQ2AVER   "1.0"
 
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
-#define MAX_ADMINS    128
-#define ADMIN_AUTH_LEVEL  1
-#define MAX_BLOCK_MODELS  26
+#define MAX_ADMINS          128
+#define ADMIN_AUTH_LEVEL    1
+#define MAX_BLOCK_MODELS    26
 
-#define VIRUS_KICK_MSG "%s has not provided adequate authentication, this may be due to a virus.\n"
-#define NOMATCH_KICK_MSG "%s has not provided adequate authentication.\n"
-#define OUTOFTIME_KICK_MSG "%s failed to authenticate.\n"
-#define MOD_KICK_MSG "%s failed the pmodified check on this map, error %d.\n"
-#define PRV_KICK_MSG "%s is using a modified client.\n"
+#define VIRUS_KICK_MSG      "%s has not provided adequate authentication, this may be due to a virus.\n"
+#define NOMATCH_KICK_MSG    "%s has not provided adequate authentication.\n"
+#define OUTOFTIME_KICK_MSG  "%s failed to authenticate.\n"
+#define MOD_KICK_MSG        "%s failed the pmodified check on this map, error %d.\n"
+#define PRV_KICK_MSG        "%s is using a modified client.\n"
 
-#define Q2A_VIRUS_KICK_MSG "Inadequate authentication, may be a virus.\n"
-#define Q2A_NOMATCH_KICK_MSG "Inadequate authentication.\n"
-#define Q2A_OUTOFTIME_KICK_MSG "Failed to respond.\n"
-#define Q2A_MOD_KICK_MSG "Failed the pmodified check on this map.\n"
-#define Q2A_PRV_KICK_MSG "Failed the private commands check.\n"
-#define FRKQ2_KICK_MSG "Failed the client authentication.\n"
+#define Q2A_VIRUS_KICK_MSG      "Inadequate authentication, may be a virus.\n"
+#define Q2A_NOMATCH_KICK_MSG    "Inadequate authentication.\n"
+#define Q2A_OUTOFTIME_KICK_MSG  "Failed to respond.\n"
+#define Q2A_MOD_KICK_MSG        "Failed the pmodified check on this map.\n"
+#define Q2A_PRV_KICK_MSG        "Failed the private commands check.\n"
+#define FRKQ2_KICK_MSG          "Failed the client authentication.\n"
 
 extern admin_type admin_pass[MAX_ADMINS];
 extern admin_type q2a_bypass_pass[MAX_ADMINS];
