@@ -591,14 +591,6 @@ void SubstituteEntities(char *newents, char *oldents)
     }
 }
 
-
-void TestWriteEntityFile(char *filename, char *string) {
-    FILE *fp;
-    gi.dprintf("Writing entity file: %s\n", filename);
-    fp = fopen(filename, "w+");
-    fputs(string, fp);
-    fclose(fp);
-}
 /**
  *
  */
@@ -794,12 +786,9 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     char *entstr;
     entstr = gi.TagMalloc(entsize, TAG_GAME);
     SubstituteEntities(entstr, backupentities);
-    TestWriteEntityFile("/tmp/newents", entstr);
-    TestWriteEntityFile("/tmp/oldents", backupentities);
 
     STARTPERFORMANCE(2);
     ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
-    //ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
     //gi.TagFree(entstr);
