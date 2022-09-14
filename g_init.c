@@ -77,6 +77,8 @@ char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
 char gmapname[MAX_QPATH];
 char version[256];
 
+char *finalentities;
+
 //uint32_t remoteKey          = 0;
 char remoteUUID[37];
 char remoteAddr[256]        = "127.0.0.1";
@@ -482,6 +484,8 @@ void InitGame(void)
         whois_read_file();
     }
 
+    finalentities = G_Malloc(0xffff);
+
     STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
 
     RA_Init();
@@ -782,16 +786,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
         }
     }
 
-    int entsize = strlen(backupentities) + 500;
-    char *entstr;
-    entstr = gi.TagMalloc(entsize, TAG_GAME);
-    SubstituteEntities(entstr, backupentities);
+    q2a_memset(finalentities, 0, sizeof(finalentities));
+    SubstituteEntities(finalentities, backupentities);
 
     STARTPERFORMANCE(2);
-    ge_mod->SpawnEntities(mapname, entstr, spawnpoint);
+    ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
-
-    //gi.TagFree(entstr);
 
     G_MergeEdicts();
 

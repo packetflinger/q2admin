@@ -229,6 +229,10 @@ typedef enum {
     MOVETYPE_BOUNCE
 } movetype_t;
 
+// Contains the map entities string. This string is potentially a different
+// size than the original entities string due to cvar-based substitutions.
+extern char *finalentities;
+
 // this structure is left intact through an entire game
 // it should be initialized at dll load time, and read/written to
 // the server.ssv file for savegames

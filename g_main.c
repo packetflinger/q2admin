@@ -65,6 +65,8 @@ void ShutdownGame(void) {
         STARTPERFORMANCE(2);
     }
 
+    gi.TagFree(finalentities);
+
     RA_Shutdown();
 
     // reset the password just in case something has gone wrong...
