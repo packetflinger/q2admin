@@ -61,10 +61,10 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
 
             if (i < proxyinfo[client].maxCmds) {
                 q2a_memmove(
-					proxyinfo[client].cmdQueue + i, 
-					proxyinfo[client].cmdQueue + i + 1, 
-					(proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t)
-				);
+                    proxyinfo[client].cmdQueue + i,
+                    proxyinfo[client].cmdQueue + i + 1,
+                    (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t)
+                );
             }
 
             return TRUE;
