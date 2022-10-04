@@ -787,10 +787,11 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     }
 
     q2a_memset(finalentities, 0, sizeof(finalentities));
-    SubstituteEntities(finalentities, backupentities);
+    //SubstituteEntities(finalentities, backupentities);
 
     STARTPERFORMANCE(2);
-    ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
+    //ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
+    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
     STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
 
     G_MergeEdicts();
