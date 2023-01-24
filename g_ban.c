@@ -1475,11 +1475,11 @@ void banRun(int startarg, edict_t *ent, int client) {
                 newentry->ip[3] = proxyinfo[clienti].ipaddressBinary[3];
 
                 Q_snprintf(
-                		savecmd + q2a_strlen(savecmd),
-						36,
-						"%d.%d.%d.%d ",
-						newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]
-				);
+                    savecmd + q2a_strlen(savecmd),
+                    36,
+                    "%d.%d.%d.%d ",
+                    newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]
+                );
 
                 while (isdigit(*cp)) {
                     cp++;
