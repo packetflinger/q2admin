@@ -509,13 +509,13 @@ void stifleRun(int startarg, edict_t *ent, int client) {
     // make sure the text doesn't overflow the internal buffer...
     if (enti && isdigit(*text) && (seconds = q2a_atoi(text)) >= 0) {
         if (seconds) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s is now stifled every %d seconds.\n", proxyinfo[clienti].name, seconds);
+            gi.cprintf(NULL, PRINT_HIGH, "%s is now stifled for %d seconds.\n", proxyinfo[clienti].name, seconds);
 
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s is now stifled every %d seconds.\n", proxyinfo[clienti].name, seconds);
+                gi.cprintf(ent, PRINT_HIGH, "%s is now stifled for %d seconds.\n", proxyinfo[clienti].name, seconds);
             }
 
-            gi.cprintf(enti, PRINT_HIGH, "You are now stifled every %d seconds.\n", seconds);
+            gi.cprintf(enti, PRINT_HIGH, "You are now stifled for %d seconds.\n", seconds);
             proxyinfo[clienti].clientcommand |= CCMD_STIFLED;
             proxyinfo[clienti].stifle_frame = lframenum;
             proxyinfo[clienti].stifle_length = SECS_TO_FRAMES(seconds);
@@ -527,11 +527,10 @@ void stifleRun(int startarg, edict_t *ent, int client) {
             }
 
             gi.cprintf(enti, PRINT_HIGH, "You have been unstifled.\n");
-
             proxyinfo[clienti].clientcommand &= ~CCMD_STIFLED;
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !stifle [LIKE/RE/CL] name [time(seconds)\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !stifle [LIKE/RE/CL] name [seconds]\n");
     }
 }
 
