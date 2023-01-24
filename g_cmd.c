@@ -1056,6 +1056,13 @@ q2acmd_t q2aCommands[] = {
         stifleRun
     },
     {
+        "unstifle",
+        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        unstifleRun
+    },
+    {
         "stuff",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,

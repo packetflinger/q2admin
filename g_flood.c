@@ -215,15 +215,18 @@ qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
 
     // half muted (can talk once per timespan)
     if (proxyinfo[client].clientcommand & CCMD_STIFLED) {
-        if (proxyinfo[client].stifle_frame > lframenum) {
+        int sf = proxyinfo[client].stifle_frame;
+        // checkForMute() is called more than once per frame per message. Simply checking for
+        // stifle_frame being larger than the current frame number is insufficient since the
+        // first time this is called it will work, but subsequent calls will result in the
+        // mute. So stifled client chat will show up in server console but not in the actual
+        // game. Effectively, this means the client is full-muted. So you have to check if
+        // the stifle_frame is the exact value of the current frame + the stifle time to
+        // know if it was set THIS frame and to not apply the mute until the next frame.
+        if (sf > lframenum && sf != lframenum + proxyinfo[client].stifle_length) {
             if (displayMsg) {
                 int secleft = FRAMES_TO_SECS(proxyinfo[client].stifle_frame - lframenum);
-                gi.cprintf(ent, PRINT_HIGH, "%d seconds of chat silence left.\n", secleft);
-                gi.cprintf(NULL, PRINT_HIGH,
-                        "lframenum: %d\nstifle_frame: %d\nstifle_length: %d\n",
-                        lframenum,
-                        proxyinfo[client].stifle_frame,
-                        proxyinfo[client].stifle_length);
+                gi.cprintf(ent, PRINT_HIGH, "You're stifled for %d more seconds\n", secleft);
             }
             return TRUE;
         } else {
@@ -517,7 +520,7 @@ void stifleRun(int startarg, edict_t *ent, int client) {
 
             gi.cprintf(enti, PRINT_HIGH, "You are now stifled for %d seconds.\n", seconds);
             proxyinfo[clienti].clientcommand |= CCMD_STIFLED;
-            proxyinfo[clienti].stifle_frame = lframenum;
+            proxyinfo[clienti].stifle_frame = 0; // next print will trigger
             proxyinfo[clienti].stifle_length = SECS_TO_FRAMES(seconds);
         } else if (proxyinfo[clienti].clientcommand & CCMD_STIFLED) {
             gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
@@ -531,6 +534,42 @@ void stifleRun(int startarg, edict_t *ent, int client) {
         }
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !stifle [LIKE/RE/CL] name [seconds]\n");
+    }
+}
+
+void unstifleRun(int startarg, edict_t *ent, int client) {
+    char *text;
+    edict_t *enti;
+    int clienti;
+    int seconds;
+
+    // skip the first part (!unstifle)
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+
+    SKIPBLANK(text);
+
+    enti = getClientFromArg(client, ent, &clienti, text, &text);
+
+    if (enti) {
+        if (proxyinfo[clienti].clientcommand & CCMD_STIFLED) {
+            gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+
+            if (ent) {
+                gi.cprintf(ent, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+            }
+
+            gi.cprintf(enti, PRINT_HIGH, "You have been unstifled.\n");
+            proxyinfo[clienti].clientcommand &= ~CCMD_STIFLED;
+            proxyinfo[clienti].stifle_frame = 0;
+            proxyinfo[clienti].stifle_length = 0;
+        }
+    } else {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !unstifle [LIKE/RE/CL] <name|id>\n");
     }
 }
 

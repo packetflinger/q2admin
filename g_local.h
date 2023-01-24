@@ -1637,6 +1637,7 @@ void floodDelRun(int startarg, edict_t *ent, int client);
 void skinChangeFloodProtectInit(char *arg);
 void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client);
 void stifleRun(int startarg, edict_t *ent, int client);
+void unstifleRun(int startarg, edict_t *ent, int client);
 
 // zb_spawn.c
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
