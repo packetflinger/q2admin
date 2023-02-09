@@ -252,7 +252,7 @@ q2acmd_t q2aCommands[] = {
     },
     {
         "cloud",
-        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
         NULL,
         cloudRun,
