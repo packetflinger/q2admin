@@ -31,6 +31,8 @@
 // arg in seconds
 #define FUTURE_FRAME(t) (CURFRAME + SECS_TO_FRAMES(t))
 
+#define CLOUDCMD_LAYOUT "sv !cloud <status|(dis|en)able|rule>"
+
 
 // Remote Admin flags
 #define RFL_FRAGS       1 << 0    // 1
@@ -260,6 +262,7 @@ void        hexDump (char *desc, void *addr, int len);
 void        RA_RotateKeys(void);
 void        debug_print(char *str);
 void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
+void        cloudRun(int startarg, edict_t *ent, int client);
 
 
 extern remote_t  remote;

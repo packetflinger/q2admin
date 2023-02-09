@@ -2,7 +2,6 @@
 
 remote_t remote;
 
-
 /**
  * Sets up RA connection. Makes sure we have what we need:
  * - enabled in config
@@ -1430,5 +1429,29 @@ void RA_SayAll(void)
                 "%s\n",
                 string
         );
+    }
+}
+
+/**
+ * Main command runner for "sv !cloud <cmd>" server command
+ */
+void cloudRun(int startarg, edict_t *ent, int client) {
+    char *command;
+    char *time;
+
+    if (gi.argc() <= startarg) {
+        gi.cprintf(ent, PRINT_HIGH, "Usage: %s\n", CLOUDCMD_LAYOUT);
+        return;
+    }
+
+    command = gi.argv(startarg);
+    gi.cprintf(ent, "PRINT_HIGH", "%s\n", command);
+    if (Q_stricmp(command, "status") == 0) {
+        if (remote.connected_frame == 0) {
+            gi.cprintf(ent, "PRINT_HIGH", "not connected\n");
+        } else {
+            gi.cprintf(ent, "PRINT_HIGH", "connected\n");
+        }
+        return;
     }
 }

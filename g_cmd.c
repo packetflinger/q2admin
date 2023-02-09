@@ -251,6 +251,13 @@ q2acmd_t q2aCommands[] = {
         &clientVoteTimeout,
     },
     {
+        "cloud",
+        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        cloudRun,
+    },
+    {
         "cl_anglespeedkey_display",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -869,73 +876,73 @@ q2acmd_t q2aCommands[] = {
         NULL,
         reloadVoteFileRun,
     },
-	{
-		"remote",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		remoteSettingsDisplay,
-	},
-	{
-		"remote_uuid",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		&remoteUUID,
-	},
-	{
-		"remote_port",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NUMBER,
-		&remotePort,
-	},
-	{
-		"remote_addr",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteAddr,
-	},
-	{
-		"remote_flags",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NUMBER,
-		&remoteFlags,
-	},
-	{
-		"remote_dnsorder",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteDNS,
-	},
-	{
-		"remote_enabled",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_LOGICAL,
-		&remoteEnabled,
-	},
-	{
-		"remote_cmd_teleport",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteCmdTeleport,
-	},
-	{
-		"remote_cmd_invite",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteCmdInvite,
-	},
-	{
-		"remote_cmd_seen",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteCmdSeen,
-	},
-	{
-		"remote_cmd_whois",
-		CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_STRING,
-		remoteCmdWhois,
-	},
+    {
+        "remote",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        remoteSettingsDisplay,
+    },
+    {
+        "remote_uuid",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &remoteUUID,
+    },
+    {
+        "remote_port",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &remotePort,
+    },
+    {
+        "remote_addr",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteAddr,
+    },
+    {
+        "remote_flags",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &remoteFlags,
+    },
+    {
+        "remote_dnsorder",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteDNS,
+    },
+    {
+        "remote_enabled",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &remoteEnabled,
+    },
+    {
+        "remote_cmd_teleport",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteCmdTeleport,
+    },
+    {
+        "remote_cmd_invite",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteCmdInvite,
+    },
+    {
+        "remote_cmd_seen",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteCmdSeen,
+    },
+    {
+        "remote_cmd_whois",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        remoteCmdWhois,
+    },
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1414,70 +1421,6 @@ q2acmd_t q2aCommands[] = {
 
 //===================================================================
 char mutedText[8192] = "";
-
-void Cmd_Invite_f(edict_t *ent) {
-        if (!(remote.flags & RFL_INVITE)) {
-                gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
-                return;
-        }
-
-        char *invitetext;
-        uint8_t id = getEntOffset(ent) - 1;
-
-        if (gi.argc() > 1) {
-                invitetext = gi.args();
-        } else {
-                invitetext = "";
-        }
-
-        RA_Invite(id, invitetext);
-}
-
-void Cmd_Remote_Status_f(edict_t *ent) {
-        /*switch (remote.online) {
-        case FALSE:
-                gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is currently offline...\n");
-                break;
-        case TRUE:
-                gi.cprintf(ent, PRINT_HIGH, "Remote Admin server is connected!\n");
-                break;
-        }*/
-}
-
-void Cmd_Find_f(edict_t *ent) {
-        if (!(remote.flags & RFL_FIND)) {
-                gi.cprintf(ent, PRINT_HIGH, "Find command is currently disabled.\n");
-                return;
-        }
-
-        uint8_t id = getEntOffset(ent) - 1;
-        //RA_Send(CMD_SEEN, "%d\\%s", id, gi.args());
-}
-
-void Cmd_Remote_Players_f(edict_t *ent) {
-        if (gi.argc() < 2) {
-                gi.cprintf(ent, PRINT_HIGH, "Usage: !players <servername>\n");
-                return;
-        }
-
-        uint8_t id = getEntOffset(ent) - 1;
-
-        //RA_WriteLong(remoteKey);
-        //RA_WriteByte(CMD_PLAYERS);
-        //RA_WriteByte(id);
-        //RA_WriteString(gi.argv(1));
-}
-
-void Cmd_Remote_Whois_f(edict_t *ent) {
-        if (gi.argc() < 2) {
-                gi.cprintf(ent, PRINT_HIGH, "Usage: !whois <playername>\n");
-                return;
-        }
-
-        uint8_t id = getEntOffset(ent) - 1;
-
-        RA_Whois(id, gi.argv(1));
-}
 
 void dprintf_internal(char *fmt, ...) {
     char cbuffer[8192];
@@ -3902,14 +3845,32 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
 void Cmd_Teleport_f(edict_t *ent)
 {
-	if (!(remote.flags & RFL_TELEPORT)) {
-		gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
-		return;
-	}
+    if (!(remote.flags & RFL_TELEPORT)) {
+        gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
+        return;
+    }
 
-	uint8_t id = getEntOffset(ent) - 1;
+    uint8_t id = getEntOffset(ent) - 1;
 
-	RA_Teleport(id);
+    RA_Teleport(id);
+}
+
+void Cmd_Invite_f(edict_t *ent) {
+    if (!(remote.flags & RFL_INVITE)) {
+            gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
+            return;
+    }
+
+    char *invitetext;
+    uint8_t id = getEntOffset(ent) - 1;
+
+    if (gi.argc() > 1) {
+            invitetext = gi.args();
+    } else {
+            invitetext = "";
+    }
+
+    RA_Invite(id, invitetext);
 }
 
 // Show the remote settings/status 
