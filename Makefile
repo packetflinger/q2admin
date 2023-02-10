@@ -56,6 +56,7 @@ OBJS := g_anticheat.o \
 		g_ban.o \
 		g_base64.o \
 		g_checkvar.o \
+		g_cloud.o \
 		g_cmd.o \
 		g_crypto.o \
 		g_disable.o \
@@ -69,7 +70,6 @@ OBJS := g_anticheat.o \
 		g_main.o \
 		g_mdfour.o \
 		g_queue.o \
-		g_cloud.o \
 		g_spawn.o \
 		g_util.o \
 		g_vote.o \

@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // because we define the full size ones in this file
 #define GAME_INCLUDE
 #include "game.h"
-#include "g_remote.h"
+#include "g_cloud.h"
 #include <ctype.h>
 #include "regex.h"
 #include "g_offsets.h"
