@@ -47,7 +47,7 @@ RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 HEADERS := 	game.h \
 			g_file.h \
 			g_local.h \
-			g_remote.h \
+			g_cloud.h \
 			q_shared.h \
 			regex.h \
 			q_platform.h
@@ -69,7 +69,7 @@ OBJS := g_anticheat.o \
 		g_main.o \
 		g_mdfour.o \
 		g_queue.o \
-		g_remote.o \
+		g_cloud.o \
 		g_spawn.o \
 		g_util.o \
 		g_vote.o \
