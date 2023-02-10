@@ -67,7 +67,7 @@ typedef enum {
     RA_STATE_CONNECTING,    // mid connection
     RA_STATE_CONNECTED,     // connected
     RA_STATE_TRUSTED        // authenticated and ready to go
-} ra_state_t;
+} ca_state_t;
 
 #define STATE(s)    (remote.state == RA_STATE_##s)
 
@@ -99,7 +99,7 @@ typedef enum {
     RA_AUTH_REC_KEY,
     RA_AUTH_SENT_SV_NONCE,
     RA_AUTH_REC_ACK,
-} ra_auth_t;
+} ca_auth_t;
 
 
 /**
@@ -112,7 +112,7 @@ typedef struct {
     qboolean    trusted;    // is the server trusted?
     qboolean    encrypted;  // should we encrypt?
     qboolean    have_keys;  // do we have the shared keys?
-    ra_auth_t   authstage;
+    ca_auth_t   authstage;
     uint8_t     auth_fail_count;
 
     // auth and encryption stuff
@@ -131,14 +131,14 @@ typedef struct {
     fd_set  set_r;    // read
     fd_set  set_w;    // write
     fd_set  set_e;    // error
-} ra_connection_t;
+} ca_connection_t;
 
 /**
  * Holds all info and state about the remote admin connection
  */
 typedef struct {
-    ra_state_t       state;
-    ra_connection_t  connection;
+    ca_state_t       state;
+    ca_connection_t  connection;
     uint32_t         connect_retry_frame;
     uint32_t         connection_attempts;
     uint32_t         connected_frame;  // the frame when we connected
@@ -173,7 +173,7 @@ typedef enum {
     CMD_MAP,           // map changed
     CMD_PING,          //
     CMD_AUTH
-} ra_client_cmd_t;
+} ca_client_cmd_t;
 
 
 /**
@@ -191,7 +191,7 @@ typedef enum {
     SCMD_TRUSTED,
     SCMD_KEY,
     SCMD_GETPLAYERS,
-} ra_server_cmd_t;
+} ca_server_cmd_t;
 
 
 /**
@@ -204,62 +204,62 @@ typedef enum {
 } remote_cmd_command_t;
 
 
-void        RA_Send(void);
-void        RA_Init(void);
-void        RA_Shutdown(void);
-void        RA_RunFrame(void);
-void        RA_Register(void);
-void        RA_Unregister(void);
-void        RA_PlayerConnect(edict_t *ent);
-void        RA_PlayerDisconnect(edict_t *ent);
-void        RA_PlayerCommand(edict_t *ent);
+void        CA_Send(void);
+void        CA_Init(void);
+void        CA_Shutdown(void);
+void        CA_RunFrame(void);
+void        CA_Register(void);
+void        CA_Unregister(void);
+void        CA_PlayerConnect(edict_t *ent);
+void        CA_PlayerDisconnect(edict_t *ent);
+void        CA_PlayerCommand(edict_t *ent);
 
-uint8_t     RA_ReadByte(void);
-uint16_t    RA_ReadShort(void);
-int32_t     RA_ReadLong(void);
-char        *RA_ReadString(void);
-void        RA_ReadData(void *out, size_t len);
-void        RA_WriteString(const char *fmt, ...);
-void        RA_WriteByte(uint8_t b);
-void        RA_WriteLong(uint32_t i);
-void        RA_WriteShort(uint16_t s);
-void        RA_WriteData(const void *data, size_t length);
-void        RA_InitBuffer(void);
+uint8_t     CA_ReadByte(void);
+uint16_t    CA_ReadShort(void);
+int32_t     CA_ReadLong(void);
+char        *CA_ReadString(void);
+void        CA_ReadData(void *out, size_t len);
+void        CA_WriteString(const char *fmt, ...);
+void        CA_WriteByte(uint8_t b);
+void        CA_WriteLong(uint32_t i);
+void        CA_WriteShort(uint16_t s);
+void        CA_WriteData(const void *data, size_t length);
+void        CA_InitBuffer(void);
 uint16_t    getport(void);
 
-void        RA_Print(uint8_t level, char *text);
-void        RA_Teleport(uint8_t client_id);
-void        RA_Frag(uint8_t victim, uint8_t attacker);
-void        RA_PlayerUpdate(uint8_t cl, const char *ui);
-void        RA_Invite(uint8_t cl, const char *text);
-void        RA_Whois(uint8_t cl, const char *name);
-void        RA_Map(const char *mapname);
-void        RA_Authorize(const char *authkey);
-void        RA_HeartBeat(void);
-void        RA_Encrypt(void);
+void        CA_Print(uint8_t level, char *text);
+void        CA_Teleport(uint8_t client_id);
+void        CA_Frag(uint8_t victim, uint8_t attacker);
+void        CA_PlayerUpdate(uint8_t cl, const char *ui);
+void        CA_Invite(uint8_t cl, const char *text);
+void        CA_Whois(uint8_t cl, const char *name);
+void        CA_Map(const char *mapname);
+void        CA_Authorize(const char *authkey);
+void        CA_HeartBeat(void);
+void        CA_Encrypt(void);
 
-void        RA_Connect(void);
-void        RA_Disconnect(void);
-void        RA_CheckConnection(void);
-void        RA_SendMessages(void);
-void        RA_ReadMessages(void);
-void        RA_ParseMessage(void);
-void        RA_ParseCommand(void);
-void        RA_DisconnectedPeer(void);
-void        RA_Ping(void);
-void        RA_PlayerList(void);
-void        RA_LookupAddress(void);
+void        CA_Connect(void);
+void        CA_Disconnect(void);
+void        CA_CheckConnection(void);
+void        CA_SendMessages(void);
+void        CA_ReadMessages(void);
+void        CA_ParseMessage(void);
+void        CA_ParseCommand(void);
+void        CA_DisconnectedPeer(void);
+void        CA_Ping(void);
+void        CA_PlayerList(void);
+void        CA_LookupAddress(void);
 void        G_StartThread(void *func, void *arg);
-void        RA_SayHello(void);
-void        RA_ParsePong(void);
-void        RA_ParseError(void);
-void        RA_SayClient(void);
-void        RA_SayAll(void);
+void        CA_SayHello(void);
+void        CA_ParsePong(void);
+void        CA_ParseError(void);
+void        CA_SayClient(void);
+void        CA_SayAll(void);
 qboolean    G_LoadKeys(void);
-qboolean    RA_VerifyServerAuth(void);
+qboolean    CA_VerifyServerAuth(void);
 void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
-void        RA_RotateKeys(void);
+void        CA_RotateKeys(void);
 void        debug_print(char *str);
 void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
 void        cloudRun(int startarg, edict_t *ent, int client);

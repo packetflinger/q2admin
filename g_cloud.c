@@ -8,7 +8,7 @@ remote_t remote;
  * - rcon password is set
  *
  */
-void RA_Init() {
+void CA_Init() {
     
     // we're already connected
     if (remote.connection.socket) {
@@ -44,7 +44,7 @@ void RA_Init() {
         return;
     }
 
-    G_StartThread(&RA_LookupAddress, NULL);
+    G_StartThread(&CA_LookupAddress, NULL);
 
     // delay connection by a few seconds
     remote.connect_retry_frame = FUTURE_FRAME(5);
@@ -55,7 +55,7 @@ void RA_Init() {
  * Build a new info string containing just want we need:
  *  name, ip, skin, fov
  */
-static char *ra_userinfo(uint8_t player_index)
+static char *ca_userinfo(uint8_t player_index)
 {
     static char newuserinfo[MAX_INFO_STRING];
     char *value;
@@ -138,7 +138,7 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
  * Do a DNS lookup for remote server.
  * This is done in a dedicated thread to prevent blocking
  */
-void RA_LookupAddress(void)
+void CA_LookupAddress(void)
 {
     char str_address[40];
     struct addrinfo hints, *res = 0;
@@ -215,7 +215,7 @@ void G_StartThread(void *func, void *arg) {
  * Replace the die() function pointer for each player edict.
  * For capturing frag events
  */
-static void ra_replace_die(void)
+static void ca_replace_die(void)
 {
     static uint8_t i;
 
@@ -247,7 +247,7 @@ void debug_print(char *str)
 /**
  * Periodically ping the server to know if the connection is still open
  */
-void RA_Ping(void)
+void CA_Ping(void)
 {
     if (remote.state < RA_STATE_CONNECTED) {
         return;
@@ -261,7 +261,7 @@ void RA_Ping(void)
     // there is already an outstanding ping
     if (remote.ping.waiting) {
         if (remote.ping.miss_count == PING_MISS_MAX) {
-            RA_DisconnectedPeer();
+            CA_DisconnectedPeer();
             return;
         }
         remote.ping.miss_count++;
@@ -273,14 +273,14 @@ void RA_Ping(void)
     remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
     // send it
-    RA_WriteByte(CMD_PING);
+    CA_WriteByte(CMD_PING);
 }
 
 /**
  * Run once per server frame
  *
  */
-void RA_RunFrame(void)
+void CA_RunFrame(void)
 {
     // keep some time
     remote.frame_number++;
@@ -294,30 +294,30 @@ void RA_RunFrame(void)
     if (remote.state >= RA_STATE_CONNECTED) {
 
         // send any buffered messages to the server
-        RA_SendMessages();
+        CA_SendMessages();
 
         // receive any pending messages from server
-        RA_ReadMessages();
+        CA_ReadMessages();
 
         // update player die() pointers
-        ra_replace_die();
+        ca_replace_die();
 
         // periodically make sure connection is alive
-        RA_Ping();
+        CA_Ping();
     }
 
     // connection started already, check for completion
     if (remote.state == RA_STATE_CONNECTING) {
-        RA_CheckConnection();
+        CA_CheckConnection();
     }
 
     // we're not connected, try again
     if (remote.state == RA_STATE_DISCONNECTED) {
-        RA_Connect();
+        CA_Connect();
     }
 }
 
-void RA_Shutdown(void)
+void CA_Shutdown(void)
 {
     if (remote.state == RA_STATE_DISABLED) {
         return;
@@ -327,9 +327,9 @@ void RA_Shutdown(void)
      * We have to call RA_SendMessages() specifically here because there won't be another
      * frame to send the buffered CMD_QUIT
      */
-    RA_WriteByte(CMD_QUIT);
-    RA_SendMessages();
-    RA_Disconnect();
+    CA_WriteByte(CMD_QUIT);
+    CA_SendMessages();
+    CA_Disconnect();
 
     freeaddrinfo(remote.addr);
 }
@@ -337,7 +337,7 @@ void RA_Shutdown(void)
 /**
  *
  */
-void RA_Disconnect(void)
+void CA_Disconnect(void)
 {
     if (remote.state < RA_STATE_CONNECTED) {
         return;
@@ -367,7 +367,7 @@ static uint32_t next_connect_frame(void)
 /**
  * Make the connection to the remote admin server
  */
-void RA_Connect(void)
+void CA_Connect(void)
 {
     int flags, ret;
 
@@ -437,9 +437,9 @@ void RA_Connect(void)
 /**
  * Check to see if the connection initiated by RA_Connect() has finished
  */
-void RA_CheckConnection(void)
+void CA_CheckConnection(void)
 {
-    ra_connection_t *c;
+    ca_connection_t *c;
     uint32_t ret;
     qboolean connected = qfalse;
     qboolean exception = qfalse;
@@ -501,7 +501,7 @@ void RA_CheckConnection(void)
             remote.state = RA_STATE_CONNECTED;
             remote.ping.frame_next = FUTURE_FRAME(10);
             remote.connected_frame = CURFRAME;
-            RA_SayHello();
+            CA_SayHello();
         }
     }
 }
@@ -509,7 +509,7 @@ void RA_CheckConnection(void)
 /**
  * Send the contents of our outgoing buffer to the server
  */
-void RA_SendMessages(void)
+void CA_SendMessages(void)
 {
     if (remote.state < RA_STATE_CONNECTING) {
         return;
@@ -523,7 +523,7 @@ void RA_SendMessages(void)
     uint32_t ret;
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
-    ra_connection_t *c;
+    ca_connection_t *c;
     message_queue_t *q;
     message_queue_t e;
 
@@ -557,7 +557,7 @@ void RA_SendMessages(void)
             if (ret == -1) {
                 if (errno == EPIPE) {
                     gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
-                    RA_DisconnectedPeer();
+                    CA_DisconnectedPeer();
                     errno = 0;
                     break;
                 }
@@ -584,7 +584,7 @@ void RA_SendMessages(void)
 /**
  * Accept any incoming messages from the server
  */
-void RA_ReadMessages(void)
+void CA_ReadMessages(void)
 {
     uint32_t ret;
     size_t expectedLength = 0;
@@ -610,7 +610,7 @@ void RA_ReadMessages(void)
         if (ret == -1) {
             if (errno != EINTR) {
                 perror("select");
-                RA_DisconnectedPeer();
+                CA_DisconnectedPeer();
                 errno = 0;
                 return;
             }
@@ -623,14 +623,14 @@ void RA_ReadMessages(void)
             ret = recv(remote.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
 
             if (ret == 0) {
-                RA_DisconnectedPeer();
+                CA_DisconnectedPeer();
                 return;
             }
 
             if (ret == -1) {
                 if (errno != EINTR) {
                     perror("recv");
-                    RA_DisconnectedPeer();
+                    CA_DisconnectedPeer();
                     return;
                 }
 
@@ -654,7 +654,7 @@ void RA_ReadMessages(void)
     }
 
     // if we made it here, we have the whole message, parse it
-    RA_ParseMessage();
+    CA_ParseMessage();
 }
 
 /**
@@ -669,7 +669,7 @@ void RA_Trusted(void)
 /**
  * Parse a newly received message and act accordingly
  */
-void RA_ParseMessage(void)
+void CA_ParseMessage(void)
 {
     message_queue_t *msg = &remote.queue_in;
     byte cmd;
@@ -686,37 +686,37 @@ void RA_ParseMessage(void)
     //hexDump("New Message", remote.queue_in.data, remote.queue_in.length);
 
     while (msg->index < msg->length) {
-        cmd = RA_ReadByte();
+        cmd = CA_ReadByte();
 
         switch (cmd) {
         case SCMD_PONG:
-            RA_ParsePong();
+            CA_ParsePong();
             break;
         case SCMD_COMMAND:
-            RA_ParseCommand();
+            CA_ParseCommand();
             break;
         case SCMD_HELLOACK:
-            RA_VerifyServerAuth();
+            CA_VerifyServerAuth();
             break;
         case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
             RA_Trusted();
-            RA_Map(remote.mapname);
-            RA_PlayerList();
+            CA_Map(remote.mapname);
+            CA_PlayerList();
             break;
         case SCMD_ERROR:
-            RA_ParseError();
+            CA_ParseError();
             break;
         case SCMD_SAYCLIENT:
-            RA_SayClient();
+            CA_SayClient();
             break;
         case SCMD_SAYALL:
-            RA_SayAll();
+            CA_SayAll();
             break;
         case SCMD_KEY:
-            RA_RotateKeys();
+            CA_RotateKeys();
             break;
         case SCMD_GETPLAYERS:
-            RA_PlayerList();
+            CA_PlayerList();
             break;
         }
     }
@@ -766,9 +766,9 @@ qboolean RSAVerifySignature( RSA* rsa,
  * 3. Read the plaintext nonce from the server, encrypt and send back
  *    to auth the client
  */
-qboolean RA_VerifyServerAuth(void)
+qboolean CA_VerifyServerAuth(void)
 {
-    ra_connection_t *c;
+    ca_connection_t *c;
     uint16_t len;
     byte digest[DIGEST_LEN];
     byte aeskey_cipher[RSA_LEN];
@@ -782,14 +782,14 @@ qboolean RA_VerifyServerAuth(void)
     c = &remote.connection;
 
     q2a_memset(signature, 0, RSA_LEN);
-    len = RA_ReadShort();
-    RA_ReadData(signature, len);
+    len = CA_ReadShort();
+    CA_ReadData(signature, len);
 
     if (remoteEncryption) {
-        RA_ReadData(aeskey_cipher, RSA_LEN);
+        CA_ReadData(aeskey_cipher, RSA_LEN);
     }
 
-    RA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+    CA_ReadData(c->sv_nonce, CHALLENGE_LEN);
 
     q2a_memset(digest, 0, DIGEST_LEN);
     G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
@@ -813,10 +813,10 @@ qboolean RA_VerifyServerAuth(void)
 
         }
 
-        RA_WriteByte(CMD_AUTH);
-        RA_WriteShort(siglen);
-        RA_WriteData(signature, siglen);
-        RA_SendMessages();
+        CA_WriteByte(CMD_AUTH);
+        CA_WriteShort(siglen);
+        CA_WriteData(signature, siglen);
+        CA_SendMessages();
 
         if (remoteEncryption) {
             len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
@@ -852,7 +852,7 @@ qboolean RA_VerifyServerAuth(void)
 /**
  * Server sent over a command.
  */
-void RA_ParseCommand(void)
+void CA_ParseCommand(void)
 {
     char *cmd;
 
@@ -861,7 +861,7 @@ void RA_ParseCommand(void)
         return;
     }
 
-    cmd = RA_ReadString();
+    cmd = CA_ReadString();
 
     // cram it into the command buffer
     gi.AddCommandString(cmd);
@@ -870,7 +870,7 @@ void RA_ParseCommand(void)
 /**
  * Not really much to parse...
  */
-void RA_ParsePong(void)
+void CA_ParsePong(void)
 {
     remote.ping.waiting = qfalse;
     remote.ping.miss_count = 0;
@@ -880,20 +880,20 @@ void RA_ParsePong(void)
  * The server sent us new symmetric encryption keys, parse them and
  * start using them
  */
-void RA_RotateKeys(void)
+void CA_RotateKeys(void)
 {
-    ra_connection_t *c;
+    ca_connection_t *c;
     c = &remote.connection;
 
-    RA_ReadData(c->aeskey, AESKEY_LEN);
-    RA_ReadData(c->iv, AESBLOCK_LEN);
+    CA_ReadData(c->aeskey, AESKEY_LEN);
+    CA_ReadData(c->iv, AESBLOCK_LEN);
 }
 
 /**
  * There was a sudden disconnection mid-stream. Reconnect after an
  * appropriate pause
  */
-void RA_DisconnectedPeer(void)
+void CA_DisconnectedPeer(void)
 {
     uint8_t secs;
 
@@ -921,7 +921,7 @@ void RA_DisconnectedPeer(void)
 /**
  * Send info about all the players connected
  */
-void RA_PlayerList(void)
+void CA_PlayerList(void)
 {
     uint8_t count, i;
     count = 0;
@@ -936,13 +936,13 @@ void RA_PlayerList(void)
         }
     }
 
-    RA_WriteByte(CMD_PLAYERLIST);
-    RA_WriteByte(count);
+    CA_WriteByte(CMD_PLAYERLIST);
+    CA_WriteByte(count);
 
     for (i=0; i<remote.maxclients; i++) {
         if (proxyinfo[i].inuse) {
-            RA_WriteByte(i);
-            RA_WriteString("%s", ra_userinfo(i));
+            CA_WriteByte(i);
+            CA_WriteString("%s", ca_userinfo(i));
         }
     }
 }
@@ -968,9 +968,9 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 
     if (self->deadflag != DEAD_DEAD) {
         if (strcmp(attacker->classname,"player") == 0) {
-            RA_Frag(id, aid);
+            CA_Frag(id, aid);
         } else {
-            RA_Frag(id, aid);
+            CA_Frag(id, aid);
         }
     }
 
@@ -990,7 +990,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
  * and send it back to us. We then decrypt and check if it matches, if so,
  * the server is who we think it is and is considered trusted.
  */
-void RA_SayHello(void)
+void CA_SayHello(void)
 {
     // don't bother if we're not fully connected yet
     if (remote.state == RA_STATE_TRUSTED) {
@@ -1000,29 +1000,29 @@ void RA_SayHello(void)
     // random data to check server auth
     RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 
-    RA_WriteLong(MAGIC_CLIENT);
-    RA_WriteByte(CMD_HELLO);
-    RA_WriteString(remoteUUID);
-    RA_WriteLong(Q2A_REVISION);
-    RA_WriteShort(remote.port);
-    RA_WriteByte(remote.maxclients);
-    RA_WriteByte(remoteEncryption ? 1 : 0);
-    RA_WriteData(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
+    CA_WriteLong(MAGIC_CLIENT);
+    CA_WriteByte(CMD_HELLO);
+    CA_WriteString(remoteUUID);
+    CA_WriteLong(Q2A_REVISION);
+    CA_WriteShort(remote.port);
+    CA_WriteByte(remote.maxclients);
+    CA_WriteByte(remoteEncryption ? 1 : 0);
+    CA_WriteData(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
 }
 
 /**
  * The server replied negatively to something
  */
-void RA_ParseError(void)
+void CA_ParseError(void)
 {
     uint8_t client_id, reason_id;
     char *reason;
 
     gi.dprintf("parsing error\n");
 
-    client_id = RA_ReadByte(); // will be -1 if not player specific
-    reason_id = RA_ReadByte();
-    reason = RA_ReadString();
+    client_id = CA_ReadByte(); // will be -1 if not player specific
+    reason_id = CA_ReadByte();
+    reason = CA_ReadString();
 
     // Where to output the error msg
     if (client_id == -1) {
@@ -1065,14 +1065,14 @@ uint16_t getport(void) {
 /**
  * Reset the outgoing message buffer to zero to start a new msg
  */
-void RA_InitBuffer() {
+void CA_InitBuffer() {
     q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
 }
 
 /**
  * Read a single byte from the message buffer
  */
-uint8_t RA_ReadByte(void)
+uint8_t CA_ReadByte(void)
 {
     unsigned char b = remote.queue_in.data[remote.queue_in.index++];
     return b & 0xff;
@@ -1081,7 +1081,7 @@ uint8_t RA_ReadByte(void)
 /**
  * Write a single byte to the message buffer
  */
-void RA_WriteByte(uint8_t b)
+void CA_WriteByte(uint8_t b)
 {
     remote.queue.data[remote.queue.length++] = b & 0xff;
 }
@@ -1089,7 +1089,7 @@ void RA_WriteByte(uint8_t b)
 /**
  * Read a short (2 bytes) from the message buffer
  */
-uint16_t RA_ReadShort(void)
+uint16_t CA_ReadShort(void)
 {
     return    (remote.queue_in.data[remote.queue_in.index++] +
             (remote.queue_in.data[remote.queue_in.index++] << 8)) & 0xffff;
@@ -1098,7 +1098,7 @@ uint16_t RA_ReadShort(void)
 /**
  * Write 2 bytes to the message buffer
  */
-void RA_WriteShort(uint16_t s)
+void CA_WriteShort(uint16_t s)
 {
     remote.queue.data[remote.queue.length++] = s & 0xff;
     remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
@@ -1107,7 +1107,7 @@ void RA_WriteShort(uint16_t s)
 /**
  * Read 4 bytes from the message buffer
  */
-int32_t RA_ReadLong(void)
+int32_t CA_ReadLong(void)
 {
     return    remote.queue_in.data[remote.queue_in.index++] +
             (remote.queue_in.data[remote.queue_in.index++] << 8) +
@@ -1118,7 +1118,7 @@ int32_t RA_ReadLong(void)
 /**
  * Write 4 bytes (long) to the message buffer
  */
-void RA_WriteLong(uint32_t i)
+void CA_WriteLong(uint32_t i)
 {
     remote.queue.data[remote.queue.length++] = i & 0xff;
     remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
@@ -1129,18 +1129,18 @@ void RA_WriteLong(uint32_t i)
 /**
  * Write an arbitrary amount of data from the message buffer
  */
-void RA_WriteData(const void *data, size_t length)
+void CA_WriteData(const void *data, size_t length)
 {
     uint32_t i;
     for (i=0; i<length; i++) {
-        RA_WriteByte(((byte *) data)[i]);
+        CA_WriteByte(((byte *) data)[i]);
     }
 }
 
 /**
  * Read a null terminated string from the buffer
  */
-char *RA_ReadString(void)
+char *CA_ReadString(void)
 {
     static char str[MAX_STRING_CHARS];
     static char character;
@@ -1153,7 +1153,7 @@ char *RA_ReadString(void)
     memset(&str, 0, MAX_STRING_CHARS);
 
     for (i=0; i<=len; i++) {
-        character = RA_ReadByte() & 0x7f;
+        character = CA_ReadByte() & 0x7f;
         strcat(str,  &character);
     }
 
@@ -1162,7 +1162,7 @@ char *RA_ReadString(void)
 
 
 // printf-ish
-void RA_WriteString(const char *fmt, ...) {
+void CA_WriteString(const char *fmt, ...) {
     
     uint16_t i;
     size_t len;
@@ -1176,12 +1176,12 @@ void RA_WriteString(const char *fmt, ...) {
     len = strlen(str);
     
     if (!str || len == 0) {
-        RA_WriteByte(0);
+        CA_WriteByte(0);
         return;
     }
     
     if (len > MAX_MSG_LEN - remote.queue.length) {
-        RA_WriteByte(0);
+        CA_WriteByte(0);
         return;
     }
 
@@ -1189,13 +1189,13 @@ void RA_WriteString(const char *fmt, ...) {
         remote.queue.data[remote.queue.length++] = str[i];
     }
 
-    RA_WriteByte(0);
+    CA_WriteByte(0);
 }
 
 /**
  * Read an arbitrary amount of data from the message buffer
  */
-void RA_ReadData(void *out, size_t len)
+void CA_ReadData(void *out, size_t len)
 {
     memcpy(out, &(remote.queue_in.data[remote.queue_in.index]), len);
     remote.queue_in.index += len;
@@ -1205,7 +1205,7 @@ void RA_ReadData(void *out, size_t len)
 /**
  * Called when a player connects
  */
-void RA_PlayerConnect(edict_t *ent)
+void CA_PlayerConnect(edict_t *ent)
 {
     int8_t cl;
     cl = getEntOffset(ent) - 1;
@@ -1214,15 +1214,15 @@ void RA_PlayerConnect(edict_t *ent)
         return;
     }
 
-    RA_WriteByte(CMD_CONNECT);
-    RA_WriteByte(cl);
-    RA_WriteString("%s", ra_userinfo(cl));
+    CA_WriteByte(CMD_CONNECT);
+    CA_WriteByte(cl);
+    CA_WriteString("%s", ca_userinfo(cl));
 }
 
 /**
  * Called when a player disconnects
  */
-void RA_PlayerDisconnect(edict_t *ent)
+void CA_PlayerDisconnect(edict_t *ent)
 {
     int8_t cl;
     cl = getEntOffset(ent) - 1;
@@ -1231,11 +1231,11 @@ void RA_PlayerDisconnect(edict_t *ent)
         return;
     }
 
-    RA_WriteByte(CMD_DISCONNECT);
-    RA_WriteByte(cl);
+    CA_WriteByte(CMD_DISCONNECT);
+    CA_WriteByte(cl);
 }
 
-void RA_PlayerCommand(edict_t *ent) {
+void CA_PlayerCommand(edict_t *ent) {
     
 }
 
@@ -1243,7 +1243,7 @@ void RA_PlayerCommand(edict_t *ent) {
  * Called for every broadcast print (bprintf), but only
  * on dedicated servers
  */
-void RA_Print(uint8_t level, char *text)
+void CA_Print(uint8_t level, char *text)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1253,15 +1253,15 @@ void RA_Print(uint8_t level, char *text)
         return;
     }
 
-    RA_WriteByte(CMD_PRINT);
-    RA_WriteByte(level);
-    RA_WriteString("%s",text);
+    CA_WriteByte(CMD_PRINT);
+    CA_WriteByte(level);
+    CA_WriteString("%s",text);
 }
 
 /**
  * Called when a player issues the teleport command
  */
-void RA_Teleport(uint8_t client_id)
+void CA_Teleport(uint8_t client_id)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1278,31 +1278,31 @@ void RA_Teleport(uint8_t client_id)
         srv = "";
     }
 
-    RA_WriteByte(CMD_COMMAND);
-    RA_WriteByte(CMD_COMMAND_TELEPORT);
-    RA_WriteByte(client_id);
-    RA_WriteString("%s", srv);
+    CA_WriteByte(CMD_COMMAND);
+    CA_WriteByte(CMD_COMMAND_TELEPORT);
+    CA_WriteByte(client_id);
+    CA_WriteString("%s", srv);
 }
 
 /**
  * Called when a player changes part of their userinfo.
  * ex: name, skin, gender, rate, etc
  */
-void RA_PlayerUpdate(uint8_t cl, const char *ui)
+void CA_PlayerUpdate(uint8_t cl, const char *ui)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
-    RA_WriteByte(CMD_PLAYERUPDATE);
-    RA_WriteByte(cl);
-    RA_WriteString("%s", ra_userinfo(cl));
+    CA_WriteByte(CMD_PLAYERUPDATE);
+    CA_WriteByte(cl);
+    CA_WriteString("%s", ca_userinfo(cl));
 }
 
 /**
  * Called when a player issues the invite command
  */
-void RA_Invite(uint8_t cl, const char *text)
+void CA_Invite(uint8_t cl, const char *text)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1312,16 +1312,16 @@ void RA_Invite(uint8_t cl, const char *text)
         return;
     }
 
-    RA_WriteByte(CMD_COMMAND);
-    RA_WriteByte(CMD_COMMAND_INVITE);
-    RA_WriteByte(cl);
-    RA_WriteString(text);
+    CA_WriteByte(CMD_COMMAND);
+    CA_WriteByte(CMD_COMMAND_INVITE);
+    CA_WriteByte(cl);
+    CA_WriteString(text);
 }
 
 /**
  * Called when a player issues the whois command
  */
-void RA_Whois(uint8_t cl, const char *name)
+void CA_Whois(uint8_t cl, const char *name)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1331,16 +1331,16 @@ void RA_Whois(uint8_t cl, const char *name)
         return;
     }
 
-    RA_WriteByte(CMD_COMMAND);
-    RA_WriteByte(CMD_COMMAND_WHOIS);
-    RA_WriteByte(cl);
-    RA_WriteString(name);
+    CA_WriteByte(CMD_COMMAND);
+    CA_WriteByte(CMD_COMMAND_WHOIS);
+    CA_WriteByte(cl);
+    CA_WriteString(name);
 }
 
 /**
  * Called when a player dies
  */
-void RA_Frag(uint8_t victim, uint8_t attacker)
+void CA_Frag(uint8_t victim, uint8_t attacker)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
@@ -1350,29 +1350,29 @@ void RA_Frag(uint8_t victim, uint8_t attacker)
         return;
     }
 
-    RA_WriteByte(CMD_FRAG);
-    RA_WriteByte(victim);
-    RA_WriteByte(attacker);
+    CA_WriteByte(CMD_FRAG);
+    CA_WriteByte(victim);
+    CA_WriteByte(attacker);
 }
 
 /**
  * Called when the map changes
  */
-void RA_Map(const char *mapname)
+void CA_Map(const char *mapname)
 {
     if (remote.state < RA_STATE_TRUSTED) {
         return;
     }
 
-    RA_WriteByte(CMD_MAP);
-    RA_WriteString("%s", mapname);
+    CA_WriteByte(CMD_MAP);
+    CA_WriteString("%s", mapname);
 }
 
 
 /**
  * Write something to a client
  */
-void RA_SayClient(void)
+void CA_SayClient(void)
 {
     uint8_t client_id;
     uint8_t level;
@@ -1383,9 +1383,9 @@ void RA_SayClient(void)
         return;
     }
 
-    client_id = RA_ReadByte();
-    level = RA_ReadByte();
-    string = RA_ReadString();
+    client_id = CA_ReadByte();
+    level = CA_ReadByte();
+    string = CA_ReadString();
 
     ent = proxyinfo[client_id].ent;
 
@@ -1399,7 +1399,7 @@ void RA_SayClient(void)
 /**
  * Say something to everyone on the server
  */
-void RA_SayAll(void)
+void CA_SayAll(void)
 {
     uint8_t i, level;
     char *string;
@@ -1408,8 +1408,8 @@ void RA_SayAll(void)
         return;
     }
 
-    level = RA_ReadByte();
-    string = RA_ReadString();
+    level = CA_ReadByte();
+    string = CA_ReadString();
 
     for (i=0; i<remote.maxclients; i++) {
         if (!proxyinfo[i].inuse) {

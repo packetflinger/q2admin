@@ -1567,7 +1567,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
 
     // only works if we're a dedicated server
     if (ent == NULL) {
-    	RA_Print(printlevel, cbuffer);	// send the one for the server console
+    	CA_Print(printlevel, cbuffer);	// send the one for the server console
     }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);
@@ -1617,7 +1617,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
          *
          * -claire (Dec. 22, 2019)
          */
-        RA_Print(printlevel, cbuffer);
+        CA_Print(printlevel, cbuffer);
     }
 
     if (q2a_strcmp(mutedText, cbuffer) == 0) {
@@ -3852,7 +3852,7 @@ void Cmd_Teleport_f(edict_t *ent)
 
     uint8_t id = getEntOffset(ent) - 1;
 
-    RA_Teleport(id);
+    CA_Teleport(id);
 }
 
 void Cmd_Invite_f(edict_t *ent) {
@@ -3870,7 +3870,7 @@ void Cmd_Invite_f(edict_t *ent) {
             invitetext = "";
     }
 
-    RA_Invite(id, invitetext);
+    CA_Invite(id, invitetext);
 }
 
 // Show the remote settings/status 

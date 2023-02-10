@@ -67,7 +67,7 @@ void ShutdownGame(void) {
 
     gi.TagFree(finalentities);
 
-    RA_Shutdown();
+    CA_Shutdown();
 
     // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
@@ -821,7 +821,7 @@ void G_RunFrame(void) {
 
     STARTPERFORMANCE(2);
     ge_mod->RunFrame();
-    RA_RunFrame();
+    CA_RunFrame();
     STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
 
     G_MergeEdicts();

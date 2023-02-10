@@ -39,7 +39,7 @@ void G_GenerateKeyPair(int bits)
 qboolean G_LoadKeys(void)
 {
     FILE *fp;
-    ra_connection_t *c = &remote.connection;
+    ca_connection_t *c = &remote.connection;
     char path[200];
 
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
@@ -230,7 +230,7 @@ void hexDump (char *desc, void *addr, int len)
  */
 size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
 {
-    ra_connection_t *c = &remote.connection;
+    ca_connection_t *c = &remote.connection;
     int dest_len = 0;
     int written = 0;
 
@@ -256,7 +256,7 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
  */
 size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
 {
-    ra_connection_t *c = &remote.connection;
+    ca_connection_t *c = &remote.connection;
     int dest_len = 0;
     int written = 0;
 

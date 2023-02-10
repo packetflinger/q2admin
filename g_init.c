@@ -488,7 +488,7 @@ void InitGame(void)
 
     STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
 
-    RA_Init();
+    CA_Init();
 }
 
 /**
@@ -825,7 +825,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     remote.frame_number = 0;
 
     if (remote.state == RA_STATE_TRUSTED) {
-        RA_Map(mapname);
+        CA_Map(mapname);
     }
 
     STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
@@ -1255,7 +1255,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
             STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
-            RA_PlayerConnect(ent);
+            CA_PlayerConnect(ent);
         }
     }
 
@@ -1662,7 +1662,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo)
 
     proxyinfo[client].next_report = 0;
 
-    RA_PlayerUpdate(client, proxyinfo[client].userinfo);
+    CA_PlayerUpdate(client, proxyinfo[client].userinfo);
     
     STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1695,7 +1695,7 @@ void ClientDisconnect(edict_t *ent)
         return;
     }
 
-    RA_PlayerDisconnect(ent);
+    CA_PlayerDisconnect(ent);
     
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         STARTPERFORMANCE(2);
