@@ -1500,7 +1500,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo)
     cl_max_curr = Info_ValueForKey(proxyinfo[client].userinfo, "cl_maxfps");
     if (!fpsFloodExempt && Q_stricmp(cl_max_temp, cl_max_curr) != 0) {
         proxyinfo[client].userinfo_changed_count++;
-        gi.cprintf(ent, PRINT_HIGH, "Counting toward flood %d\n", proxyinfo[client].userinfo_changed_count);
     }
 
     if (proxyinfo[client].userinfo_changed_count > USERINFOCHANGE_COUNT) {
