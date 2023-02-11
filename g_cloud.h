@@ -26,7 +26,7 @@
 
 #define QUEUE_SIZE      0x55FF
 
-#define CURFRAME        (remote.frame_number)
+#define CURFRAME        (cloud.frame_number)
 
 // arg in seconds
 #define FUTURE_FRAME(t) (CURFRAME + SECS_TO_FRAMES(t))
@@ -42,7 +42,7 @@
 #define RFL_FIND        1 << 4    // 16
 #define RFL_WHOIS       1 << 5    // 32
 #define RFL_DEBUG       1 << 11   // 1024
-#define RFL(f)          ((remote.flags & RFL_##f) != 0)
+#define RFL(f)          ((cloud.flags & RFL_##f) != 0)
 
 #define MAX_MSG_LEN     1000
 
@@ -134,7 +134,7 @@ typedef struct {
 } ca_connection_t;
 
 /**
- * Holds all info and state about the remote admin connection
+ * Holds all info and state about the cloud admin connection
  */
 typedef struct {
     ca_state_t       state;
@@ -151,7 +151,7 @@ typedef struct {
     message_queue_t  queue;     // messages outgoing to RA server
     message_queue_t  queue_in;  // messages incoming from RA server
     ping_t           ping;
-} remote_t;
+} cloud_t;
 
 
 /**
@@ -265,7 +265,7 @@ void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
 void        cloudRun(int startarg, edict_t *ent, int client);
 
 
-extern remote_t  remote;
+extern cloud_t  cloud;
 extern cvar_t    *gamelib;
 
 

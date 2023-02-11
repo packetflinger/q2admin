@@ -1,6 +1,6 @@
 #include "g_local.h"
 
-remote_t remote;
+cloud_t cloud;
 
 /**
  * Sets up RA connection. Makes sure we have what we need:
@@ -11,43 +11,43 @@ remote_t remote;
 void CA_Init() {
     
     // we're already connected
-    if (remote.connection.socket) {
+    if (cloud.connection.socket) {
         return;
     }
 
-    memset(&remote, 0, sizeof(remote));
+    memset(&cloud, 0, sizeof(cloud));
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
     if (!remoteEnabled) {
         gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
         return;
     }
-    remote.state = CA_STATE_DISCONNECTED;
+    cloud.state = CA_STATE_DISCONNECTED;
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
     if (!G_LoadKeys()) {
-        remote.state = CA_STATE_DISABLED;
+        cloud.state = CA_STATE_DISABLED;
         return;
     }
 
-    remote.connection.encrypted = remoteEncryption;
+    cloud.connection.encrypted = remoteEncryption;
     
     if (!remoteAddr[0]) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
-        remote.state = CA_STATE_DISABLED;
+        cloud.state = CA_STATE_DISABLED;
         return;
     }
 
     if (!remotePort) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
-        remote.state = CA_STATE_DISABLED;
+        cloud.state = CA_STATE_DISABLED;
         return;
     }
 
     G_StartThread(&CA_LookupAddress, NULL);
 
     // delay connection by a few seconds
-    remote.connect_retry_frame = FUTURE_FRAME(5);
+    cloud.connect_retry_frame = FUTURE_FRAME(5);
 }
 
 
@@ -159,36 +159,36 @@ void CA_LookupAddress(void)
 
     if (err != 0) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
-        remote.state = CA_STATE_DISABLED;
+        cloud.state = CA_STATE_DISABLED;
         return;
     } else {
-        memset(&remote.addr, 0, sizeof(struct addrinfo));
+        memset(&cloud.addr, 0, sizeof(struct addrinfo));
 
         // getaddrinfo can return multiple mixed v4/v6 results, select an appropriate one
-        remote.addr = select_addrinfo(res);
+        cloud.addr = select_addrinfo(res);
 
-        if (!remote.addr) {
-            remote.state = CA_STATE_DISABLED;
+        if (!cloud.addr) {
+            cloud.state = CA_STATE_DISABLED;
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
             return;
         }
 
         // for convenience
         if (res->ai_family == AF_INET6) {
-            remote.connection.ipv6 = qtrue;
+            cloud.connection.ipv6 = qtrue;
         }
 
-        if (remote.addr->ai_family == AF_INET6) {
+        if (cloud.addr->ai_family == AF_INET6) {
             q2a_inet_ntop(
-                    remote.addr->ai_family,
-                    &((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
+                    cloud.addr->ai_family,
+                    &((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
                     str_address,
                     sizeof(str_address)
             );
         } else {
             q2a_inet_ntop(
-                    remote.addr->ai_family,
-                    &((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
+                    cloud.addr->ai_family,
+                    &((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
                     str_address,
                     sizeof(str_address)
             );
@@ -197,8 +197,8 @@ void CA_LookupAddress(void)
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server resolved to %s\n", str_address);
     }
 
-    remote.flags = remoteFlags;
-    remote.state = CA_STATE_DISCONNECTED;
+    cloud.flags = remoteFlags;
+    cloud.state = CA_STATE_DISCONNECTED;
 }
 
 void G_StartThread(void *func, void *arg) {
@@ -219,7 +219,7 @@ static void ca_replace_die(void)
 {
     static uint8_t i;
 
-    for (i=0; i<=remote.maxclients; i++) {
+    for (i=0; i<=cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
 
             // replace player edict's die() pointer
@@ -249,28 +249,28 @@ void debug_print(char *str)
  */
 void CA_Ping(void)
 {
-    if (remote.state < CA_STATE_CONNECTED) {
+    if (cloud.state < CA_STATE_CONNECTED) {
         return;
     }
 
     // not time yet
-    if (remote.ping.frame_next > CURFRAME) {
+    if (cloud.ping.frame_next > CURFRAME) {
         return;
     }
 
     // there is already an outstanding ping
-    if (remote.ping.waiting) {
-        if (remote.ping.miss_count == PING_MISS_MAX) {
+    if (cloud.ping.waiting) {
+        if (cloud.ping.miss_count == PING_MISS_MAX) {
             CA_DisconnectedPeer();
             return;
         }
-        remote.ping.miss_count++;
+        cloud.ping.miss_count++;
     }
 
     // state stuff
-    remote.ping.frame_sent = CURFRAME;
-    remote.ping.waiting = qtrue;
-    remote.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
+    cloud.ping.frame_sent = CURFRAME;
+    cloud.ping.waiting = qtrue;
+    cloud.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
     // send it
     CA_WriteByte(CMD_PING);
@@ -283,15 +283,15 @@ void CA_Ping(void)
 void CA_RunFrame(void)
 {
     // keep some time
-    remote.frame_number++;
+    cloud.frame_number++;
 
     // remote admin is disabled, don't do anything
-    if (remote.state == CA_STATE_DISABLED) {
+    if (cloud.state == CA_STATE_DISABLED) {
         return;
     }
 
     // everything we need to do while RA is connected
-    if (remote.state >= CA_STATE_CONNECTED) {
+    if (cloud.state >= CA_STATE_CONNECTED) {
 
         // send any buffered messages to the server
         CA_SendMessages();
@@ -307,19 +307,19 @@ void CA_RunFrame(void)
     }
 
     // connection started already, check for completion
-    if (remote.state == CA_STATE_CONNECTING) {
+    if (cloud.state == CA_STATE_CONNECTING) {
         CA_CheckConnection();
     }
 
     // we're not connected, try again
-    if (remote.state == CA_STATE_DISCONNECTED) {
+    if (cloud.state == CA_STATE_DISCONNECTED) {
         CA_Connect();
     }
 }
 
 void CA_Shutdown(void)
 {
-    if (remote.state == CA_STATE_DISABLED) {
+    if (cloud.state == CA_STATE_DISABLED) {
         return;
     }
 
@@ -331,7 +331,7 @@ void CA_Shutdown(void)
     CA_SendMessages();
     CA_Disconnect();
 
-    freeaddrinfo(remote.addr);
+    freeaddrinfo(cloud.addr);
 }
 
 /**
@@ -339,12 +339,12 @@ void CA_Shutdown(void)
  */
 void CA_Disconnect(void)
 {
-    if (remote.state < CA_STATE_CONNECTED) {
+    if (cloud.state < CA_STATE_CONNECTED) {
         return;
     }
 
-    closesocket(remote.connection.socket);
-    remote.state = CA_STATE_DISCONNECTED;
+    closesocket(cloud.connection.socket);
+    cloud.state = CA_STATE_DISCONNECTED;
 }
 
 /**
@@ -353,11 +353,11 @@ void CA_Disconnect(void)
  */
 static uint32_t next_connect_frame(void)
 {
-    if (remote.connection_attempts < 12) {  // 2 minutes
+    if (cloud.connection_attempts < 12) {  // 2 minutes
         return FUTURE_FRAME(10);
-    } else if (remote.connection_attempts < 20) { // 10 minutes
+    } else if (cloud.connection_attempts < 20) { // 10 minutes
         return FUTURE_FRAME(30);
-    } else if (remote.connection_attempts < 50) { // 30 minutes
+    } else if (cloud.connection_attempts < 50) { // 30 minutes
         return FUTURE_FRAME(60);
     } else {
         return FUTURE_FRAME(120);
@@ -372,28 +372,28 @@ void CA_Connect(void)
     int flags, ret;
 
     // only if we've waited long enough
-    if (remote.frame_number < remote.connect_retry_frame) {
+    if (cloud.frame_number < cloud.connect_retry_frame) {
         return;
     }
 
     // clear the in and out buffers
-    q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
-    q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 
-    remote.state = CA_STATE_CONNECTING;
-    remote.connection_attempts++;
+    cloud.state = CA_STATE_CONNECTING;
+    cloud.connection_attempts++;
 
     // create the socket
-    remote.connection.socket = socket(
-            remote.addr->ai_family,
-            remote.addr->ai_socktype,
-            remote.addr->ai_protocol
+    cloud.connection.socket = socket(
+            cloud.addr->ai_family,
+            cloud.addr->ai_socktype,
+            cloud.addr->ai_protocol
     );
 
-    if (remote.connection.socket == -1) {
+    if (cloud.connection.socket == -1) {
         perror("connect");
         errno = 0;
-        remote.connect_retry_frame = next_connect_frame();
+        cloud.connect_retry_frame = next_connect_frame();
 
         return;
     }
@@ -402,22 +402,22 @@ void CA_Connect(void)
 // preferred method is using POSIX O_NONBLOCK, if available
 #if defined(O_NONBLOCK)
     flags = 0;
-    ret = fcntl(remote.connection.socket, F_SETFL, flags | O_NONBLOCK);
+    ret = fcntl(cloud.connection.socket, F_SETFL, flags | O_NONBLOCK);
 #else
     flags = 1;
-    ret = ioctlsocket(remote.connection.socket, FIONBIO, (long unsigned int *) &flags);
+    ret = ioctlsocket(cloud.connection.socket, FIONBIO, (long unsigned int *) &flags);
 #endif
 
     if (ret == -1) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
-        remote.state = CA_STATE_DISCONNECTED;
-        remote.connect_retry_frame = FUTURE_FRAME(30);
+        cloud.state = CA_STATE_DISCONNECTED;
+        cloud.connect_retry_frame = FUTURE_FRAME(30);
     }
 
     errno = 0;
 
     // make the actual connection
-    ret = connect(remote.connection.socket, remote.addr->ai_addr, remote.addr->ai_addrlen);
+    ret = connect(cloud.connection.socket, cloud.addr->ai_addr, cloud.addr->ai_addrlen);
 
     if (ret == -1) {
         if (errno == EINPROGRESS) {
@@ -448,7 +448,7 @@ void CA_CheckConnection(void)
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
 
-    c = &remote.connection;
+    c = &cloud.connection;
 
     FD_ZERO(&c->set_w);
     FD_ZERO(&c->set_e);
@@ -482,8 +482,8 @@ void CA_CheckConnection(void)
         perror("CheckConnection");
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
         closesocket(c->socket);
-        remote.state = CA_STATE_DISCONNECTED;
-        remote.connect_retry_frame = FUTURE_FRAME(10);
+        cloud.state = CA_STATE_DISCONNECTED;
+        cloud.connect_retry_frame = FUTURE_FRAME(10);
         return;
     }
 
@@ -493,14 +493,14 @@ void CA_CheckConnection(void)
         getpeername(c->socket, (struct sockaddr *)&addr, &len);
 
         if (errno) {
-            remote.connect_retry_frame = FUTURE_FRAME(30);
-            remote.state = CA_STATE_DISCONNECTED;
+            cloud.connect_retry_frame = FUTURE_FRAME(30);
+            cloud.state = CA_STATE_DISCONNECTED;
             closesocket(c->socket);
         } else {
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
-            remote.state = CA_STATE_CONNECTED;
-            remote.ping.frame_next = FUTURE_FRAME(10);
-            remote.connected_frame = CURFRAME;
+            cloud.state = CA_STATE_CONNECTED;
+            cloud.ping.frame_next = FUTURE_FRAME(10);
+            cloud.connected_frame = CURFRAME;
             CA_SayHello();
         }
     }
@@ -511,12 +511,12 @@ void CA_CheckConnection(void)
  */
 void CA_SendMessages(void)
 {
-    if (remote.state < CA_STATE_CONNECTING) {
+    if (cloud.state < CA_STATE_CONNECTING) {
         return;
     }
 
     // nothing to send
-    if (!remote.queue.length) {
+    if (!cloud.queue.length) {
         return;
     }
 
@@ -527,8 +527,8 @@ void CA_SendMessages(void)
     message_queue_t *q;
     message_queue_t e;
 
-    c = &remote.connection;
-    q = &remote.queue;
+    c = &cloud.connection;
+    q = &cloud.queue;
 
     while (qtrue) {
         FD_ZERO(&c->set_w);
@@ -545,7 +545,7 @@ void CA_SendMessages(void)
 
         // socket write buffer is ready, send
         if (ret) {
-            if (c->encrypted && c->have_keys && remote.state == CA_STATE_TRUSTED) {
+            if (c->encrypted && c->have_keys && cloud.state == CA_STATE_TRUSTED) {
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
@@ -592,21 +592,21 @@ void CA_ReadMessages(void)
     message_queue_t *in;
     message_queue_t dec;
 
-    if (remote.state < CA_STATE_CONNECTING) {
+    if (cloud.state < CA_STATE_CONNECTING) {
         return;
     }
 
     tv.tv_sec = tv.tv_usec = 0;
 
     // save some typing
-    in = &remote.queue_in;
+    in = &cloud.queue_in;
 
     while (qtrue) {
-        FD_ZERO(&remote.connection.set_r);
-        FD_SET(remote.connection.socket, &remote.connection.set_r);
+        FD_ZERO(&cloud.connection.set_r);
+        FD_SET(cloud.connection.socket, &cloud.connection.set_r);
 
         // see if there is data waiting in the buffer for us to read
-        ret = select(remote.connection.socket + 1, &remote.connection.set_r, NULL, NULL, &tv);
+        ret = select(cloud.connection.socket + 1, &cloud.connection.set_r, NULL, NULL, &tv);
         if (ret == -1) {
             if (errno != EINTR) {
                 perror("select");
@@ -620,7 +620,7 @@ void CA_ReadMessages(void)
 
         // socket read buffer has data waiting in it
         if (ret) {
-            ret = recv(remote.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+            ret = recv(cloud.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
 
             if (ret == 0) {
                 CA_DisconnectedPeer();
@@ -640,7 +640,7 @@ void CA_ReadMessages(void)
             in->length += ret;
 
             // decrypt if necessary
-            if (remote.connection.encrypted && remote.connection.have_keys && remote.state == CA_STATE_TRUSTED) {
+            if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CA_STATE_TRUSTED) {
                 memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
@@ -663,7 +663,7 @@ void CA_ReadMessages(void)
 void RA_Trusted(void)
 {
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection Trusted\n");
-    remote.state = CA_STATE_TRUSTED;
+    cloud.state = CA_STATE_TRUSTED;
 }
 
 /**
@@ -671,15 +671,15 @@ void RA_Trusted(void)
  */
 void CA_ParseMessage(void)
 {
-    message_queue_t *msg = &remote.queue_in;
+    message_queue_t *msg = &cloud.queue_in;
     byte cmd;
 
-    if (remote.state == CA_STATE_DISABLED) {
+    if (cloud.state == CA_STATE_DISABLED) {
         return;
     }
 
     // no data
-    if (!remote.queue_in.length) {
+    if (!cloud.queue_in.length) {
         return;
     }
 
@@ -700,7 +700,7 @@ void CA_ParseMessage(void)
             break;
         case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
             RA_Trusted();
-            CA_Map(remote.mapname);
+            CA_Map(cloud.mapname);
             CA_PlayerList();
             break;
         case SCMD_ERROR:
@@ -722,7 +722,7 @@ void CA_ParseMessage(void)
     }
 
     // reset queue back to zero
-    q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 }
 
 qboolean RSAVerifySignature( RSA* rsa,
@@ -779,7 +779,7 @@ qboolean CA_VerifyServerAuth(void)
     unsigned int siglen;
     int chalsigned;
 
-    c = &remote.connection;
+    c = &cloud.connection;
 
     q2a_memset(signature, 0, RSA_LEN);
     len = CA_ReadShort();
@@ -834,16 +834,16 @@ qboolean CA_VerifyServerAuth(void)
             }
         }
 
-        remote.connection_attempts = 0;
-        remote.connection.auth_fail_count = 0;
+        cloud.connection_attempts = 0;
+        cloud.connection.auth_fail_count = 0;
         return qtrue;
     } else {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
-        remote.connection.auth_fail_count++;
+        cloud.connection.auth_fail_count++;
 
-        if (remote.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
+        if (cloud.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
-            remote.state = CA_STATE_DISABLED;
+            cloud.state = CA_STATE_DISABLED;
         }
         return qfalse;
     }
@@ -857,7 +857,7 @@ void CA_ParseCommand(void)
     char *cmd;
 
     // we should never get here if we're not trusted, but just in case
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -872,8 +872,8 @@ void CA_ParseCommand(void)
  */
 void CA_ParsePong(void)
 {
-    remote.ping.waiting = qfalse;
-    remote.ping.miss_count = 0;
+    cloud.ping.waiting = qfalse;
+    cloud.ping.miss_count = 0;
 }
 
 /**
@@ -883,7 +883,7 @@ void CA_ParsePong(void)
 void CA_RotateKeys(void)
 {
     ca_connection_t *c;
-    c = &remote.connection;
+    c = &cloud.connection;
 
     CA_ReadData(c->aeskey, AESKEY_LEN);
     CA_ReadData(c->iv, AESBLOCK_LEN);
@@ -897,24 +897,24 @@ void CA_DisconnectedPeer(void)
 {
     uint8_t secs;
 
-    if (remote.state < CA_STATE_CONNECTED) {
+    if (cloud.state < CA_STATE_CONNECTED) {
         return;
     }
 
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
-    remote.state = CA_STATE_DISCONNECTED;
-    remote.connection.trusted = qfalse;
-    remote.connection.have_keys = qfalse;
-    memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
-    memset(&remote.connection.iv[0], 0, AESBLOCK_LEN);
+    cloud.state = CA_STATE_DISCONNECTED;
+    cloud.connection.trusted = qfalse;
+    cloud.connection.have_keys = qfalse;
+    memset(&cloud.connection.aeskey[0], 0, AESKEY_LEN);
+    memset(&cloud.connection.iv[0], 0, AESBLOCK_LEN);
 
     // try reconnecting a reasonably random amount of time later
     srand((unsigned) time(NULL));
     secs = rand() & 0xff;
-    remote.connect_retry_frame = FUTURE_FRAME(10) + secs;
+    cloud.connect_retry_frame = FUTURE_FRAME(10) + secs;
     gi.cprintf(NULL, PRINT_HIGH, "Trying to reconnect in %d seconds\n",
-        FRAMES_TO_SECS(remote.connect_retry_frame - remote.frame_number)
+        FRAMES_TO_SECS(cloud.connect_retry_frame - cloud.frame_number)
     );
 }
 
@@ -926,11 +926,11 @@ void CA_PlayerList(void)
     uint8_t count, i;
     count = 0;
 
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
-    for (i=0; i<remote.maxclients; i++) {
+    for (i=0; i<cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             count++;
         }
@@ -939,7 +939,7 @@ void CA_PlayerList(void)
     CA_WriteByte(CMD_PLAYERLIST);
     CA_WriteByte(count);
 
-    for (i=0; i<remote.maxclients; i++) {
+    for (i=0; i<cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             CA_WriteByte(i);
             CA_WriteString("%s", ca_userinfo(i));
@@ -993,21 +993,21 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 void CA_SayHello(void)
 {
     // don't bother if we're not fully connected yet
-    if (remote.state == CA_STATE_TRUSTED) {
+    if (cloud.state == CA_STATE_TRUSTED) {
         return;
     }
 
     // random data to check server auth
-    RAND_bytes(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
+    RAND_bytes(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 
     CA_WriteLong(MAGIC_CLIENT);
     CA_WriteByte(CMD_HELLO);
     CA_WriteString(remoteUUID);
     CA_WriteLong(Q2A_REVISION);
-    CA_WriteShort(remote.port);
-    CA_WriteByte(remote.maxclients);
+    CA_WriteShort(cloud.port);
+    CA_WriteByte(cloud.maxclients);
     CA_WriteByte(remoteEncryption ? 1 : 0);
-    CA_WriteData(remote.connection.cl_nonce, sizeof(remote.connection.cl_nonce));
+    CA_WriteData(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 }
 
 /**
@@ -1034,9 +1034,9 @@ void CA_ParseError(void)
 
     // serious enough to disconnect
     if (reason_id >= 200) {
-        closesocket(remote.connection.socket);
-        remote.state = CA_STATE_DISABLED;
-        freeaddrinfo(remote.addr);
+        closesocket(cloud.connection.socket);
+        cloud.state = CA_STATE_DISABLED;
+        freeaddrinfo(cloud.addr);
     }
 }
 
@@ -1066,7 +1066,7 @@ uint16_t getport(void) {
  * Reset the outgoing message buffer to zero to start a new msg
  */
 void CA_InitBuffer() {
-    q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue, 0, sizeof(message_queue_t));
 }
 
 /**
@@ -1074,7 +1074,7 @@ void CA_InitBuffer() {
  */
 uint8_t CA_ReadByte(void)
 {
-    unsigned char b = remote.queue_in.data[remote.queue_in.index++];
+    unsigned char b = cloud.queue_in.data[cloud.queue_in.index++];
     return b & 0xff;
 }
 
@@ -1083,7 +1083,7 @@ uint8_t CA_ReadByte(void)
  */
 void CA_WriteByte(uint8_t b)
 {
-    remote.queue.data[remote.queue.length++] = b & 0xff;
+    cloud.queue.data[cloud.queue.length++] = b & 0xff;
 }
 
 /**
@@ -1091,8 +1091,8 @@ void CA_WriteByte(uint8_t b)
  */
 uint16_t CA_ReadShort(void)
 {
-    return    (remote.queue_in.data[remote.queue_in.index++] +
-            (remote.queue_in.data[remote.queue_in.index++] << 8)) & 0xffff;
+    return    (cloud.queue_in.data[cloud.queue_in.index++] +
+            (cloud.queue_in.data[cloud.queue_in.index++] << 8)) & 0xffff;
 }
 
 /**
@@ -1100,8 +1100,8 @@ uint16_t CA_ReadShort(void)
  */
 void CA_WriteShort(uint16_t s)
 {
-    remote.queue.data[remote.queue.length++] = s & 0xff;
-    remote.queue.data[remote.queue.length++] = (s >> 8) & 0xff;
+    cloud.queue.data[cloud.queue.length++] = s & 0xff;
+    cloud.queue.data[cloud.queue.length++] = (s >> 8) & 0xff;
 }
 
 /**
@@ -1109,10 +1109,10 @@ void CA_WriteShort(uint16_t s)
  */
 int32_t CA_ReadLong(void)
 {
-    return    remote.queue_in.data[remote.queue_in.index++] +
-            (remote.queue_in.data[remote.queue_in.index++] << 8) +
-            (remote.queue_in.data[remote.queue_in.index++] << 16) +
-            (remote.queue_in.data[remote.queue_in.index++] << 24);
+    return    cloud.queue_in.data[cloud.queue_in.index++] +
+            (cloud.queue_in.data[cloud.queue_in.index++] << 8) +
+            (cloud.queue_in.data[cloud.queue_in.index++] << 16) +
+            (cloud.queue_in.data[cloud.queue_in.index++] << 24);
 }
 
 /**
@@ -1120,10 +1120,10 @@ int32_t CA_ReadLong(void)
  */
 void CA_WriteLong(uint32_t i)
 {
-    remote.queue.data[remote.queue.length++] = i & 0xff;
-    remote.queue.data[remote.queue.length++] = (i >> 8) & 0xff;
-    remote.queue.data[remote.queue.length++] = (i >> 16) & 0xff;
-    remote.queue.data[remote.queue.length++] = (i >> 24) & 0xff;
+    cloud.queue.data[cloud.queue.length++] = i & 0xff;
+    cloud.queue.data[cloud.queue.length++] = (i >> 8) & 0xff;
+    cloud.queue.data[cloud.queue.length++] = (i >> 16) & 0xff;
+    cloud.queue.data[cloud.queue.length++] = (i >> 24) & 0xff;
 }
 
 /**
@@ -1148,7 +1148,7 @@ char *CA_ReadString(void)
 
     do {
         len++;
-    } while (remote.queue_in.data[(remote.queue_in.index + len)] != 0);
+    } while (cloud.queue_in.data[(cloud.queue_in.index + len)] != 0);
 
     memset(&str, 0, MAX_STRING_CHARS);
 
@@ -1180,13 +1180,13 @@ void CA_WriteString(const char *fmt, ...) {
         return;
     }
     
-    if (len > MAX_MSG_LEN - remote.queue.length) {
+    if (len > MAX_MSG_LEN - cloud.queue.length) {
         CA_WriteByte(0);
         return;
     }
 
     for (i=0; i<len; i++) {
-        remote.queue.data[remote.queue.length++] = str[i];
+        cloud.queue.data[cloud.queue.length++] = str[i];
     }
 
     CA_WriteByte(0);
@@ -1197,8 +1197,8 @@ void CA_WriteString(const char *fmt, ...) {
  */
 void CA_ReadData(void *out, size_t len)
 {
-    memcpy(out, &(remote.queue_in.data[remote.queue_in.index]), len);
-    remote.queue_in.index += len;
+    memcpy(out, &(cloud.queue_in.data[cloud.queue_in.index]), len);
+    cloud.queue_in.index += len;
 }
 
 
@@ -1210,7 +1210,7 @@ void CA_PlayerConnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1227,7 +1227,7 @@ void CA_PlayerDisconnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1245,11 +1245,11 @@ void CA_PlayerCommand(edict_t *ent) {
  */
 void CA_Print(uint8_t level, char *text)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
     
-    if (!(remote.flags & RFL_CHAT)) {
+    if (!(cloud.flags & RFL_CHAT)) {
         return;
     }
 
@@ -1263,11 +1263,11 @@ void CA_Print(uint8_t level, char *text)
  */
 void CA_Teleport(uint8_t client_id)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
-    if (!(remote.flags & RFL_TELEPORT)) {
+    if (!(cloud.flags & RFL_TELEPORT)) {
         return;
     }
 
@@ -1290,7 +1290,7 @@ void CA_Teleport(uint8_t client_id)
  */
 void CA_PlayerUpdate(uint8_t cl, const char *ui)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1304,11 +1304,11 @@ void CA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void CA_Invite(uint8_t cl, const char *text)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
-    if (!(remote.flags & RFL_INVITE)) {
+    if (!(cloud.flags & RFL_INVITE)) {
         return;
     }
 
@@ -1323,11 +1323,11 @@ void CA_Invite(uint8_t cl, const char *text)
  */
 void CA_Whois(uint8_t cl, const char *name)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
-    if (!(remote.flags & RFL_WHOIS)) {
+    if (!(cloud.flags & RFL_WHOIS)) {
         return;
     }
 
@@ -1342,11 +1342,11 @@ void CA_Whois(uint8_t cl, const char *name)
  */
 void CA_Frag(uint8_t victim, uint8_t attacker)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
-    if (!(remote.flags & RFL_FRAGS)) {
+    if (!(cloud.flags & RFL_FRAGS)) {
         return;
     }
 
@@ -1360,7 +1360,7 @@ void CA_Frag(uint8_t victim, uint8_t attacker)
  */
 void CA_Map(const char *mapname)
 {
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1379,7 +1379,7 @@ void CA_SayClient(void)
     char *string;
     edict_t *ent;
 
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1404,14 +1404,14 @@ void CA_SayAll(void)
     uint8_t i, level;
     char *string;
 
-    if (remote.state < CA_STATE_TRUSTED) {
+    if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
 
     level = CA_ReadByte();
     string = CA_ReadString();
 
-    for (i=0; i<remote.maxclients; i++) {
+    for (i=0; i<cloud.maxclients; i++) {
         if (!proxyinfo[i].inuse) {
             continue;
         }
@@ -1447,7 +1447,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     command = gi.argv(startarg);
 
     if (Q_stricmp(command, "status") == 0) {
-        if (remote.state == CA_STATE_CONNECTED) {
+        if (cloud.state == CA_STATE_CONNECTED) {
             gi.cprintf(ent, "PRINT_HIGH", "not connected\n");
         } else {
             gi.cprintf(ent, "PRINT_HIGH", "connected\n");

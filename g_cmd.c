@@ -1765,7 +1765,7 @@ void AddCommandString_internal(char *text) {
 
         // force all clients to report if map changes
         uint32_t i;
-        for (i=0; i<remote.maxclients; i++) {
+        for (i=0; i<cloud.maxclients; i++) {
         	if (proxyinfo[i].inuse) {
         		proxyinfo[i].remote_reported = 0;
         	}
@@ -3851,7 +3851,7 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
 void Cmd_Teleport_f(edict_t *ent)
 {
-    if (!(remote.flags & RFL_TELEPORT)) {
+    if (!(cloud.flags & RFL_TELEPORT)) {
         gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
         return;
     }
@@ -3862,7 +3862,7 @@ void Cmd_Teleport_f(edict_t *ent)
 }
 
 void Cmd_Invite_f(edict_t *ent) {
-    if (!(remote.flags & RFL_INVITE)) {
+    if (!(cloud.flags & RFL_INVITE)) {
             gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
             return;
     }
@@ -3884,51 +3884,51 @@ void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
 	char addr[INET6_ADDRSTRLEN];
 	char addrstr[INET6_ADDRSTRLEN + 6];  // add room for port (:#####)
 
-	if (remote.state == CA_STATE_DISABLED) {
+	if (cloud.state == CA_STATE_DISABLED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin is currently disabled\n");
 		return;
 	}
 
-	if (remote.state < CA_STATE_CONNECTED) {
+	if (cloud.state < CA_STATE_CONNECTED) {
 		gi.cprintf(NULL, PRINT_HIGH, "remote admin enabled, but not currently connected\n");
 		gi.cprintf(
 				NULL,
 				PRINT_HIGH,
 				"next connection attempt in %d seconds\n",
-				FRAMES_TO_SECS(remote.connect_retry_frame - CURFRAME)
+				FRAMES_TO_SECS(cloud.connect_retry_frame - CURFRAME)
 		);
 		return;
 	}
 
 	// get a string representation of the remote addr
-	if (remote.addr->ai_family == AF_INET6) {
+	if (cloud.addr->ai_family == AF_INET6) {
 		q2a_inet_ntop(
-				remote.addr->ai_family,
-				&((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_addr,
+				cloud.addr->ai_family,
+				&((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
 				addr,
 				sizeof(addr)
 		);
 
 		q2a_strcpy(
 				addrstr,
-				va("[%s]:%d", addr, (int)((struct sockaddr_in6 *) remote.addr->ai_addr)->sin6_port)
+				va("[%s]:%d", addr, (int)((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_port)
 		);
 	} else {
 		q2a_inet_ntop(
-				remote.addr->ai_family,
-				&((struct sockaddr_in *) remote.addr->ai_addr)->sin_addr,
+				cloud.addr->ai_family,
+				&((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
 				addr,
 				sizeof(addr)
 		);
 
 		q2a_strcpy(
 				addrstr,
-				va("[%s]:%d", addr, (int)((struct sockaddr_in *) remote.addr->ai_addr)->sin_port)
+				va("[%s]:%d", addr, (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port)
 		);
 	}
 
 	gi.cprintf(NULL, PRINT_HIGH, "Connected to %s\n", addrstr);
-	gi.cprintf(NULL, PRINT_HIGH, "Uptime: %d seconds\n", FRAMES_TO_SECS(CURFRAME - remote.connected_frame));
+	gi.cprintf(NULL, PRINT_HIGH, "Uptime: %d seconds\n", FRAMES_TO_SECS(CURFRAME - cloud.connected_frame));
 
 /*	char address[INET_ADDRSTRLEN];
 	

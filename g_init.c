@@ -820,12 +820,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
         gi.dprintf("You have not set a server ip.  Please add the following to %s\nserverip \"ip\" where ip matches the outgoing one of the server.\n", CFGFILE);
     }
 
-    remote.maxclients = (int) maxclients->value;
-    q2a_strncpy(remote.mapname, mapname, sizeof(remote.mapname));
-    remote.port = getport();
-    remote.frame_number = 0;
+    cloud.maxclients = (int) maxclients->value;
+    q2a_strncpy(cloud.mapname, mapname, sizeof(cloud.mapname));
+    cloud.port = getport();
+    cloud.frame_number = 0;
 
-    if (remote.state == CA_STATE_TRUSTED) {
+    if (cloud.state == CA_STATE_TRUSTED) {
         CA_Map(mapname);
     }
 
