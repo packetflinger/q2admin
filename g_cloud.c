@@ -1447,7 +1447,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     command = gi.argv(startarg);
 
     if (Q_stricmp(command, "status") == 0) {
-        if (remote.connection == CA_STATE_CONNECTED) {
+        if (remote.state == CA_STATE_CONNECTED) {
             gi.cprintf(ent, "PRINT_HIGH", "not connected\n");
         } else {
             gi.cprintf(ent, "PRINT_HIGH", "connected\n");
