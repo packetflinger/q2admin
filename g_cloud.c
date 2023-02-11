@@ -22,11 +22,11 @@ void CA_Init() {
         gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
         return;
     }
-    remote.state = RA_STATE_DISCONNECTED;
+    remote.state = CA_STATE_DISCONNECTED;
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
 
     if (!G_LoadKeys()) {
-        remote.state = RA_STATE_DISABLED;
+        remote.state = CA_STATE_DISABLED;
         return;
     }
 
@@ -34,13 +34,13 @@ void CA_Init() {
     
     if (!remoteAddr[0]) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
-        remote.state = RA_STATE_DISABLED;
+        remote.state = CA_STATE_DISABLED;
         return;
     }
 
     if (!remotePort) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
-        remote.state = RA_STATE_DISABLED;
+        remote.state = CA_STATE_DISABLED;
         return;
     }
 
@@ -159,7 +159,7 @@ void CA_LookupAddress(void)
 
     if (err != 0) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
-        remote.state = RA_STATE_DISABLED;
+        remote.state = CA_STATE_DISABLED;
         return;
     } else {
         memset(&remote.addr, 0, sizeof(struct addrinfo));
@@ -168,7 +168,7 @@ void CA_LookupAddress(void)
         remote.addr = select_addrinfo(res);
 
         if (!remote.addr) {
-            remote.state = RA_STATE_DISABLED;
+            remote.state = CA_STATE_DISABLED;
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
             return;
         }
@@ -198,7 +198,7 @@ void CA_LookupAddress(void)
     }
 
     remote.flags = remoteFlags;
-    remote.state = RA_STATE_DISCONNECTED;
+    remote.state = CA_STATE_DISCONNECTED;
 }
 
 void G_StartThread(void *func, void *arg) {
@@ -249,7 +249,7 @@ void debug_print(char *str)
  */
 void CA_Ping(void)
 {
-    if (remote.state < RA_STATE_CONNECTED) {
+    if (remote.state < CA_STATE_CONNECTED) {
         return;
     }
 
@@ -286,12 +286,12 @@ void CA_RunFrame(void)
     remote.frame_number++;
 
     // remote admin is disabled, don't do anything
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state == CA_STATE_DISABLED) {
         return;
     }
 
     // everything we need to do while RA is connected
-    if (remote.state >= RA_STATE_CONNECTED) {
+    if (remote.state >= CA_STATE_CONNECTED) {
 
         // send any buffered messages to the server
         CA_SendMessages();
@@ -307,19 +307,19 @@ void CA_RunFrame(void)
     }
 
     // connection started already, check for completion
-    if (remote.state == RA_STATE_CONNECTING) {
+    if (remote.state == CA_STATE_CONNECTING) {
         CA_CheckConnection();
     }
 
     // we're not connected, try again
-    if (remote.state == RA_STATE_DISCONNECTED) {
+    if (remote.state == CA_STATE_DISCONNECTED) {
         CA_Connect();
     }
 }
 
 void CA_Shutdown(void)
 {
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state == CA_STATE_DISABLED) {
         return;
     }
 
@@ -339,12 +339,12 @@ void CA_Shutdown(void)
  */
 void CA_Disconnect(void)
 {
-    if (remote.state < RA_STATE_CONNECTED) {
+    if (remote.state < CA_STATE_CONNECTED) {
         return;
     }
 
     closesocket(remote.connection.socket);
-    remote.state = RA_STATE_DISCONNECTED;
+    remote.state = CA_STATE_DISCONNECTED;
 }
 
 /**
@@ -380,7 +380,7 @@ void CA_Connect(void)
     q2a_memset(&remote.queue, 0, sizeof(message_queue_t));
     q2a_memset(&remote.queue_in, 0, sizeof(message_queue_t));
 
-    remote.state = RA_STATE_CONNECTING;
+    remote.state = CA_STATE_CONNECTING;
     remote.connection_attempts++;
 
     // create the socket
@@ -410,7 +410,7 @@ void CA_Connect(void)
 
     if (ret == -1) {
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
-        remote.state = RA_STATE_DISCONNECTED;
+        remote.state = CA_STATE_DISCONNECTED;
         remote.connect_retry_frame = FUTURE_FRAME(30);
     }
 
@@ -482,7 +482,7 @@ void CA_CheckConnection(void)
         perror("CheckConnection");
         gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
         closesocket(c->socket);
-        remote.state = RA_STATE_DISCONNECTED;
+        remote.state = CA_STATE_DISCONNECTED;
         remote.connect_retry_frame = FUTURE_FRAME(10);
         return;
     }
@@ -494,11 +494,11 @@ void CA_CheckConnection(void)
 
         if (errno) {
             remote.connect_retry_frame = FUTURE_FRAME(30);
-            remote.state = RA_STATE_DISCONNECTED;
+            remote.state = CA_STATE_DISCONNECTED;
             closesocket(c->socket);
         } else {
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
-            remote.state = RA_STATE_CONNECTED;
+            remote.state = CA_STATE_CONNECTED;
             remote.ping.frame_next = FUTURE_FRAME(10);
             remote.connected_frame = CURFRAME;
             CA_SayHello();
@@ -511,7 +511,7 @@ void CA_CheckConnection(void)
  */
 void CA_SendMessages(void)
 {
-    if (remote.state < RA_STATE_CONNECTING) {
+    if (remote.state < CA_STATE_CONNECTING) {
         return;
     }
 
@@ -545,7 +545,7 @@ void CA_SendMessages(void)
 
         // socket write buffer is ready, send
         if (ret) {
-            if (c->encrypted && c->have_keys && remote.state == RA_STATE_TRUSTED) {
+            if (c->encrypted && c->have_keys && remote.state == CA_STATE_TRUSTED) {
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
@@ -592,7 +592,7 @@ void CA_ReadMessages(void)
     message_queue_t *in;
     message_queue_t dec;
 
-    if (remote.state < RA_STATE_CONNECTING) {
+    if (remote.state < CA_STATE_CONNECTING) {
         return;
     }
 
@@ -640,7 +640,7 @@ void CA_ReadMessages(void)
             in->length += ret;
 
             // decrypt if necessary
-            if (remote.connection.encrypted && remote.connection.have_keys && remote.state == RA_STATE_TRUSTED) {
+            if (remote.connection.encrypted && remote.connection.have_keys && remote.state == CA_STATE_TRUSTED) {
                 memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
@@ -663,7 +663,7 @@ void CA_ReadMessages(void)
 void RA_Trusted(void)
 {
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection Trusted\n");
-    remote.state = RA_STATE_TRUSTED;
+    remote.state = CA_STATE_TRUSTED;
 }
 
 /**
@@ -674,7 +674,7 @@ void CA_ParseMessage(void)
     message_queue_t *msg = &remote.queue_in;
     byte cmd;
 
-    if (remote.state == RA_STATE_DISABLED) {
+    if (remote.state == CA_STATE_DISABLED) {
         return;
     }
 
@@ -843,7 +843,7 @@ qboolean CA_VerifyServerAuth(void)
 
         if (remote.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
             gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
-            remote.state = RA_STATE_DISABLED;
+            remote.state = CA_STATE_DISABLED;
         }
         return qfalse;
     }
@@ -857,7 +857,7 @@ void CA_ParseCommand(void)
     char *cmd;
 
     // we should never get here if we're not trusted, but just in case
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -897,13 +897,13 @@ void CA_DisconnectedPeer(void)
 {
     uint8_t secs;
 
-    if (remote.state < RA_STATE_CONNECTED) {
+    if (remote.state < CA_STATE_CONNECTED) {
         return;
     }
 
     gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
 
-    remote.state = RA_STATE_DISCONNECTED;
+    remote.state = CA_STATE_DISCONNECTED;
     remote.connection.trusted = qfalse;
     remote.connection.have_keys = qfalse;
     memset(&remote.connection.aeskey[0], 0, AESKEY_LEN);
@@ -926,7 +926,7 @@ void CA_PlayerList(void)
     uint8_t count, i;
     count = 0;
 
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -993,7 +993,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
 void CA_SayHello(void)
 {
     // don't bother if we're not fully connected yet
-    if (remote.state == RA_STATE_TRUSTED) {
+    if (remote.state == CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1035,7 +1035,7 @@ void CA_ParseError(void)
     // serious enough to disconnect
     if (reason_id >= 200) {
         closesocket(remote.connection.socket);
-        remote.state = RA_STATE_DISABLED;
+        remote.state = CA_STATE_DISABLED;
         freeaddrinfo(remote.addr);
     }
 }
@@ -1210,7 +1210,7 @@ void CA_PlayerConnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1227,7 +1227,7 @@ void CA_PlayerDisconnect(edict_t *ent)
     int8_t cl;
     cl = getEntOffset(ent) - 1;
 
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1245,7 +1245,7 @@ void CA_PlayerCommand(edict_t *ent) {
  */
 void CA_Print(uint8_t level, char *text)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
     
@@ -1263,7 +1263,7 @@ void CA_Print(uint8_t level, char *text)
  */
 void CA_Teleport(uint8_t client_id)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1290,7 +1290,7 @@ void CA_Teleport(uint8_t client_id)
  */
 void CA_PlayerUpdate(uint8_t cl, const char *ui)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1304,7 +1304,7 @@ void CA_PlayerUpdate(uint8_t cl, const char *ui)
  */
 void CA_Invite(uint8_t cl, const char *text)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1323,7 +1323,7 @@ void CA_Invite(uint8_t cl, const char *text)
  */
 void CA_Whois(uint8_t cl, const char *name)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1342,7 +1342,7 @@ void CA_Whois(uint8_t cl, const char *name)
  */
 void CA_Frag(uint8_t victim, uint8_t attacker)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1360,7 +1360,7 @@ void CA_Frag(uint8_t victim, uint8_t attacker)
  */
 void CA_Map(const char *mapname)
 {
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1379,7 +1379,7 @@ void CA_SayClient(void)
     char *string;
     edict_t *ent;
 
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1404,7 +1404,7 @@ void CA_SayAll(void)
     uint8_t i, level;
     char *string;
 
-    if (remote.state < RA_STATE_TRUSTED) {
+    if (remote.state < CA_STATE_TRUSTED) {
         return;
     }
 
@@ -1445,9 +1445,9 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     }
 
     command = gi.argv(startarg);
-    gi.cprintf(ent, "PRINT_HIGH", "%s\n", command);
+
     if (Q_stricmp(command, "status") == 0) {
-        if (remote.connected_frame == 0) {
+        if (remote.connection == CA_STATE_CONNECTED) {
             gi.cprintf(ent, "PRINT_HIGH", "not connected\n");
         } else {
             gi.cprintf(ent, "PRINT_HIGH", "connected\n");

@@ -824,7 +824,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
     remote.port = getport();
     remote.frame_number = 0;
 
-    if (remote.state == RA_STATE_TRUSTED) {
+    if (remote.state == CA_STATE_TRUSTED) {
         CA_Map(mapname);
     }
 

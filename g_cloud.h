@@ -62,11 +62,11 @@
  * The various states of the remote admin connection
  */
 typedef enum {
-    RA_STATE_DISABLED,      // not using RA at all
-    RA_STATE_DISCONNECTED,  // will try to connect when possible
-    RA_STATE_CONNECTING,    // mid connection
-    RA_STATE_CONNECTED,     // connected
-    RA_STATE_TRUSTED        // authenticated and ready to go
+    CA_STATE_DISABLED,      // not using RA at all
+    CA_STATE_DISCONNECTED,  // will try to connect when possible
+    CA_STATE_CONNECTING,    // mid connection
+    CA_STATE_CONNECTED,     // connected
+    CA_STATE_TRUSTED        // authenticated and ready to go
 } ca_state_t;
 
 #define STATE(s)    (remote.state == RA_STATE_##s)
