@@ -472,6 +472,12 @@ q2acmd_t q2aCommands[] = {
         floodDelRun
     },
     {
+        "fpsfloodexempt",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &fpsFloodExempt
+    },
+    {
         "framesperprocess",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,

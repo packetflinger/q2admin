@@ -71,6 +71,7 @@ cvar_t *configfile_spawn;
 cvar_t *configfile_vote;
 
 qboolean quake2dirsupport = TRUE;
+qboolean fpsFloodExempt = FALSE;
 
 char dllname[256];
 char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
@@ -1462,6 +1463,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo)
     char *s = Info_ValueForKey(userinfo, "name");
     char tmptext[128];
     char *cl_max_temp;
+    char *cl_max_curr;
     char *timescale_temp;
     int temp;
 
@@ -1492,7 +1494,15 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo)
         logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0);
     }
 
-    proxyinfo[client].userinfo_changed_count++; 
+    // Don't count excessive cl_maxfps changes as flooding if fpsfloodexempt is true.
+    // Changing FPS frequently is normal behavior for jumpmod
+    cl_max_temp = Info_ValueForKey(userinfo, "cl_maxfps");
+    cl_max_curr = Info_ValueForKey(proxyinfo[client].userinfo, "cl_maxfps");
+    if (!fpsFloodExempt && Q_stricmp(cl_max_temp, cl_max_curr) != 0) {
+        proxyinfo[client].userinfo_changed_count++;
+        gi.cprintf(ent, PRINT_HIGH, "Counting toward flood %d\n", proxyinfo[client].userinfo_changed_count);
+    }
+
     if (proxyinfo[client].userinfo_changed_count > USERINFOCHANGE_COUNT) {
         temp = ltime - proxyinfo[client].userinfo_changed_start;
         if (temp < USERINFOCHANGE_TIME) {

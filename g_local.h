@@ -1358,6 +1358,7 @@ extern qboolean disablecmds_enable;
 extern qboolean checkvarcmds_enable;
 extern qboolean swap_attack_use;
 extern qboolean timescaledetect;
+extern qboolean fpsFloodExempt;
 
 extern char defaultBanMsg[256];
 extern char defaultChatBanMsg[256];
