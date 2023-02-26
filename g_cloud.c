@@ -81,9 +81,14 @@ static char *ca_userinfo(uint8_t player_index)
         q2a_strcat(newuserinfo, va("\\fov\\%s", value));
     }
 
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "phash");
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "hand");
     if (*value) {
-        q2a_strcat(newuserinfo, va("\\phash\\%s", value));
+        q2a_strcat(newuserinfo, va("\\hand\\%s", value));
+    }
+
+    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "cl_cookie");
+    if (*value) {
+        q2a_strcat(newuserinfo, va("\\cl_cookie\\%s", value));
     }
 
     return newuserinfo;
@@ -1433,24 +1438,59 @@ void CA_SayAll(void)
 }
 
 /**
+ * Format a string time_spec based on a quantity of frames
+ */
+static void secsToTime(char *out, uint32_t secs) {
+    uint32_t    days = 0,
+                hours = 0,
+                minutes = 0,
+                seconds = 0;
+    uint32_t f = secs;
+
+    days = f / 86400;
+    f -= days * 86400;
+
+    hours = f / 3600;
+    f -= hours * 3600;
+
+    minutes = f / 60;
+    f -= minutes * 60;
+
+    seconds = f;
+
+    if (days == 0) {
+        sprintf(out, "%02d:%02d:%02d", hours, minutes, seconds);
+    } else if (days == 1) {
+        sprintf(out, "1 day, %02d:%02d:%02d", hours, minutes, seconds);
+    } else {
+        sprintf(out, "%d days, %02d:%02d:%02d", days, hours, minutes, seconds);
+    }
+}
+
+/**
  * Main command runner for "sv !cloud <cmd>" server command
  */
 void cloudRun(int startarg, edict_t *ent, int client) {
     char *command;
     char *time;
+    qboolean connected;
+    char connected_time[25];
 
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, "Usage: %s\n", CLOUDCMD_LAYOUT);
         return;
     }
 
+    connected = cloud.state == CA_STATE_TRUSTED;
     command = gi.argv(startarg);
 
+
     if (Q_stricmp(command, "status") == 0) {
-        if (cloud.state == CA_STATE_CONNECTED) {
-            gi.cprintf(ent, "PRINT_HIGH", "not connected\n");
-        } else {
-            gi.cprintf(ent, "PRINT_HIGH", "connected\n");
+        gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n%-20s%sconnected\n", "state:", (connected)? "":"dis");
+        if (connected) {
+            secsToTime(&connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
+            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
+            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "connected time:", connected_time);
         }
         return;
     }
