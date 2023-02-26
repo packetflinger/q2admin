@@ -911,6 +911,7 @@ void CA_DisconnectedPeer(void)
     cloud.state = CA_STATE_DISCONNECTED;
     cloud.connection.trusted = qfalse;
     cloud.connection.have_keys = qfalse;
+    cloud.disconnect_count++;
     memset(&cloud.connection.aeskey[0], 0, AESKEY_LEN);
     memset(&cloud.connection.iv[0], 0, AESBLOCK_LEN);
 
@@ -1484,9 +1485,11 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     connected = cloud.state == CA_STATE_TRUSTED;
     command = gi.argv(startarg);
 
-
     if (Q_stricmp(command, "status") == 0) {
-        gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n%-20s%sconnected\n", "state:", (connected)? "":"dis");
+        gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n");
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", remoteAddr, remotePort));
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", (connected)? "connected, trusted" : "disconnected");
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%d\n", "disconnects:", cloud.disconnect_count);
         if (connected) {
             secsToTime(&connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
             gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
