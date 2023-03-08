@@ -1488,6 +1488,12 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     if (Q_stricmp(command, "status") == 0) {
         gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n");
         gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", remoteAddr, remotePort));
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "clientid:", remoteUUID);
+        if (cloud.state == CA_STATE_DISABLED) {
+            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", "disabled");
+            return;
+        }
+
         gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", (connected)? "connected, trusted" : "disconnected");
         gi.cprintf(ent, "PRINT_HIGH", "%-20s%d\n", "disconnects:", cloud.disconnect_count);
         if (connected) {
@@ -1495,6 +1501,23 @@ void cloudRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
             gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "connected time:", connected_time);
         }
+        return;
+    }
+
+    if (Q_stricmp(command, "reconnect") == 0) {
+        CA_Disconnect();
+        CA_Init();
+        return;
+    }
+
+    if (Q_stricmp(command, "disconnect") == 0) {
+        CA_Disconnect();
+        cloud.state = CA_STATE_DISABLED;
+        return;
+    }
+
+    if (Q_stricmp(command, "connect") == 0) {
+        CA_Init();
         return;
     }
 }
