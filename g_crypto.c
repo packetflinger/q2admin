@@ -42,7 +42,7 @@ qboolean G_LoadKeys(void)
     ca_connection_t *c = &cloud.connection;
     char path[200];
 
-    gi.cprintf(NULL, PRINT_HIGH, "[RA] Loading encryption keys...");
+    gi.cprintf(NULL, PRINT_HIGH, "[cloud] loading encryption keys...");
 
     // first load our private key
     sprintf(path, "%s/%s", moddir, remotePrivateKey);
