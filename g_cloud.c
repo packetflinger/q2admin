@@ -9,8 +9,6 @@ cloud_t cloud;
  *
  */
 void CA_Init() {
-    
-    // we're already connected
     if (cloud.connection.socket) {
         return;
     }
@@ -19,11 +17,11 @@ void CA_Init() {
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
     if (!remoteEnabled) {
-        gi.cprintf(NULL, PRINT_HIGH, "Remote Admin is disabled in your config.\n");
+        gi.cprintf(NULL, PRINT_HIGH, "Cloud Admin is disabled in your config.\n");
         return;
     }
     cloud.state = CA_STATE_DISCONNECTED;
-    gi.cprintf(NULL, PRINT_HIGH, "[RA] Remote Admin Init...\n");
+    gi.cprintf(NULL, PRINT_HIGH, "[cloud] init...\n");
 
     if (!G_LoadKeys()) {
         cloud.state = CA_STATE_DISABLED;
@@ -33,13 +31,13 @@ void CA_Init() {
     cloud.connection.encrypted = remoteEncryption;
     
     if (!remoteAddr[0]) {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_addr is not set...disabling\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_addr is not set...disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
 
     if (!remotePort) {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] remote_port is not set...disabling\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_port is not set...disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
@@ -163,7 +161,7 @@ void CA_LookupAddress(void)
     int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
 
     if (err != 0) {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] DNS error\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] DNS error\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     } else {
@@ -174,7 +172,7 @@ void CA_LookupAddress(void)
 
         if (!cloud.addr) {
             cloud.state = CA_STATE_DISABLED;
-            gi.cprintf(NULL, PRINT_HIGH, "[RA] Problems resolving server address, disabling\n");
+            gi.cprintf(NULL, PRINT_HIGH, "[cloud] problems resolving server address, disabling\n");
             return;
         }
 
@@ -199,7 +197,7 @@ void CA_LookupAddress(void)
             );
         }
 
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server resolved to %s\n", str_address);
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server resolved to %s\n", str_address);
     }
 
     cloud.flags = remoteFlags;
@@ -414,7 +412,7 @@ void CA_Connect(void)
 #endif
 
     if (ret == -1) {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
         cloud.state = CA_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_FRAME(30);
     }
@@ -428,7 +426,7 @@ void CA_Connect(void)
         if (errno == EINPROGRESS) {
             // expected
         } else {
-            perror("[RA] connect error");
+            perror("[cloud] connect error");
             errno = 0;
         }
     }
@@ -485,7 +483,7 @@ void CA_CheckConnection(void)
 
     if (ret == -1) {
         perror("CheckConnection");
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection unfinished: %s\n", strerror(errno));
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection unfinished: %s\n", strerror(errno));
         closesocket(c->socket);
         cloud.state = CA_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_FRAME(10);
@@ -502,7 +500,7 @@ void CA_CheckConnection(void)
             cloud.state = CA_STATE_DISCONNECTED;
             closesocket(c->socket);
         } else {
-            gi.cprintf(NULL, PRINT_HIGH, "[RA] Connected\n");
+            gi.cprintf(NULL, PRINT_HIGH, "[cloud] connected\n");
             cloud.state = CA_STATE_CONNECTED;
             cloud.ping.frame_next = FUTURE_FRAME(10);
             cloud.connected_frame = CURFRAME;
@@ -667,7 +665,7 @@ void CA_ReadMessages(void)
  */
 void RA_Trusted(void)
 {
-    gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection Trusted\n");
+    gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection trusted\n");
     cloud.state = CA_STATE_TRUSTED;
 }
 
@@ -802,9 +800,9 @@ qboolean CA_VerifyServerAuth(void)
 
     if (verified) {
         servertrusted = qtrue;
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server signature verified\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server signature verified\n");
     } else {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
 
     // encrypt the server's nonce and send back to auth ourselves
@@ -826,7 +824,7 @@ qboolean CA_VerifyServerAuth(void)
         if (remoteEncryption) {
             len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
             if (!len) {
-                gi.cprintf(NULL, PRINT_HIGH, "[RA] couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
+                gi.cprintf(NULL, PRINT_HIGH, "[cloud] couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
                 remoteEncryption = qfalse;
                 c->have_keys = qfalse;
             } else {
@@ -843,11 +841,11 @@ qboolean CA_VerifyServerAuth(void)
         cloud.connection.auth_fail_count = 0;
         return qtrue;
     } else {
-        gi.cprintf(NULL, PRINT_HIGH, "[RA] Server authentication failed\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server authentication failed\n");
         cloud.connection.auth_fail_count++;
 
         if (cloud.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
-            gi.cprintf(NULL, PRINT_HIGH, "[RA] Too many auth failures, giving up\n");
+            gi.cprintf(NULL, PRINT_HIGH, "[cloud] too many auth failures, giving up\n");
             cloud.state = CA_STATE_DISABLED;
         }
         return qfalse;
@@ -906,7 +904,7 @@ void CA_DisconnectedPeer(void)
         return;
     }
 
-    gi.cprintf(NULL, PRINT_HIGH, "[RA] Connection lost\n");
+    gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection lost\n");
 
     cloud.state = CA_STATE_DISCONNECTED;
     cloud.connection.trusted = qfalse;
@@ -1512,7 +1510,8 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 
     if (Q_stricmp(command, "disconnect") == 0) {
         CA_Disconnect();
-        cloud.state = CA_STATE_DISABLED;
+        q2a_memset(&cloud, 0, sizeof(cloud_t));
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] disconnected\n");
         return;
     }
 
