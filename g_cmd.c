@@ -258,6 +258,90 @@ q2acmd_t q2aCommands[] = {
         cloudRun,
     },
     {
+        "cloud_flags",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &cloud_flags,
+    },
+    {
+        "cloud_cmd_teleport",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        cloud_cmd_teleport,
+    },
+    {
+        "cloud_cmd_invite",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        cloud_cmd_invite,
+    },
+    {
+        "cloud_cmd_seen",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        cloud_cmd_seen,
+    },
+    {
+        "cloud_cmd_whois",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        cloud_cmd_whois,
+    },
+    {
+        "cloud_dns",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        cloud_dns,
+    },
+    {
+        "cloud_enabled",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &cloud_enabled,
+    },
+    {
+        "cloud_address",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &cloud_address,
+    },
+    {
+        "cloud_port",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &cloud_port,
+    },
+    {
+        "cloud_encryption",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &cloud_encryption,
+    },
+    {
+        "cloud_publickey",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &cloud_publickey,
+    },
+    {
+        "cloud_privatekey",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &cloud_privatekey,
+    },
+    {
+        "cloud_serverkey",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &cloud_serverkey,
+    },
+    {
+        "cloud_uuid",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &cloud_uuid,
+    },
+    {
         "cl_anglespeedkey_display",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -883,73 +967,6 @@ q2acmd_t q2aCommands[] = {
         reloadVoteFileRun,
     },
     {
-        "remote",
-        CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
-        NULL,
-        remoteSettingsDisplay,
-    },
-    {
-        "remote_uuid",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &remoteUUID,
-    },
-    {
-        "remote_port",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &remotePort,
-    },
-    {
-        "remote_addr",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteAddr,
-    },
-    {
-        "remote_flags",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &remoteFlags,
-    },
-    {
-        "remote_dnsorder",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteDNS,
-    },
-    {
-        "remote_enabled",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_LOGICAL,
-        &remoteEnabled,
-    },
-    {
-        "remote_cmd_teleport",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteCmdTeleport,
-    },
-    {
-        "remote_cmd_invite",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteCmdInvite,
-    },
-    {
-        "remote_cmd_seen",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteCmdSeen,
-    },
-    {
-        "remote_cmd_whois",
-        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        remoteCmdWhois,
-    },
-    {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
@@ -1399,30 +1416,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_NUMBER,
         &whois_active
     },
-	{
-		"remote_encryption",
-		CMDWHERE_CFGFILE, // you can't change this on the fly, config only
-		CMDTYPE_LOGICAL,
-		&remoteEncryption
-	},
-	{
-		"remote_private_key",
-		CMDWHERE_CFGFILE,
-		CMDTYPE_STRING,
-		&remotePrivateKey
-	},
-	{
-		"remote_public_key",
-		CMDWHERE_CFGFILE,
-		CMDTYPE_STRING,
-		&remotePublicKey
-	},
-	{
-		"remote_sv_public_key",
-		CMDWHERE_CFGFILE,
-		CMDTYPE_STRING,
-		&remoteServerPublicKey
-	},
 };
 
 //===================================================================
@@ -3235,22 +3228,22 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-    if (Q_stricmp(cmd, remoteCmdTeleport) == 0) {
+    if (Q_stricmp(cmd, cloud_cmd_teleport) == 0) {
         Cmd_Teleport_f(ent);
         return;
     }
 
-    if (Q_stricmp(cmd, remoteCmdInvite) == 0) {
+    if (Q_stricmp(cmd, cloud_cmd_invite) == 0) {
         Cmd_Invite_f(ent);
         return;
     }
 
-    if (Q_stricmp(cmd, remoteCmdSeen) == 0) {
+    if (Q_stricmp(cmd, cloud_cmd_seen) == 0) {
         Cmd_Find_f(ent);
         return;
     }
 
-    if (Q_stricmp(cmd, remoteCmdWhois) == 0) {
+    if (Q_stricmp(cmd, cloud_cmd_whois) == 0) {
         Cmd_Remote_Whois_f(ent);
         return;
     }

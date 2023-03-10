@@ -81,23 +81,25 @@ char version[256];
 char *finalentities;
 
 //uint32_t remoteKey          = 0;
-char remoteUUID[37];
-char remoteAddr[256]        = "127.0.0.1";
-int remotePort              = 9988;
-int remoteFlags             = 1024;
-char remoteDNS[3]           = "64";    // ipv6 first, then ipv4
-qboolean remoteEnabled      = FALSE;
-char remoteCmdTeleport[15]  = "!teleport";
-char remoteCmdInvite[15]    = "!invite";
-char remoteCmdSeen[15]      = "!seen";
-char remoteCmdWhois[15]     = "!whois";
+//char remoteUUID[37];
+//char remoteAddr[256]        = "127.0.0.1";
+//int remotePort              = 9988;
+//qboolean remoteEnabled      = FALSE;
 
-char remotePublicKey[256] = "q2a_public.pem";
-char remotePrivateKey[256] = "q2a_private.pem";
-char remoteServerPublicKey[256] = "q2a_server_public.pem";
-
-qboolean remoteEncryption = qfalse;
-
+qboolean cloud_enabled           = qfalse;
+char     cloud_address[256]      = "127.0.0.1";
+int      cloud_port              = 9988;
+qboolean cloud_encryption        = qtrue;
+char     cloud_privatekey[256]   = "private.pem";
+char     cloud_publickey[256]    = "public.pem";
+char     cloud_serverkey[256]    = "server.pem";
+char     cloud_uuid[37]          = "00000000-0000-0000-0000-000000000000";
+int      cloud_flags             = 4095; // 12 bits worth
+char     cloud_dns[3]            = "64"; // ipv6 first then ipv4
+char     cloud_cmd_teleport[25]  = "!teleport";
+char     cloud_cmd_invite[25]    = "!invite";
+char     cloud_cmd_seen[25]      = "!seen";
+char     cloud_cmd_whois[25]     = "!whois";
 
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;

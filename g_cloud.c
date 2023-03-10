@@ -13,10 +13,12 @@ void CA_Init() {
         return;
     }
 
+    ReadCloudConfigFile("baseq2/q2a_cloud.cfg");
+
     memset(&cloud, 0, sizeof(cloud));
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
-    if (!remoteEnabled) {
+    if (!cloud_enabled) {
         gi.cprintf(NULL, PRINT_HIGH, "Cloud Admin is disabled in your config.\n");
         return;
     }
@@ -28,15 +30,15 @@ void CA_Init() {
         return;
     }
 
-    cloud.connection.encrypted = remoteEncryption;
+    cloud.connection.encrypted = cloud_encryption;
     
-    if (!remoteAddr[0]) {
+    if (!cloud_address[0]) {
         gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_addr is not set...disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
 
-    if (!remotePort) {
+    if (!cloud_port) {
         gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_port is not set...disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
@@ -48,6 +50,18 @@ void CA_Init() {
     cloud.connect_retry_frame = FUTURE_FRAME(5);
 }
 
+/**
+ *
+ */
+void ReadCloudConfigFile(char *filename)
+{
+    if (!readCfgFile(filename)) {
+        memset(&cloud, 0, sizeof(cloud_t));
+        gi.dprintf("Failed to read %s\n", filename);
+    } else {
+        gi.dprintf("read cloud config ok\n");
+    }
+}
 
 /**
  * Build a new info string containing just want we need:
@@ -106,8 +120,8 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
     }
 
     // just in case it's set blank in the config
-    if (!remoteDNS[0]) {
-        q2a_strcpy(remoteDNS, "64");
+    if (!cloud_dns[0]) {
+        q2a_strcpy(cloud_dns, "64");
     }
 
     // save the first one of each address family, if more than 1, they're
@@ -123,13 +137,13 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
     }
 
     // select one based on preference
-    if (remoteDNS[0] == '6' && v6) {
+    if (cloud_dns[0] == '6' && v6) {
         return v6;
-    } else if (remoteDNS[0] == '4' && v4) {
+    } else if (cloud_dns[0] == '4' && v4) {
         return v4;
-    } else if (remoteDNS[1] == '6' && v6) {
+    } else if (cloud_dns[1] == '6' && v6) {
         return v6;
-    } else if (remoteDNS[1] == '4' && v4) {
+    } else if (cloud_dns[1] == '4' && v4) {
         return v4;
     }
 
@@ -158,7 +172,7 @@ void CA_LookupAddress(void)
     errno = 0;
 
     // do the actual DNS lookup
-    int err = getaddrinfo(remoteAddr, va("%d",remotePort), &hints, &res);
+    int err = getaddrinfo(cloud_address, va("%d",cloud_port), &hints, &res);
 
     if (err != 0) {
         gi.cprintf(NULL, PRINT_HIGH, "[cloud] DNS error\n");
@@ -200,7 +214,7 @@ void CA_LookupAddress(void)
         gi.cprintf(NULL, PRINT_HIGH, "[cloud] server resolved to %s\n", str_address);
     }
 
-    cloud.flags = remoteFlags;
+    cloud.flags = cloud_flags;
     cloud.state = CA_STATE_DISCONNECTED;
 }
 
@@ -663,7 +677,7 @@ void CA_ReadMessages(void)
 /**
  * The server has let us know we are trusted.
  */
-void RA_Trusted(void)
+void CA_Trusted(void)
 {
     gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection trusted\n");
     cloud.state = CA_STATE_TRUSTED;
@@ -702,7 +716,7 @@ void CA_ParseMessage(void)
             CA_VerifyServerAuth();
             break;
         case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
-            RA_Trusted();
+            CA_Trusted();
             CA_Map(cloud.mapname);
             CA_PlayerList();
             break;
@@ -788,7 +802,7 @@ qboolean CA_VerifyServerAuth(void)
     len = CA_ReadShort();
     CA_ReadData(signature, len);
 
-    if (remoteEncryption) {
+    if (cloud_encryption) {
         CA_ReadData(aeskey_cipher, RSA_LEN);
     }
 
@@ -821,11 +835,11 @@ qboolean CA_VerifyServerAuth(void)
         CA_WriteData(signature, siglen);
         CA_SendMessages();
 
-        if (remoteEncryption) {
+        if (cloud_encryption) {
             len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
             if (!len) {
                 gi.cprintf(NULL, PRINT_HIGH, "[cloud] couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
-                remoteEncryption = qfalse;
+                cloud_encryption = qfalse;
                 c->have_keys = qfalse;
             } else {
                 q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
@@ -1006,11 +1020,11 @@ void CA_SayHello(void)
 
     CA_WriteLong(MAGIC_CLIENT);
     CA_WriteByte(CMD_HELLO);
-    CA_WriteString(remoteUUID);
+    CA_WriteString(cloud_uuid);
     CA_WriteLong(Q2A_REVISION);
     CA_WriteShort(cloud.port);
     CA_WriteByte(cloud.maxclients);
-    CA_WriteByte(remoteEncryption ? 1 : 0);
+    CA_WriteByte(cloud_encryption ? 1 : 0);
     CA_WriteData(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 }
 
@@ -1485,8 +1499,8 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 
     if (Q_stricmp(command, "status") == 0) {
         gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n");
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", remoteAddr, remotePort));
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "clientid:", remoteUUID);
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "client uuid:", cloud_uuid);
         if (cloud.state == CA_STATE_DISABLED) {
             gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", "disabled");
             return;
@@ -1504,6 +1518,8 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 
     if (Q_stricmp(command, "reconnect") == 0) {
         CA_Disconnect();
+        q2a_memset(&cloud, 0, sizeof(cloud_t));
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] disconnected\n");
         CA_Init();
         return;
     }

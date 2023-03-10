@@ -1235,21 +1235,21 @@ extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
 
-//extern uint32_t remoteKey;
-extern char remoteUUID[37];
-extern char remoteAddr[256];
-extern int remotePort;
-extern int remoteFlags;
-extern char remoteDNS[3];
-extern qboolean remoteEnabled;
-extern char remoteCmdTeleport[15];
-extern char remoteCmdInvite[15];
-extern char remoteCmdSeen[15];
-extern char remoteCmdWhois[15];
-extern qboolean remoteEncryption;
-extern char remotePrivateKey[256];
-extern char remotePublicKey[256];
-extern char remoteServerPublicKey[256];
+// cloud admin config
+extern qboolean cloud_enabled;
+extern char     cloud_address[256];
+extern int      cloud_port;
+extern qboolean cloud_encryption;
+extern char     cloud_privatekey[256];
+extern char     cloud_publickey[256];
+extern char     cloud_serverkey[256];
+extern char     cloud_uuid[37];
+extern char     cloud_dns[3];
+extern int      cloud_flags;
+extern char     cloud_cmd_teleport[25];
+extern char     cloud_cmd_invite[25];
+extern char     cloud_cmd_seen[25];
+extern char     cloud_cmd_whois[25];
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
