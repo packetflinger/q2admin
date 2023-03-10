@@ -23,7 +23,7 @@ void CA_Init() {
         return;
     }
     cloud.state = CA_STATE_DISCONNECTED;
-    gi.cprintf(NULL, PRINT_HIGH, "[cloud] init...\n");
+    CA_printf("init...\n");
 
     if (!G_LoadKeys()) {
         cloud.state = CA_STATE_DISABLED;
@@ -33,13 +33,13 @@ void CA_Init() {
     cloud.connection.encrypted = cloud_encryption;
     
     if (!cloud_address[0]) {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_addr is not set...disabling\n");
+        CA_printf("cloud_addr is not set, disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
 
     if (!cloud_port) {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] remote_port is not set...disabling\n");
+        CA_printf("cloud_port is not set, disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
@@ -174,7 +174,7 @@ void CA_LookupAddress(void)
     int err = getaddrinfo(cloud_address, va("%d",cloud_port), &hints, &res);
 
     if (err != 0) {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] DNS error\n");
+        CA_printf("DNS error\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     } else {
@@ -185,7 +185,7 @@ void CA_LookupAddress(void)
 
         if (!cloud.addr) {
             cloud.state = CA_STATE_DISABLED;
-            gi.cprintf(NULL, PRINT_HIGH, "[cloud] problems resolving server address, disabling\n");
+            CA_printf("problems resolving server address, disabling\n");
             return;
         }
 
@@ -210,7 +210,7 @@ void CA_LookupAddress(void)
             );
         }
 
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server resolved to %s\n", str_address);
+        CA_printf("server resolved to %s\n,", str_address);
     }
 
     cloud.flags = cloud_flags;
@@ -425,7 +425,7 @@ void CA_Connect(void)
 #endif
 
     if (ret == -1) {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
+        CA_printf("error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
         cloud.state = CA_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_FRAME(30);
     }
@@ -496,7 +496,7 @@ void CA_CheckConnection(void)
 
     if (ret == -1) {
         perror("CheckConnection");
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection unfinished: %s\n", strerror(errno));
+        CA_printf("connection unfinished: %s\n", strerror(errno));
         closesocket(c->socket);
         cloud.state = CA_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_FRAME(10);
@@ -513,7 +513,7 @@ void CA_CheckConnection(void)
             cloud.state = CA_STATE_DISCONNECTED;
             closesocket(c->socket);
         } else {
-            gi.cprintf(NULL, PRINT_HIGH, "[cloud] connected\n");
+            CA_printf("connected\n");
             cloud.state = CA_STATE_CONNECTED;
             cloud.ping.frame_next = FUTURE_FRAME(10);
             cloud.connected_frame = CURFRAME;
@@ -678,7 +678,7 @@ void CA_ReadMessages(void)
  */
 void CA_Trusted(void)
 {
-    gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection trusted\n");
+    CA_printf("connection trusted\n");
     cloud.state = CA_STATE_TRUSTED;
 }
 
@@ -813,9 +813,9 @@ qboolean CA_VerifyServerAuth(void)
 
     if (verified) {
         servertrusted = qtrue;
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server signature verified\n");
+        CA_printf("server signature verified\n");
     } else {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        CA_printf("error: %s\n", RR_error_string(ERR_get_error(), NULL));
     }
 
     // encrypt the server's nonce and send back to auth ourselves
@@ -837,7 +837,7 @@ qboolean CA_VerifyServerAuth(void)
         if (cloud_encryption) {
             len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
             if (!len) {
-                gi.cprintf(NULL, PRINT_HIGH, "[cloud] couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
+                CA_printf("couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
                 cloud_encryption = qfalse;
                 c->have_keys = qfalse;
             } else {
@@ -854,11 +854,11 @@ qboolean CA_VerifyServerAuth(void)
         cloud.connection.auth_fail_count = 0;
         return qtrue;
     } else {
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] server authentication failed\n");
+        CA_printf("server authentication failed\n");
         cloud.connection.auth_fail_count++;
 
         if (cloud.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
-            gi.cprintf(NULL, PRINT_HIGH, "[cloud] too many auth failures, giving up\n");
+            CA_printf("too many auth failures, giving up\n");
             cloud.state = CA_STATE_DISABLED;
         }
         return qfalse;
@@ -917,7 +917,7 @@ void CA_DisconnectedPeer(void)
         return;
     }
 
-    gi.cprintf(NULL, PRINT_HIGH, "[cloud] connection lost\n");
+    CA_printf("connection lost\n");
 
     cloud.state = CA_STATE_DISCONNECTED;
     cloud.connection.trusted = qfalse;
@@ -930,7 +930,7 @@ void CA_DisconnectedPeer(void)
     srand((unsigned) time(NULL));
     secs = rand() & 0xff;
     cloud.connect_retry_frame = FUTURE_FRAME(10) + secs;
-    gi.cprintf(NULL, PRINT_HIGH, "Trying to reconnect in %d seconds\n",
+    CA_printf("trying to reconnect in %d seconds\n",
         FRAMES_TO_SECS(cloud.connect_retry_frame - cloud.frame_number)
     );
 }
@@ -1560,7 +1560,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     if (Q_stricmp(command, "reconnect") == 0) {
         CA_Disconnect();
         q2a_memset(&cloud, 0, sizeof(cloud_t));
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] disconnected\n");
+        CA_printf("disconnected\n");
         CA_Init();
         return;
     }
@@ -1568,7 +1568,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     if (Q_stricmp(command, "disconnect") == 0) {
         CA_Disconnect();
         q2a_memset(&cloud, 0, sizeof(cloud_t));
-        gi.cprintf(NULL, PRINT_HIGH, "[cloud] disconnected\n");
+        CA_printf("disconnected\n");
         return;
     }
 
@@ -1576,4 +1576,19 @@ void cloudRun(int startarg, edict_t *ent, int client) {
         CA_Init();
         return;
     }
+}
+
+/**
+ * Printf something to the server console prepended with [cloud]
+ */
+void CA_printf(char *fmt, ...) {
+    char cbuffer[8192];
+    va_list arglist;
+
+    // convert to string
+    va_start(arglist, fmt);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
+    va_end(arglist);
+
+    gi.cprintf(NULL, PRINT_HIGH, "[cloud] %s", cbuffer);
 }
