@@ -80,12 +80,6 @@ char version[256];
 
 char *finalentities;
 
-//uint32_t remoteKey          = 0;
-//char remoteUUID[37];
-//char remoteAddr[256]        = "127.0.0.1";
-//int remotePort              = 9988;
-//qboolean remoteEnabled      = FALSE;
-
 qboolean cloud_enabled           = qfalse;
 char     cloud_address[256]      = "127.0.0.1";
 int      cloud_port              = 9988;
