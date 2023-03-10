@@ -887,6 +887,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     // override default config files
     configfile_ban = gi.cvar("q2a_banfile", BANLISTFILE, CVAR_LATCH);
     configfile_bypass = gi.cvar("q2a_bypassfile", BYPASSFILE, CVAR_LATCH);
+    configfile_cloud = gi.cvar("q2a_cloudfile", CLOUDFILE, CVAR_LATCH);
     configfile_cvar = gi.cvar("q2a_cvarfile", CHECKVARFILE, CVAR_LATCH);
     configfile_disable = gi.cvar("q2a_disablefile", DISABLEFILE, CVAR_LATCH);
     configfile_flood = gi.cvar("q2a_floodfile", FLOODFILE, CVAR_LATCH);

@@ -796,6 +796,7 @@ struct chatflood_s {
 #define BANLISTFILE     "q2a_ban.cfg"
 #define BYPASSFILE      "q2a_bypass.cfg"
 #define CHECKVARFILE    "q2a_cvar.cfg"
+#define CLOUDFILE       "q2a_cloud.cfg"
 #define DISABLEFILE     "q2a_disable.cfg"
 #define FLOODFILE       "q2a_flood.cfg"
 #define LOGINFILE       "q2a_login.cfg"
@@ -1196,6 +1197,7 @@ extern cvar_t *rcon_password,
               *tune_spawn_grenades,
               *configfile_ban,
               *configfile_bypass,
+              *configfile cloud,
               *configfile_cvar,
               *configfile_disable,
               *configfile_flood,

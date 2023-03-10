@@ -61,6 +61,7 @@ cvar_t *tune_spawn_grenades;
 
 cvar_t *configfile_ban;
 cvar_t *configfile_bypass;
+cvar_t *configfile_cloud;
 cvar_t *configfile_cvar;
 cvar_t *configfile_disable;
 cvar_t *configfile_flood;

@@ -55,12 +55,11 @@ void CA_Init() {
  */
 void ReadCloudConfigFile(char *filename)
 {
-    if (!readCfgFile(filename)) {
-        memset(&cloud, 0, sizeof(cloud_t));
-        gi.dprintf("Failed to read %s\n", filename);
-    } else {
-        gi.dprintf("read cloud config ok\n");
-    }
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cloud->string);
+
+    // read config from mod dir first, then global
+    readCfgFile(buffer);
+    readCfgFile(configfile_cloud->string);
 }
 
 /**
