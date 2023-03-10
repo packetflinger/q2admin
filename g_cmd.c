@@ -47,7 +47,6 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
 void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
 void lockDownServerRun(int startarg, edict_t *ent, int client);
 void Cmd_Remote_Status_f(edict_t *ent);
-void remoteSettingsDisplay(int startarg, edict_t *ent, int client);
 
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
@@ -3871,81 +3870,4 @@ void Cmd_Invite_f(edict_t *ent) {
 
     CA_Invite(id, invitetext);
 }
-
-// Show the remote settings/status 
-void remoteSettingsDisplay(int startarg, edict_t *ent, int client) {
-	char addr[INET6_ADDRSTRLEN];
-	char addrstr[INET6_ADDRSTRLEN + 6];  // add room for port (:#####)
-
-	if (cloud.state == CA_STATE_DISABLED) {
-		gi.cprintf(NULL, PRINT_HIGH, "remote admin is currently disabled\n");
-		return;
-	}
-
-	if (cloud.state < CA_STATE_CONNECTED) {
-		gi.cprintf(NULL, PRINT_HIGH, "remote admin enabled, but not currently connected\n");
-		gi.cprintf(
-				NULL,
-				PRINT_HIGH,
-				"next connection attempt in %d seconds\n",
-				FRAMES_TO_SECS(cloud.connect_retry_frame - CURFRAME)
-		);
-		return;
-	}
-
-	// get a string representation of the remote addr
-	if (cloud.addr->ai_family == AF_INET6) {
-		q2a_inet_ntop(
-				cloud.addr->ai_family,
-				&((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
-				addr,
-				sizeof(addr)
-		);
-
-		q2a_strcpy(
-				addrstr,
-				va("[%s]:%d", addr, (int)((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_port)
-		);
-	} else {
-		q2a_inet_ntop(
-				cloud.addr->ai_family,
-				&((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
-				addr,
-				sizeof(addr)
-		);
-
-		q2a_strcpy(
-				addrstr,
-				va("[%s]:%d", addr, (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port)
-		);
-	}
-
-	gi.cprintf(NULL, PRINT_HIGH, "Connected to %s\n", addrstr);
-	gi.cprintf(NULL, PRINT_HIGH, "Uptime: %d seconds\n", FRAMES_TO_SECS(CURFRAME - cloud.connected_frame));
-
-/*	char address[INET_ADDRSTRLEN];
-	
-	if (remote.enabled) {
-		q2a_inet_ntop(
-			remote.addr->ai_family, 
-			&((struct sockaddr_in *)remote.addr->ai_addr)->sin_addr, 
-			address, 
-			sizeof(address)
-		);
-	} else {
-		q2a_strcpy(address, "none");
-	}
-	*/
-	/*
-	gi.cprintf(ent, PRINT_HIGH, 
-		"Remote Settings:\nEnabled = %s\nOnline = %s\nAddress = %s\nFlags = %d\nKey = %d\n",
-		(remote.enabled) ? "yes" : "no",
-		(remote.online) ? "yes" : "no",
-		(remote.enabled) ? va("%s:%d", address, remote.port) : "none",
-		remote.flags,
-		remoteKey
-	);
-	*/
-}
-
 
