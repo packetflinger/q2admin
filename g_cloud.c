@@ -1480,6 +1480,40 @@ static void secsToTime(char *out, uint32_t secs) {
 }
 
 /**
+ * Put the current IP address and ports of the connected cloud admin server into dst
+ *
+ * dst needs to be at least INET6_ADDRSTRLEN in size
+ */
+void getCloudIP(char *remoteip, int *remoteport, int *localport)
+{
+    char addr[INET6_ADDRSTRLEN];
+
+    // IPv6
+    if (cloud.addr->ai_family == AF_INET6) {
+        q2a_inet_ntop(
+            cloud.addr->ai_family,
+            &((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
+            addr,
+            sizeof(addr)
+        );
+
+        q2a_strcpy(remoteip, va("[%s]", addr));
+    } else {  // IPv4
+        q2a_inet_ntop(
+            cloud.addr->ai_family,
+            &((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
+            addr,
+            sizeof(addr)
+        );
+
+        q2a_strcpy(remoteip, va("%s", addr));
+    }
+
+    localport = (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
+    remoteport = cloud_port;
+}
+
+/**
  * Main command runner for "sv !cloud <cmd>" server command
  */
 void cloudRun(int startarg, edict_t *ent, int client) {
@@ -1487,6 +1521,9 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     char *time;
     qboolean connected;
     char connected_time[25];
+    char connected_ip[INET6_ADDRSTRLEN];
+    int local_port;
+    int remote_port;
 
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, "Usage: %s\n", CLOUDCMD_LAYOUT);
@@ -1498,14 +1535,19 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 
     if (Q_stricmp(command, "status") == 0) {
         gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n");
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
+        if (connected) {
+            getCloudIP(connected_ip, &remote_port, &local_port);
+            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_port));
+        } else {
+            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
+        }
         gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "client uuid:", cloud_uuid);
         if (cloud.state == CA_STATE_DISABLED) {
             gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", "disabled");
             return;
         }
 
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", (connected)? "connected, trusted" : "disconnected");
+        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", (connected)? "trusted" : "disconnected");
         gi.cprintf(ent, "PRINT_HIGH", "%-20s%d\n", "disconnects:", cloud.disconnect_count);
         if (connected) {
             secsToTime(&connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
