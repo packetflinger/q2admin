@@ -1,11 +1,27 @@
+/**
+ * The cloud admin client maintains a separate TCP connection
+ * to a remote management server. The client (q2 server) and
+ * the cloud admin server mutually authenticate via asymmetrically
+ * encrypted challenges. Once trusted, the client feeds the server
+ * game information (player data, chats, frags, etc) and will do
+ * as the cloud admin server instructs (enforcing bans/mutes,
+ * telling players about other servers, etc).
+ *
+ * Server operators can connect to a cloud admin server by
+ * registering using it's web interface, exchanging public keys,
+ * and obtaining a unique identifier used in the connection
+ * handshake.
+ *
+ * The tcp connection is encrypted using AES-CBC with keys rotating
+ * about once an hour.
+ */
+
 #include "g_local.h"
 
 cloud_t cloud;
 
 /**
- * Sets up RA connection. Makes sure we have what we need:
- * - enabled in config
- * - rcon password is set
+ * Sets up the cloud admin connection.
  *
  */
 void CA_Init() {
@@ -51,7 +67,8 @@ void CA_Init() {
 }
 
 /**
- *
+ * Load config from disk. First load from q2 folder,
+ * then the mod folder.
  */
 void ReadCloudConfigFile(char *filename)
 {
@@ -163,7 +180,7 @@ void CA_LookupAddress(void)
     memset(&res, 0, sizeof(res));
 
     hints.ai_family         = AF_UNSPEC;     // either v6 or v4
-    hints.ai_socktype       = SOCK_STREAM;     // TCP
+    hints.ai_socktype       = SOCK_STREAM;   // TCP
     hints.ai_protocol       = 0;
     hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capable
 
@@ -381,7 +398,7 @@ static uint32_t next_connect_frame(void)
 }
 
 /**
- * Make the connection to the remote admin server
+ * Make the connection to the cloud admin server
  */
 void CA_Connect(void)
 {
@@ -446,7 +463,7 @@ void CA_Connect(void)
 
     /**
      * since we're non-blocking, the connection won't complete in this single server frame.
-     * We have to select() for it on a later runframe. See RA_CheckConnection()
+     * We have to select() for it on a later runframe. See CA_CheckConnection()
      */
 }
 
@@ -979,10 +996,6 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
     uint8_t aid = getEntOffset(attacker) - 1;
     gitem_t *weapon;
 
-    //proxyinfo[id].die(self, inflictor, attacker, damage, point);
-    //return;
-
-
     if (self->deadflag != DEAD_DEAD) {
         if (strcmp(attacker->classname,"player") == 0) {
             CA_Frag(id, aid);
@@ -990,10 +1003,6 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
             CA_Frag(id, aid);
         }
     }
-
-    //weapon = (gitem_t *)((attacker->client) + OTDM_CL_WEAPON_OFFSET);
-
-    //gi.dprintf("MOD: %s\n", weapon->classname);
 
     // call the player's real die() function
     proxyinfo[id].die(self, inflictor, attacker, damage, point);
@@ -1009,7 +1018,7 @@ void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, in
  */
 void CA_SayHello(void)
 {
-    // don't bother if we're not fully connected yet
+    // don't bother if we're fully connected
     if (cloud.state == CA_STATE_TRUSTED) {
         return;
     }
