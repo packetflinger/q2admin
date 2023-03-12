@@ -73,6 +73,7 @@ OBJS := g_anticheat.o \
 		g_spawn.o \
 		g_util.o \
 		g_vote.o \
+		g_vpn.o \
 		g_zbot.o \
 		g_zbotcheck.o \
 		regex.o
