@@ -1257,6 +1257,25 @@ extern char     cloud_cmd_whois[25];
 extern qboolean vpn_kick;
 extern qboolean vpn_enable;
 extern char     vpn_api_key[33];
+extern char     vpn_host[50];
+
+typedef enum {
+    DL_NONE,
+    DL_VPNAPI,
+} dltype_t;
+
+typedef struct download_s {
+    edict_t     *initiator;
+    unsigned    unique_id;
+    dltype_t    type;
+    char        name[32];
+    char        path[1024];
+    void        (*onFinish)(struct download_s *, int, byte *, int);
+    qboolean    inuse;
+} download_t;
+
+extern qboolean http_enable;
+
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;

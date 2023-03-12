@@ -100,6 +100,8 @@ qboolean vpn_enable              = qfalse;
 qboolean vpn_kick                = qtrue;
 char     vpn_api_key[33]         = "";
 
+qboolean http_enable             = qtrue;
+
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
 int client_map_cfg = 6;

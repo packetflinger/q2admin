@@ -585,6 +585,12 @@ q2acmd_t q2aCommands[] = {
         hackuserdisplay
     },
     {
+        "http_enable",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &http_enable
+    },
+    {
         "impulsestokickon",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,

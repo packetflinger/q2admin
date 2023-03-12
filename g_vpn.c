@@ -14,6 +14,9 @@
  */
 
 #include "g_local.h"
+
+char vpn_host[50] = "vpnapi.io";
+
 /**
  * Returns yes or no if the client is coming from a VPN connection
  */
