@@ -492,6 +492,8 @@ void InitGame(void)
 
     STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
 
+    HTTP_Init();
+
     CA_Init();
 }
 

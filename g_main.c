@@ -819,6 +819,8 @@ void G_RunFrame(void) {
 
     checkOnVoting();
 
+    HTTP_RunDownloads();
+
     STARTPERFORMANCE(2);
     ge_mod->RunFrame();
     CA_RunFrame();

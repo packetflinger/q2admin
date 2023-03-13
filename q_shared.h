@@ -245,8 +245,6 @@ void COM_DefaultExtension(char *path, char *extension);
 char *COM_Parse(char **data_p, char **command_p);
 // data is an in/out parm, returns a parsed out token
 
-void Com_sprintf(char *dest, int size, char *fmt, ...);
-
 void Com_PageInMemory(byte *buffer, int size);
 
 //=============================================

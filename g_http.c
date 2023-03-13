@@ -56,7 +56,7 @@ typedef struct dlhandle_s {
 #define MAX_DLSIZE  0x100000    // 1 MiB
 #define MIN_DLSIZE  0x8000      // 32 KiB
 
-dlhandle_t  downloads[MAX_DOWNLOADS];
+dlhandle_t downloads[MAX_DOWNLOADS];
 
 static CURLM                *multi = NULL;
 static unsigned             handleCount = 0;
@@ -70,22 +70,24 @@ static time_t               last_dns_lookup;
 void HandleDownload (download_t *download, char *buff, int len, int code)
 {
     //handle went invalid (client->pers->download = zeroed), just ignore this download completely.
-    if (!download->inuse)
+    if (!download->inuse) {
         return;
+    }
 
     //FIXME: observed a crash here due to NULL initiator
-    if (!download->initiator)
-        TDM_Error("TDM_HandleDownload: NULL initiator");
+    if (!download->initiator) {
+        gi.dprintf("HandleDownload: NULL initiator");
+    }
 
     //player left before download finished, lame!
     //note on an extremely poor connection it's possible another player since occupied their slot, but
     //for that to happen, the download must take 3+ seconds which should be unrealistic, so i don't
     //deal with it.
     //if (!download->initiator->inuse || download->initiator->client->pers.uniqueid != download->unique_id) {
-        download->initiator = NULL;
+    download->initiator = NULL;
     //}
 
-    download->onFinish (download, code, (byte *)buff, len);
+    download->onFinish(download, code, (byte *)buff, len);
 }
 
 /*
@@ -127,7 +129,7 @@ static void HTTP_EscapePath(const char *filePath, char *escaped)
     len = strlen(escaped);
     p = escaped;
     while ((p = strstr (p, "./"))) {
-        memmove(p, p+2, len - (p - escaped) - 1);
+        q2a_memmove(p, p+2, len - (p - escaped) - 1);
         len -= 2;
     }
 }
@@ -171,13 +173,13 @@ static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream)
         tmp = dl->tempBuffer;
         dl->tempBuffer = gi.TagMalloc((int)new_size, TAG_GAME);
         if (tmp) {
-            memcpy(dl->tempBuffer, tmp, dl->fileSize);
+            q2a_memcpy(dl->tempBuffer, tmp, dl->fileSize);
             gi.TagFree(tmp);
         }
         dl->fileSize = new_size;
     }
 
-    memcpy(dl->tempBuffer + dl->position, ptr, bytes);
+    q2a_memcpy(dl->tempBuffer + dl->position, ptr, bytes);
     dl->position += bytes;
     dl->tempBuffer[dl->position] = 0;
 
@@ -196,7 +198,7 @@ int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr)
             size = sizeof(buff)-1;
         }
         Q_strncpy(buff, data, size);
-        gi.dprintf("  OpenTDM HTTP DEBUG: %s", buff);
+        gi.dprintf("  HTTP DEBUG: %s", buff);
         if (!strchr(buff, '\n')) {
             gi.dprintf ("\n");
         }
@@ -213,7 +215,7 @@ Resolve the g_http_domain and cache it, so we don't do DNS
 lookups at critical times (eg mid match).
 ===============
 */
-void HTTP_ResolveOTDMServer(void)
+void HTTP_ResolveVPNServer(void)
 {
     if (!http_enable) {
         return;
@@ -228,7 +230,7 @@ void HTTP_ResolveOTDMServer(void)
 
         if (!h) {
             otdm_api_ip[0] = '\0';
-            gi.dprintf ("WARNING: Could not resolve OpenTDM web API server '%s'. HTTP functions unavailable.\n", vpn_host);
+            gi.dprintf ("WARNING: Could not resolve VPN API server '%s'. HTTP functions unavailable.\n", vpn_host);
             return;
         }
 
@@ -249,7 +251,7 @@ handle.
 */
 void HTTP_StartDownload(dlhandle_t *dl)
 {
-    char    escapedFilePath[1024*3];
+    char escapedFilePath[1024*3];
 
     dl->tempBuffer = NULL;
     dl->speed = 0;
@@ -263,7 +265,7 @@ void HTTP_StartDownload(dlhandle_t *dl)
     HTTP_EscapePath(dl->filePath, escapedFilePath);
 
     // format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
-    Com_sprintf(dl->URL, sizeof(dl->URL), "http://%s%s%s", otdm_api_ip, "", escapedFilePath);
+    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s%s", otdm_api_ip, "", escapedFilePath);
 
     curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
@@ -307,7 +309,7 @@ void HTTP_Init(void)
     curl_global_init(CURL_GLOBAL_NOTHING);
     multi = curl_multi_init();
 
-    Com_sprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
+    snprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
     http_header_slist = curl_slist_append(http_header_slist, hostHeader);
 
     gi.dprintf("%s initialized.\n", curl_version());
