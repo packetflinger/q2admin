@@ -1,7 +1,6 @@
 #ifndef G_REMOTE_H
 #define G_REMOTE_H
 
-#include <glib.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <stdio.h>
