@@ -3275,7 +3275,6 @@ void ClientCommand(edict_t *ent) {
     }
 
     if (Q_stricmp(cmd, cloud_cmd_seen) == 0) {
-        Cmd_Find_f(ent);
         return;
     }
 
