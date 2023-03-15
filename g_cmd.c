@@ -3280,17 +3280,6 @@ void ClientCommand(edict_t *ent) {
     }
 
     if (Q_stricmp(cmd, cloud_cmd_whois) == 0) {
-        Cmd_Remote_Whois_f(ent);
-        return;
-    }
-
-    if (Q_stricmp(cmd, "!rastatus") == 0) {
-        Cmd_Remote_Status_f(ent);
-        return;
-    }
-
-    if (Q_stricmp(cmd, "!players") == 0) {
-        Cmd_Remote_Players_f(ent);
         return;
     }
 
