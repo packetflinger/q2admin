@@ -372,7 +372,7 @@ static void HTTP_FinishDownload(void)
         }
 
         if (i == MAX_DOWNLOADS) {
-            TDM_Error ("HTTP_FinishDownload: Handle not found!");
+            gi.dprintf("HTTP_FinishDownload: Handle not found!\n");
         }
 
         dl = &downloads[i];
