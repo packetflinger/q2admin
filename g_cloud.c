@@ -832,7 +832,7 @@ qboolean CA_VerifyServerAuth(void)
         servertrusted = qtrue;
         CA_printf("server signature verified\n");
     } else {
-        CA_printf("error: %s\n", RR_error_string(ERR_get_error(), NULL));
+        CA_printf("error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
 
     // encrypt the server's nonce and send back to auth ourselves
