@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <ctype.h>
 #include "regex.h"
 #include "g_offsets.h"
+#include "g_json.h";
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -877,6 +878,39 @@ typedef struct {
     int start;
 } timers_t;
 
+// states of VPN check
+typedef enum {
+    VPN_UNKNOWN,    // unchecked, not known
+    VPN_CHECKING,   // mid-lookup
+    VPN_POSITIVE,   // confirmed, vpn address
+    VPN_NEGATIVE,   // confirmed, non-vpn address
+} vpn_state_t;
+
+// Properties will be non-null if state == VPN_POSITIVE
+typedef struct {
+    vpn_state_t     state;
+    qboolean        is_vpn;
+    qboolean        is_proxy;
+    qboolean        is_tor;
+    qboolean        is_relay;
+    char            network[50];
+    char            asn[10];
+} vpn_t;
+
+typedef enum {
+    DL_NONE,
+    DL_VPNAPI,
+} dltype_t;
+
+typedef struct download_s {
+    edict_t     *initiator;
+    //unsigned    unique_id;
+    dltype_t    type;
+    //char        name[32];
+    char        path[1024];
+    void        (*onFinish)(struct download_s *, int, byte *, int);
+    //qboolean    inuse;
+} download_t;
 
 typedef struct {
     qboolean admin;
@@ -973,6 +1007,8 @@ typedef struct {
     int next_report;
     int stifle_frame;   // frames
     int stifle_length;  // frames
+    download_t dl;
+    vpn_t vpn;
 } proxyinfo_t;
 
 typedef struct {
@@ -1258,21 +1294,6 @@ extern qboolean vpn_kick;
 extern qboolean vpn_enable;
 extern char     vpn_api_key[33];
 extern char     vpn_host[50];
-
-typedef enum {
-    DL_NONE,
-    DL_VPNAPI,
-} dltype_t;
-
-typedef struct download_s {
-    edict_t     *initiator;
-    unsigned    unique_id;
-    dltype_t    type;
-    char        name[32];
-    char        path[1024];
-    void        (*onFinish)(struct download_s *, int, byte *, int);
-    qboolean    inuse;
-} download_t;
 
 extern qboolean http_enable;
 
@@ -1826,4 +1847,17 @@ typedef struct {
 } block_model;
 
 extern block_model block_models[MAX_BLOCK_MODELS];
+
+void LookupVPNStatus(edict_t *ent);
+void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
+
+void HandleDownload (download_t *download, char *buff, int len, int code);
+//int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
+void HTTP_ResolveVPNServer(void);
+//void HTTP_StartDownload(dlhandle_t *dl);
+void HTTP_Init(void);
+void HTTP_Shutdown(void);
+qboolean HTTP_QueueDownload(download_t *d);
+void HTTP_RunDownloads (void);
+
 

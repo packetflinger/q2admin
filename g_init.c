@@ -1270,6 +1270,10 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
         whois_update_seen(client, ent);
     }
 
+    if (vpn_enable) {
+        LookupVPNStatus(ent);
+    }
+
     if (ret) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0);
 

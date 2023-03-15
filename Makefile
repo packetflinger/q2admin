@@ -30,7 +30,7 @@ RM ?= rm -f
 CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD -DCURL_STATICLIB $(GLIB_CFLAGS) $(SSL_CFLAGS) $(INCLUDES)
 LDFLAGS ?= -shared $(GLIB_LDFLAGS) $(SSL_LDFLAGS)
 #LIBS ?= -lcurl -lm -ldl
-LIBS=deps/$(CPU)/libcurl.a deps/$(CPU)/libcrypto.a -lpthread
+LIBS=deps/$(CPU)/libcurl.a deps/$(CPU)/libcrypto.a -lpthread -lssl
 
 ifdef CONFIG_WINDOWS
     CFLAGS += -DQ2ADMINCLIB=1
@@ -48,6 +48,7 @@ HEADERS := 	game.h \
 			g_file.h \
 			g_local.h \
 			g_cloud.h \
+			g_json.h \
 			q_shared.h \
 			regex.h \
 			q_platform.h
@@ -65,6 +66,7 @@ OBJS := g_anticheat.o \
 		g_hashlist.o \
 		g_http.o \
 		g_init.o \
+		g_json.o \
 		g_libc.o \
 		g_log.o \
 		g_lrcon.o \

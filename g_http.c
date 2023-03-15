@@ -45,7 +45,7 @@ typedef struct dlhandle_s {
     char            URL[2048];
     char            *tempBuffer;
     qboolean        inuse;
-    download_t      *tdm_handle;
+    download_t      *handle;
 } dlhandle_t;
 
 //we need this high in case a sudden server switch causes a bunch of people
@@ -70,9 +70,11 @@ static time_t               last_dns_lookup;
 void HandleDownload (download_t *download, char *buff, int len, int code)
 {
     //handle went invalid (client->pers->download = zeroed), just ignore this download completely.
+    /*
     if (!download->inuse) {
         return;
     }
+    */
 
     //FIXME: observed a crash here due to NULL initiator
     if (!download->initiator) {
@@ -84,7 +86,7 @@ void HandleDownload (download_t *download, char *buff, int len, int code)
     //for that to happen, the download must take 3+ seconds which should be unrealistic, so i don't
     //deal with it.
     //if (!download->initiator->inuse || download->initiator->client->pers.uniqueid != download->unique_id) {
-    download->initiator = NULL;
+    //download->initiator = NULL;
     //}
 
     download->onFinish(download, code, (byte *)buff, len);
@@ -262,10 +264,10 @@ void HTTP_StartDownload(dlhandle_t *dl)
         dl->curl = curl_easy_init();
     }
 
-    HTTP_EscapePath(dl->filePath, escapedFilePath);
+    //HTTP_EscapePath(dl->filePath, escapedFilePath);
 
     // format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
-    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s%s", otdm_api_ip, "", escapedFilePath);
+    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", vpn_host, dl->filePath);
 
     curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
@@ -287,6 +289,9 @@ void HTTP_StartDownload(dlhandle_t *dl)
     curl_easy_setopt(dl->curl, CURLOPT_MAXREDIRS, 5);
     curl_easy_setopt(dl->curl, CURLOPT_USERAGENT, "q2admin");
     curl_easy_setopt(dl->curl, CURLOPT_REFERER, "");
+    curl_easy_setopt(dl->curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
+    curl_easy_setopt(dl->curl, CURLOPT_CAPATH, "");
+    curl_easy_setopt(dl->curl, CURLOPT_SSL_VERIFYPEER, 0);
     curl_easy_setopt(dl->curl, CURLOPT_URL, dl->URL);
 
     if (curl_multi_add_handle(multi, dl->curl) != CURLM_OK) {
@@ -381,16 +386,17 @@ static void HTTP_FinishDownload(void)
 
                 curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &responseCode);
                 if (responseCode == 404) {
-                    HandleDownload(dl->tdm_handle, NULL, 0, responseCode);
+                    HandleDownload(dl->handle, NULL, 0, responseCode);
+                    //FinishVPNLookup(dl->handle, NULL, 0, responseCode, )
                     gi.dprintf ("HTTP: %s: 404 File Not Found\n", dl->URL);
                     curl_multi_remove_handle (multi, dl->curl);
                     dl->inuse = qfalse;
                     continue;
                 } else if (responseCode == 200) {
-                    HandleDownload(dl->tdm_handle, dl->tempBuffer, dl->position, responseCode);
+                    HandleDownload(dl->handle, dl->tempBuffer, dl->position, responseCode);
                     gi.TagFree(dl->tempBuffer);
                 } else {
-                    HandleDownload(dl->tdm_handle, NULL, 0, responseCode);
+                    HandleDownload(dl->handle, NULL, 0, responseCode);
                     if (dl->tempBuffer) {
                         gi.TagFree (dl->tempBuffer);
                     }
@@ -399,7 +405,7 @@ static void HTTP_FinishDownload(void)
 
             //fatal error
             default:
-                HandleDownload(dl->tdm_handle, NULL, 0, 0);
+                HandleDownload(dl->handle, NULL, 0, 0);
                 gi.dprintf("HTTP Error: %s: %s\n", dl->URL, curl_easy_strerror (result));
                 curl_multi_remove_handle(multi, dl->curl);
                 dl->inuse = qfalse;
@@ -428,19 +434,21 @@ qboolean HTTP_QueueDownload(download_t *d)
     unsigned    i;
 
     if (handleCount == MAX_DOWNLOADS) {
-        gi.cprintf (d->initiator, PRINT_HIGH, "Another download is already pending, please try again later.\n");
+        gi.dprintf("Another download is already pending, please try again later.\n");
         return qfalse;
     }
 
     if (!http_enable) {
-        gi.cprintf (d->initiator, PRINT_HIGH, "HTTP functions are disabled on this server.\n");
+        gi.dprintf("HTTP functions are disabled on this server.\n");
         return qfalse;
     }
 
+    /*
     if (!otdm_api_ip[0]) {
-        gi.cprintf (d->initiator, PRINT_HIGH, "This server failed to resolve the OpenTDM web API server.\n");
+        gi.dprintf("This server failed to resolve the OpenTDM web API server.\n");
         return qfalse;
     }
+    */
 
     for (i = 0; i < MAX_DOWNLOADS; i++) {
         if (!downloads[i].inuse) {
@@ -449,11 +457,11 @@ qboolean HTTP_QueueDownload(download_t *d)
     }
 
     if (i == MAX_DOWNLOADS) {
-        gi.cprintf (d->initiator, PRINT_HIGH, "The server is too busy to download configs right now.\n");
+        gi.dprintf("The server is too busy to download configs right now.\n");
         return qfalse;
     }
 
-    downloads[i].tdm_handle = d;
+    downloads[i].handle = d;
     downloads[i].inuse = qtrue;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
