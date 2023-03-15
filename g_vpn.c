@@ -104,3 +104,21 @@ qboolean isVPN(int clientnum)
 {
     return qfalse;
 }
+
+/**
+ * Display any players currently connected via a VPN
+ */
+void vpnUsersRun(int startarg, edict_t *ent, int client)
+{
+    int i;
+
+    for (i=0; i<(int)maxclients->value; i++) {
+        if (!proxyinfo[i].inuse) {
+            continue;
+        }
+
+        if (proxyinfo[i].vpn.state == VPN_POSITIVE) {
+            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", proxyinfo[i].name, proxyinfo[i].vpn.network, proxyinfo[i].vpn.asn);
+        }
+    }
+}

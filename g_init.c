@@ -100,6 +100,8 @@ qboolean vpn_enable              = qfalse;
 qboolean vpn_kick                = qtrue;
 char     vpn_api_key[33]         = "";
 
+int      ip_limit                = 0;
+
 qboolean http_enable             = qtrue;
 
 int USERINFOCHANGE_TIME = 60;
@@ -971,6 +973,19 @@ qboolean checkReconnectList(char *username)
     }
 
     return TRUE;
+}
+
+/**
+ * Do two IPv4 addresses match?
+ */
+static qboolean IPv4Match(byte first[4], byte second[4]) {
+    for (int i=0; i<3; i++) {
+        if (first[i] != second[i]) {
+            return qfalse;
+        }
+    }
+
+    return qtrue;
 }
 
 /**
@@ -1876,6 +1891,30 @@ void ClientBegin(edict_t *ent)
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
     
+    // positive value is normal client limit
+    // negative value is vpn client limit (abs)
+    // 0 is no limit
+    if (ip_limit != 0) {
+        int sameaddr = 1;
+        for (int i=0; i<(int)maxclients->value; i++) {
+            if (!proxyinfo[i].inuse || i == client) {
+                continue;
+            }
+            if (IPv4Match(proxyinfo[i].ipaddressBinary, proxyinfo[client].ipaddressBinary)) {
+                sameaddr++;
+            }
+        }
+        if (sameaddr > ip_limit && ip_limit > 0) {
+            Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same IP address (%d)\n", sameaddr);
+            gi.cprintf(ent, PRINT_HIGH, buffer);
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+        }
+        if (sameaddr > (ip_limit * -1) && ip_limit < 0 && proxyinfo[client].vpn.state == VPN_POSITIVE) {
+            Q_snprintf(buffer, sizeof(buffer), "Too many VPN connections from the same IP address (%d)\n", sameaddr);
+            gi.cprintf(ent, PRINT_HIGH, buffer);
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+        }
+    }
 
     if (num_q2a_admins) {
         addCmdQueue(client, QCMD_SPAMBYPASS, 60 + (10 * random()), 0, 0);

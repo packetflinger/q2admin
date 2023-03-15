@@ -606,6 +606,12 @@ q2acmd_t q2aCommands[] = {
         ipRun
     },
     {
+        "ip_limit",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &ip_limit
+    },
+    {
         "ipbanning_enable",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -1184,6 +1190,13 @@ q2acmd_t q2aCommands[] = {
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
         &vpn_api_key
+    },
+    {
+        "vpnusers",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        vpnUsersRun,
     },
     {
         "vpn_enable",

@@ -1295,6 +1295,9 @@ extern qboolean vpn_enable;
 extern char     vpn_api_key[33];
 extern char     vpn_host[50];
 
+// 0 no limit, positive normal limit, negative vpn limit
+extern int      ip_limit;
+
 extern qboolean http_enable;
 
 
@@ -1850,14 +1853,13 @@ extern block_model block_models[MAX_BLOCK_MODELS];
 
 void LookupVPNStatus(edict_t *ent);
 void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
-
 void HandleDownload (download_t *download, char *buff, int len, int code);
-//int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
 void HTTP_ResolveVPNServer(void);
-//void HTTP_StartDownload(dlhandle_t *dl);
 void HTTP_Init(void);
 void HTTP_Shutdown(void);
 qboolean HTTP_QueueDownload(download_t *d);
 void HTTP_RunDownloads (void);
+
+void vpnUsersRun(int startarg, edict_t *ent, int client);
 
 
