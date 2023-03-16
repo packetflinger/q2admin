@@ -1,2 +1,4 @@
-libcurl 7.82.0
-libcrypto 1.1.1n
+libcurl 7.88.0
+libssl 3.1.0
+libcrypto 3.1.0
+libz 1.2.13

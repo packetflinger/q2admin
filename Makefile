@@ -15,22 +15,20 @@ ifndef YEAR
 	YEAR := $(shell date +%Y)
 endif
 
-GLIB_CFLAGS ?= $(shell pkg-config --cflags glib-2.0)
-GLIB_LDFLAGS ?= $(shell pkg-config --libs glib-2.0)
-
-SSL_CFLAGS ?= $(shell pkg-config --cflags openssl)
-SSL_LDFLAGS ?= $(shell pkg-config --libs openssl)
-
 CC ?= gcc
 LD ?= ld
 WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
 
-CFLAGS += -O2 -fno-strict-aliasing -g -Wno-unused-but-set-variable -MMD -DCURL_STATICLIB $(GLIB_CFLAGS) $(SSL_CFLAGS) $(INCLUDES)
-LDFLAGS ?= -shared $(GLIB_LDFLAGS) $(SSL_LDFLAGS)
-#LIBS ?= -lcurl -lm -ldl
-LIBS=deps/$(CPU)/libcurl.a deps/$(CPU)/libcrypto.a -lpthread -lssl
+CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
+LDFLAGS ?= -shared
+LIBS ?= deps/$(CPU)/libcurl.a \
+        deps/$(CPU)/libz.a \
+        deps/$(CPU)/libssl.a \
+        deps/$(CPU)/libcrypto.a \
+        -lpthread \
+        -ldl
 
 ifdef CONFIG_WINDOWS
     CFLAGS += -DQ2ADMINCLIB=1
@@ -45,41 +43,41 @@ CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
 RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 
 HEADERS := 	game.h \
-			g_file.h \
-			g_local.h \
-			g_cloud.h \
-			g_json.h \
-			q_shared.h \
-			regex.h \
-			q_platform.h
+            g_file.h \
+            g_local.h \
+            g_cloud.h \
+            g_json.h \
+            q_shared.h \
+            regex.h \
+            q_platform.h
 
-OBJS := g_anticheat.o \
-		g_ban.o \
-		g_base64.o \
-		g_checkvar.o \
-		g_cloud.o \
-		g_cmd.o \
-		g_crypto.o \
-		g_disable.o \
-		g_file.o \
-		g_flood.o \
-		g_hashlist.o \
-		g_http.o \
-		g_init.o \
-		g_json.o \
-		g_libc.o \
-		g_log.o \
-		g_lrcon.o \
-		g_main.o \
-		g_mdfour.o \
-		g_queue.o \
-		g_spawn.o \
-		g_util.o \
-		g_vote.o \
-		g_vpn.o \
-		g_zbot.o \
-		g_zbotcheck.o \
-		regex.o
+OBJS :=     g_anticheat.o \
+            g_ban.o \
+            g_base64.o \
+            g_checkvar.o \
+            g_cloud.o \
+            g_cmd.o \
+            g_crypto.o \
+            g_disable.o \
+            g_file.o \
+            g_flood.o \
+            g_hashlist.o \
+            g_http.o \
+            g_init.o \
+            g_json.o \
+            g_libc.o \
+            g_log.o \
+            g_lrcon.o \
+            g_main.o \
+            g_mdfour.o \
+            g_queue.o \
+            g_spawn.o \
+            g_util.o \
+            g_vote.o \
+            g_vpn.o \
+            g_zbot.o \
+            g_zbotcheck.o \
+            regex.o
 
 ifdef CONFIG_SQLITE
     SQLITE_CFLAGS ?=
