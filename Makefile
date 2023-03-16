@@ -26,13 +26,8 @@ INCLUDES ?= -Ideps/$(CPU)/curl-7.88.0/include \
             -Ideps/$(CPU)/openssl-3.1.0/include
             
 CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
+
 LDFLAGS ?= -shared
-qLIBS ?= deps/$(CPU)/libcurl.a \
-        deps/$(CPU)/libz.a \
-        deps/$(CPU)/libssl.a \
-        deps/$(CPU)/libcrypto.a \
-        -lpthread \
-        -ldl
 
 LIBS ?= deps/$(CPU)/curl-7.88.0/lib/libcurl.a \
         deps/$(CPU)/zlib-1.2.13/lib/libz.a \
@@ -132,7 +127,7 @@ endif
 	$(E) [RC] $@
 	$(Q)$(WINDRES) $(RCFLAGS) -o $@ $<
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) genkeys
 	$(E) [LD] $@
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
