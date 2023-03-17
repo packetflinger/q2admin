@@ -272,7 +272,7 @@ void HTTP_StartDownload(dlhandle_t *dl)
     curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
 
-    if (qtrue) { // change this later
+    if (http_debug) {
         curl_easy_setopt(dl->curl, CURLOPT_DEBUGFUNCTION, CURL_Debug);
         curl_easy_setopt(dl->curl, CURLOPT_VERBOSE, 1);
     } else {

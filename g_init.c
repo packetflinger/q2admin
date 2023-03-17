@@ -102,6 +102,7 @@ char     vpn_api_key[33]         = "";
 
 int      ip_limit                = 0;
 
+qboolean http_debug              = qfalse;
 qboolean http_enable             = qtrue;
 
 int USERINFOCHANGE_TIME = 60;

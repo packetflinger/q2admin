@@ -1298,6 +1298,7 @@ extern char     vpn_host[50];
 // 0 no limit, positive normal limit, negative vpn limit
 extern int      ip_limit;
 
+extern qboolean http_debug;
 extern qboolean http_enable;
 
 
