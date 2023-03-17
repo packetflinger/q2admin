@@ -1809,6 +1809,8 @@ void ClientDisconnect(edict_t *ent)
     proxyinfo[client].vid_restart = qfalse;
     proxyinfo[client].userid = -1;
     
+    q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
+
     STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
 }
 
