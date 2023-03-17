@@ -105,6 +105,8 @@ int      ip_limit                = 0;
 qboolean http_debug              = qfalse;
 qboolean http_enable             = qtrue;
 
+ip_cache_t *ipcache;
+
 int USERINFOCHANGE_TIME = 60;
 int USERINFOCHANGE_COUNT = 40;
 int client_map_cfg = 6;
@@ -481,6 +483,8 @@ void InitGame(void)
 
         removeClientCommands(i);
     }
+
+    ipcache = 0;
 
     Read_Admin_cfg();
 

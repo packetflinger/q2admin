@@ -878,6 +878,19 @@ typedef struct {
     int start;
 } timers_t;
 
+// not used yet
+struct ip_cache_s {
+    byte ip[16];                // enough room for ipv6
+    int masklen;                // cidr len
+    int ttl;                    // seconds this entry is valid
+    qboolean v6;                // is it an IPv6 address?
+    struct ip_cache_s *prev;
+    struct ip_cache_s *next;
+};
+
+typedef struct ip_cache_s ip_cache_t;
+extern ip_cache_t *ipcache;
+
 // states of VPN check
 typedef enum {
     VPN_UNKNOWN,    // unchecked, not known
