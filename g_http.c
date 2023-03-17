@@ -443,13 +443,6 @@ qboolean HTTP_QueueDownload(download_t *d)
         return qfalse;
     }
 
-    /*
-    if (!otdm_api_ip[0]) {
-        gi.dprintf("This server failed to resolve the OpenTDM web API server.\n");
-        return qfalse;
-    }
-    */
-
     for (i = 0; i < MAX_DOWNLOADS; i++) {
         if (!downloads[i].inuse) {
             break;
