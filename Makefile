@@ -127,7 +127,7 @@ endif
 	$(E) [RC] $@
 	$(Q)$(WINDRES) $(RCFLAGS) -o $@ $<
 
-$(TARGET): $(OBJS) genkeys
+$(TARGET): $(OBJS)
 	$(E) [LD] $@
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
