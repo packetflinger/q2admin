@@ -1475,6 +1475,36 @@ q2acmd_t q2aCommands[] = {
 //===================================================================
 char mutedText[8192] = "";
 
+void Cmd_Teleport_f(edict_t *ent)
+{
+    if (!(cloud.flags & RFL_TELEPORT)) {
+        gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
+        return;
+    }
+
+    uint8_t id = getEntOffset(ent) - 1;
+
+    CA_Teleport(id);
+}
+
+void Cmd_Invite_f(edict_t *ent) {
+    if (!(cloud.flags & RFL_INVITE)) {
+            gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
+            return;
+    }
+
+    char *invitetext;
+    uint8_t id = getEntOffset(ent) - 1;
+
+    if (gi.argc() > 1) {
+            invitetext = gi.args();
+    } else {
+            invitetext = "";
+    }
+
+    CA_Invite(id, invitetext);
+}
+
 void dprintf_internal(char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
@@ -3879,35 +3909,5 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
 
     // clear all the reconnect user info...
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
-}
-
-void Cmd_Teleport_f(edict_t *ent)
-{
-    if (!(cloud.flags & RFL_TELEPORT)) {
-        gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
-        return;
-    }
-
-    uint8_t id = getEntOffset(ent) - 1;
-
-    CA_Teleport(id);
-}
-
-void Cmd_Invite_f(edict_t *ent) {
-    if (!(cloud.flags & RFL_INVITE)) {
-            gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
-            return;
-    }
-
-    char *invitetext;
-    uint8_t id = getEntOffset(ent) - 1;
-
-    if (gi.argc() > 1) {
-            invitetext = gi.args();
-    } else {
-            invitetext = "";
-    }
-
-    CA_Invite(id, invitetext);
 }
 
