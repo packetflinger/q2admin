@@ -1132,7 +1132,7 @@ void readBanLists(void) {
     }
 
     if (!ret) {
-        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_ban->string);
+        gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_ban->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0);
     }
 
