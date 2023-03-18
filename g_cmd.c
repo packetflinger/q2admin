@@ -2478,9 +2478,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         return FALSE;
     } else if (proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2) // check for proxy string
     {
-        char *a1 = gi.argv(1);
-        char *a2 = gi.argv(2);
-
         if (!zbotdetect || !proxyinfo[client].inuse) {
             return FALSE;
         }
