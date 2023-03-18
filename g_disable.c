@@ -152,7 +152,7 @@ void readDisableLists(void) {
     }
 
     if (!ret) {
-        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_disable->string);
+        gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_disable->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_disable->string), IW_DISABLESETUPLOAD, 0.0);
     }
 }
