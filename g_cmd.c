@@ -585,6 +585,12 @@ q2acmd_t q2aCommands[] = {
         hackuserdisplay
     },
     {
+        "http_cacert_path",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        http_cacert_path
+    },
+    {
         "http_debug",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -595,6 +601,12 @@ q2acmd_t q2aCommands[] = {
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &http_enable
+    },
+    {
+        "http_verifyssl",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &http_verifyssl
     },
     {
         "impulsestokickon",

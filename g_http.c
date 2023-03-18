@@ -289,10 +289,15 @@ void HTTP_StartDownload(dlhandle_t *dl)
     curl_easy_setopt(dl->curl, CURLOPT_MAXREDIRS, 5);
     curl_easy_setopt(dl->curl, CURLOPT_USERAGENT, "q2admin");
     curl_easy_setopt(dl->curl, CURLOPT_REFERER, "");
-    curl_easy_setopt(dl->curl, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
-    curl_easy_setopt(dl->curl, CURLOPT_CAPATH, "");
-    curl_easy_setopt(dl->curl, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(dl->curl, CURLOPT_CAPATH, http_cacert_path);
+
     curl_easy_setopt(dl->curl, CURLOPT_URL, dl->URL);
+    if (http_verifyssl) {
+        curl_easy_setopt(dl->curl, CURLOPT_SSL_VERIFYPEER, 1);
+    } else {
+        curl_easy_setopt(dl->curl, CURLOPT_SSL_VERIFYPEER, 0);
+    }
+
 
     if (curl_multi_add_handle(multi, dl->curl) != CURLM_OK) {
         gi.dprintf("HTTP_StartDownload: curl_multi_add_handle: error\n");

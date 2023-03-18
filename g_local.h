@@ -1311,8 +1311,10 @@ extern char     vpn_host[50];
 // 0 no limit, positive normal limit, negative vpn limit
 extern int      ip_limit;
 
+extern char     http_cacert_path[256];
 extern qboolean http_debug;
 extern qboolean http_enable;
+extern qboolean http_verifyssl;
 
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];

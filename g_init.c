@@ -102,8 +102,10 @@ char     vpn_api_key[33]         = "";
 
 int      ip_limit                = 0;
 
+char     http_cacert_path[256]   = "/etc/ssl/certs";
 qboolean http_debug              = qfalse;
 qboolean http_enable             = qtrue;
+qboolean http_verifyssl          = qtrue;
 
 ip_cache_t *ipcache;
 
