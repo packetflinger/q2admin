@@ -21,18 +21,18 @@ WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
 
-INCLUDES ?= -Ideps/$(CPU)/curl-7.88.0/include \
-            -Ideps/$(CPU)/zlib-1.2.13/include \
-            -Ideps/$(CPU)/openssl-3.1.0/include
+INCLUDES ?= -Ideps/$(CPU)/curl/include \
+            -Ideps/$(CPU)/zlib/include \
+            -Ideps/$(CPU)/openssl/include
             
 CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
 
 LDFLAGS ?= -shared
 
-LIBS ?= deps/$(CPU)/curl-7.88.0/lib/libcurl.a \
-        deps/$(CPU)/zlib-1.2.13/lib/libz.a \
-        deps/$(CPU)/openssl-3.1.0/lib/libssl.a \
-        deps/$(CPU)/openssl-3.1.0/lib/libcrypto.a \
+LIBS ?= deps/$(CPU)/curl/lib/libcurl.a \
+        deps/$(CPU)/zlib/lib/libz.a \
+        deps/$(CPU)/openssl/lib/libssl.a \
+        deps/$(CPU)/openssl/lib/libcrypto.a \
         -lpthread \
         -ldl
 
