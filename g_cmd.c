@@ -105,11 +105,11 @@ block_model block_models[MAX_BLOCK_MODELS] ={
         "models/weapons/g_machn/tris.md2"
     },
     { 
-		"models/weapons/g_rocket/tris.md2"
-	},
+        "models/weapons/g_rocket/tris.md2"
+    },
     { 
-		"models/weapons/g_hyperb/tris.md2"
-	},
+        "models/weapons/g_hyperb/tris.md2"
+    },
     {
         "models/weapons/g_shotg/tris.md2"
     },
@@ -838,27 +838,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_NUMBER,
         &numofdisplays
     },
-
-    //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-    /*{
-            "play_all_enable",
-            CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-            CMDTYPE_LOGICAL,
-            &play_all_enable
-    },
-    {
-            "play_team_enable",
-            CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-            CMDTYPE_LOGICAL,
-            &play_team_enable
-    },
-    {
-            "play_person_enable",
-            CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-            CMDTYPE_LOGICAL,
-            &play_person_enable
-    },*/
-    //r1ch 2005-01-26 disable hugely buggy commands END
     {
         "printmessageonplaycmds",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1022,13 +1001,13 @@ q2acmd_t q2aCommands[] = {
         NULL,
         sayPersonRun,
     },
-	{
-		"say_person_low",
-		CMDWHERE_SERVERCONSOLE,
-		CMDTYPE_NONE,
-		NULL,
-		sayPersonLowRun,
-	},
+    {
+        "say_person_low",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        sayPersonLowRun,
+    },
     {
         "say_person_enable",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1271,11 +1250,11 @@ q2acmd_t q2aCommands[] = {
         zbotuserdisplay
     },
     /*{
-			"client_check",
-			CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-			CMDTYPE_NUMBER,
-			&client_check
-	},*/
+        "client_check",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &client_check
+    },*/
     {
         "client_map_cfg",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
@@ -1459,11 +1438,11 @@ q2acmd_t q2aCommands[] = {
         &USERINFOCHANGE_TIME
     },
     /*{ 
-		"version_check", 
-		CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE, 
-		CMDTYPE_STRING,
-		&version_check
-	},*/
+        "version_check",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &version_check
+    },*/
     {
         "whois_active",
         CMDWHERE_CFGFILE, //Only allocates memory at InitGame: can only be read from config
@@ -2052,11 +2031,11 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0:
-						q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
-						if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
-							maxi++;
-							proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
-						} else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+                        q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+                        if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+                            maxi++;
+                            proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
+                        } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
                             maxi++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
@@ -2085,14 +2064,14 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 
 edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
     int8_t clienti, foundclienti;
-	uint8_t like, matchcount;
+    uint8_t like, matchcount;
     char strbuffer[sizeof(buffer)];
-	char strbuffer2[sizeof(buffer)];
+    char strbuffer2[sizeof(buffer)];
 
     foundclienti = -1;
-	matchcount = 0;
-	
-	if (startContains(cp, "CL ")) {
+    matchcount = 0;
+
+    if (startContains(cp, "CL ")) {
         like = 3;
 
         cp += 2;
@@ -2132,15 +2111,15 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0:
-						q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
-						if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
-							foundclienti = clienti;
-							matchcount++;
-							if (matchcount > 1) {
-								gi.cprintf(ent, PRINT_HIGH, "2 or more player names matched.\n");
-								return NULL;
-							}
-						} else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+                        q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+                        if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+                            foundclienti = clienti;
+                            matchcount++;
+                            if (matchcount > 1) {
+                                gi.cprintf(ent, PRINT_HIGH, "2 or more player names matched.\n");
+                                return NULL;
+                            }
+                        } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
                                 return NULL;
@@ -2205,23 +2184,23 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
         }
 
         Q_snprintf(
-        		tmptext,
-				sizeof(tmptext),
-				"(%s)(private message to: %s) %s\n",
-				proxyinfo[client].name,
-				proxyinfo[clienti].name,
-				text
-		);
+                tmptext,
+                sizeof(tmptext),
+                "(%s)(private message to: %s) %s\n",
+                proxyinfo[client].name,
+                proxyinfo[clienti].name,
+                text
+        );
         cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
         cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
 
         Q_snprintf(
-        		tmptext,
-				sizeof(tmptext),
-				"(%s)(private message) %s\n",
-				proxyinfo[client].name,
-				text
-		);
+                tmptext,
+                sizeof(tmptext),
+                "(%s)(private message) %s\n",
+                proxyinfo[client].name,
+                text
+        );
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
 
         return FALSE;
@@ -2299,23 +2278,23 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
                 enti = getEnt((clienti + 1));
 
                 Q_snprintf(
-                		tmptext,
-						sizeof(tmptext),
-						"(%s)(private message to: %s) %s\n",
-						proxyinfo[client].name,
-						proxyinfo[clienti].name,
-						text
-				);
+                        tmptext,
+                        sizeof(tmptext),
+                        "(%s)(private message to: %s) %s\n",
+                        proxyinfo[client].name,
+                        proxyinfo[clienti].name,
+                        text
+                );
                 cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
                 cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
 
                 Q_snprintf(
-                		tmptext,
-						sizeof(tmptext),
-						"(%s)(private message) %s\n",
-						proxyinfo[client].name,
-						text
-				);
+                        tmptext,
+                        sizeof(tmptext),
+                        "(%s)(private message) %s\n",
+                        proxyinfo[client].name,
+                        text
+                );
                 cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
             }
         }
@@ -2924,92 +2903,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
                 return FALSE;
             }
-
-            //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-            /*
-            else if (play_team_enable && startContains(args, "!t")) // play_team
-            {
-                args += 2;
-                SKIPBLANK(args);
-
-                if (*args && q2a_strchr(args, ';') == NULL) {
-                    if (printmessageonplaycmds) {
-                        sprintf(buffer, "say_team \"Playing Team Sound %s\"\n",
-                                args);
-                        stuffcmd(ent, buffer);
-                    }
-                    sprintf(buffer, "say_team \"swpplay %s\"\n", args);
-                    stuffcmd(ent, buffer);
-                } else {
-                    gi.cprintf(ent, PRINT_HIGH, "say !t wavfile\n");
-                }
-
-                return FALSE;
-            } else if (play_all_enable && startContains(args, "!a")) // play_all
-            {
-                args += 2;
-                SKIPBLANK(args);
-
-                if (*args && q2a_strchr(args, ';') == NULL) {
-                    if (printmessageonplaycmds) {
-                        sprintf(buffer, "say \"Playing Sound %s\"\n", args);
-                        stuffcmd(ent, buffer);
-                    }
-                    sprintf(buffer, "play %s\n", args);
-
-                    for (clienti = 0; clienti < maxclients->value; clienti++) {
-                        if (proxyinfo[clienti].inuse) {
-                            stuffcmd(getEnt((clienti + 1)), buffer);
-                        }
-                    }
-                } else {
-                    gi.cprintf(ent, PRINT_HIGH, "say !a wavfile\n");
-                }
-
-                return FALSE;
-            } else if (play_person_enable && startContains(args, "!w")) // play_person
-            {
-                char *txt;
-
-                args += 2;
-                SKIPBLANK(args);
-
-                enti = getClientFromArg(client, ent, &clienti, args, &txt);
-
-                if (enti) {
-                    if (q2a_strlen(txt) > sizeof(buffer) - 10) {
-                        txt[sizeof(buffer) - 10] = 0;
-                    }
-
-                    if (q2a_strchr(args, ';') == NULL) {
-                        if (printmessageonplaycmds) {
-                            sprintf(buffer,
-                                    "(%s)(private play sound to: %s) %s\n",
-                                    proxyinfo[client].name,
-                                    proxyinfo[clienti].name, txt);
-                            cprintf_internal(NULL, PRINT_CHAT, "%s", buffer);
-                            cprintf_internal(ent, PRINT_CHAT, "%s", buffer);
-
-                            sprintf(buffer, "(%s)(private play sound) %s\n",
-                                    proxyinfo[client].name, txt);
-                            cprintf_internal(enti, PRINT_CHAT, "%s", buffer);
-                        }
-
-                        sprintf(buffer, "play %s\n", txt);
-                        stuffcmd(enti, buffer);
-                    } else {
-                        gi.cprintf(ent, PRINT_HIGH,
-                                "say !w [LIKE/RE/CL] name wavfile\n");
-                    }
-                } else {
-                    gi.cprintf(ent, PRINT_HIGH,
-                            "say !w [LIKE/RE/CL] name wavfile\n");
-                }
-
-                return FALSE;
-            }
-            */
-            //r1ch 2005-01-26 disable hugely buggy commands BEGIN
         }
     } else if (checkforfloodcmds(cmd)) {
         if (checkForMute(client, ent, TRUE)) {
@@ -3019,9 +2912,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         *checkforfloodafter = TRUE;
     }
 
-
-    //	if(adminpassword[0] && proxyinfo[client].admin && cmd[0] == '!')
-    //		{
     if (cmd[0] == '!') {
         if (proxyinfo[client].q2a_admin) {
             q2a_admin_command = ADMIN_process_command(ent, client);
@@ -3096,106 +2986,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             gi.cprintf(ent, PRINT_HIGH, "Unknown q2admin command!\n");
             return FALSE;
         }
-    }
-        //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-        /*
-        else if(play_team_enable && Q_stricmp(cmd, "play_team") == 0)
-                {
-                        char *args;
-			
-                        if (gi.argc() != 2)
-                                {
-                                        gi.cprintf(ent, PRINT_HIGH, "play_team wavfile\n");
-                                        return FALSE;
-                                }
-				
-                        args = gi.argv(1);
-			
-                        if(!*args || q2a_strchr(args, ';') != NULL)
-                                {
-                                        gi.cprintf(ent, PRINT_HIGH, "play_team wavfile\n");
-                                        return FALSE;
-                                }
-				
-                        if ( printmessageonplaycmds )
-                                {
-                                        sprintf(buffer, "say_team \"Playing Team Sound %s\"\n", args);
-                                        stuffcmd(ent, buffer);
-                                }
-                        sprintf(buffer, "say_team \"swpplay %s\"\n", args);
-                        stuffcmd(ent, buffer);
-                        return FALSE;
-                }
-        else if(play_all_enable && Q_stricmp(cmd, "play_all") == 0)
-                {
-                        char *args;
-			
-                        if (gi.argc() != 2)
-                                {
-                                        return FALSE;
-                                }
-				
-                        args = gi.argv(1);
-			
-                        if(!*args || q2a_strchr(args, ';') != NULL)
-                                {
-                                        gi.cprintf(ent, PRINT_HIGH, "play_all wavfile\n");
-                                        return FALSE;
-                                }
-				
-                        if ( printmessageonplaycmds )
-                                {
-                                        sprintf(buffer, "say \"Playing Sound %s\"\n", args);
-                                        stuffcmd(ent, buffer);
-                                }
-                        sprintf(buffer, "play %s\n", args);
-			
-			
-                        for(clienti = 0; clienti < maxclients->value; clienti++)
-                                {
-                                        if(proxyinfo[clienti].inuse)
-                                                {
-                                                        stuffcmd(getEnt((clienti + 1)), buffer);
-                                                }
-                                }
-                        return FALSE;
-                }
-        else if(play_person_enable && Q_stricmp(cmd, "play_person") == 0)
-                {
-                        char *txt;
-			
-                        enti = getClientFromArg(client, ent, &clienti, getArgs(), &txt);
-			
-                        if(enti && q2a_strchr(txt, ';') == NULL)
-                                {
-                                        if(q2a_strlen(txt) > sizeof(buffer) - 10)
-                                                {
-                                                        txt[sizeof(buffer) - 10] = 0;
-                                                }
-						
-                                        if ( printmessageonplaycmds )
-                                                {
-                                                        sprintf(buffer, "(%s)(private play sound to: %s) %s\n", proxyinfo[client].name, proxyinfo[clienti].name, txt);
-                                                        cprintf_internal(NULL, PRINT_CHAT, "%s", buffer);
-                                                        cprintf_internal(ent, PRINT_CHAT, "%s", buffer);
-							
-                                                        sprintf(buffer, "(%s)(private play sound) %s\n", proxyinfo[client].name, txt);
-                                                        cprintf_internal(enti, PRINT_CHAT, "%s", buffer);
-                                                }
-						
-                                        sprintf(buffer, "play %s\n", txt);
-                                        stuffcmd(enti, buffer);
-                                }
-                        else
-                                {
-                                        gi.cprintf(ent, PRINT_HIGH, "play_person [LIKE/RE/CL] name wavfile\n");
-                                }
-				
-                        return FALSE;
-                }*/
-        //r1ch 2005-01-26 disable hugely buggy commands END
-
-    else if (say_person_enable && Q_stricmp(cmd, "say_person") == 0) {
+    } else if (say_person_enable && Q_stricmp(cmd, "say_person") == 0) {
         if (checkForMute(client, ent, TRUE)) {
             return FALSE;
         }
