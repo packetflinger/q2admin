@@ -1582,6 +1582,7 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 
 // zb_cmd.c
 void readCfgFiles(void);
+qboolean readCfgFile(char *cfgfilename);
 void ClientCommand(edict_t *ent);
 void ServerCommand(void);
 void dprintf_internal(char *fmt, ...);
@@ -1878,4 +1879,16 @@ void HTTP_RunDownloads (void);
 
 void vpnUsersRun(int startarg, edict_t *ent, int client);
 
+// crypto funcs
+qboolean G_LoadKeys(void);
+void G_GenerateKeyPair(int bits);
+void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len);
+size_t G_PrivateDecrypt(byte *dest, byte *src);
+void G_PublicDecrypt(RSA *key, byte *dest, byte *src);
+
+size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len);
+size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len);
+void G_SHA256Hash(byte *dest, byte *src, size_t src_len);
+void hexDump(char *desc, void *addr, int len);
+void G_RSAError();
 
