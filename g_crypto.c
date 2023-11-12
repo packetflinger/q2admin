@@ -144,9 +144,10 @@ size_t G_PrivateDecrypt(byte *dest, byte *src)
  * Encrypt a message using a public key. ONLY the matching private key
  * can decrypt the message.
  */
-size_t G_PublicEncrypt(EVP_PKEY *k, byte *out, byte *in, size_t inlen) {
+size_t G_PublicEncrypt(byte *out, byte *in, size_t inlen) {
     size_t cipherlen = 0;
-    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(k, NULL);
+    EVP_PKEY *key = cloud.connection.rsa_pu;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
         CA_printf("error creating context for encrypting\n");
         return 0;
