@@ -283,3 +283,21 @@ void G_SHA256Hash(byte *dest, byte *src, size_t src_len)
     SHA256_Final(hash, &sha256);
     memcpy(dest, hash, SHA256_DIGEST_LENGTH);
 }
+
+/**
+ * OpenSSL 3.* compatible SHA256 message digest
+ */
+void SHA256Hash(byte *dest, byte *src, size_t src_len) {
+    EVP_MD *md;
+    EVP_MD_CTX *ctx;
+    unsigned int md_len;
+
+    md = EVP_get_digestbyname("SHA256");
+    ctx = EVP_MD_CTX_new();
+
+    EVP_DigestInit_ex2(ctx, md, NULL);
+    EVP_DigestUpdate(ctx, src, src_len);
+    EVP_DigestFinal_ex(ctx, dest, &md_len);
+
+    EVP_MD_CTX_free(ctx);
+}
