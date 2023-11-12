@@ -1026,6 +1026,10 @@ void CA_SayHello(void)
     // random data to check server auth
     RAND_bytes(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 
+    byte challenge[RSA_LEN];
+    int chal_len = G_PublicEncrypt(challenge, cloud.connection.cl_nonce,
+            CHALLENGE_LEN);
+
     CA_WriteLong(MAGIC_CLIENT);
     CA_WriteByte(CMD_HELLO);
     CA_WriteString(cloud_uuid);
@@ -1033,7 +1037,8 @@ void CA_SayHello(void)
     CA_WriteShort(cloud.port);
     CA_WriteByte(cloud.maxclients);
     CA_WriteByte(cloud_encryption ? 1 : 0);
-    CA_WriteData(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
+    //CA_WriteData(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
+    CA_WriteData(challenge, RSA_LEN);
 }
 
 /**
