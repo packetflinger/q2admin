@@ -150,6 +150,49 @@ void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len)
 }
 
 /**
+ * Encrypt a message using a public key. ONLY the matching private key
+ * can decrypt the message.
+ */
+size_t G_PublicEncrypt(EVP_PKEY *k, byte *out, byte *in, size_t inlen) {
+    size_t cipherlen = 0;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(k, NULL);
+    if (!ctx) {
+        CA_printf("error creating context for encrypting\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_encrypt_init(ctx) <= 0) {
+        CA_printf("encrypt init failed\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+        CA_printf("error adding padding type (OAEP)\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, in, inlen) <= 0) {
+        CA_printf("encrypt error\n");
+        return 0;
+    }
+
+    byte *out1 = OPENSSL_malloc(cipherlen);
+
+    if (!out) {
+        CA_printf("malloc error while encrypting\n");
+    }
+
+    if (EVP_PKEY_encrypt(ctx, out1, &cipherlen, in, inlen) <= 0) {
+        CA_printf("error encrypting\n");
+    }
+
+    memcpy(out, out1, cipherlen);
+    OPENSSL_free(out1);
+
+    return cipherlen;
+}
+
+/**
  *
  */
 void G_RSAError()
@@ -274,20 +317,8 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     return written;
 }
 
-void G_SHA256Hash(byte *dest, byte *src, size_t src_len)
-{
-    byte hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, src, src_len);
-    SHA256_Final(hash, &sha256);
-    memcpy(dest, hash, SHA256_DIGEST_LENGTH);
-}
 
-/**
- * OpenSSL 3.* compatible SHA256 message digest
- */
-void SHA256Hash(byte *dest, byte *src, size_t src_len) {
+void G_SHA256Hash(byte *dest, byte *src, size_t src_len) {
     EVP_MD *md;
     EVP_MD_CTX *ctx;
     unsigned int md_len;
