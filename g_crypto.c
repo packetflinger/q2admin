@@ -119,25 +119,50 @@ void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
 }
 
 /**
- * Wrapper - decrypt ciphertext using our private key
+ * Decrypt src using our private key
  */
 
-size_t G_PrivateDecrypt(byte *dest, byte *src)
+size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
 {
-    RSA *key = cloud.connection.rsa_pr;
+    size_t len = 0;
 
-    if (!key) {
+    EVP_PKEY *key = cloud.connection.rsa_pr;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
+    if (!ctx) {
+        CA_printf("error creating private key context\n");
+        return len;
+    }
+
+    if (EVP_PKEY_decrypt_init(ctx) <= 0) {
+        CA_printf("error initializing decrypt\n");
+        return len;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
+        CA_printf("error adding decryption padding (OAEP)\n");
+        return len;
+    }
+
+    if (EVP_PKEY_decrypt(ctx, NULL, &len, src, src_len) <= 0) {
+        CA_printf("error getting decrypt size\n");
         return 0;
     }
 
-    int result = RSA_private_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
+    byte *newplain = OPENSSL_malloc(len);
 
-    if (result <= 0) {
-    	gi.cprintf(NULL, PRINT_HIGH, "Error: %d\n", result);
+    if (!newplain) {
+        CA_printf("error mallocing in decrypt\n");
         return 0;
     }
 
-    return result;
+    if (EVP_PKEY_decrypt(ctx, newplain, &len, src, src_len) <= 0) {
+        CA_printf("error decrypting\n");
+        return 0;
+    }
+
+    memcpy(dest, newplain, len);
+
+    return len;
 }
 
 /**
