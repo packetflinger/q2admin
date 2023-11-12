@@ -110,15 +110,6 @@ qboolean G_LoadKeys(void)
 }
 
 /**
- * Wrapper
- */
-void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
-{
-    int result;
-    result = RSA_public_decrypt(RSA_size(key), src, dest, key, 0); // dont pad
-}
-
-/**
  * Decrypt src using our private key
  */
 

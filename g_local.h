@@ -1884,7 +1884,6 @@ qboolean G_LoadKeys(void);
 void G_GenerateKeyPair(int bits);
 void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len);
 size_t G_PrivateDecrypt(byte *dest, byte *src);
-void G_PublicDecrypt(RSA *key, byte *dest, byte *src);
 
 size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len);
 size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len);
