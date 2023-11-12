@@ -141,15 +141,6 @@ size_t G_PrivateDecrypt(byte *dest, byte *src)
 }
 
 /**
- * Wrapper
- */
-void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len)
-{
-    int result;
-    result = RSA_private_encrypt(len, src, dest, key, RSA_PKCS1_PADDING);
-}
-
-/**
  * Encrypt a message using a public key. ONLY the matching private key
  * can decrypt the message.
  */
