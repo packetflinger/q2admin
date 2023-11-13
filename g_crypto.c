@@ -51,8 +51,8 @@ qboolean G_LoadKeys(void)
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
         return qfalse;
     }
-    c->rsa_pr = RSA_new();
-    c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
+
+    c->rsa_pr = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
     fclose(fp);
 
     if (!c->rsa_pr) {
@@ -68,13 +68,13 @@ qboolean G_LoadKeys(void)
         RSA_free(c->rsa_pr);
         return qfalse;
     }
-    c->rsa_pu = RSA_new();
-    c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
+
+    c->rsa_pu = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
 
     // if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
-    if (!c->rsa_pu) {
-        c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
-    }
+    //if (!c->rsa_pu) {
+    //    c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
+    //}
 
     fclose(fp);
 
@@ -84,7 +84,7 @@ qboolean G_LoadKeys(void)
         return qfalse;
     }
 
-    // last the remote admin server's public key
+    // last the cloud admin server's public key
     sprintf(path, "%s/%s", moddir, cloud_serverkey);
     fp = fopen(path, "rb");
     if (!fp) {
@@ -93,8 +93,8 @@ qboolean G_LoadKeys(void)
         RSA_free(c->rsa_pu);
         return qfalse;
     }
-    c->rsa_sv_pu = RSA_new();
-    c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
+
+    c->rsa_sv_pu = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
     fclose(fp);
 
     if (!c->rsa_sv_pu) {
