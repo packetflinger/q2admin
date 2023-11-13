@@ -812,28 +812,39 @@ qboolean CA_VerifyServerAuth(void)
     unsigned int siglen;
     int chalsigned;
 
+    byte sv_auth_cipher[RSA_LEN];
+    byte sv_auth_plain[RSA_LEN];
+
+    byte cl_hash[SHA256_DIGEST_LENGTH]; // the hash we calculate
+    byte sv_hash[SHA256_DIGEST_LENGTH]; // the one the server sends us
+    byte sv_challenge[CHALLENGE_LEN];
+
     c = &cloud.connection;
 
-    q2a_memset(signature, 0, RSA_LEN);
+    q2a_memset(sv_auth_cipher, 0, RSA_LEN);
     len = CA_ReadShort();
-    CA_ReadData(signature, len);
+    CA_ReadData(sv_auth_cipher, len);
+
+    size_t auth_len = G_PrivateDecrypt(sv_auth_plain, sv_auth_cipher, RSA_LEN);
+    q2a_memcpy(sv_hash, sv_auth_plain, SHA256_DIGEST_LENGTH);
+    q2a_memcpy(sv_challenge, sv_auth_plain + SHA256_DIGEST_LENGTH, CHALLENGE_LEN);
 
     if (cloud_encryption) {
         CA_ReadData(aeskey_cipher, RSA_LEN);
     }
 
-    CA_ReadData(c->sv_nonce, CHALLENGE_LEN);
-
-    q2a_memset(digest, 0, DIGEST_LEN);
-    G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
-    verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
-
-    if (verified) {
+    G_SHA256Hash(cl_hash, c->cl_nonce, CHALLENGE_LEN);
+    if (q2a_memcmp(cl_hash, sv_hash, SHA256_DIGEST_LENGTH)) {
         servertrusted = qtrue;
         CA_printf("server signature verified\n");
     } else {
         CA_printf("error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
+    //CA_ReadData(c->sv_nonce, CHALLENGE_LEN);
+
+    //q2a_memset(digest, 0, DIGEST_LEN);
+    //G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
+    //verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
 
     // encrypt the server's nonce and send back to auth ourselves
     if (servertrusted) {
@@ -852,7 +863,7 @@ qboolean CA_VerifyServerAuth(void)
         CA_SendMessages();
 
         if (cloud_encryption) {
-            len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher);
+            len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher, RSA_LEN);
             if (!len) {
                 CA_printf("couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
                 cloud_encryption = qfalse;
@@ -1025,10 +1036,12 @@ void CA_SayHello(void)
 
     // random data to check server auth
     RAND_bytes(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
+    hexDump("nonce", cloud.connection.cl_nonce, CHALLENGE_LEN);
 
     byte challenge[RSA_LEN];
-    int chal_len = G_PublicEncrypt(challenge, cloud.connection.cl_nonce,
-            CHALLENGE_LEN);
+    q2a_memset(challenge, 0, sizeof(challenge));
+    int chal_len = G_PublicEncrypt(challenge, cloud.connection.cl_nonce, CHALLENGE_LEN);
+    hexDump("encrypted nonce", challenge, chal_len);
 
     CA_WriteLong(MAGIC_CLIENT);
     CA_WriteByte(CMD_HELLO);
