@@ -265,7 +265,7 @@ void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
 void        cloudRun(int startarg, edict_t *ent, int client);
 void        CA_printf(char *fmt, ...);
 void        ReadCloudConfigFile(char *filename);
-size_t      G_PublicEncrypt(byte *out, byte *in, size_t inlen);
+size_t      G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen);
 
 
 extern cloud_t  cloud;

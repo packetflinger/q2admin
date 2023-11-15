@@ -129,8 +129,8 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
         return len;
     }
 
-    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
-        CA_printf("error adding decryption padding (OAEP)\n");
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
+        CA_printf("error adding decryption padding (PKCS1)\n");
         return len;
     }
 
@@ -160,9 +160,8 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
  * Encrypt a message using a public key. ONLY the matching private key
  * can decrypt the message.
  */
-size_t G_PublicEncrypt(byte *out, byte *in, size_t inlen) {
+size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
     size_t cipherlen = 0;
-    EVP_PKEY *key = cloud.connection.rsa_pu;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
         CA_printf("error creating context for encrypting\n");
@@ -174,8 +173,8 @@ size_t G_PublicEncrypt(byte *out, byte *in, size_t inlen) {
         return 0;
     }
 
-    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING) <= 0) {
-        CA_printf("error adding padding type (OAEP)\n");
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
+        CA_printf("error adding padding type (PKCS1)\n");
         return 0;
     }
 
