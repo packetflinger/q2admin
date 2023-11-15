@@ -261,7 +261,7 @@ void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
 void        CA_RotateKeys(void);
 void        debug_print(char *str);
-void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
+void        G_MessageDigest(byte *dest, byte *src, size_t src_len);
 void        cloudRun(int startarg, edict_t *ent, int client);
 void        CA_printf(char *fmt, ...);
 void        CA_dprintf(char *fmt, ...);

@@ -850,7 +850,7 @@ qboolean CA_VerifyServerAuth(void)
     }
 
     // to compare with what server sent back to us
-    G_SHA256Hash(challenge_hash, c->cl_nonce, CHALLENGE_LEN);
+    G_MessageDigest(challenge_hash, c->cl_nonce, CHALLENGE_LEN);
 
     // if the hashes match, server is authenticated
     if (q2a_memcmp(challenge_hash, response_hash, DIGEST_LEN) == 0) {
@@ -859,7 +859,7 @@ qboolean CA_VerifyServerAuth(void)
         // reuse response and challenge_hash for our auth to server
         q2a_memset(response, 0, sizeof(response));
         q2a_memset(challenge_hash, 0, sizeof(challenge_hash));
-        G_SHA256Hash(challenge_hash, sv_challenge, sizeof(sv_challenge));
+        G_MessageDigest(challenge_hash, sv_challenge, sizeof(sv_challenge));
         enc_len = G_PublicEncrypt(cloud.connection.rsa_sv_pu, response, challenge_hash, DIGEST_LEN);
 
         // send our response to server's challenge

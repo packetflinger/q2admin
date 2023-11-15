@@ -324,8 +324,14 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     return written;
 }
 
-
-void G_SHA256Hash(byte *dest, byte *src, size_t src_len) {
+/**
+ * Hash the input using the specified algorithm. We're using
+ * SHA256 for now.
+ *
+ * If you change the digest, make sure to change the length
+ * of the DIGEST_LEN macro in g_cloud.h too!!
+ */
+void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
     EVP_MD *md;
     EVP_MD_CTX *ctx;
     unsigned int md_len;
