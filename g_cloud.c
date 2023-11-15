@@ -837,15 +837,12 @@ qboolean CA_VerifyServerAuth(void)
     blob_offset += CHALLENGE_LEN;
 
     if (cloud_encryption) {
-        // the symmetric key we need to use
+        // the symmetric key
         q2a_memcpy(c->aeskey, sv_auth_plain + blob_offset, AESKEY_LEN);
         blob_offset += AESKEY_LEN;
 
-        hexDump("key", c->aeskey, AESKEY_LEN);
-
         // the initial value for symmetric encryption
         q2a_memcpy(c->iv, sv_auth_plain + blob_offset, AES_IV_LEN);
-        hexDump("IV", c->iv, AES_IV_LEN);
 
         c->have_keys = qtrue;
         c->e_ctx = EVP_CIPHER_CTX_new();
@@ -861,44 +858,19 @@ qboolean CA_VerifyServerAuth(void)
     } else {
         CA_printf("error: %s\n", ERR_error_string(ERR_get_error(), NULL));
     }
-    //CA_ReadData(c->sv_nonce, CHALLENGE_LEN);
-
-    //q2a_memset(digest, 0, DIGEST_LEN);
-    //G_SHA256Hash(digest, c->cl_nonce, CHALLENGE_LEN);
-    //verified = RSA_verify(NID_sha256, digest, DIGEST_LEN, signature, len, c->rsa_sv_pu);
 
     // encrypt the server's nonce and send back to auth ourselves
     if (servertrusted) {
         q2a_memset(digest, 0, DIGEST_LEN);
         q2a_memset(signature, 0, RSA_LEN);
         G_SHA256Hash(cl_hash, sv_challenge, CHALLENGE_LEN);
-        //G_SHA256Hash(digest, c->sv_nonce, CHALLENGE_LEN);
 
-        //chalsigned = RSA_sign(NID_sha256, digest, DIGEST_LEN, signature, &siglen, c->rsa_pr);
         size_t chalcipherlen = G_PublicEncrypt(cloud.connection.rsa_sv_pu, signature, cl_hash, DIGEST_LEN);
 
         CA_WriteByte(CMD_AUTH);
         CA_WriteShort(chalcipherlen);
         CA_WriteData(signature, chalcipherlen);
         CA_SendMessages();
-
-        /*
-        if (cloud_encryption) {
-            len = G_PrivateDecrypt(key_plus_iv, aeskey_cipher, RSA_LEN);
-            if (!len) {
-                CA_printf("couldn't decrypt symmetric keys, connection will NOT be encrypted\n");
-                cloud_encryption = qfalse;
-                c->have_keys = qfalse;
-            } else {
-                q2a_memcpy(c->aeskey, key_plus_iv, AESKEY_LEN);
-                q2a_memcpy(c->iv, key_plus_iv + AESKEY_LEN, AES_IV_LEN);
-
-                c->have_keys = qtrue;
-                c->e_ctx = EVP_CIPHER_CTX_new();
-                c->d_ctx = EVP_CIPHER_CTX_new();
-            }
-        }
-        */
 
         cloud.connection_attempts = 0;
         cloud.connection.auth_fail_count = 0;
