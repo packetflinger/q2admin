@@ -948,7 +948,7 @@ void CA_DisconnectedPeer(void)
     srand((unsigned) time(NULL));
     secs = rand() & 0xff;
     cloud.connect_retry_frame = FUTURE_FRAME(10) + secs;
-    CA_printf("trying to reconnect in %d seconds\n",
+    CA_dprintf("trying to reconnect in %d seconds\n",
         FRAMES_TO_SECS(cloud.connect_retry_frame - cloud.frame_number)
     );
 }
