@@ -695,7 +695,7 @@ void CA_ReadMessages(void)
  */
 void CA_Trusted(void)
 {
-    CA_printf("connection trusted\n");
+    CA_dprintf("connection trusted\n");
     cloud.state = CA_STATE_TRUSTED;
 }
 
