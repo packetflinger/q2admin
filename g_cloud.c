@@ -191,7 +191,7 @@ void CA_LookupAddress(void)
     int err = getaddrinfo(cloud_address, va("%d",cloud_port), &hints, &res);
 
     if (err != 0) {
-        CA_printf("DNS error\n");
+        CA_dprintf("DNS error\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     } else {
@@ -202,7 +202,7 @@ void CA_LookupAddress(void)
 
         if (!cloud.addr) {
             cloud.state = CA_STATE_DISABLED;
-            CA_printf("problems resolving server address, disabling\n");
+            CA_dprintf("problems resolving server address, disabling\n");
             return;
         }
 
@@ -227,7 +227,7 @@ void CA_LookupAddress(void)
             );
         }
 
-        CA_printf("server resolved to %s\n,", str_address);
+        CA_dprintf("server resolved to %s\n,", str_address);
     }
 
     cloud.flags = cloud_flags;
