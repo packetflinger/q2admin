@@ -117,8 +117,8 @@ typedef struct {
     // auth and encryption stuff
     byte    cl_nonce[CHALLENGE_LEN];  // random data
     byte    sv_nonce[CHALLENGE_LEN];  // random data
-    byte    session_key[AESKEY_LEN];  // shared encryption key (128bit)
-    byte    iv[AES_IV_LEN];        // GCM IV is 12 bytes
+    byte    session_key[AESKEY_LEN];    // shared encryption key (128bit)
+    byte    initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
 
     EVP_PKEY *public_key;  // our public key
     EVP_PKEY *private_key; // our private key
