@@ -121,7 +121,7 @@ typedef struct {
     byte    iv[AES_IV_LEN];        // GCM IV is 12 bytes
 
     EVP_PKEY *public_key;  // our public key
-    EVP_PKEY *rsa_pr;      // our private key
+    EVP_PKEY *private_key; // our private key
     EVP_PKEY *rsa_sv_pu;   // RA server's public key
 
     EVP_CIPHER_CTX *e_ctx;  // encryption context

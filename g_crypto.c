@@ -52,10 +52,10 @@ qboolean G_LoadKeys(void)
         return qfalse;
     }
 
-    c->rsa_pr = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
+    c->private_key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
     fclose(fp);
 
-    if (!c->rsa_pr) {
+    if (!c->private_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
         return qfalse;
     }
@@ -65,7 +65,7 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         return qfalse;
     }
 
@@ -75,7 +75,7 @@ qboolean G_LoadKeys(void)
 
     if (!c->public_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         return qfalse;
     }
 
@@ -84,7 +84,7 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         RSA_free(c->public_key);
         return qfalse;
     }
@@ -94,7 +94,7 @@ qboolean G_LoadKeys(void)
 
     if (!c->rsa_sv_pu) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         RSA_free(c->public_key);
         return qfalse;
     }
@@ -112,7 +112,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
 {
     size_t len = 0;
 
-    EVP_PKEY *key = cloud.connection.rsa_pr;
+    EVP_PKEY *key = cloud.connection.private_key;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
         CA_printf("error creating private key context\n");
