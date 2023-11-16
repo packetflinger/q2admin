@@ -71,11 +71,6 @@ qboolean G_LoadKeys(void)
 
     c->rsa_pu = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
 
-    // if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
-    //if (!c->rsa_pu) {
-    //    c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
-    //}
-
     fclose(fp);
 
     if (!c->rsa_pu) {
