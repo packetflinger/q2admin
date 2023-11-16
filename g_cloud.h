@@ -120,7 +120,7 @@ typedef struct {
     byte    aeskey[AESKEY_LEN];       // shared encryption key (128bit)
     byte    iv[AES_IV_LEN];        // GCM IV is 12 bytes
 
-    EVP_PKEY *rsa_pu;      // our public key
+    EVP_PKEY *public_key;  // our public key
     EVP_PKEY *rsa_pr;      // our private key
     EVP_PKEY *rsa_sv_pu;   // RA server's public key
 

@@ -69,11 +69,11 @@ qboolean G_LoadKeys(void)
         return qfalse;
     }
 
-    c->rsa_pu = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
+    c->public_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
 
     fclose(fp);
 
-    if (!c->rsa_pu) {
+    if (!c->public_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
         RSA_free(c->rsa_pr);
         return qfalse;
@@ -85,7 +85,7 @@ qboolean G_LoadKeys(void)
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
         RSA_free(c->rsa_pr);
-        RSA_free(c->rsa_pu);
+        RSA_free(c->public_key);
         return qfalse;
     }
 
@@ -95,7 +95,7 @@ qboolean G_LoadKeys(void)
     if (!c->rsa_sv_pu) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
         RSA_free(c->rsa_pr);
-        RSA_free(c->rsa_pu);
+        RSA_free(c->public_key);
         return qfalse;
     }
 
