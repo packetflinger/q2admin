@@ -860,7 +860,7 @@ qboolean CA_VerifyServerAuth(void)
         q2a_memset(response, 0, sizeof(response));
         q2a_memset(challenge_hash, 0, sizeof(challenge_hash));
         G_MessageDigest(challenge_hash, sv_challenge, sizeof(sv_challenge));
-        enc_len = G_PublicEncrypt(cloud.connection.rsa_sv_pu, response, challenge_hash, DIGEST_LEN);
+        enc_len = G_PublicEncrypt(cloud.connection.server_key, response, challenge_hash, DIGEST_LEN);
 
         // send our response to server's challenge
         CA_WriteByte(CMD_AUTH);
@@ -1029,7 +1029,7 @@ void CA_SayHello(void)
 
     byte challenge[RSA_LEN];
     q2a_memset(challenge, 0, sizeof(challenge));
-    int chal_len = G_PublicEncrypt(cloud.connection.rsa_sv_pu, challenge,
+    int chal_len = G_PublicEncrypt(cloud.connection.server_key, challenge,
             cloud.connection.cl_nonce, CHALLENGE_LEN);
 
     CA_WriteLong(MAGIC_CLIENT);

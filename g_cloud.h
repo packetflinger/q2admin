@@ -122,7 +122,7 @@ typedef struct {
 
     EVP_PKEY *public_key;  // our public key
     EVP_PKEY *private_key; // our private key
-    EVP_PKEY *rsa_sv_pu;   // RA server's public key
+    EVP_PKEY *server_key;  // CA server's public key
 
     EVP_CIPHER_CTX *e_ctx;  // encryption context
     EVP_CIPHER_CTX *d_ctx;  // decryption context

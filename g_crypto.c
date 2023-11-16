@@ -89,10 +89,10 @@ qboolean G_LoadKeys(void)
         return qfalse;
     }
 
-    c->rsa_sv_pu = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
+    c->server_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
     fclose(fp);
 
-    if (!c->rsa_sv_pu) {
+    if (!c->server_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
         RSA_free(c->private_key);
         RSA_free(c->public_key);
