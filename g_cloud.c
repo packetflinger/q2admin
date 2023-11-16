@@ -49,13 +49,13 @@ void CA_Init() {
     cloud.connection.encrypted = cloud_encryption;
     
     if (!cloud_address[0]) {
-        CA_printf("cloud_addr is not set, disabling\n");
+        CA_dprintf("cloud_addr is not set, disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
 
     if (!cloud_port) {
-        CA_printf("cloud_port is not set, disabling\n");
+        CA_dprintf("cloud_port is not set, disabling\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     }
