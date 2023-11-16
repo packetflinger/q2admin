@@ -29,7 +29,7 @@ void CA_Init() {
         return;
     }
 
-    ReadCloudConfigFile("baseq2/q2a_cloud.cfg");
+    ReadCloudConfigFile();
 
     memset(&cloud, 0, sizeof(cloud));
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
@@ -70,7 +70,7 @@ void CA_Init() {
  * Load config from disk. First load from q2 folder,
  * then the mod folder.
  */
-void ReadCloudConfigFile(char *filename)
+void ReadCloudConfigFile()
 {
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cloud->string);
 
