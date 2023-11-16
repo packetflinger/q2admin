@@ -227,7 +227,7 @@ void CA_LookupAddress(void)
             );
         }
 
-        CA_dprintf("server resolved to %s\n,", str_address);
+        CA_dprintf("server resolved to %s\n", str_address);
     }
 
     cloud.flags = cloud_flags;
