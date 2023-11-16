@@ -834,9 +834,9 @@ qboolean CA_VerifyServerAuth(void)
 
     if (cloud_encryption) {
         // the symmetric key
-        q2a_memset(c->aeskey, 0, sizeof(c->aeskey));
-        q2a_memcpy(c->aeskey, response_plain + offset, sizeof(c->aeskey));
-        offset += sizeof(c->aeskey);
+        q2a_memset(c->session_key, 0, sizeof(c->session_key));
+        q2a_memcpy(c->session_key, response_plain + offset, sizeof(c->session_key));
+        offset += sizeof(c->session_key);
 
         // the initial value for symmetric encryption
         q2a_memset(c->iv, 0, sizeof(c->iv));
@@ -919,7 +919,7 @@ void CA_RotateKeys(void)
     ca_connection_t *c;
     c = &cloud.connection;
 
-    CA_ReadData(c->aeskey, AESKEY_LEN);
+    CA_ReadData(c->session_key, AESKEY_LEN);
     CA_ReadData(c->iv, AESBLOCK_LEN);
 }
 
@@ -941,7 +941,7 @@ void CA_DisconnectedPeer(void)
     cloud.connection.trusted = qfalse;
     cloud.connection.have_keys = qfalse;
     cloud.disconnect_count++;
-    memset(&cloud.connection.aeskey[0], 0, AESKEY_LEN);
+    memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
     memset(&cloud.connection.iv[0], 0, AESBLOCK_LEN);
 
     // try reconnecting a reasonably random amount of time later
