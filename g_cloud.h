@@ -115,21 +115,21 @@ typedef struct {
     uint8_t     auth_fail_count;
 
     // auth and encryption stuff
-    byte    cl_nonce[CHALLENGE_LEN];  // random data
-    byte    sv_nonce[CHALLENGE_LEN];  // random data
+    byte    cl_nonce[CHALLENGE_LEN];    // random data
+    byte    sv_nonce[CHALLENGE_LEN];    // random data
     byte    session_key[AESKEY_LEN];    // shared encryption key (128bit)
     byte    initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
 
-    EVP_PKEY *public_key;  // our public key
-    EVP_PKEY *private_key; // our private key
-    EVP_PKEY *server_key;  // CA server's public key
+    EVP_PKEY *public_key;   // our public key
+    EVP_PKEY *private_key;  // our private key
+    EVP_PKEY *server_key;   // CA server's public key
 
     EVP_CIPHER_CTX *e_ctx;  // encryption context
     EVP_CIPHER_CTX *d_ctx;  // decryption context
 
-    fd_set  set_r;    // read
-    fd_set  set_w;    // write
-    fd_set  set_e;    // error
+    fd_set  set_r;          // read
+    fd_set  set_w;          // write
+    fd_set  set_e;          // error
 } ca_connection_t;
 
 /**
