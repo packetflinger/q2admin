@@ -51,11 +51,11 @@ qboolean G_LoadKeys(void)
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
         return qfalse;
     }
-    c->rsa_pr = RSA_new();
-    c->rsa_pr = PEM_read_RSAPrivateKey(fp, &c->rsa_pr, NULL, NULL);
+
+    c->private_key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
     fclose(fp);
 
-    if (!c->rsa_pr) {
+    if (!c->private_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
         return qfalse;
     }
@@ -65,42 +65,37 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         return qfalse;
     }
-    c->rsa_pu = RSA_new();
-    c->rsa_pu = PEM_read_RSAPublicKey(fp, &c->rsa_pu, NULL, NULL);
 
-    // if new style key (header has BEGIN PUBLIC KEY instead of BEGIN RSA PUBLIC KEY)
-    if (!c->rsa_pu) {
-        c->rsa_pu = PEM_read_RSA_PUBKEY(fp, &c->rsa_pu, NULL, NULL);
-    }
+    c->public_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
 
     fclose(fp);
 
-    if (!c->rsa_pu) {
+    if (!c->public_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
-        RSA_free(c->rsa_pr);
+        RSA_free(c->private_key);
         return qfalse;
     }
 
-    // last the remote admin server's public key
+    // last the cloud admin server's public key
     sprintf(path, "%s/%s", moddir, cloud_serverkey);
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->rsa_pr);
-        RSA_free(c->rsa_pu);
+        RSA_free(c->private_key);
+        RSA_free(c->public_key);
         return qfalse;
     }
-    c->rsa_sv_pu = RSA_new();
-    c->rsa_sv_pu = PEM_read_RSAPublicKey(fp, &c->rsa_sv_pu, NULL, NULL);
+
+    c->server_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
     fclose(fp);
 
-    if (!c->rsa_sv_pu) {
+    if (!c->server_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
-        RSA_free(c->rsa_pr);
-        RSA_free(c->rsa_pu);
+        RSA_free(c->private_key);
+        RSA_free(c->public_key);
         return qfalse;
     }
 
@@ -110,43 +105,93 @@ qboolean G_LoadKeys(void)
 }
 
 /**
- * Wrapper
- */
-void G_PublicDecrypt(RSA *key, byte *dest, byte *src)
-{
-    int result;
-    result = RSA_public_decrypt(RSA_size(key), src, dest, key, 0); // dont pad
-}
-
-/**
- * Wrapper - decrypt ciphertext using our private key
+ * Decrypt src using our private key
  */
 
-size_t G_PrivateDecrypt(byte *dest, byte *src)
+size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
 {
-    RSA *key = cloud.connection.rsa_pr;
+    size_t len = 0;
 
-    if (!key) {
+    EVP_PKEY *key = cloud.connection.private_key;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
+    if (!ctx) {
+        CA_printf("error creating private key context\n");
+        return len;
+    }
+
+    if (EVP_PKEY_decrypt_init(ctx) <= 0) {
+        CA_printf("error initializing decrypt\n");
+        return len;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
+        CA_printf("error adding decryption padding (PKCS1)\n");
+        return len;
+    }
+
+    if (EVP_PKEY_decrypt(ctx, NULL, &len, src, src_len) <= 0) {
+        CA_printf("error getting decrypt size\n");
         return 0;
     }
 
-    int result = RSA_private_decrypt(RSA_size(key), src, dest, key, RSA_PKCS1_PADDING);
+    byte *newplain = OPENSSL_malloc(len);
 
-    if (result <= 0) {
-    	gi.cprintf(NULL, PRINT_HIGH, "Error: %d\n", result);
+    if (!newplain) {
+        CA_printf("error mallocing in decrypt\n");
         return 0;
     }
 
-    return result;
+    if (EVP_PKEY_decrypt(ctx, newplain, &len, src, src_len) <= 0) {
+        CA_printf("error decrypting\n");
+        return 0;
+    }
+
+    memcpy(dest, newplain, len);
+
+    return len;
 }
 
 /**
- * Wrapper
+ * Encrypt a message using a public key. ONLY the matching private key
+ * can decrypt the message.
  */
-void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len)
-{
-    int result;
-    result = RSA_private_encrypt(len, src, dest, key, RSA_PKCS1_PADDING);
+size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
+    size_t cipherlen = 0;
+    EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
+    if (!ctx) {
+        CA_printf("error creating context for encrypting\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_encrypt_init(ctx) <= 0) {
+        CA_printf("encrypt init failed\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
+        CA_printf("error adding padding type (PKCS1)\n");
+        return 0;
+    }
+
+    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, in, inlen) <= 0) {
+        CA_printf("encrypt error\n");
+        return 0;
+    }
+
+    byte *out1 = OPENSSL_malloc(cipherlen);
+
+    if (!out) {
+        CA_printf("malloc error while encrypting\n");
+    }
+
+    if (EVP_PKEY_encrypt(ctx, out1, &cipherlen, in, inlen) <= 0) {
+        CA_printf("error encrypting\n");
+    }
+
+    memcpy(out, out1, cipherlen);
+    OPENSSL_free(out1);
+
+    return cipherlen;
 }
 
 /**
@@ -238,7 +283,7 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
         return 0;
     }
 
-    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
+    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
     EVP_EncryptUpdate(c->e_ctx, dest + dest_len, &dest_len, src, src_len);
     written += dest_len;
 
@@ -264,7 +309,7 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
         return 0;
     }
 
-    EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, c->aeskey, c->iv);
+    EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
     EVP_DecryptUpdate(c->d_ctx, dest + dest_len, &dest_len, src, src_len);
     written += dest_len;
 
@@ -274,12 +319,24 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     return written;
 }
 
-void G_SHA256Hash(byte *dest, byte *src, size_t src_len)
-{
-    byte hash[SHA256_DIGEST_LENGTH];
-    SHA256_CTX sha256;
-    SHA256_Init(&sha256);
-    SHA256_Update(&sha256, src, src_len);
-    SHA256_Final(hash, &sha256);
-    memcpy(dest, hash, SHA256_DIGEST_LENGTH);
+/**
+ * Hash the input using the specified algorithm. We're using
+ * SHA256 for now.
+ *
+ * If you change the digest, make sure to change the length
+ * of the DIGEST_LEN macro in g_cloud.h too!!
+ */
+void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
+    EVP_MD *md;
+    EVP_MD_CTX *ctx;
+    unsigned int md_len;
+
+    md = EVP_get_digestbyname("SHA256");
+    ctx = EVP_MD_CTX_new();
+
+    EVP_DigestInit_ex2(ctx, md, NULL);
+    EVP_DigestUpdate(ctx, src, src_len);
+    EVP_DigestFinal_ex(ctx, dest, &md_len);
+
+    EVP_MD_CTX_free(ctx);
 }

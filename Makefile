@@ -1,7 +1,7 @@
 -include .config
 
 ifndef CPU
-    CPU := $(shell uname -m | sed -e s/i.86/i386/ -e s/amd64/x86_64/ -e s/sun4u/sparc64/ -e s/arm.*/arm/ -e s/sa110/arm/ -e s/alpha/axp/)
+    CPU := $(shell uname -m | sed -e s/i.86/i386/ -e s/amd64/x86_64/ -e s/sun4u/sparc64/ -e s/aarch64/arm64/ -e s/sa110/arm/ -e s/alpha/axp/)
 endif
 
 ifndef REV
@@ -27,7 +27,11 @@ INCLUDES ?= -Ideps/$(CPU)/curl/include \
             
 CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
 
-LDFLAGS ?= -shared
+ifdef CONFIG_MACOS
+    LDFLAGS ?= -shared -framework CoreFoundation -framework CoreServices -framework SystemConfiguration
+else
+    LDFLAGS ?= -shared
+endif
 
 LIBS ?= deps/$(CPU)/curl/lib/libcurl.a \
         deps/$(CPU)/zlib/lib/libz.a \

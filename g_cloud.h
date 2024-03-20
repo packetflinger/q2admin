@@ -115,21 +115,21 @@ typedef struct {
     uint8_t     auth_fail_count;
 
     // auth and encryption stuff
-    byte    cl_nonce[CHALLENGE_LEN];  // random data
-    byte    sv_nonce[CHALLENGE_LEN];  // random data
-    byte    aeskey[AESKEY_LEN];       // shared encryption key (128bit)
-    byte    iv[AES_IV_LEN];        // GCM IV is 12 bytes
+    byte    cl_nonce[CHALLENGE_LEN];    // random data
+    byte    sv_nonce[CHALLENGE_LEN];    // random data
+    byte    session_key[AESKEY_LEN];    // shared encryption key (128bit)
+    byte    initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
 
-    RSA     *rsa_pu;      // our public key
-    RSA     *rsa_pr;      // our private key
-    RSA     *rsa_sv_pu;   // RA server's public key
+    EVP_PKEY *public_key;   // our public key
+    EVP_PKEY *private_key;  // our private key
+    EVP_PKEY *server_key;   // CA server's public key
 
     EVP_CIPHER_CTX *e_ctx;  // encryption context
     EVP_CIPHER_CTX *d_ctx;  // decryption context
 
-    fd_set  set_r;    // read
-    fd_set  set_w;    // write
-    fd_set  set_e;    // error
+    fd_set  set_r;          // read
+    fd_set  set_w;          // write
+    fd_set  set_e;          // error
 } ca_connection_t;
 
 /**
@@ -261,9 +261,12 @@ void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
 void        CA_RotateKeys(void);
 void        debug_print(char *str);
-void        G_SHA256Hash(byte *dest, byte *src, size_t src_len);
+void        G_MessageDigest(byte *dest, byte *src, size_t src_len);
 void        cloudRun(int startarg, edict_t *ent, int client);
 void        CA_printf(char *fmt, ...);
+void        CA_dprintf(char *fmt, ...);
+void        ReadCloudConfigFile(void);
+size_t      G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen);
 
 
 extern cloud_t  cloud;
