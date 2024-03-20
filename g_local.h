@@ -1023,6 +1023,8 @@ typedef struct {
     int stifle_length;  // frames
     download_t dl;
     vpn_t vpn;
+    netadr_t address;
+    char address_str[135]; // string rep, ipv4/ipv6:port
 } proxyinfo_t;
 
 typedef struct {
