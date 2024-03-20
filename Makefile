@@ -53,6 +53,7 @@ HEADERS := 	game.h \
             g_local.h \
             g_cloud.h \
             g_json.h \
+            g_net.h \
             q_shared.h \
             regex.h \
             q_platform.h
@@ -76,6 +77,7 @@ OBJS :=     g_anticheat.o \
             g_lrcon.o \
             g_main.o \
             g_mdfour.o \
+            g_net.o \
             g_queue.o \
             g_spawn.o \
             g_util.o \
