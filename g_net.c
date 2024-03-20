@@ -4,6 +4,31 @@
 #include "g_local.h"
 
 /**
+ * Get a string representation of a netadr_t.
+ *
+ * dest needs to be at least 46 bytes long
+ */
+void IPString(char *dest, netadr_t *address, qboolean incport)
+{
+    int i;
+    char temp[INET6_ADDRSTRLEN];
+
+    q2a_memset(temp, 0, sizeof(temp));
+    if (address->type == NA_IP6) {
+        inet_ntop(AF_INET6, &address->ip.u8, temp, INET6_ADDRSTRLEN);
+        q2a_strcpy(dest, va("[%s]", temp));
+    } else {
+        inet_ntop(AF_INET, &address->ip.u8, temp, INET_ADDRSTRLEN);
+        q2a_strcpy(dest, temp);
+    }
+
+    if (incport) {
+        q2a_strcat(dest, ":");
+        q2a_strcat(dest, address->port);
+    }
+}
+
+/**
  * Parse a string representation of the player's IP address
  * into a netadr_t struct. This support both IPv4 and IPv6
  * addresses.
