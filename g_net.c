@@ -40,12 +40,13 @@ void IPString(char *dest, netadr_t *address, qboolean incport)
 void ParseIP(netadr_t *address, const char *ip)
 {
     char *delim;
-    int addrlen;  // number of characters in IP string
-    char addr[40]; // temporarily hold just the IP part
-    struct in6_addr addr6;
-    struct in_addr addr4;
+    int addrlen;           // number of characters in IP string
+    char addr[40];         // temporarily hold just the IP part
+    struct in6_addr addr6; // use for both versions
 
-    memset(addr, 0, 40);
+    q2a_memset(addr, 0, 40);
+    q2a_memset(address, 0, sizeof(netadr_t));
+    q2a_memset(&addr6, 0, sizeof(struct in6_addr));
 
     // Look for IPv6
     delim = strstr(ip, "]:");
@@ -65,10 +66,8 @@ void ParseIP(netadr_t *address, const char *ip)
         address->type = NA_IP;
         address->port = (uint16_t) atoi(delim + 1);
         addrlen = (int) (delim - ip);
-        q2a_memcpy(addr, ip + 1, addrlen);
-        inet_pton(AF_INET, addr, &addr4);
-        q2a_memcpy(address->ip.u8, addr6.s6_addr, 16);
-        return;
+        q2a_memcpy(addr, ip, addrlen);
+        inet_pton(AF_INET, addr, &addr6);
+        q2a_memcpy(address->ip.u8, addr6.s6_addr, sizeof(in_addr_t));
     }
-    return;
 }
