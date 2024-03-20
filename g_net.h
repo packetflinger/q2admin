@@ -23,6 +23,7 @@ typedef struct netadr_s {
     uint32_t scope_id;
 } netadr_t;
 
+void ParseIP(netadr_t *addr, const char *ip);
 
 static inline bool NET_IsEqualAdr(const netadr_t *a, const netadr_t *b)
 {
