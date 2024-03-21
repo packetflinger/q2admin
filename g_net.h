@@ -27,7 +27,7 @@ typedef struct netadr_s {
 } netadr_t;
 
 qboolean AddressesMatch(netadr_t *a1, netadr_t *a2);
-void IPString(char *dest, netadr_t *address, qboolean incport);
+void IPString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport)
 void ParseIP(netadr_t *addr, const char *ip);
 qboolean ValidIPAddress(netadr_t *addr);
 
