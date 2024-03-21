@@ -48,6 +48,91 @@ void AddressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean in
 }
 
 /**
+ * Get a netadr_t representing the subnet mask based on
+ * CIDR notation (number of bits in the mask).
+ *
+ * Calculating this for IPv6 was for serious...
+ */
+netadr_t net_cidrToMask(int cidr, qboolean v6)
+{
+    int i;
+    uint32_t mask;
+    netadr_t addr;
+    int tempcidr;
+
+    q2a_memset(&addr, 0, sizeof(netadr_t));
+    if (!v6) {
+        addr.type = NA_IP;
+        for (i=1; i<=cidr; i++) {
+            mask += 1 << (32-i);
+        }
+        addr.ip.u8[3] = mask & 0xff;
+        addr.ip.u8[2] = (mask >> 8) & 0xff;
+        addr.ip.u8[1] = (mask >> 16) & 0xff;
+        addr.ip.u8[0] = (mask >> 24) & 0xff;
+        printf("v4mask: %u\n", mask);
+    } else {
+        addr.type = NA_IP6;
+        if (cidr == 128) {
+            addr.ip.u32[0] = 0xffffffff;
+            addr.ip.u32[1] = 0xffffffff;
+            addr.ip.u32[2] = 0xffffffff;
+            addr.ip.u32[3] = 0xffffffff;
+        }
+        if (cidr >= 96 && cidr < 128) {
+            addr.ip.u32[0] = 0xffffffff;
+            addr.ip.u32[1] = 0xffffffff;
+            addr.ip.u32[2] = 0xffffffff;
+            tempcidr = cidr - 96;
+            mask = 0;
+            for (i=1; i<=tempcidr; i++) {
+                mask += 1 << (32-i);
+            }
+            addr.ip.u8[15] = mask & 0xff;
+            addr.ip.u8[14] = (mask >> 8) & 0xff;
+            addr.ip.u8[13] = (mask >> 16) & 0xff;
+            addr.ip.u8[12] = (mask >> 24) & 0xff;
+        }
+        if (cidr >= 64 && cidr < 96) {
+            addr.ip.u32[0] = 0xffffffff;
+            addr.ip.u32[1] = 0xffffffff;
+            tempcidr = cidr - 64;
+            mask = 0;
+            for (i=1; i<=tempcidr; i++) {
+                mask += 1 << (32-i);
+            }
+            addr.ip.u8[11] = mask & 0xff;
+            addr.ip.u8[10] = (mask >> 8) & 0xff;
+            addr.ip.u8[9] = (mask >> 16) & 0xff;
+            addr.ip.u8[8] = (mask >> 24) & 0xff;
+        }
+        if (cidr >= 32 && cidr < 64) {
+            addr.ip.u32[0] = 0xffffffff;
+            tempcidr = cidr - 32;
+            mask = 0;
+            for (i=1; i<=tempcidr; i++) {
+                mask += 1 << (32-i);
+            }
+            addr.ip.u8[7] = mask & 0xff;
+            addr.ip.u8[6] = (mask >> 8) & 0xff;
+            addr.ip.u8[5] = (mask >> 16) & 0xff;
+            addr.ip.u8[4] = (mask >> 24) & 0xff;
+        }
+        if (cidr < 32) {
+            tempcidr = cidr - 0;
+            mask = 0;
+            for (i=1; i<=tempcidr; i++) {
+                mask += 1 << (32-i);
+            }
+            addr.ip.u8[3] = mask & 0xff;
+            addr.ip.u8[2] = (mask >> 8) & 0xff;
+            addr.ip.u8[1] = (mask >> 16) & 0xff;
+            addr.ip.u8[0] = (mask >> 24) & 0xff;
+        }
+    }
+    return addr;
+}
+/**
  * Parse a string representation of the player's IP address
  * into a netadr_t struct. This support both IPv4 and IPv6
  * addresses.
