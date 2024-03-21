@@ -1706,7 +1706,6 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         newentry->floodinfo.chatFloodProtectSilence = q2a_atoi(cp);
 
-
         if (gi.argc() <= startarg) {
             cp = "";
         } else {
@@ -1716,13 +1715,13 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
             Q_snprintf(
-            		savecmd + q2a_strlen(savecmd),
-					sizeof(savecmd) - q2a_strlen(savecmd),
-					"FLOOD %d %d %d ",
-					newentry->floodinfo.chatFloodProtectNum,
-					newentry->floodinfo.chatFloodProtectSec,
-					newentry->floodinfo.chatFloodProtectSilence
-			);
+                    savecmd + q2a_strlen(savecmd),
+                    sizeof(savecmd) - q2a_strlen(savecmd),
+                    "FLOOD %d %d %d ",
+                    newentry->floodinfo.chatFloodProtectNum,
+                    newentry->floodinfo.chatFloodProtectSec,
+                    newentry->floodinfo.chatFloodProtectSilence
+            );
             newentry->floodinfo.chatFloodProtect = TRUE;
         } else {
             newentry->floodinfo.chatFloodProtect = FALSE;
