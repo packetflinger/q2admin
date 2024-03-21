@@ -1879,7 +1879,7 @@ void ClientBegin(edict_t *ent)
             if (!proxyinfo[i].inuse || i == client) {
                 continue;
             }
-            if (AddressesMatch(proxyinfo[i].address, proxyinfo[client].address)) {
+            if (AddressesMatch(&proxyinfo[i].address, &proxyinfo[client].address)) {
                 sameaddr++;
             }
         }
