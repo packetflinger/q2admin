@@ -218,7 +218,7 @@ void net_parseIPAddressBase(netadr_t *address, const char *ip)
 /**
  * Very simple check for whether a client's IP starts with a valid number
  */
-qboolean ValidIPAddress(netadr_t *addr)
+qboolean net_validIPAddress(netadr_t *addr)
 {
     int first = q2a_atoi(addr->ip.u8[0]);
     return first > 0;
