@@ -976,7 +976,7 @@ typedef struct {
     char hack_teststring3[RANDOM_STRING_LENGTH + 1];
     char hack_timescale[RANDOM_STRING_LENGTH + 1];
     int hacked_disconnect;
-    byte hacked_disconnect_ip[4];
+    netadr_t hacked_disconnect_addr;
     int checked_hacked_exe;
 
     // used to test the variables check list

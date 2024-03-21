@@ -2661,10 +2661,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
         if (proxyinfo[client].hacked_disconnect == 1) {
             sameip = 1;
-            if ((proxyinfo[client].hacked_disconnect_ip[0] != proxyinfo[client].ipaddressBinary[0]) ||
-                    (proxyinfo[client].hacked_disconnect_ip[1] != proxyinfo[client].ipaddressBinary[1]) ||
-                    (proxyinfo[client].hacked_disconnect_ip[2] != proxyinfo[client].ipaddressBinary[2]) ||
-                    (proxyinfo[client].hacked_disconnect_ip[3] != proxyinfo[client].ipaddressBinary[3])) {
+            if (!AddressesMatch(&proxyinfo[client].hacked_disconnect_addr, &proxyinfo[client].address)) {
                 sameip = 0;
             }
             if (sameip == 1) {
@@ -2702,10 +2699,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             Q_stricmp(cmd, proxyinfo[client].hack_teststring3) == 0) {
         proxyinfo[client].clientcommand &= ~CCMD_WAITFORCONNECTREPLY;
         proxyinfo[client].hacked_disconnect = 1;
-        proxyinfo[client].hacked_disconnect_ip[0] = proxyinfo[client].ipaddressBinary[0];
-        proxyinfo[client].hacked_disconnect_ip[1] = proxyinfo[client].ipaddressBinary[1];
-        proxyinfo[client].hacked_disconnect_ip[2] = proxyinfo[client].ipaddressBinary[2];
-        proxyinfo[client].hacked_disconnect_ip[3] = proxyinfo[client].ipaddressBinary[3];
+        proxyinfo[client].hacked_disconnect_addr = proxyinfo[client].address;
         return FALSE;
     }
 
