@@ -1470,7 +1470,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 newentry->addr = proxyinfo[clienti].address;
 
                 q2a_memset(ipstr, 0, sizeof(ipstr));
-                AddressToString(ipstr, newentry->addr, qfalse, qfalse);
+                net_addressToString(ipstr, newentry->addr, qfalse, qfalse);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
                     INET6_ADDRSTRLEN,
