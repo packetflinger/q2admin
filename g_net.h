@@ -29,6 +29,7 @@ typedef struct netadr_s {
 qboolean AddressesMatch(netadr_t *a1, netadr_t *a2);
 void AddressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport)
 void ParseIP(netadr_t *addr, const char *ip);
+void ParseIPAddressBase(netadr_t *address, const char *ip);
 qboolean ValidIPAddress(netadr_t *addr);
 
 static inline bool NET_IsEqualAdr(const netadr_t *a, const netadr_t *b)

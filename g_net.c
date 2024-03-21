@@ -92,6 +92,51 @@ void ParseIP(netadr_t *address, const char *ip)
 }
 
 /**
+ * Parse a string representation of an IP address into a netadr_t.
+ * This support both IPv4 and IPv6 addresses. Address should not have
+ * a port appended and IPv6 addresses shouldn't be surrounded by
+ * square brackets.
+ *
+ * This does not do input format checking, so be careful.
+ *
+ * Input format: "192.2.0.4" or "2001:db8::face"
+ */
+void ParseIPAddressBase(netadr_t *address, const char *ip)
+{
+    char *delim;
+    int addrlen;           // number of characters in IP string
+    char addr[40];         // temporarily hold just the IP part
+    struct in6_addr addr6; // use for both versions
+
+    q2a_memset(addr, 0, 40);
+    q2a_memset(address, 0, sizeof(netadr_t));
+    q2a_memset(&addr6, 0, sizeof(struct in6_addr));
+
+    // Look for IPv6
+    delim = strstr(ip, "]:");
+    if (delim) {
+        address->type = NA_IP6;
+        address->port = (uint16_t) q2a_atoi(delim + 2);
+        addrlen = (int) (delim - (ip + 1));
+        q2a_memcpy(addr, ip + 1, addrlen);
+        inet_pton(AF_INET6, addr, &addr6);
+        q2a_memcpy(address->ip.u8, addr6.s6_addr, 16);
+        return;
+    }
+
+    // assume it's an IPv4 address
+    delim = strstr(ip, ":");
+    if (delim) {
+        address->type = NA_IP;
+        address->port = (uint16_t) q2a_atoi(delim + 1);
+        addrlen = (int) (delim - ip);
+        q2a_memcpy(addr, ip, addrlen);
+        inet_pton(AF_INET, addr, &addr6);
+        q2a_memcpy(address->ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+    }
+}
+
+/**
  * Very simple check for whether a client's IP starts with a valid number
  */
 qboolean ValidIPAddress(netadr_t *addr)
