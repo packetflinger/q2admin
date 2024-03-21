@@ -2661,7 +2661,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
         if (proxyinfo[client].hacked_disconnect == 1) {
             sameip = 1;
-            if (!AddressesMatch(&proxyinfo[client].hacked_disconnect_addr, &proxyinfo[client].address)) {
+            if (!net_addressesMatch(&proxyinfo[client].hacked_disconnect_addr, &proxyinfo[client].address)) {
                 sameip = 0;
             }
             if (sameip == 1) {

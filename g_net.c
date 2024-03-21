@@ -6,7 +6,7 @@
 /**
  * Check whether 2 IPs are the same
  */
-qboolean AddressesMatch(netadr_t *a1, netadr_t *a2)
+qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
 {
     int len;
     if (a1->type != a2->type) {

@@ -26,7 +26,7 @@ typedef struct netadr_s {
     uint32_t scope_id;
 } netadr_t;
 
-qboolean AddressesMatch(netadr_t *a1, netadr_t *a2);
+qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2);
 void AddressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport);
 netadr_t net_cidrToMask(int cidr, qboolean v6);
 void ParseIP(netadr_t *addr, const char *ip);
