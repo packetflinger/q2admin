@@ -52,7 +52,7 @@ void ParseIP(netadr_t *address, const char *ip)
     delim = strstr(ip, "]:");
     if (delim) {
         address->type = NA_IP6;
-        address->port = (uint16_t) atoi(delim + 2);
+        address->port = (uint16_t) q2a_atoi(delim + 2);
         addrlen = (int) (delim - (ip + 1));
         q2a_memcpy(addr, ip + 1, addrlen);
         inet_pton(AF_INET6, addr, &addr6);
@@ -64,7 +64,7 @@ void ParseIP(netadr_t *address, const char *ip)
     delim = strstr(ip, ":");
     if (delim) {
         address->type = NA_IP;
-        address->port = (uint16_t) atoi(delim + 1);
+        address->port = (uint16_t) q2a_atoi(delim + 1);
         addrlen = (int) (delim - ip);
         q2a_memcpy(addr, ip, addrlen);
         inet_pton(AF_INET, addr, &addr6);
