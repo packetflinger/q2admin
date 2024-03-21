@@ -71,3 +71,12 @@ void ParseIP(netadr_t *address, const char *ip)
         q2a_memcpy(address->ip.u8, addr6.s6_addr, sizeof(in_addr_t));
     }
 }
+
+/**
+ * Very simple check for whether a client's IP starts with a valid number
+ */
+qboolean ValidIPAddress(netadr_t *addr)
+{
+    int first = q2a_atoi(addr->ip.u8[0]);
+    return first > 0;
+}

@@ -25,6 +25,7 @@ typedef struct netadr_s {
 
 void IPString(char *dest, netadr_t *address, qboolean incport);
 void ParseIP(netadr_t *addr, const char *ip);
+qboolean ValidIPAddress(netadr_t *addr);
 
 static inline bool NET_IsEqualAdr(const netadr_t *a, const netadr_t *b)
 {
