@@ -43,7 +43,7 @@ void AddressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean in
 
     if (incport) {
         q2a_strcat(dest, ":");
-        q2a_strcat(dest, address->port);
+        q2a_strcat(dest, va("%d", address->port));
     }
 }
 
