@@ -857,40 +857,10 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
         unsigned int i;
         int num;
 
-        q2a_strncpy(proxyinfo[client].ipaddress, ip, sizeof(proxyinfo[client].ipaddress));
-
         if (q2a_strcmp(ip, "loopback") == 0) {
-            proxyinfo[client].ipaddress[0] = 127;
-            proxyinfo[client].ipaddress[1] = 0;
-            proxyinfo[client].ipaddress[2] = 0;
-            proxyinfo[client].ipaddress[3] = 1;
-
+            ParseIP(&proxyinfo[client].address, "127.0.0.1:0");
         } else {
-            for (i = 0; i < 4; i++) {
-                num = q2a_atoi(ip);
-
-                if (num > 255 || num < 0) {
-                    // not a valid ip address
-                    proxyinfo[client].ipaddress[0] = 0;
-                    num = 0;
-                }
-
-                proxyinfo[client].ipaddressBinary[i] = num;
-
-                while (isdigit(*ip)) {
-                    ip++;
-                }
-
-                if (*ip == '.') {
-                    ip++;
-                } else {
-                    if (i < 3 || (*ip != ':' && *ip != 0)) {
-                        // not a valid ip address
-                        proxyinfo[client].ipaddress[0] = 0;
-                    }
-                    break;
-                }
-            }
+            ParseIP(&proxyinfo[client].address, ip);
         }
     }
 
@@ -900,7 +870,7 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
         if (proxy_nitro2) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
         } else {
-            return TRUE;
+            return qtrue;
         }
     }
 
@@ -910,11 +880,11 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
         if (proxy_bwproxy) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
         } else {
-            return TRUE;
+            return qtrue;
         }
     }
 
-    return FALSE;
+    return qfalse;
 }
 
 /**
