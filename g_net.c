@@ -23,7 +23,7 @@ qboolean AddressesMatch(netadr_t *a1, netadr_t *a2)
  * wrapv6 arg controls whether IPv6 addresses are sandwiched in between brackets or not.
  * incport arg controls whether ":portnum" will be appended.
  */
-void IPString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport)
+void AddressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport)
 {
     int i;
     char temp[INET6_ADDRSTRLEN];
