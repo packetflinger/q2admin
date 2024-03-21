@@ -1,6 +1,9 @@
 #ifndef G_NET_H
 #define G_NET_H
 
+#define IP4_LEN  4
+#define IP6_LEN 16
+
 typedef enum {
     NA_UNSPECIFIED,
     NA_LOOPBACK,
@@ -23,6 +26,7 @@ typedef struct netadr_s {
     uint32_t scope_id;
 } netadr_t;
 
+qboolean AddressesMatch(netadr_t *a1, netadr_t *a2);
 void IPString(char *dest, netadr_t *address, qboolean incport);
 void ParseIP(netadr_t *addr, const char *ip);
 qboolean ValidIPAddress(netadr_t *addr);

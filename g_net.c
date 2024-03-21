@@ -4,6 +4,19 @@
 #include "g_local.h"
 
 /**
+ * Check whether 2 IPs are the same
+ */
+qboolean AddressesMatch(netadr_t *a1, netadr_t *a2)
+{
+    int len;
+    if (a1->type != a2->type) {
+        return qfalse;
+    }
+    len = (a1->type == NA_IP6) ? IP6_LEN : IP4_LEN;
+    return q2a_memcmp(a1->ip.u8, a2->ip.u8, len);
+}
+
+/**
  * Get a string representation of a netadr_t.
  *
  * dest needs to be at least 46 bytes long
