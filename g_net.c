@@ -141,7 +141,7 @@ netadr_t net_cidrToMask(int cidr, qboolean v6)
  *
  * Input format: "192.2.0.4:1234" or "[2001:db8::face]:23456"
  */
-void ParseIP(netadr_t *address, const char *ip)
+void net_parseIP(netadr_t *address, const char *ip)
 {
     char *delim;
     int addrlen;           // number of characters in IP string

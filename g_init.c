@@ -858,9 +858,9 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
         int num;
 
         if (q2a_strcmp(ip, "loopback") == 0) {
-            ParseIP(&proxyinfo[client].address, "127.0.0.1:0");
+            net_parseIP(&proxyinfo[client].address, "127.0.0.1:0");
         } else {
-            ParseIP(&proxyinfo[client].address, ip);
+            net_parseIP(&proxyinfo[client].address, ip);
         }
     }
 
