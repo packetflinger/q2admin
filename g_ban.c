@@ -1167,13 +1167,15 @@ void readBanLists(void) {
 
 void banRun(int startarg, edict_t *ent, int client) {
     char *cp;
+    char *tempcp;
     int clienti, num;
     unsigned int i, save;
     qboolean like, all, re;
     baninfo_t *newentry;
-    char savecmd[256];
-    char strbuffer[256];
+    char savecmd[384];
+    char strbuffer[384];
     qboolean nocheck = FALSE;
+    char ipstr[INET6_ADDRSTRLEN];
 
     // [sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)]] [FLOOD xxx xxx xxx] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
 
@@ -1404,11 +1406,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         }
 
         // get ip address
-        newentry->ip[0] = 0;
-        newentry->ip[1] = 0;
-        newentry->ip[2] = 0;
-        newentry->ip[3] = 0;
-
+        q2a_memset(newentry->addr, 0, sizeof(netadr_t));
         if (startContains(cp, "IP")) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1469,16 +1467,15 @@ void banRun(int startarg, edict_t *ent, int client) {
                     return;
                 }
 
-                newentry->ip[0] = proxyinfo[clienti].ipaddressBinary[0];
-                newentry->ip[1] = proxyinfo[clienti].ipaddressBinary[1];
-                newentry->ip[2] = proxyinfo[clienti].ipaddressBinary[2];
-                newentry->ip[3] = proxyinfo[clienti].ipaddressBinary[3];
+                newentry->addr = proxyinfo[clienti].address;
 
+                q2a_memset(ipstr, 0, sizeof(ipstr));
+                AddressToString(ipstr, newentry->addr, qfalse, qfalse);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
-                    36,
-                    "%d.%d.%d.%d ",
-                    newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]
+                    INET6_ADDRSTRLEN,
+                    "%s ",
+                    ipstr
                 );
 
                 while (isdigit(*cp)) {
@@ -1494,7 +1491,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                         cp++;
                     }
                 } else {
-                    newentry->subnetmask = 32;
+                    newentry->subnetmask = (newentry->addr.type == NA_IP6) ? 128 : 32;
                 }
 
                 if (*cp != 0) {
@@ -1512,26 +1509,16 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strcat(savecmd, cp);
                 q2a_strcat(savecmd, " ");
 
-                if (isdigit(*cp)) {
-                    for (i = 0; i < 4; i++) {
-                        num = q2a_atoi(cp);
-
-                        if (num > 255) {
-                            num = 255;
-                        }
-
-                        newentry->ip[i] = num;
-
-                        while (isdigit(*cp)) {
-                            cp++;
-                        }
-
-                        if (*cp == '.') {
-                            cp++;
-                        } else {
-                            break;
-                        }
+                if (isxdigit(*cp)) {
+                    tempcp = cp;
+                    // find the end of the IP string
+                    while (!(*tempcp == " " || *tempcp == "/" )) {
+                        tempcp++;
                     }
+                    q2a_memset(ipstr, 0, sizeof(ipstr));
+                    q2a_memcpy(ipstr, cp, (tempcp-cp));
+                    ParseIPAddressBase(newentry->addr, ipstr);
+                    cp = tempcp;
 
                     if (*cp == '/') {
                         cp++;
@@ -1542,7 +1529,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                             cp++;
                         }
                     } else {
-                        newentry->subnetmask = 32;
+                        newentry->subnetmask = (newentry->addr.type == NA_IP6) ? 128 : 32;
                     }
 
                     if (*cp != 0) {

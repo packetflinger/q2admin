@@ -830,6 +830,7 @@ typedef struct banstruct {
     byte type;
     byte loadType;
     byte ip[4];
+    netadr_t addr;
     byte subnetmask;
     char nick[80];
     char password[80];
