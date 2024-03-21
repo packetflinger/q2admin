@@ -1517,7 +1517,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     }
                     q2a_memset(ipstr, 0, sizeof(ipstr));
                     q2a_memcpy(ipstr, cp, (tempcp-cp));
-                    ParseIPAddressBase(newentry->addr, ipstr);
+                    net_parseIPAddressBase(newentry->addr, ipstr);
                     cp = tempcp;
 
                     if (*cp == '/') {

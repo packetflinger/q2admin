@@ -186,7 +186,7 @@ void net_parseIP(netadr_t *address, const char *ip)
  *
  * Input format: "192.2.0.4" or "2001:db8::face"
  */
-void ParseIPAddressBase(netadr_t *address, const char *ip)
+void net_parseIPAddressBase(netadr_t *address, const char *ip)
 {
     char *delim;
     int addrlen;           // number of characters in IP string
