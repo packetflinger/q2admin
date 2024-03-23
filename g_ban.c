@@ -2041,34 +2041,11 @@ int checkBanList(edict_t *ent, int client) {
 
             // check IP
             if (IPBanning_Enable) {
-                int snm = checkentry->subnetmask;
-                unsigned int i;
-
-                for (i = 0; i < 4 && snm; i++) {
-                    if (snm < 8) {
-                        byte mask = 0xFF << (8 - snm);
-
-                        if ((checkentry->ip[i] & mask) != (proxyinfo[client].ipaddressBinary[i] & mask)) {
-                            break;
-                        }
-                    } else {
-                        if (checkentry->ip[i] != proxyinfo[client].ipaddressBinary[i]) {
-                            break;
-                        }
-                    }
-
-                    snm -= 8;
-                }
-
-                if (snm > 0) {
+                if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
                     continue;
                 }
-            } else if (checkentry->subnetmask) {
-                prevcheckentry = checkentry;
-                checkentry = checkentry->next;
-                continue;
             }
 
             if (checkentry->exclude) {
