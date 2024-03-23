@@ -240,6 +240,7 @@ netadr_t net_parseIPAddressMask(const char *ip)
             address.mask_bits = q2a_atoi(delim+1);
         } else {
             q2a_strcpy(addr, ip);
+            address.mask_bits = 128;
         }
         inet_pton(AF_INET6, addr, &addr6);
         q2a_memcpy(address.ip.u8, addr6.s6_addr, 16);
@@ -256,6 +257,7 @@ netadr_t net_parseIPAddressMask(const char *ip)
             address.mask_bits = q2a_atoi(delim+1);
         } else {
             q2a_strcpy(addr, ip);
+            address.mask_bits = 32;
         }
         inet_pton(AF_INET, addr, &addr6);
         q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
