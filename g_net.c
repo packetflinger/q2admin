@@ -107,6 +107,23 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t)
 }
 
 /**
+ * Tests if a network address is in a particular subnet
+ */
+qboolean net_contains(netadr_t *network, netadr_t *host)
+{
+    if (network->type != host->type) {
+        return qfalse;
+    }
+    netadr_t mask = net_cidrToMask(network->mask_bits, network->type);
+    for (int i=0; i<IP6_LEN; i++) {
+        if ((network->ip.u8[i] & mask.ip.u8[i]) != (host->ip.u8[i] & mask.ip.u8[i])) {
+            return qfalse;
+        }
+    }
+    return qtrue;
+}
+
+/**
  * Parse a string representation of the player's IP address
  * into a netadr_t struct. This support both IPv4 and IPv6
  * addresses.
