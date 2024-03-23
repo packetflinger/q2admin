@@ -29,7 +29,7 @@ typedef struct netadr_s {
 
 qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2);
 char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport);
-netadr_t net_cidrToMask(int cidr, qboolean v6);
+netadr_t net_cidrToMask(int cidr, netadrtype_t t);
 void net_parseIP(netadr_t *addr, const char *ip);
 netadr_t net_parseIPAddressBase(const char *ip);
 qboolean net_validIPAddress(netadr_t *addr);
