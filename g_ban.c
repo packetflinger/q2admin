@@ -1936,7 +1936,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     edict_t *enti = getEnt((clienti + 1));
                     if (checkCheckIfBanned(enti, clienti)) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0);
-                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, proxyinfo[clienti].ipaddress);
+                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, net_addressToString(proxyinfo[clienti].address, qfalse, qfalse));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
