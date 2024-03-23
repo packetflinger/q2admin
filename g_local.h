@@ -1895,3 +1895,5 @@ void G_SHA256Hash(byte *dest, byte *src, size_t src_len);
 void hexDump(char *desc, void *addr, int len);
 void G_RSAError();
 
+int q2a_ceil(float x);
+int q2a_floor(float x);

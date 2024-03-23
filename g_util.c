@@ -633,3 +633,25 @@ char *Q_strcasestr(const char *s1, const char *s2)
     return NULL;
 }
 
+/**
+ * The version in math.h was weird with values between 0-1
+ */
+int q2a_ceil(float x)
+{
+    float temp;
+
+    temp = x - (int)x;
+    if (temp > 0) {
+        return ((int)x) + 1;
+    } else {
+        return (int)x;
+    }
+}
+
+/**
+ * Just to complement q2a_ceil
+ */
+int q2a_floor(float x)
+{
+   return (int)x;
+}
