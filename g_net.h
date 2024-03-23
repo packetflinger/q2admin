@@ -33,6 +33,7 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t);
 qboolean net_contains(netadr_t *network, netadr_t *host);
 void net_parseIP(netadr_t *addr, const char *ip);
 netadr_t net_parseIPAddressBase(const char *ip);
+netadr_t net_parseIPAddressMask(const char *ip);
 qboolean net_validIPAddress(netadr_t *addr);
 
 static inline bool NET_IsEqualAdr(const netadr_t *a, const netadr_t *b)

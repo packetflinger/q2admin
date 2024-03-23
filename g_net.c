@@ -209,6 +209,61 @@ netadr_t net_parseIPAddressBase(const char *ip)
 }
 
 /**
+ * Parse a basic string IP address with or without a CIDR mask.
+ *
+ * Examples:
+ * 192.0.2.5
+ * 192.0.2.5/27
+ * 2002:db8::4
+ * 2002:db8::4/64
+ */
+netadr_t net_parseIPAddressMask(const char *ip)
+{
+    netadr_t address;
+    char *delim;
+    int addrlen;           // number of characters in IP string
+    char addr[40];         // temporarily hold just the IP part
+    struct in6_addr addr6; // use for both versions
+
+    q2a_memset(addr, 0, 40);
+    q2a_memset(&address, 0, sizeof(netadr_t));
+    q2a_memset(&addr6, 0, sizeof(struct in6_addr));
+
+    // Look for IPv6
+    delim = strstr(ip, ":");
+    if (delim) {
+        address.type = NA_IP6;
+        delim = strstr(ip, "/");
+        if (delim) {
+            q2a_memcpy(addr, ip, (delim-ip));
+            address.mask_bits = q2a_atoi(delim+1);
+        } else {
+            q2a_strcpy(addr, ip);
+        }
+        inet_pton(AF_INET6, addr, &addr6);
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, 16);
+        return address;
+    }
+
+    // assume it's an IPv4 address
+    delim = strstr(ip, ".");
+    if (delim) {
+        address.type = NA_IP;
+        delim = strstr(ip, "/");
+        if (delim) {
+            q2a_memcpy(addr, ip, (delim-ip));
+            address.mask_bits = q2a_atoi(delim+1);
+        } else {
+            q2a_strcpy(addr, ip);
+        }
+        inet_pton(AF_INET, addr, &addr6);
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        return address;
+    }
+    return address;
+}
+
+/**
  * Very simple check for whether a client's IP starts with a valid number
  */
 qboolean net_validIPAddress(netadr_t *addr)
