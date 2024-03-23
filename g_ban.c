@@ -1406,7 +1406,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         }
 
         // get ip address
-        q2a_memset(newentry->addr, 0, sizeof(netadr_t));
+        q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
         if (startContains(cp, "IP")) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
