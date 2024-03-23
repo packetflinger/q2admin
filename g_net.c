@@ -186,32 +186,34 @@ void net_parseIP(netadr_t *address, const char *ip)
  *
  * Input format: "192.2.0.4" or "2001:db8::face"
  */
-void net_parseIPAddressBase(netadr_t *address, const char *ip)
+netadr_t net_parseIPAddressBase(const char *ip)
 {
+    netadr_t address;
     char *delim;
     int addrlen;           // number of characters in IP string
     char addr[40];         // temporarily hold just the IP part
     struct in6_addr addr6; // use for both versions
 
     q2a_memset(addr, 0, 40);
-    q2a_memset(address, 0, sizeof(netadr_t));
+    q2a_memset(&address, 0, sizeof(netadr_t));
     q2a_memset(&addr6, 0, sizeof(struct in6_addr));
 
     // Look for IPv6
     delim = strstr(ip, ":");
     if (delim) {
-        address->type = NA_IP6;
+        address.type = NA_IP6;
         inet_pton(AF_INET6, ip, &addr6);
-        q2a_memcpy(address->ip.u8, addr6.s6_addr, 16);
-        return;
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, 16);
+        return address;
     }
 
     // assume it's an IPv4 address
     delim = strstr(ip, ".");
     if (delim) {
-        address->type = NA_IP;
+        address.type = NA_IP;
         inet_pton(AF_INET, ip, &addr6);
-        q2a_memcpy(address->ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        return address;
     }
 }
 
