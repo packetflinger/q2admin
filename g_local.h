@@ -829,7 +829,6 @@ typedef struct banstruct {
     qboolean exclude;
     byte type;
     byte loadType;
-    byte ip[4];
     netadr_t addr;
     byte subnetmask;
     char nick[80];
