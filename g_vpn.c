@@ -25,7 +25,7 @@ void LookupVPNStatus(edict_t *ent)
 {
     char *request;
     proxyinfo_t *pi;
-    char addr[INET6_ADDRSTRLEN];
+    char *addr;
 
     int i = getEntOffset(ent) - 1;
     if (!vpn_enable) {
@@ -38,7 +38,7 @@ void LookupVPNStatus(edict_t *ent)
         return;
     }
 
-    net_addressToString(addr, &pi->address, qfalse, qfalse);
+    addr = net_addressToString(&pi->address, qfalse, qfalse);
     request = va("/api/%s?key=%s", addr, vpn_api_key);
     proxyinfo[i].vpn.state = VPN_CHECKING;
     proxyinfo[i].dl.initiator = ent;

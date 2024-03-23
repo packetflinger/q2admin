@@ -1175,7 +1175,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     char savecmd[384];
     char strbuffer[384];
     qboolean nocheck = FALSE;
-    char ipstr[INET6_ADDRSTRLEN];
+    char *ipstr;
 
     // [sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)]] [FLOOD xxx xxx xxx] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
 
@@ -1469,8 +1469,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
                 newentry->addr = proxyinfo[clienti].address;
 
-                q2a_memset(ipstr, 0, sizeof(ipstr));
-                net_addressToString(ipstr, newentry->addr, qfalse, qfalse);
+                ipstr = net_addressToString(&newentry->addr, qfalse, qfalse);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
                     INET6_ADDRSTRLEN,

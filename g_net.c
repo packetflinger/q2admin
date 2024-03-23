@@ -19,16 +19,18 @@ qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
 /**
  * Get a string representation of a netadr_t.
  *
- * dest needs to be at least 46 bytes long.
  * wrapv6 arg controls whether IPv6 addresses are sandwiched in between brackets or not.
  * incport arg controls whether ":portnum" will be appended.
  */
-void net_addressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolean incport)
+char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport)
 {
     int i;
     char temp[INET6_ADDRSTRLEN];
+    static char dest[INET6_ADDRSTRLEN];
 
     q2a_memset(temp, 0, sizeof(temp));
+    q2a_memset(dest, 0, sizeof(dest));
+
     if (address->type == NA_IP6) {
         inet_ntop(AF_INET6, &address->ip.u8, temp, INET6_ADDRSTRLEN);
         if (wrapv6) {
@@ -45,6 +47,7 @@ void net_addressToString(char *dest, netadr_t *address, qboolean wrapv6, qboolea
         q2a_strcat(dest, ":");
         q2a_strcat(dest, va("%d", address->port));
     }
+    return dest;
 }
 
 /**
