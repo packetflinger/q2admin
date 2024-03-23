@@ -206,6 +206,7 @@ netadr_t net_parseIPAddressBase(const char *ip)
         q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
         return address;
     }
+    return address;
 }
 
 /**
