@@ -24,6 +24,7 @@ typedef struct netadr_s {
     netadrip_t ip;
     uint16_t port;
     uint32_t scope_id;
+    uint8_t mask_bits;
 } netadr_t;
 
 qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2);
