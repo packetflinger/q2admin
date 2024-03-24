@@ -1052,7 +1052,6 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     proxyinfo[client].retries = 0;
     proxyinfo[client].rbotretries = 0;
     proxyinfo[client].charindex = 0;
-    proxyinfo[client].ipaddress[0] = 0;
     proxyinfo[client].name[0] = 0;
     proxyinfo[client].skin[0] = 0;
     proxyinfo[client].ipaddressBinary[0] = 0;
@@ -1109,7 +1108,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     }
 
     if (strlen(skinname) > 38) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s: Skin name exceeds 38 characters (IP = %s)\n", proxyinfo[client].name, proxyinfo[client].ipaddress);
+        gi.cprintf(NULL, PRINT_HIGH, "%s: Skin name exceeds 38 characters (IP = %s)\n", proxyinfo[client].name, IP(client));
         return FALSE;
     }
 
@@ -1122,7 +1121,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
         currentBanMsg = lockoutmsg;
 
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, proxyinfo[client].ipaddress);
+        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
 
         if (banOnConnect) {
             ret = 0;
@@ -1130,7 +1129,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
-    } else if (checkClientIpAddress && proxyinfo[client].ipaddress[0] == 0) // check for invlaid IP's and don't let them in :)
+    } else if (checkClientIpAddress && !HASIP(client)) // check for invlaid IP's and don't let them in :)
     {
         char *ip = FindIpAddressInUserInfo(userinfo, 0);
         gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "Client doesn't have a valid IP address", ip);
@@ -1144,7 +1143,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
         }
     } else if (checkCheckIfBanned(ent, client)) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, proxyinfo[client].ipaddress);
+        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
 
         if (banOnConnect) {
             ret = 0;
@@ -1257,7 +1256,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0);
 
         if (userInfoOverflow) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "WARNING: Client's userinfo space looks to have overflowed!", proxyinfo[client].ipaddress);
+            gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "WARNING: Client's userinfo space looks to have overflowed!", IP(client));
             proxyinfo[client].clientcommand |= CCMD_CLIENTOVERFLOWED;
         }
     }
@@ -1734,7 +1733,6 @@ void ClientDisconnect(edict_t *ent)
     proxyinfo[client].rbotretries = 0;
     proxyinfo[client].clientcommand = 0;
     proxyinfo[client].charindex = 0;
-    proxyinfo[client].ipaddress[0] = 0;
     proxyinfo[client].name[0] = 0;
     proxyinfo[client].skin[0] = 0;
     proxyinfo[client].stuffFile = 0;
@@ -1774,6 +1772,7 @@ void ClientDisconnect(edict_t *ent)
     proxyinfo[client].userid = -1;
     
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
+    q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
 
     STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
 }
