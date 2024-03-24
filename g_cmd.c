@@ -3627,7 +3627,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", proxyinfo[clienti].name, proxyinfo[clienti].ipaddress);
+        Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", proxyinfo[clienti].name, net_addressToString(&proxyinfo[clienti].address, qfalse, qfalse));
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL <id>]|name\n");
