@@ -21,8 +21,9 @@ qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
  *
  * wrapv6 arg controls whether IPv6 addresses are sandwiched in between brackets or not.
  * incport arg controls whether ":portnum" will be appended.
+ * incmask arg controls whether "/xx" cidr mask will be appended.
  */
-char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport)
+char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport, qboolean incmask)
 {
     int i;
     char temp[INET6_ADDRSTRLEN];
@@ -43,9 +44,12 @@ char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport)
         q2a_strcpy(dest, temp);
     }
 
+    if (incmask) {
+        q2a_strcat(dest, va("/%d", address->mask_bits));
+    }
+
     if (incport) {
-        q2a_strcat(dest, ":");
-        q2a_strcat(dest, va("%d", address->port));
+        q2a_strcat(dest, va(":%d", address->port));
     }
     return dest;
 }

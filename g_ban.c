@@ -1346,7 +1346,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
                 newentry->addr = proxyinfo[clienti].address;
 
-                ipstr = net_addressToString(&newentry->addr, qfalse, qfalse);
+                ipstr = net_addressToString(&newentry->addr, qfalse, qfalse, qtrue);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
                     INET6_ADDRSTRLEN,
@@ -1740,7 +1740,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     edict_t *enti = getEnt((clienti + 1));
                     if (checkCheckIfBanned(enti, clienti)) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0);
-                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, net_addressToString(&proxyinfo[clienti].address, qfalse, qfalse));
+                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
@@ -1988,7 +1988,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                         buffer + q2a_strlen(buffer),
                         sizeof(buffer) - q2a_strlen(buffer),
                         " IP %s",
-                        net_addressToString(&findentry->addr, qfalse, qfalse)
+                        net_addressToString(&findentry->addr, qfalse, qfalse, qtrue)
                 );
             }
         }

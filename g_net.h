@@ -4,8 +4,10 @@
 #define IP4_LEN  4
 #define IP6_LEN 16
 
-#define IP(x)     (net_addressToString(&proxyinfo[x].address, qfalse, qfalse))
+#define IP(x)     (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qfalse))
+#define IPMASK(x) (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qtrue))
 #define IPSTR(a)  (net_addressToString(a->address, qfalse, qfalse))
+#define IPSTRMASK(a) (net_addressToString(a->address, qfalse, qfalse, qtrue))
 #define HASIP(x)  (proxyinfo[x].address.ip.u8[0] != 0)
 
 typedef enum {
@@ -32,7 +34,7 @@ typedef struct netadr_s {
 } netadr_t;
 
 qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2);
-char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport);
+char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport, qboolean incmask);
 netadr_t net_cidrToMask(int cidr, netadrtype_t t);
 qboolean net_contains(netadr_t *network, netadr_t *host);
 void net_parseIP(netadr_t *addr, const char *ip);
