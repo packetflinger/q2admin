@@ -88,7 +88,7 @@ void readIpFromLog(int client, edict_t *ent) {
     FILE *dumpfile;
     long fpos;
 
-    if (proxyinfo[client].ipaddress[0]) {
+    if (HASIP(client)) {
         return;
     }
 
@@ -104,7 +104,7 @@ void readIpFromLog(int client, edict_t *ent) {
     while (getLastLine(buffer, dumpfile, &fpos)) {
         if (startContains(buffer, "ip")) {
             char *cp = buffer + 3;
-            char *dp = proxyinfo[client].ipaddress;
+            char *dp = IP(client);
 
             SKIPBLANK(cp);
 
@@ -550,7 +550,7 @@ void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check) {
         }
 
         if (proxyinfo[client].q2a_admin & 16) {
-            gi.cprintf(ent, PRINT_HIGH, "ip           %s\n", proxyinfo[user].ipaddress);
+            gi.cprintf(ent, PRINT_HIGH, "ip           %s\n", IP(user));
         }
 
         cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "name");
@@ -857,7 +857,7 @@ void whois_adduser(int client, edict_t *ent) {
     }
 
     whois_details[WHOIS_COUNT].id = WHOIS_COUNT;
-    q2a_strncpy(whois_details[WHOIS_COUNT].ip, strtok(proxyinfo[client].ipaddress, ":"), 22);
+    q2a_strncpy(whois_details[WHOIS_COUNT].ip, IP(client), 22);
     q2a_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, 16);
     proxyinfo[client].userid = WHOIS_COUNT;
     WHOIS_COUNT++;
@@ -894,7 +894,7 @@ void whois_getid(int client, edict_t *ent) {
     //called when a client connects
     unsigned int i;
     for (i = 0; i < WHOIS_COUNT; i++) {
-        if (q2a_strcmp(whois_details[i].ip, strtok(proxyinfo[client].ipaddress, ":")) == 0) {
+        if (q2a_strcmp(whois_details[i].ip, IP(client)) == 0) {
             //got a match, store new id
             proxyinfo[client].userid = i;
             whois_newname(client, ent);
