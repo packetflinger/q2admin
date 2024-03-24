@@ -938,8 +938,6 @@ typedef struct {
     int logfilenum;
     long logfilecheckpos;
     char buffer[256]; // log buffer
-    char ipaddress[40];
-    byte ipaddressBinary[4];
     byte impulse;
     byte inuse;
     char name[16];
