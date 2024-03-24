@@ -4,6 +4,8 @@
 #define IP4_LEN  4
 #define IP6_LEN 16
 
+#define IP(x) (net_addressToString(&proxyinfo[x].address, qfalse, qfalse))
+
 typedef enum {
     NA_UNSPECIFIED,
     NA_LOOPBACK,
