@@ -1056,6 +1056,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     char strbuffer[384];
     qboolean nocheck = FALSE;
     char *ipstr;
+    char tempip[INET6_ADDRSTRLEN];
 
     // [sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)]] [FLOOD xxx xxx xxx] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
 
@@ -1378,9 +1379,9 @@ void banRun(int startarg, edict_t *ent, int client) {
                     while (!isspace(*tempcp)) {
                         tempcp++;
                     }
-                    q2a_memset(ipstr, 0, sizeof(ipstr));
-                    q2a_memcpy(ipstr, cp, (tempcp-cp));
-                    newentry->addr = net_parseIPAddressBase(ipstr);
+                    q2a_memset(tempip, 0, sizeof(tempip));
+                    q2a_memcpy(tempip, cp, (tempcp-cp));
+                    newentry->addr = net_parseIPAddressMask(tempip);
                     cp = tempcp;
 
                     if (*cp != 0) {
