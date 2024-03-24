@@ -343,7 +343,7 @@ skipwhite:
 }
 
 /**
- * Get the IPv4 address from the userinfo string
+ * Get the IPv4/IPv6 address from the userinfo string
  */
 char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow)
 {
