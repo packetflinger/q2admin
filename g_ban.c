@@ -653,12 +653,12 @@ qboolean ReadBanFile(char *bfname) {
                         if (isxdigit(*cp)) {
                             tempcp = cp;
                             // find the end of the IP string
-                            while (!(*tempcp == " " || *tempcp == "/" )) {
+                            while (!isspace(*tempcp)) {
                                 tempcp++;
                             }
                             q2a_memset(ipstr, 0, sizeof(ipstr));
                             q2a_memcpy(ipstr, cp, (tempcp-cp));
-                            newentry->addr = net_parseIPAddressBase(ipstr);
+                            newentry->addr = net_parseIPAddressMask(ipstr);
                             cp = tempcp;
                         }
 
@@ -1375,7 +1375,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (isxdigit(*cp)) {
                     tempcp = cp;
                     // find the end of the IP string
-                    while (!(*tempcp == " " || *tempcp == "/" )) {
+                    while (!isspace(*tempcp)) {
                         tempcp++;
                     }
                     q2a_memset(ipstr, 0, sizeof(ipstr));
