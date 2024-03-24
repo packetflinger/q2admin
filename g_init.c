@@ -953,19 +953,6 @@ qboolean checkReconnectList(char *username)
 }
 
 /**
- * Do two IPv4 addresses match?
- */
-static qboolean IPv4Match(byte first[4], byte second[4]) {
-    for (int i=0; i<3; i++) {
-        if (first[i] != second[i]) {
-            return qfalse;
-        }
-    }
-
-    return qtrue;
-}
-
-/**
  * Called when a new player first connects to the server, before entering the game
  */
 qboolean ClientConnect(edict_t *ent, char *userinfo)
