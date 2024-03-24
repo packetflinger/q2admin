@@ -331,7 +331,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'i') {
                 if (ent) {
-                    cp = proxyinfo[client].ipaddress;
+                    cp = IP(client);
                     while (*cp) {
                         *dest++ = *cp++;
                     }
