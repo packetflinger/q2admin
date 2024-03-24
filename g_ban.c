@@ -107,7 +107,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                 if (startContains(cp, "ALL")) {
                     newentry->type = NICKALL;
-                    newentry->subnetmask = 0;
                     newentry->maxnumberofconnects = 0;
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
@@ -204,35 +203,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
                         }
 
                         SKIPBLANK(cp);
-                        /*
-                        // get MASK
-                        if(startContains(cp, "MASK"))
-                        {
-                        cp += 4;
-											 
-                        SKIPBLANK(cp);
-											 
-                        newentry->subnetmask = q2a_atoi(cp);
-											 
-                        if(newentry->subnetmask > 32)
-                        {
-                        newentry->subnetmask = 32;
-                        }
-											 
-                        while(isdigit(*cp))
-                        {
-                        cp++;
-                        }
-											 
-                        SKIPBLANK(cp);
-                        }
-                        else
-                        {
-                        newentry->subnetmask = 32;
-                        }
-                         */
-                    } else {
-                        newentry->subnetmask = 0;
                     }
                 }
 
@@ -363,7 +333,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -540,6 +510,8 @@ qboolean ReadBanFile(char *bfname) {
     chatbaninfo_t *cnewentry;
     char strbuffer[256];
     unsigned int uptoLine = 0;
+    char *tempcp;
+    char ipstr[INET6_ADDRSTRLEN];
 
     banfile = fopen(bfname, "rt");
     if (!banfile) {
@@ -587,7 +559,6 @@ qboolean ReadBanFile(char *bfname) {
 
                 if (startContains(cp, "ALL")) {
                     newentry->type = NICKALL;
-                    newentry->subnetmask = 0;
                     newentry->maxnumberofconnects = 0;
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
@@ -680,7 +651,15 @@ qboolean ReadBanFile(char *bfname) {
                         SKIPBLANK(cp);
 
                         if (isxdigit(*cp)) {
-                            newentry->addr = net_parseIPAddressMask(cp);
+                            tempcp = cp;
+                            // find the end of the IP string
+                            while (!(*tempcp == " " || *tempcp == "/" )) {
+                                tempcp++;
+                            }
+                            q2a_memset(ipstr, 0, sizeof(ipstr));
+                            q2a_memcpy(ipstr, cp, (tempcp-cp));
+                            newentry->addr = net_parseIPAddressBase(ipstr);
+                            cp = tempcp;
                         }
 
                         SKIPBLANK(cp);
@@ -814,7 +793,7 @@ qboolean ReadBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -1129,7 +1108,6 @@ void banRun(int startarg, edict_t *ent, int client) {
 
     if (startContains(cp, "ALL")) {
         newentry->type = NICKALL;
-        newentry->subnetmask = 0;
         newentry->maxnumberofconnects = 0;
         newentry->numberofconnects = 0;
         newentry->msg = NULL;
@@ -1379,18 +1357,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     cp++;
                 }
 
-                if (*cp == '/') {
-                    cp++;
-
-                    newentry->subnetmask = q2a_atoi(cp);
-
-                    while (isdigit(*cp)) {
-                        cp++;
-                    }
-                } else {
-                    newentry->subnetmask = (newentry->addr.type == NA_IP6) ? 128 : 32;
-                }
-
                 if (*cp != 0) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -1417,8 +1383,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     newentry->addr = net_parseIPAddressBase(ipstr);
                     cp = tempcp;
 
-                    newentry->subnetmask = (newentry->addr.type == NA_IP6) ? 128 : 32;
-
                     if (*cp != 0) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -1439,8 +1403,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                 cp = gi.argv(startarg);
                 startarg++;
             }
-        } else {
-            newentry->subnetmask = 0;
         }
     }
 
@@ -1726,7 +1688,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     // do you have a valid ban record?
-    if (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) {
+    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) {
         // no, abort
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
@@ -1999,7 +1961,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
             q2a_strcat(buffer, " +");
         }
 
-        if (findentry->type == NICKALL && findentry->subnetmask == 0) {
+        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0) {
             q2a_strcat(buffer, " ALL");
         } else {
             if (findentry->type != NICKALL) {
@@ -2020,7 +1982,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                 }
             }
 
-            if (findentry->subnetmask != 0) {
+            if (findentry->addr.mask_bits != 0) {
                 Q_snprintf(
                         buffer + q2a_strlen(buffer),
                         sizeof(buffer) - q2a_strlen(buffer),
