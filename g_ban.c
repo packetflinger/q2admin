@@ -1383,19 +1383,8 @@ void banRun(int startarg, edict_t *ent, int client) {
                     q2a_memcpy(tempip, cp, (tempcp-cp));
                     newentry->addr = net_parseIPAddressMask(tempip);
                     cp = tempcp;
-
-                    if (*cp != 0) {
-                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
-                        gi.TagFree(newentry);
-                        return;
-                    }
                 }
+                SKIPBLANK(cp);
             }
 
             if (gi.argc() <= startarg) {
