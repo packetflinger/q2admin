@@ -1054,10 +1054,6 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
     proxyinfo[client].charindex = 0;
     proxyinfo[client].name[0] = 0;
     proxyinfo[client].skin[0] = 0;
-    proxyinfo[client].ipaddressBinary[0] = 0;
-    proxyinfo[client].ipaddressBinary[1] = 0;
-    proxyinfo[client].ipaddressBinary[2] = 0;
-    proxyinfo[client].ipaddressBinary[3] = 0;
     proxyinfo[client].stuffFile = 0;
     proxyinfo[client].impulsesgenerated = 0;
     proxyinfo[client].floodinfo.chatFloodProtect = FALSE;
