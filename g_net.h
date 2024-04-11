@@ -7,7 +7,7 @@
 #define IP(x)     (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qfalse))
 #define IPMASK(x) (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qtrue))
 #define IPSTR(a)  (net_addressToString(a->address, qfalse, qfalse))
-#define IPSTRMASK(a) (net_addressToString(a->address, qfalse, qfalse, qtrue))
+#define IPSTRMASK(a) (net_addressToString(a, qfalse, qfalse, qtrue))
 #define HASIP(x)  (proxyinfo[x].address.ip.u8[0] != 0)
 
 typedef enum {

@@ -1346,7 +1346,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
                 newentry->addr = proxyinfo[clienti].address;
 
-                ipstr = net_addressToString(&newentry->addr, qfalse, qfalse, qtrue);
+                ipstr = IPSTRMASK(&newentry->addr);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
                     INET6_ADDRSTRLEN,
@@ -1662,6 +1662,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     if (*cp != 0) {
+
         // something is wrong...
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
