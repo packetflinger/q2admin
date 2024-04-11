@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "regex.h"
 #include "g_offsets.h"
 #include "g_json.h"
+#include "g_net.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -828,8 +829,7 @@ typedef struct banstruct {
     qboolean exclude;
     byte type;
     byte loadType;
-    byte ip[4];
-    byte subnetmask;
+    netadr_t addr;
     char nick[80];
     char password[80];
     char *msg;
@@ -938,8 +938,6 @@ typedef struct {
     int logfilenum;
     long logfilecheckpos;
     char buffer[256]; // log buffer
-    char ipaddress[40];
-    byte ipaddressBinary[4];
     byte impulse;
     byte inuse;
     char name[16];
@@ -975,7 +973,7 @@ typedef struct {
     char hack_teststring3[RANDOM_STRING_LENGTH + 1];
     char hack_timescale[RANDOM_STRING_LENGTH + 1];
     int hacked_disconnect;
-    byte hacked_disconnect_ip[4];
+    netadr_t hacked_disconnect_addr;
     int checked_hacked_exe;
 
     // used to test the variables check list
@@ -1022,6 +1020,8 @@ typedef struct {
     int stifle_length;  // frames
     download_t dl;
     vpn_t vpn;
+    netadr_t address;
+    char address_str[135]; // string rep, ipv4/ipv6:port
 } proxyinfo_t;
 
 typedef struct {
@@ -1891,3 +1891,5 @@ void G_SHA256Hash(byte *dest, byte *src, size_t src_len);
 void hexDump(char *desc, void *addr, int len);
 void G_RSAError();
 
+int q2a_ceil(float x);
+int q2a_floor(float x);

@@ -107,14 +107,10 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                 if (startContains(cp, "ALL")) {
                     newentry->type = NICKALL;
-                    newentry->ip[0] = 0;
-                    newentry->ip[1] = 0;
-                    newentry->ip[2] = 0;
-                    newentry->ip[3] = 0;
-                    newentry->subnetmask = 0;
                     newentry->maxnumberofconnects = 0;
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
+                    q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
                     all = TRUE;
 
                     cp += 3;
@@ -195,79 +191,18 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     }
 
                     // get ip address
-                    newentry->ip[0] = 0;
-                    newentry->ip[1] = 0;
-                    newentry->ip[2] = 0;
-                    newentry->ip[3] = 0;
+                    q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
 
                     if (startContains(cp, "IP")) {
                         cp += 2;
 
                         SKIPBLANK(cp);
 
-                        if (isdigit(*cp)) {
-                            for (i = 0; i < 4; i++) {
-                                num = q2a_atoi(cp);
-
-                                if (num > 255) {
-                                    num = 255;
-                                }
-
-                                newentry->ip[i] = num;
-
-                                while (isdigit(*cp)) {
-                                    cp++;
-                                }
-
-                                if (*cp == '.') {
-                                    cp++;
-                                } else {
-                                    break;
-                                }
-                            }
-
-                            if (*cp == '/') {
-                                cp++;
-                                newentry->subnetmask = q2a_atoi(cp);
-
-                                while (isdigit(*cp)) {
-                                    cp++;
-                                }
-                            } else {
-                                newentry->subnetmask = 32;
-                            }
+                        if (isxdigit(*cp)) {
+                            newentry->addr = net_parseIPAddressMask(cp);
                         }
 
                         SKIPBLANK(cp);
-                        /*
-                        // get MASK
-                        if(startContains(cp, "MASK"))
-                        {
-                        cp += 4;
-											 
-                        SKIPBLANK(cp);
-											 
-                        newentry->subnetmask = q2a_atoi(cp);
-											 
-                        if(newentry->subnetmask > 32)
-                        {
-                        newentry->subnetmask = 32;
-                        }
-											 
-                        while(isdigit(*cp))
-                        {
-                        cp++;
-                        }
-											 
-                        SKIPBLANK(cp);
-                        }
-                        else
-                        {
-                        newentry->subnetmask = 32;
-                        }
-                         */
-                    } else {
-                        newentry->subnetmask = 0;
                     }
                 }
 
@@ -398,7 +333,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -575,6 +510,8 @@ qboolean ReadBanFile(char *bfname) {
     chatbaninfo_t *cnewentry;
     char strbuffer[256];
     unsigned int uptoLine = 0;
+    char *tempcp;
+    char ipstr[INET6_ADDRSTRLEN];
 
     banfile = fopen(bfname, "rt");
     if (!banfile) {
@@ -622,14 +559,10 @@ qboolean ReadBanFile(char *bfname) {
 
                 if (startContains(cp, "ALL")) {
                     newentry->type = NICKALL;
-                    newentry->ip[0] = 0;
-                    newentry->ip[1] = 0;
-                    newentry->ip[2] = 0;
-                    newentry->ip[3] = 0;
-                    newentry->subnetmask = 0;
                     newentry->maxnumberofconnects = 0;
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
+                    q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
                     all = TRUE;
 
                     cp += 3;
@@ -710,79 +643,26 @@ qboolean ReadBanFile(char *bfname) {
                     }
 
                     // get ip address
-                    newentry->ip[0] = 0;
-                    newentry->ip[1] = 0;
-                    newentry->ip[2] = 0;
-                    newentry->ip[3] = 0;
+                    q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
 
                     if (startContains(cp, "IP")) {
                         cp += 2;
 
                         SKIPBLANK(cp);
 
-                        if (isdigit(*cp)) {
-                            for (i = 0; i < 4; i++) {
-                                num = q2a_atoi(cp);
-
-                                if (num > 255) {
-                                    num = 255;
-                                }
-
-                                newentry->ip[i] = num;
-
-                                while (isdigit(*cp)) {
-                                    cp++;
-                                }
-
-                                if (*cp == '.') {
-                                    cp++;
-                                } else {
-                                    break;
-                                }
+                        if (isxdigit(*cp)) {
+                            tempcp = cp;
+                            // find the end of the IP string
+                            while (!isspace(*tempcp)) {
+                                tempcp++;
                             }
-
-                            if (*cp == '/') {
-                                cp++;
-                                newentry->subnetmask = q2a_atoi(cp);
-
-                                while (isdigit(*cp)) {
-                                    cp++;
-                                }
-                            } else {
-                                newentry->subnetmask = 32;
-                            }
+                            q2a_memset(ipstr, 0, sizeof(ipstr));
+                            q2a_memcpy(ipstr, cp, (tempcp-cp));
+                            newentry->addr = net_parseIPAddressMask(ipstr);
+                            cp = tempcp;
                         }
 
                         SKIPBLANK(cp);
-                        /*
-                        // get MASK
-                        if(startContains(cp, "MASK"))
-                        {
-                        cp += 4;
-											 
-                        SKIPBLANK(cp);
-											 
-                        newentry->subnetmask = q2a_atoi(cp);
-											 
-                        if(newentry->subnetmask > 32)
-                        {
-                        newentry->subnetmask = 32;
-                        }
-											 
-                        while(isdigit(*cp))
-                        {
-                        cp++;
-                        }
-											 
-                        SKIPBLANK(cp);
-                        }
-                        else
-                        {
-                        newentry->subnetmask = 32;
-                        }
-                         */
-                    } else {
-                        newentry->subnetmask = 0;
                     }
                 }
 
@@ -913,7 +793,7 @@ qboolean ReadBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -1167,13 +1047,16 @@ void readBanLists(void) {
 
 void banRun(int startarg, edict_t *ent, int client) {
     char *cp;
+    char *tempcp;
     int clienti, num;
     unsigned int i, save;
     qboolean like, all, re;
     baninfo_t *newentry;
-    char savecmd[256];
-    char strbuffer[256];
+    char savecmd[384];
+    char strbuffer[384];
     qboolean nocheck = FALSE;
+    char *ipstr;
+    char tempip[INET6_ADDRSTRLEN];
 
     // [sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)]] [FLOOD xxx xxx xxx] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
 
@@ -1226,15 +1109,11 @@ void banRun(int startarg, edict_t *ent, int client) {
 
     if (startContains(cp, "ALL")) {
         newentry->type = NICKALL;
-        newentry->ip[0] = 0;
-        newentry->ip[1] = 0;
-        newentry->ip[2] = 0;
-        newentry->ip[3] = 0;
-        newentry->subnetmask = 0;
         newentry->maxnumberofconnects = 0;
         newentry->numberofconnects = 0;
         newentry->msg = NULL;
         newentry->floodinfo.chatFloodProtect = FALSE;
+        q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
         all = TRUE;
 
 
@@ -1404,11 +1283,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         }
 
         // get ip address
-        newentry->ip[0] = 0;
-        newentry->ip[1] = 0;
-        newentry->ip[2] = 0;
-        newentry->ip[3] = 0;
-
+        q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
         if (startContains(cp, "IP")) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1469,32 +1344,18 @@ void banRun(int startarg, edict_t *ent, int client) {
                     return;
                 }
 
-                newentry->ip[0] = proxyinfo[clienti].ipaddressBinary[0];
-                newentry->ip[1] = proxyinfo[clienti].ipaddressBinary[1];
-                newentry->ip[2] = proxyinfo[clienti].ipaddressBinary[2];
-                newentry->ip[3] = proxyinfo[clienti].ipaddressBinary[3];
+                newentry->addr = proxyinfo[clienti].address;
 
+                ipstr = IPSTRMASK(&newentry->addr);
                 Q_snprintf(
                     savecmd + q2a_strlen(savecmd),
-                    36,
-                    "%d.%d.%d.%d ",
-                    newentry->ip[0], newentry->ip[1], newentry->ip[2], newentry->ip[3]
+                    INET6_ADDRSTRLEN,
+                    "%s ",
+                    ipstr
                 );
 
                 while (isdigit(*cp)) {
                     cp++;
-                }
-
-                if (*cp == '/') {
-                    cp++;
-
-                    newentry->subnetmask = q2a_atoi(cp);
-
-                    while (isdigit(*cp)) {
-                        cp++;
-                    }
-                } else {
-                    newentry->subnetmask = 32;
                 }
 
                 if (*cp != 0) {
@@ -1512,51 +1373,18 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strcat(savecmd, cp);
                 q2a_strcat(savecmd, " ");
 
-                if (isdigit(*cp)) {
-                    for (i = 0; i < 4; i++) {
-                        num = q2a_atoi(cp);
-
-                        if (num > 255) {
-                            num = 255;
-                        }
-
-                        newentry->ip[i] = num;
-
-                        while (isdigit(*cp)) {
-                            cp++;
-                        }
-
-                        if (*cp == '.') {
-                            cp++;
-                        } else {
-                            break;
-                        }
+                if (isxdigit(*cp)) {
+                    tempcp = cp;
+                    // find the end of the IP string
+                    while (!isspace(*tempcp)) {
+                        tempcp++;
                     }
-
-                    if (*cp == '/') {
-                        cp++;
-
-                        newentry->subnetmask = q2a_atoi(cp);
-
-                        while (isdigit(*cp)) {
-                            cp++;
-                        }
-                    } else {
-                        newentry->subnetmask = 32;
-                    }
-
-                    if (*cp != 0) {
-                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
-                        gi.TagFree(newentry);
-                        return;
-                    }
+                    q2a_memset(tempip, 0, sizeof(tempip));
+                    q2a_memcpy(tempip, cp, (tempcp-cp));
+                    newentry->addr = net_parseIPAddressMask(tempip);
+                    cp = tempcp;
                 }
+                SKIPBLANK(cp);
             }
 
             if (gi.argc() <= startarg) {
@@ -1565,55 +1393,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                 cp = gi.argv(startarg);
                 startarg++;
             }
-
-            // get MASK
-            /*      if(startContains(cp, "MASK"))
-            {
-            if(gi.argc() <= startarg)
-            {
-            gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-            gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-					 
-            if(newentry->r)
-            {
-            regfree(newentry->r);
-            gi.TagFree(newentry->r);
-            }
-            gi.TagFree(newentry);
-            return;
-            }
-					 
-            cp = gi.argv(startarg);
-            startarg++;
-					 
-            q2a_strcat(savecmd, "MASK ");
-            q2a_strcat(savecmd, cp);
-            q2a_strcat(savecmd, " ");
-					 
-            newentry->subnetmask = q2a_atoi(cp);
-					 
-            if(newentry->subnetmask > 32)
-            {
-            newentry->subnetmask = 32;
-            }
-					 
-            if(gi.argc() <= startarg)
-            {
-            cp = "";
-            }
-            else
-            {
-            cp = gi.argv(startarg);
-            startarg++;
-            }
-            }
-            else
-            {
-            newentry->subnetmask = 32;
-            }
-             */
-        } else {
-            newentry->subnetmask = 0;
         }
     }
 
@@ -1719,7 +1498,6 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         newentry->floodinfo.chatFloodProtectSilence = q2a_atoi(cp);
 
-
         if (gi.argc() <= startarg) {
             cp = "";
         } else {
@@ -1729,13 +1507,13 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
             Q_snprintf(
-            		savecmd + q2a_strlen(savecmd),
-					sizeof(savecmd) - q2a_strlen(savecmd),
-					"FLOOD %d %d %d ",
-					newentry->floodinfo.chatFloodProtectNum,
-					newentry->floodinfo.chatFloodProtectSec,
-					newentry->floodinfo.chatFloodProtectSilence
-			);
+                    savecmd + q2a_strlen(savecmd),
+                    sizeof(savecmd) - q2a_strlen(savecmd),
+                    "FLOOD %d %d %d ",
+                    newentry->floodinfo.chatFloodProtectNum,
+                    newentry->floodinfo.chatFloodProtectSec,
+                    newentry->floodinfo.chatFloodProtectSilence
+            );
             newentry->floodinfo.chatFloodProtect = TRUE;
         } else {
             newentry->floodinfo.chatFloodProtect = FALSE;
@@ -1884,6 +1662,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     if (*cp != 0) {
+
         // something is wrong...
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
@@ -1900,7 +1679,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     // do you have a valid ban record?
-    if (!all && newentry->type == NICKALL && newentry->subnetmask == 0 && newentry->maxnumberofconnects == 0) {
+    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) {
         // no, abort
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
@@ -1951,7 +1730,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     edict_t *enti = getEnt((clienti + 1));
                     if (checkCheckIfBanned(enti, clienti)) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0);
-                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, proxyinfo[clienti].ipaddress);
+                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
@@ -2056,34 +1835,11 @@ int checkBanList(edict_t *ent, int client) {
 
             // check IP
             if (IPBanning_Enable) {
-                int snm = checkentry->subnetmask;
-                unsigned int i;
-
-                for (i = 0; i < 4 && snm; i++) {
-                    if (snm < 8) {
-                        byte mask = 0xFF << (8 - snm);
-
-                        if ((checkentry->ip[i] & mask) != (proxyinfo[client].ipaddressBinary[i] & mask)) {
-                            break;
-                        }
-                    } else {
-                        if (checkentry->ip[i] != proxyinfo[client].ipaddressBinary[i]) {
-                            break;
-                        }
-                    }
-
-                    snm -= 8;
-                }
-
-                if (snm > 0) {
+                if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
                     continue;
                 }
-            } else if (checkentry->subnetmask) {
-                prevcheckentry = checkentry;
-                checkentry = checkentry->next;
-                continue;
             }
 
             if (checkentry->exclude) {
@@ -2196,7 +1952,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
             q2a_strcat(buffer, " +");
         }
 
-        if (findentry->type == NICKALL && findentry->subnetmask == 0) {
+        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0) {
             q2a_strcat(buffer, " ALL");
         } else {
             if (findentry->type != NICKALL) {
@@ -2217,17 +1973,13 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                 }
             }
 
-            if (findentry->subnetmask != 0) {
+            if (findentry->addr.mask_bits != 0) {
                 Q_snprintf(
-                		buffer + q2a_strlen(buffer),
-						sizeof(buffer) - q2a_strlen(buffer),
-						" IP %d.%d.%d.%d/%d",
-						findentry->ip[0],
-						findentry->ip[1],
-						findentry->ip[2],
-						findentry->ip[3],
-						findentry->subnetmask
-				);
+                        buffer + q2a_strlen(buffer),
+                        sizeof(buffer) - q2a_strlen(buffer),
+                        " IP %s",
+                        net_addressToString(&findentry->addr, qfalse, qfalse, qtrue)
+                );
             }
         }
 

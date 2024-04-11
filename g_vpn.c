@@ -25,6 +25,7 @@ void LookupVPNStatus(edict_t *ent)
 {
     char *request;
     proxyinfo_t *pi;
+    char *addr;
 
     int i = getEntOffset(ent) - 1;
     if (!vpn_enable) {
@@ -37,8 +38,8 @@ void LookupVPNStatus(edict_t *ent)
         return;
     }
 
-
-    request = va("/api/%d.%d.%d.%d?key=%s", pi->ipaddressBinary[0], pi->ipaddressBinary[1], pi->ipaddressBinary[2], pi->ipaddressBinary[3], vpn_api_key);
+    addr = net_addressToString(&pi->address, qfalse, qfalse, qfalse);
+    request = va("/api/%s?key=%s", addr, vpn_api_key);
     proxyinfo[i].vpn.state = VPN_CHECKING;
     proxyinfo[i].dl.initiator = ent;
     proxyinfo[i].dl.onFinish = FinishVPNLookup;
@@ -91,7 +92,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
             gi.cprintf(NULL, PRINT_HIGH, "%s disconnected for using a VPN [%s - %s]\n",
-                    download->initiator->client->pers.netname, proxyinfo[i].ipaddress, v->asn
+                    download->initiator->client->pers.netname, IP(i), v->asn
             );
         }
     }

@@ -237,7 +237,7 @@ void G_RunFrame(void) {
                     char *ip = ipbuffer;
                     char *bp = ip;
 
-                    q2a_strncpy(ipbuffer, proxyinfo[client].ipaddress, sizeof(ipbuffer));
+                    q2a_strncpy(ipbuffer, IP(client), sizeof(ipbuffer));
 
                     while (*bp && (*bp != ':')) {
                         bp++;
