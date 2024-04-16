@@ -29,22 +29,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "g_file.h"
 
-#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
-#define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
-
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
-
 
 qboolean IPBanning_Enable = FALSE;
 qboolean NickBanning_Enable = FALSE;
 qboolean ChatBanning_Enable = FALSE;
 qboolean kickOnNameChange = FALSE;
 
-
 char defaultBanMsg[256];
 char *currentBanMsg;
-
 
 long banNumUpto = 0;
 long chatBanNumUpto = 0;

@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_offsets.h"
 #include "g_json.h"
 #include "g_net.h"
+#include "g_ban.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -777,25 +778,15 @@ struct edict_s {
     monsterinfo_t   monsterinfo;
 };
 
-// zbot detector global stuff
-
-struct chatflood_s {
-    qboolean chatFloodProtect;
-    int chatFloodProtectNum;
-    int chatFloodProtectSec;
-    int chatFloodProtectSilence;
-};
 
 #define MAXIMPULSESTOTEST 256
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define BANLISTREMOTEFILE               "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
 #define ANTICHEATEXCEPTIONREMOTEFILE    "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
 #define ANTICHEATEXCEPTIONLOCALFILE     "ac.cfg"
 #define HASHLISTREMOTEDIR               "http://www.q2admin.net/server"
 
-#define BANLISTFILE     "q2a_ban.cfg"
 #define BYPASSFILE      "q2a_bypass.cfg"
 #define CHECKVARFILE    "q2a_cvar.cfg"
 #define CLOUDFILE       "q2a_cloud.cfg"
@@ -821,49 +812,10 @@ struct chatflood_s {
 #define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
 #define DEFAULTBANMSG           "You are banned from this server!"
-#define DEFAULTCHABANMSG        "Message banned."
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
-
-typedef struct banstruct {
-    regex_t *r;
-    qboolean exclude;
-    byte type;
-    byte loadType;
-    netadr_t addr;
-    char nick[80];
-    char password[80];
-    char *msg;
-    long maxnumberofconnects;
-    long numberofconnects;
-    long bannum;
-    float timeout;
-    struct chatflood_s floodinfo;
-    struct banstruct *next;
-} baninfo_t;
-
-#define NOTUSED   0
-#define NICKALL   1
-#define NICKEQ   2
-#define NICKLIKE  3
-#define NICKRE   4
-#define NICKBLANK  5
 
 #define LT_PERM   1
 #define LT_TEMP   2
-
-typedef struct chatbanstruct {
-    regex_t *r;
-    byte type;
-    byte loadType;
-    long bannum;
-    char chat[256];
-    char *msg;
-    struct chatbanstruct *next;
-} chatbaninfo_t;
-
-#define CNOTUSED  0
-#define CHATLIKE  1
-#define CHATRE   2
 
 typedef struct {
     byte command;
