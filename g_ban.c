@@ -45,9 +45,7 @@ long chatBanNumUpto = 0;
 char defaultChatBanMsg[256];
 
 /**
- * Addition by MDVz0r
- * mdv [at] z0r.nl
- * 9apr2007
+ *
  */
 qboolean ReadRemoteBanFile(char *bfname) {
     URL_FILE *banfile;
@@ -69,26 +67,16 @@ qboolean ReadRemoteBanFile(char *bfname) {
         qboolean like, re, all;
 
         SKIPBLANK(cp);
-
         uptoLine++;
-
         if (!(cp[0] == ';' || cp[0] == '\n' || isBlank(cp))) {
             if (startContains(cp, "BAN:")) {
-                // create include / exclude ban.
-                // BAN: [+/-(-)] [ALL/[NAME [LIKE/RE] "name"/BLANK/ALL(ALL)] [IP xxx[.xxx(0)[.xxx(0)[.xxx(0)]]][/yy(32)]] [PASSWORD "xxx"] [MAX 0-xxx(0)] [FLOOD xxx xxx xxx] [MSG "xxx"]
-
-                // allocate memory for ban record
                 newentry = gi.TagMalloc(sizeof (baninfo_t), TAG_LEVEL);
-
                 newentry->loadType = LT_PERM;
                 newentry->timeout = 0.0;
                 newentry->r = 0;
-
                 cp += 4;
-
                 SKIPBLANK(cp);
 
-                // get +/-
                 if (*cp == '-') {
                     cp++;
                     SKIPBLANK(cp);
@@ -108,26 +96,19 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     newentry->msg = NULL;
                     q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
                     all = TRUE;
-
                     cp += 3;
                     SKIPBLANK(cp);
                 } else {
                     all = FALSE;
-
-                    // Name:
                     if (startContains(cp, "NAME")) {
                         cp += 4;
                         SKIPBLANK(cp);
-
-                        // Like?
                         if (startContains(cp, "LIKE")) {
                             cp += 4;
                             like = TRUE;
                             re = FALSE;
                             SKIPBLANK(cp);
-
-                        }//re?
-                        else if (startContains(cp, "RE")) {
+                        } else if (startContains(cp, "RE")) {
                             cp += 2;
                             like = FALSE;
                             re = TRUE;
@@ -137,7 +118,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
                             re = FALSE;
                         }
 
-                        // BLANK or ALL or name
                         if (startContains(cp, "BLANK")) {
                             cp += 5;
                             newentry->type = NICKBLANK;
@@ -161,71 +141,52 @@ qboolean ReadRemoteBanFile(char *bfname) {
                             while (*cp && *cp != '\"') {
                                 cp++;
                             }
-
                             cp++;
                         } else {
                             newentry->type = NOTUSED;
                         }
-
 
                         if (newentry->type == NICKRE) { // compile RE
                             q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                             q_strupr(strbuffer);
                             newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
                             q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                            //              if(regcomp(newentry->r, strbuffer, REG_EXTENDED))
                             if (regcomp(newentry->r, strbuffer, 0)) {
                                 gi.TagFree(newentry->r);
                                 newentry->r = 0;
                             }
                         }
-
-
                         SKIPBLANK(cp);
                     } else {
                         newentry->type = NICKALL;
                     }
 
-                    // get ip address
                     q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
-
                     if (startContains(cp, "IP")) {
                         cp += 2;
-
                         SKIPBLANK(cp);
-
                         if (isxdigit(*cp)) {
                             newentry->addr = net_parseIPAddressMask(cp);
                         }
-
                         SKIPBLANK(cp);
                     }
                 }
 
-
                 // get PASSWORD
                 if (!newentry->exclude && startContains(cp, "PASSWORD")) {
                     cp += 8;
-
                     SKIPBLANK(cp);
 
                     if (*cp == '\"') {
-                        // copy password
-
                         cp++;
-
                         cp = processstring(newentry->password, cp, sizeof (newentry->password) - 1, '\"');
-
-                        // make sure you are at the end quote
-                        while (*cp && *cp != '\"') {
+                        while (*cp && *cp != '\"') {    // find ending quote
                             cp++;
                         }
-
                         cp++;
                     } else {
                         newentry->type = NOTUSED;
                     }
-
                     SKIPBLANK(cp);
                 } else {
                     newentry->password[0] = 0;
@@ -234,56 +195,39 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 // get MAX
                 if (!newentry->exclude && startContains(cp, "MAX")) {
                     cp += 3;
-
                     SKIPBLANK(cp);
-
                     newentry->maxnumberofconnects = q2a_atoi(cp);
-
                     while (isdigit(*cp)) {
                         cp++;
                     }
-
                     SKIPBLANK(cp);
                 } else {
                     newentry->maxnumberofconnects = 0;
                 }
-
                 newentry->numberofconnects = 0;
 
                 // get FLOOD
                 if (!newentry->exclude && startContains(cp, "FLOOD")) {
                     cp += 5;
-
                     SKIPBLANK(cp);
-
                     newentry->floodinfo.chatFloodProtectNum = q2a_atoi(cp);
-
                     while (isdigit(*cp)) {
                         cp++;
                     }
-
                     SKIPBLANK(cp);
-
                     newentry->floodinfo.chatFloodProtectSec = q2a_atoi(cp);
-
                     while (isdigit(*cp)) {
                         cp++;
                     }
-
                     SKIPBLANK(cp);
-
                     newentry->floodinfo.chatFloodProtectSilence = q2a_atoi(cp);
-
                     if (*cp == '-') {
                         cp++;
                     }
-
                     while (isdigit(*cp)) {
                         cp++;
                     }
-
                     SKIPBLANK(cp);
-
                     if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
                         newentry->floodinfo.chatFloodProtect = TRUE;
                     } else {
@@ -296,25 +240,14 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 // get MSG
                 if (startContains(cp, "MSG")) {
                     cp += 3;
-
                     SKIPBLANK(cp);
-
-                    // copy MSG
-
                     cp++;
-
                     cp = processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
-
-                    // make sure you are at the end quote
-                    while (*cp && *cp != '\"') {
+                    while (*cp && *cp != '\"') {    // find ending quote
                         cp++;
                     }
-
                     cp++;
-
                     SKIPBLANK(cp);
-
-
                     num = q2a_strlen(buffer2);
 
                     if (num) {
@@ -348,7 +281,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     // insert at the head of the correct list.
                     newentry->bannum = banNumUpto;
                     banNumUpto++;
-
                     newentry->next = banhead;
                     banhead = newentry;
                 }
@@ -356,22 +288,16 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 cnewentry = gi.TagMalloc(sizeof (chatbaninfo_t), TAG_LEVEL);
                 cnewentry->loadType = LT_PERM;
                 cnewentry->r = 0;
-
                 cp += 8;
-
                 SKIPBLANK(cp);
-
                 if (startContains(cp, "LIKE")) {
                     cp += 4;
                     SKIPBLANK(cp);
-
                     cnewentry->type = CHATLIKE;
-
                 }//re?
                 else if (startContains(cp, "RE")) {
                     cp += 2;
                     SKIPBLANK(cp);
-
                     cnewentry->type = CHATRE;
                 } else {
                     cnewentry->type = CHATLIKE;
@@ -386,11 +312,8 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     while (*cp && *cp != '\"') {
                         cp++;
                     }
-
                     cp++;
-
                     SKIPBLANK(cp);
-
                     if (cnewentry->type == CHATRE) { // compile RE
                         q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
                         q_strupr(strbuffer);
@@ -453,15 +376,11 @@ qboolean ReadRemoteBanFile(char *bfname) {
             } else if (startContains(cp, "INCLUDE:")) {
                 // include another ban file..
                 // INCLUDE: "banfile"
-
                 cp += 8;
-
                 SKIPBLANK(cp);
-
                 if (*cp == '\"') {
                     cp++;
                     cp = processstring(strbuffer, cp, sizeof (strbuffer) - 1, '\"');
-
                     if (strbuffer[0]) {
                         ReadRemoteBanFile(strbuffer);
                     } else {
@@ -475,9 +394,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
             }
         }
     }
-
     url_fclose(banfile);
-
     return TRUE;
 }
 
