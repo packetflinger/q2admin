@@ -67,3 +67,20 @@ typedef struct chatbanstruct {
 #define CNOTUSED    0
 #define CHATLIKE    1
 #define CHATRE      2
+
+void banRun(int startarg, edict_t *ent, int client);
+void chatbanRun(int startarg, edict_t *ent, int client);
+int checkBanList(edict_t *ent, int client);
+int checkCheckIfBanned(edict_t *ent, int client);
+int checkCheckIfChatBanned(char *txt);
+void delbanRun(int startarg, edict_t *ent, int client);
+void delchatbanRun(int startarg, edict_t *ent, int client);
+void displayNextBan(edict_t *ent, int client, long bannum);
+void displayNextChatBan(edict_t *ent, int client, long chatbannum);
+void freeBanLists(void);
+void listbansRun(int startarg, edict_t *ent, int client);
+void listchatbansRun(int startarg, edict_t *ent, int client);
+qboolean ReadBanFile(char *bfname);
+void readBanLists(void);
+qboolean ReadRemoteBanFile(char *bfname);
+void reloadbanfileRun(int startarg, edict_t *ent, int client);

@@ -1566,23 +1566,10 @@ void q_strupr(char *c);
 qboolean wildcard_match(char *pattern, char *haystack);
 
 // zb_ban.c
-void banRun(int startarg, edict_t *ent, int client);
-void reloadbanfileRun(int startarg, edict_t *ent, int client);
 void AC_ReloadExceptions(int startarg, edict_t *ent, int client);
 void reloadhashlistRun(int startarg, edict_t *ent, int client);
 void AC_LoadExceptions(void);
 void loadhashlist(void);
-void readBanLists(void);
-int checkCheckIfBanned(edict_t *ent, int client);
-void listbansRun(int startarg, edict_t *ent, int client);
-void displayNextBan(edict_t *ent, int client, long bannum);
-void delbanRun(int startarg, edict_t *ent, int client);
-void chatbanRun(int startarg, edict_t *ent, int client);
-int checkCheckIfChatBanned(char *txt);
-void listchatbansRun(int startarg, edict_t *ent, int client);
-void displayNextChatBan(edict_t *ent, int client, long chatbannum);
-void delchatbanRun(int startarg, edict_t *ent, int client);
-void freeBanLists(void);
 
 // zb_lrcon.c
 void readLRconLists(void);
