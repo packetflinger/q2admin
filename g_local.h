@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_net.h"
 #include "g_ban.h"
 #include "g_base64.h"
+#include "g_checkvar.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1685,16 +1686,6 @@ void displayNextDisable(edict_t *ent, int client, long floodcmd);
 void disablecmdRun(int startarg, edict_t *ent, int client);
 void disableDelRun(int startarg, edict_t *ent, int client);
 qboolean checkDisabledCommand(char *cmd);
-
-// zb_checkvar.c
-void readCheckVarLists(void);
-void reloadCheckVarFileRun(int startarg, edict_t *ent, int client);
-void listcheckvarsRun(int startarg, edict_t *ent, int client);
-void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd);
-void checkvarcmdRun(int startarg, edict_t *ent, int client);
-void checkvarDelRun(int startarg, edict_t *ent, int client);
-void checkVariableTest(edict_t *ent, int client, int idx);
-void checkVariableValid(edict_t *ent, int client, char *value);
 
 // md4.c
 unsigned Com_BlockChecksum(void *buffer, int length);

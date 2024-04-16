@@ -20,24 +20,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define CHECKVAR_MAX             50
-
-typedef struct {
-    char variablename[50];
-    char value[50];
-    double upper, lower;
-    int type;
-} checkvar_t;
-
-#define CV_CONSTANT     0
-#define CV_RANGE        1
-
 checkvar_t checkvarList[CHECKVAR_MAX];
-int maxcheckvars = 0;
-
 qboolean checkvarcmds_enable = FALSE;
 int checkvar_poll_time = 60;
+int maxcheckvars = 0;
 
+/**
+ *
+ */
 qboolean ReadCheckVarFile(char *checkvarname) {
     FILE *checkvarfile;
     unsigned int uptoLine = 0;
@@ -63,7 +53,6 @@ qboolean ReadCheckVarFile(char *checkvarname) {
         }
 
         SKIPBLANK(cp);
-
         uptoLine++;
 
         if (startContains(cp, "CT:") || startContains(cp, "RG:")) {
@@ -104,7 +93,6 @@ qboolean ReadCheckVarFile(char *checkvarname) {
                 continue;
             }
 
-
             SKIPBLANK(cp);
 
             if (checkvarList[maxcheckvars].type == CV_CONSTANT) {
@@ -112,7 +100,6 @@ qboolean ReadCheckVarFile(char *checkvarname) {
                     gi.dprintf("Error loading CHECKVAR from line %d in file %s, \" not found\n", uptoLine, checkvarname);
                     continue;
                 }
-
                 cp++;
                 cp = processstring(checkvarList[maxcheckvars].value, cp, sizeof (checkvarList[maxcheckvars].value) - 1, '\"');
                 continue;
@@ -149,14 +136,10 @@ qboolean ReadCheckVarFile(char *checkvarname) {
 
                 cp++;
                 cp = processstring(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
-
                 checkvarList[maxcheckvars].upper = q2a_atof(rangevalue);
-
                 continue;
             }
-
             maxcheckvars++;
-
             if (maxcheckvars >= CHECKVAR_MAX) {
                 break;
             }
@@ -164,98 +147,101 @@ qboolean ReadCheckVarFile(char *checkvarname) {
             gi.dprintf("Error loading CHECKVAR from line %d in file %s\n", uptoLine, checkvarname);
         }
     }
-
     fclose(checkvarfile);
-
     return TRUE;
 }
 
+/**
+ *
+ */
 void readCheckVarLists(void) {
     qboolean ret;
 
     maxcheckvars = 0;
     ret = ReadCheckVarFile(configfile_cvar->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cvar->string);
     if (ReadCheckVarFile(buffer)) {
         ret = TRUE;
     }
-
     if (!ret) {
         gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_cvar->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_cvar), IW_CHECKVARSETUPLOAD, 0.0);
     }
 }
 
+/**
+ *
+ */
 void reloadCheckVarFileRun(int startarg, edict_t *ent, int client) {
     readCheckVarLists();
     gi.cprintf(ent, PRINT_HIGH, "Check-Variables reloaded.\n");
 }
 
+/**
+ *
+ */
 void checkVariableTest(edict_t *ent, int client, int idx) {
     if (checkvarcmds_enable) {
         if (idx >= maxcheckvars) {
             idx = 0;
         }
-
         if (maxcheckvars) {
             proxyinfo[client].checkvar_idx = idx;
             generateRandomString(proxyinfo[client].hack_checkvar, RANDOM_STRING_LENGTH);
             Q_snprintf(
-            		buffer,
-					sizeof(buffer),
-					"%s $%s\n",
-					proxyinfo[client].hack_checkvar,
-					checkvarList[idx].variablename
-			);
+                    buffer,
+                    sizeof(buffer),
+                    "%s $%s\n",
+                    proxyinfo[client].hack_checkvar,
+                    checkvarList[idx].variablename
+            );
             stuffcmd(ent, buffer);
-
             idx++;
         }
-
     } else {
         idx = 0;
     }
-
     addCmdQueue(client, QCMD_CHECKVARTESTS, (float) checkvar_poll_time, idx, 0);
 }
 
+/**
+ *
+ */
 void checkVariableValid(edict_t *ent, int client, char *value) {
     switch (checkvarList[proxyinfo[client].checkvar_idx].type) {
         case CV_CONSTANT:
             if (q2a_strcmp(checkvarList[proxyinfo[client].checkvar_idx].value, value) != 0) {
                 Q_snprintf(
-                		buffer,
-						sizeof(buffer),
-						"%s %s\n",
-						checkvarList[proxyinfo[client].checkvar_idx].variablename,
-						checkvarList[proxyinfo[client].checkvar_idx].value
-				);
+                        buffer,
+                        sizeof(buffer),
+                        "%s %s\n",
+                        checkvarList[proxyinfo[client].checkvar_idx].variablename,
+                        checkvarList[proxyinfo[client].checkvar_idx].value
+                );
                 stuffcmd(ent, buffer);
             }
             break;
-
         case CV_RANGE:
         {
             double fvalue = q2a_atof(value);
 
             if (fvalue < checkvarList[proxyinfo[client].checkvar_idx].lower) {
                 Q_snprintf(
-                		buffer,
-						sizeof(buffer),
-						"%s %g\n",
-						checkvarList[proxyinfo[client].checkvar_idx].variablename,
-						checkvarList[proxyinfo[client].checkvar_idx].lower
-				);
+                        buffer,
+                        sizeof(buffer),
+                        "%s %g\n",
+                        checkvarList[proxyinfo[client].checkvar_idx].variablename,
+                        checkvarList[proxyinfo[client].checkvar_idx].lower
+                );
                 stuffcmd(ent, buffer);
             } else if (fvalue > checkvarList[proxyinfo[client].checkvar_idx].upper) {
                 Q_snprintf(
-                		buffer,
-						sizeof(buffer),
-						"%s %g\n",
-						checkvarList[proxyinfo[client].checkvar_idx].variablename,
-						checkvarList[proxyinfo[client].checkvar_idx].upper
-				);
+                        buffer,
+                        sizeof(buffer),
+                        "%s %g\n",
+                        checkvarList[proxyinfo[client].checkvar_idx].variablename,
+                        checkvarList[proxyinfo[client].checkvar_idx].upper
+                );
                 stuffcmd(ent, buffer);
             }
             break;
@@ -263,14 +249,17 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
     }
 }
 
-//===================================================================
-
+/**
+ *
+ */
 void listcheckvarsRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPCHECKVAR, 0, 0, 0);
-
     gi.cprintf(ent, PRINT_HIGH, "Start Check-Variables List:\n");
 }
 
+/**
+ *
+ */
 void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd) {
     if (checkvarcmd < maxcheckvars) {
         switch (checkvarList[checkvarcmd].type) {
@@ -289,8 +278,9 @@ void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd) {
     }
 }
 
-#define CHECKVARCMD     "[sv] !checkvarcmd [CT/RG] \"variable\" [\"value\" | \"lower\" \"upper\"]\n"
-
+/**
+ *
+ */
 void checkvarcmdRun(int startarg, edict_t *ent, int client) {
     char *cmd;
 
@@ -356,12 +346,12 @@ void checkvarcmdRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "%4d RG: %s = %g to %g\n", maxcheckvars + 1, checkvarList[maxcheckvars].variablename, checkvarList[maxcheckvars].lower, checkvarList[maxcheckvars].upper);
             break;
     }
-
     maxcheckvars++;
 }
 
-#define CHECKVARDELCMD     "[sv] !checkvardel checkvarnum\n"
-
+/**
+ *
+ */
 void checkvarDelRun(int startarg, edict_t *ent, int client) {
     int checkvar;
 
@@ -371,19 +361,16 @@ void checkvarDelRun(int startarg, edict_t *ent, int client) {
     }
 
     checkvar = q2a_atoi(gi.argv(startarg));
-
     if (checkvar < 1 || checkvar > maxcheckvars) {
         gi.cprintf(ent, PRINT_HIGH, CHECKVARDELCMD);
         return;
     }
 
     checkvar--;
-
     if (checkvar + 1 < maxcheckvars) {
         q2a_memmove((checkvarList + checkvar), (checkvarList + checkvar + 1), sizeof (checkvar_t) * (maxcheckvars - checkvar));
     }
 
     maxcheckvars--;
-
     gi.cprintf(ent, PRINT_HIGH, "Check-Variable command deleted\n");
 }
