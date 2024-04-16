@@ -1842,13 +1842,10 @@ int checkBanList(edict_t *ent, int client) {
                 }
             }
 
-            if (checkentry->exclude) {
-                // ok, a ban situation..
-
+            if (checkentry->exclude) {  // ban situation
                 if (checkentry->msg) {
                     currentBanMsg = checkentry->msg;
                 }
-
                 return 1;
             }
 
