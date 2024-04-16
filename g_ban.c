@@ -2079,8 +2079,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     char savecmd[256];
     char strbuffer[256];
 
-    // [sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]
-
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
         return;
@@ -2144,7 +2142,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
 
         cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
         q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
-        //    if(regcomp(cnewentry->r, strbuffer, REG_EXTENDED))
         if (regcomp(cnewentry->r, strbuffer, 0)) {
             gi.TagFree(cnewentry->r);
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
