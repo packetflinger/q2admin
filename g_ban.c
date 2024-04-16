@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "g_file.h"
 
+#define CHATBANCMD_LAYOUT  "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
 
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
@@ -357,12 +358,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     banhead = newentry;
                 }
             } else if (startContains(cp, "CHATBAN:")) {
-                // create chat ban.
-                // CHATBAN: [LIKE/RE(LIKE)] "xxx" [MSG "xxx"]
-
-                // allocate memory for chat ban record
                 cnewentry = gi.TagMalloc(sizeof (chatbaninfo_t), TAG_LEVEL);
-
                 cnewentry->loadType = LT_PERM;
                 cnewentry->r = 0;
 
@@ -405,7 +401,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
                         q_strupr(strbuffer);
                         cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
                         q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
-                        //            if(regcomp(cnewentry->r, strbuffer, REG_EXTENDED))
                         if (regcomp(cnewentry->r, strbuffer, 0)) {
                             gi.TagFree(cnewentry->r);
                             cnewentry->r = 0;
@@ -2069,8 +2064,6 @@ void delbanRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "No ban number supplied to delete.\n");
     }
 }
-
-#define CHATBANCMD_LAYOUT  "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
 
 void chatbanRun(int startarg, edict_t *ent, int client) {
     char *cp;
