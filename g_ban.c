@@ -1982,22 +1982,22 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
 
         if (!findentry->exclude && findentry->maxnumberofconnects) {
             Q_snprintf(
-            		buffer + q2a_strlen(buffer),
-					sizeof(buffer) - q2a_strlen(buffer),
-					" MAX %d",
-					findentry->maxnumberofconnects
-			);
+                    buffer + q2a_strlen(buffer),
+                    sizeof(buffer) - q2a_strlen(buffer),
+                    " MAX %d",
+                    findentry->maxnumberofconnects
+            );
         }
 
         if (!findentry->exclude && findentry->floodinfo.chatFloodProtect) {
             Q_snprintf(
-            		buffer + q2a_strlen(buffer),
-					sizeof(buffer) - q2a_strlen(buffer),
-					" FLOOD %d %d %d",
-					findentry->floodinfo.chatFloodProtectNum,
-					findentry->floodinfo.chatFloodProtectSec,
-					findentry->floodinfo.chatFloodProtectSilence
-			);
+                    buffer + q2a_strlen(buffer),
+                    sizeof(buffer) - q2a_strlen(buffer),
+                    " FLOOD %d %d %d",
+                    findentry->floodinfo.chatFloodProtectNum,
+                    findentry->floodinfo.chatFloodProtectSec,
+                    findentry->floodinfo.chatFloodProtectSilence
+            );
         }
 
         if (findentry->msg) {
@@ -2008,11 +2008,11 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
 
         if (findentry->timeout) {
             Q_snprintf(
-            		buffer + q2a_strlen(buffer),
-					sizeof(buffer) - q2a_strlen(buffer),
-					" TIME %g",
-					(findentry->timeout - ltime) / 60.0
-			);
+                    buffer + q2a_strlen(buffer),
+                    sizeof(buffer) - q2a_strlen(buffer),
+                    " TIME %g",
+                    (findentry->timeout - ltime) / 60.0
+            );
         }
 
         gi.cprintf(ent, PRINT_HIGH, "%s\n", buffer);
