@@ -29,7 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 #include "g_file.h"
 
-#define CHATBANCMD_LAYOUT  "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
+#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
+#define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
 
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
@@ -1022,10 +1023,6 @@ void readBanLists(void) {
         }
     }
 }
-
-
-
-#define BANCMD_LAYOUT  "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
 
 void banRun(int startarg, edict_t *ent, int client) {
     char *cp;
