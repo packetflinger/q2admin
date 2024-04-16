@@ -413,27 +413,15 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 // get MSG
                 if (startContains(cp, "MSG")) {
                     cp += 3;
-
                     SKIPBLANK(cp);
-
-                    // copy MSG
-
                     cp++;
-
                     cp = processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
-
-                    // make sure you are at the end quote
-                    while (*cp && *cp != '\"') {
+                    while (*cp && *cp != '\"') {    // find the end quote
                         cp++;
                     }
-
                     cp++;
-
                     SKIPBLANK(cp);
-
-
                     num = q2a_strlen(buffer2);
-
                     if (num) {
                         cnewentry->msg = gi.TagMalloc(num + 1, TAG_LEVEL);
                         q2a_strncpy(cnewentry->msg, buffer2, num + 1);
@@ -443,7 +431,6 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 } else {
                     cnewentry->msg = NULL;
                 }
-
 
                 // do you have a valid ban record?
                 if (cnewentry->type == CNOTUSED || (cnewentry->type == CHATRE && !cnewentry->r)) {
