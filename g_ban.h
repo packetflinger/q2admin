@@ -2,6 +2,7 @@
  * Q2Admin
  * Ban related stuff
  */
+#pragma once
 
 #define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
 #define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
