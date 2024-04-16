@@ -1834,7 +1834,7 @@ int checkBanList(edict_t *ent, int client) {
             }
 
             // check IP
-            if (IPBanning_Enable) {
+            if (IPBanning_Enable && checkentry->addr.mask_bits > 0) {
                 if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
@@ -1913,8 +1913,6 @@ int checkCheckIfBanned(edict_t *ent, int client) {
 
     currentBanMsg = defaultBanMsg;
     return checkBanList(ent, client);
-
-    return 0;
 }
 
 void listbansRun(int startarg, edict_t *ent, int client) {
