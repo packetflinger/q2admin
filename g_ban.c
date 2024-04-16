@@ -1854,7 +1854,6 @@ int checkBanList(edict_t *ent, int client) {
 
                 Q_snprintf(strbuffer, sizeof(strbuffer), "INCLUDE - %s", s);
                 logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0);
-                gi.dprintf("%s\n", strbuffer);
 
                 if (q2a_strcmp(checkentry->password, s)) {
                     if (checkentry->msg) {
