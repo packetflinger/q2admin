@@ -1903,14 +1903,11 @@ int checkCheckIfBanned(edict_t *ent, int client) {
         if (proxyinfo[client].baninfo->numberofconnects) {
             proxyinfo[client].baninfo->numberofconnects--;
         }
-
         proxyinfo[client].baninfo = NULL;
     }
-
     if (!IPBanning_Enable && !NickBanning_Enable) {
         return 0;
     }
-
     currentBanMsg = defaultBanMsg;
     return checkBanList(ent, client);
 }
