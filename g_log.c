@@ -20,22 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-typedef struct {
-    qboolean inuse;
-    qboolean mod;
-    char filename[256];
-
-} logfile_t;
-
-logfile_t logFiles[32];
-
-typedef struct {
-    char *logtype;
-    qboolean log;
-    unsigned long logfiles;
-    char format[4096];
-} logtypes_t;
-
 logtypes_t logtypes[] ={
     { "ZBOT", FALSE, 0, ""},
     { "ZBOTIMPULSES", FALSE, 0, ""},
@@ -65,9 +49,9 @@ logtypes_t logtypes[] ={
     { "PRIVATELOG", FALSE, 0, ""},
 };
 
-
-#define LOGTYPES_MAX    (sizeof(logtypes) / sizeof(logtypes[0]))
-
+/**
+ *
+ */
 void expandOutPortNum(char *srcdest, int max) {
     char *org = srcdest;
 
@@ -132,6 +116,9 @@ void expandOutPortNum(char *srcdest, int max) {
     org[max] = 0;
 }
 
+/**
+ *
+ */
 qboolean loadLogListFile(char *filename) {
     FILE *loglist;
     char readbuf[4096];
@@ -277,35 +264,34 @@ qboolean loadLogListFile(char *filename) {
             }
         }
     }
-
     fclose(loglist);
-
     return TRUE;
 }
 
+/**
+ *
+ */
 void loadLogList(void) {
     unsigned int i;
     qboolean ret;
 
     q2a_memset(logFiles, 0x0, sizeof (logFiles));
-
     for (i = 0; i < LOGTYPES_MAX; i++) {
         logtypes[i].log = FALSE;
     }
-
     ret = loadLogListFile(configfile_log->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_log->string);
     if (loadLogListFile(buffer)) {
         ret = TRUE;
     }
-
-
     if (!ret) {
         gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_log->string);
     }
 }
 
+/**
+ *
+ */
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2) {
     char *cp;
     time_t ltimetemp;
@@ -358,11 +344,11 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 while (*cp && *cp != '\n') {
                     *dest++ = *cp++;
                 }
-			} else if (*format == 'T') {	// short format
-				time(&ltimetemp);
-				timeinfo = localtime(&ltimetemp);
-				strftime(buffer,15,"%Y%m%d%H%M%S", timeinfo);
-				
+            } else if (*format == 'T') {	// short format
+                time(&ltimetemp);
+                timeinfo = localtime(&ltimetemp);
+                strftime(buffer,15,"%Y%m%d%H%M%S", timeinfo);
+
                 cp = buffer;
                 while (*cp && *cp != '\n') {
                     *dest++ = *cp++;
@@ -405,10 +391,16 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
     *dest = 0;
 }
 
+/**
+ *
+ */
 qboolean isLogEvent(enum zb_logtypesenum ltype) {
     return logtypes[(int) ltype].log;
 }
 
+/**
+ *
+ */
 void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2) {
     if (logtypes[(int) ltype].log) {
         char logline[4096];
@@ -439,6 +431,9 @@ void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *messag
     }
 }
 
+/**
+ *
+ */
 void displaylogfileRun(int startarg, edict_t *ent, int client) {
     int logToDisplay = 0;
 
@@ -461,6 +456,9 @@ void displaylogfileRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void displayLogFileCont(edict_t *ent, int client, long logfilereadpos) {
     int logNum = proxyinfo[client].logfilenum;
     char logname[356];
@@ -493,6 +491,9 @@ void displayLogFileCont(edict_t *ent, int client, long logfilereadpos) {
     }
 }
 
+/**
+ *
+ */
 void clearlogfileRun(int startarg, edict_t *ent, int client) {
     int logToDisplay = 0;
 
@@ -528,9 +529,9 @@ void clearlogfileRun(int startarg, edict_t *ent, int client) {
     }
 }
 
-
-#define LOGFILECMD    "[sv] !logfile [view <logfilenum> / edit [filenum(1-32)] [mod] [filename] / del [filenum(1-32)]]\n"
-
+/**
+ *
+ */
 void logfileRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     int logfilenum;
@@ -616,15 +617,16 @@ void logfileRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum) {
     gi.cprintf(ent, PRINT_HIGH, "  %3d    %s  %s\n", logfilenum + 1, logFiles[logfilenum].mod ? "Yes" : " No", logFiles[logfilenum].filename);
-
     for (logfilenum++; logfilenum < 32; logfilenum++) {
         if (logFiles[logfilenum].inuse) {
             break;
         }
     }
-
     if (logfilenum < 32) {
         addCmdQueue(client, QCMD_DISPLOGFILELIST, 0, logfilenum, 0);
     } else {
@@ -632,10 +634,9 @@ void displayLogFileListCont(edict_t *ent, int client, long logfilenum) {
     }
 }
 
-
-
-#define LOGEVENTCMD    "[sv] !logevent [view <logtype> / edit [logtype] <log [yes/no]> <logfiles [logfile[+logfile...]]> <format \"format\">]\n"
-
+/**
+ *
+ */
 void logeventRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     char *lt;
@@ -792,6 +793,9 @@ void logeventRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly) {
 	unsigned long logfile;
     unsigned int i;
