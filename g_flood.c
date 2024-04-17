@@ -20,22 +20,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define FLOOD_MAXCMDS         1024
-
-typedef struct {
-    char *floodcmd;
-    byte type;
-    regex_t *r;
-}
-floodcmd_t;
-
-#define FLOOD_SW  0
-#define FLOOD_EX  1
-#define FLOOD_RE  2
-
 floodcmd_t floodcmds[FLOOD_MAXCMDS];
 int maxflood_cmds = 0;
 
+/**
+ *
+ */
 qboolean ReadFloodFile(char *floodname) {
     FILE *floodfile;
     unsigned int uptoLine = 0;
@@ -108,9 +98,7 @@ qboolean ReadFloodFile(char *floodname) {
             } else {
                 floodcmds[maxflood_cmds].r = 0;
             }
-
             maxflood_cmds++;
-
             if (maxflood_cmds >= FLOOD_MAXCMDS) {
                 break;
             }
@@ -118,12 +106,13 @@ qboolean ReadFloodFile(char *floodname) {
             gi.dprintf("Error loading FLOOD from line %d in file %s\n", uptoLine, floodname);
         }
     }
-
     fclose(floodfile);
-
     return TRUE;
 }
 
+/**
+ * Free up any allocated memory
+ */
 void freeFloodLists(void) {
     while (maxflood_cmds) {
         maxflood_cmds--;
@@ -135,13 +124,14 @@ void freeFloodLists(void) {
     }
 }
 
+/**
+ *
+ */
 void readFloodLists(void) {
     qboolean ret;
 
     freeFloodLists();
-
     ret = ReadFloodFile(configfile_flood->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_flood->string);
     if (ReadFloodFile(buffer)) {
         ret = TRUE;
@@ -153,11 +143,17 @@ void readFloodLists(void) {
     }
 }
 
+/**
+ *
+ */
 void reloadFloodFileRun(int startarg, edict_t *ent, int client) {
     readFloodLists();
     gi.cprintf(ent, PRINT_HIGH, "Flood commands reloaded.\n");
 }
 
+/**
+ *
+ */
 qboolean checkforfloodcmd(char *cp, int floodcmd) {
     switch (floodcmds[floodcmd].type) {
         case FLOOD_SW:
@@ -169,29 +165,28 @@ qboolean checkforfloodcmd(char *cp, int floodcmd) {
         case FLOOD_RE:
             return (regexec(floodcmds[floodcmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-
     return FALSE;
 }
 
+/**
+ *
+ */
 qboolean checkforfloodcmds(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
-
     for (i = 0; i < maxflood_cmds; i++) {
         if (checkforfloodcmd(buffer, i)) {
             return TRUE;
         }
     }
-
     return FALSE;
 }
 
-
-
-//===================================================================
-
+/**
+ *
+ */
 qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
     // permanently muted
     if (proxyinfo[client].clientcommand & CCMD_PCSILENCE) {
@@ -238,6 +233,9 @@ qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
     return FALSE;
 }
 
+/**
+ *
+ */
 qboolean checkForFlood(int client) {
     struct chatflood_s *fi;
 
@@ -276,31 +274,24 @@ qboolean checkForFlood(int client) {
     return FALSE;
 }
 
-
-
-//===================================================================
-
+/**
+ *
+ */
 void nameChangeFloodProtectInit(char *arg) {
     nameChangeFloodProtect = FALSE;
 
     if (*arg) {
         nameChangeFloodProtectNum = q2a_atoi(arg);
-
         while (*arg && *arg != ' ') {
             arg++;
         }
-
         SKIPBLANK(arg);
-
         if (*arg) {
             nameChangeFloodProtectSec = q2a_atoi(arg);
-
             while (*arg && *arg != ' ') {
                 arg++;
             }
-
             SKIPBLANK(arg);
-
             if (*arg) {
                 nameChangeFloodProtectSilence = q2a_atoi(arg);
                 nameChangeFloodProtect = TRUE;
@@ -309,6 +300,9 @@ void nameChangeFloodProtectInit(char *arg) {
     }
 }
 
+/**
+ *
+ */
 void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg + 2) {
         nameChangeFloodProtectNum = q2a_atoi(gi.argv(startarg));
@@ -326,31 +320,24 @@ void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
     }
 }
 
-
-
-//===================================================================
-
+/**
+ *
+ */
 void skinChangeFloodProtectInit(char *arg) {
     skinChangeFloodProtect = FALSE;
 
     if (*arg) {
         skinChangeFloodProtectNum = q2a_atoi(arg);
-
         while (*arg && *arg != ' ') {
             arg++;
         }
-
         SKIPBLANK(arg);
-
         if (*arg) {
             skinChangeFloodProtectSec = q2a_atoi(arg);
-
             while (*arg && *arg != ' ') {
                 arg++;
             }
-
             SKIPBLANK(arg);
-
             if (*arg) {
                 skinChangeFloodProtectSilence = q2a_atoi(arg);
                 skinChangeFloodProtect = TRUE;
@@ -359,6 +346,9 @@ void skinChangeFloodProtectInit(char *arg) {
     }
 }
 
+/**
+ *
+ */
 void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg + 2) {
         skinChangeFloodProtectNum = q2a_atoi(gi.argv(startarg));
@@ -376,33 +366,26 @@ void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
     }
 }
 
-
-//===================================================================
-
+/**
+ *
+ */
 void chatFloodProtectInit(char *arg) {
     floodinfo.chatFloodProtect = FALSE;
 
     if (*arg) {
         floodinfo.chatFloodProtectNum = q2a_atoi(arg);
-
         while (*arg && *arg != ' ') {
             arg++;
         }
-
         SKIPBLANK(arg);
-
         if (*arg) {
             floodinfo.chatFloodProtectSec = q2a_atoi(arg);
-
             while (*arg && *arg != ' ') {
                 arg++;
             }
-
             SKIPBLANK(arg);
-
             if (*arg) {
                 floodinfo.chatFloodProtectSilence = q2a_atoi(arg);
-
                 if (floodinfo.chatFloodProtectNum && floodinfo.chatFloodProtectSec) {
                     floodinfo.chatFloodProtect = TRUE;
                 }
@@ -411,12 +394,14 @@ void chatFloodProtectInit(char *arg) {
     }
 }
 
+/**
+ *
+ */
 void chatFloodProtectRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg + 2) {
         floodinfo.chatFloodProtectNum = q2a_atoi(gi.argv(startarg));
         floodinfo.chatFloodProtectSec = q2a_atoi(gi.argv(startarg + 1));
         floodinfo.chatFloodProtectSilence = q2a_atoi(gi.argv(startarg + 2));
-
         if (floodinfo.chatFloodProtectNum && floodinfo.chatFloodProtectSec) {
             floodinfo.chatFloodProtect = TRUE;
         } else {
@@ -425,7 +410,6 @@ void chatFloodProtectRun(int startarg, edict_t *ent, int client) {
     } else if (gi.argc() > startarg) {
         floodinfo.chatFloodProtect = FALSE;
     }
-
     if (floodinfo.chatFloodProtect) {
         gi.cprintf(ent, PRINT_HIGH, "chatfloodprotect %d %d %d\n", floodinfo.chatFloodProtectNum, floodinfo.chatFloodProtectSec, floodinfo.chatFloodProtectSilence);
     } else {
@@ -433,6 +417,9 @@ void chatFloodProtectRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void muteRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -491,6 +478,9 @@ void muteRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void stifleRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -537,6 +527,9 @@ void stifleRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void unstifleRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -573,6 +566,9 @@ void unstifleRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -636,21 +632,17 @@ void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "[sv] !clientchatfloodprotect [LIKE/RE/CL] name [xxx(num) xxx(sec) xxx(silence) / disable]\n");
 }
 
-
-
-
-
-
-
-
-//===================================================================
-
+/**
+ *
+ */
 void listfloodsRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPFLOOD, 0, 0, 0);
-
     gi.cprintf(ent, PRINT_HIGH, "Start flood commands List:\n");
 }
 
+/**
+ *
+ */
 void displayNextFlood(edict_t *ent, int client, long floodcmd) {
     if (floodcmd < maxflood_cmds) {
         switch (floodcmds[floodcmd].type) {
@@ -673,10 +665,9 @@ void displayNextFlood(edict_t *ent, int client, long floodcmd) {
     }
 }
 
-
-
-#define FLOODCMD     "[sv] !floodcmd [SW/EX/RE] \"command\"\n"
-
+/**
+ *
+ */
 void floodcmdRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     int len;
@@ -715,14 +706,12 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
 
     floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_LEVEL);
     processstring(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
-    //  q2a_strcpy(floodcmds[maxflood_cmds].floodcmd, cmd);
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
         q_strupr(cmd);
 
         floodcmds[maxflood_cmds].r = gi.TagMalloc(sizeof (*floodcmds[maxflood_cmds].r), TAG_LEVEL);
         q2a_memset(floodcmds[maxflood_cmds].r, 0x0, sizeof (*floodcmds[maxflood_cmds].r));
-        //        if(regcomp(floodcmds[maxflood_cmds].r, cmd, REG_EXTENDED))
         if (regcomp(floodcmds[maxflood_cmds].r, cmd, 0)) {
             gi.TagFree(floodcmds[maxflood_cmds].floodcmd);
             gi.TagFree(floodcmds[maxflood_cmds].r);
@@ -749,14 +738,12 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\" added\n", maxflood_cmds + 1, floodcmds[maxflood_cmds].floodcmd);
             break;
     }
-
     maxflood_cmds++;
 }
 
-
-
-#define FLOODDELCMD     "[sv] !flooddel floodnum\n"
-
+/**
+ *
+ */
 void floodDelRun(int startarg, edict_t *ent, int client) {
     int flood;
 
@@ -766,14 +753,12 @@ void floodDelRun(int startarg, edict_t *ent, int client) {
     }
 
     flood = q2a_atoi(gi.argv(startarg));
-
     if (flood < 1 || flood > maxflood_cmds) {
         gi.cprintf(ent, PRINT_HIGH, FLOODDELCMD);
         return;
     }
 
     flood--;
-
     gi.TagFree(floodcmds[flood].floodcmd);
     if (floodcmds[flood].r) {
         regfree(floodcmds[flood].r);
@@ -783,10 +768,6 @@ void floodDelRun(int startarg, edict_t *ent, int client) {
     if (flood + 1 < maxflood_cmds) {
         q2a_memmove((floodcmds + flood), (floodcmds + flood + 1), sizeof (floodcmd_t) * (maxflood_cmds - flood));
     }
-
     maxflood_cmds--;
-
     gi.cprintf(ent, PRINT_HIGH, "flood command deleted\n");
 }
-
-

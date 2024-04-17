@@ -60,6 +60,7 @@ HEADERS := 	game.h \
             g_crypto.h \
             g_disable.h \
             g_file.h \
+            g_flood.h \
             g_local.h \
             g_cloud.h \
             g_json.h \
