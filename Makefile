@@ -72,7 +72,6 @@ OBJS :=     g_anticheat.o \
             g_disable.o \
             g_file.o \
             g_flood.o \
-            g_hashlist.o \
             g_http.o \
             g_init.o \
             g_json.o \
