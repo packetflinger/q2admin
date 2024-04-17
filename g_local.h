@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_offsets.h"
 #include "g_json.h"
 #include "g_net.h"
+#include "g_anticheat.h"
 #include "g_ban.h"
 #include "g_base64.h"
 #include "g_checkvar.h"
@@ -1570,9 +1571,7 @@ void q_strupr(char *c);
 qboolean wildcard_match(char *pattern, char *haystack);
 
 // zb_ban.c
-void AC_ReloadExceptions(int startarg, edict_t *ent, int client);
 void reloadhashlistRun(int startarg, edict_t *ent, int client);
-void AC_LoadExceptions(void);
 void loadhashlist(void);
 
 // zb_lrcon.c
