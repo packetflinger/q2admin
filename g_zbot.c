@@ -49,18 +49,6 @@ char *impulsemessages[] ={
     "175 (zbot toggles scanner display command)"
 };
 
-
-
-//===================================================================
-
-void generateRandomString(char *buffer, int length) {
-    unsigned int index;
-    for (index = 0; index < length; index++) {
-        buffer[index] = RANDCHAR();
-    }
-    buffer[index] = 0;
-}
-
 qboolean checkImpulse(byte impulse) {
     unsigned int i;
 

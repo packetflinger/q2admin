@@ -653,3 +653,14 @@ qboolean can_do_new_cmds(int client) {
         return FALSE;
     }
 }
+
+/**
+ * Random characters of whatever length
+ */
+void generateRandomString(char *buffer, int length) {
+    unsigned int index;
+    for (index = 0; index < length; index++) {
+        buffer[index] = RANDCHAR();
+    }
+    buffer[index] = 0;
+}

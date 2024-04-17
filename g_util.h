@@ -8,6 +8,7 @@
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 qboolean can_do_new_cmds(int client);
 void G_MergeEdicts(void);
+void generateRandomString(char *buffer, int length);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 qboolean getLogicalValue(char *arg);
 qboolean Info_Validate(char *s);

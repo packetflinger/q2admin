@@ -1443,7 +1443,6 @@ void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
-void generateRandomString(char *buffer, int length);
 void readIpFromLog(int client, edict_t *ent);
 
 // zb_zbotcheck.c
