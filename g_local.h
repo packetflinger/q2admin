@@ -50,6 +50,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_flood.h"
 #include "g_http.h"
 #include "g_init.h"
+#include "g_log.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1575,18 +1576,6 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str);
 void removeClientCommand(int client, byte command);
 void removeClientCommands(int client);
-
-// zb_log.c
-void loadLogList(void);
-qboolean isLogEvent(enum zb_logtypesenum ltype);
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2);
-void displaylogfileRun(int startarg, edict_t *ent, int client);
-void displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
-void clearlogfileRun(int startarg, edict_t *ent, int client);
-void logfileRun(int startarg, edict_t *ent, int client);
-void displayLogFileListCont(edict_t *ent, int client, long logfilenum);
-void logeventRun(int startarg, edict_t *ent, int client);
-void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly);
 
 // zb_spawn.c
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
