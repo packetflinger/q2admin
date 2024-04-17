@@ -44,6 +44,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_ban.h"
 #include "g_base64.h"
 #include "g_checkvar.h"
+#include "g_crypto.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1809,18 +1810,6 @@ qboolean HTTP_QueueDownload(download_t *d);
 void HTTP_RunDownloads (void);
 
 void vpnUsersRun(int startarg, edict_t *ent, int client);
-
-// crypto funcs
-qboolean G_LoadKeys(void);
-void G_GenerateKeyPair(int bits);
-void G_PrivateEncrypt(RSA *key, byte *dest, byte *src, size_t len);
-size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len);
-
-size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len);
-size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len);
-void G_SHA256Hash(byte *dest, byte *src, size_t src_len);
-void hexDump(char *desc, void *addr, int len);
-void G_RSAError();
 
 int q2a_ceil(float x);
 int q2a_floor(float x);
