@@ -1519,7 +1519,6 @@ extern user_details* whois_details;
 extern qboolean timers_active;
 extern int timers_min_seconds;
 extern int timers_max_seconds;
-qboolean can_do_new_cmds(int client);
 
 
 typedef struct {

@@ -641,3 +641,15 @@ int q2a_ceil(float x) {
 int q2a_floor(float x) {
    return (int)x;
 }
+
+/**
+ * Throttle command usage
+ */
+qboolean can_do_new_cmds(int client) {
+    if (proxyinfo[client].newcmd_timeout <= ltime) {
+        proxyinfo[client].newcmd_timeout = ltime + 3;
+        return TRUE;
+    } else {
+        return FALSE;
+    }
+}

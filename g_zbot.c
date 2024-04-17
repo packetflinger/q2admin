@@ -360,13 +360,3 @@ void stuff_private_commands(int client, edict_t *ent) {
         proxyinfo[client].private_command_got[i] = qfalse;
     }
 }
-
-qboolean can_do_new_cmds(int client) {
-    if (proxyinfo[client].newcmd_timeout <= ltime) {
-        proxyinfo[client].newcmd_timeout = ltime + 3;
-        return TRUE;
-    } else {
-        return FALSE;
-    }
-
-}

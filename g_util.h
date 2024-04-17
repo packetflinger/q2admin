@@ -6,6 +6,7 @@
 #pragma once
 
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
+qboolean can_do_new_cmds(int client);
 void G_MergeEdicts(void);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 qboolean getLogicalValue(char *arg);
