@@ -72,6 +72,7 @@ HEADERS := 	game.h \
             g_util.h \
             g_vote.h \
             g_vpn.h \
+            g_whois.h \
             g_cloud.h \
             g_json.h \
             g_net.h \
@@ -104,6 +105,7 @@ OBJS :=     g_admin.o \
             g_util.o \
             g_vote.o \
             g_vpn.o \
+            g_whois.o \
             g_zbot.o \
             g_zbotcheck.o \
             regex.o

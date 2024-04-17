@@ -57,6 +57,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_util.h"
 #include "g_vote.h"
 #include "g_vpn.h"
+#include "g_whois.h"
 #include "profile.h"
 
 #define PRIVATE_COMMANDS               8
@@ -1453,7 +1454,6 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 void generateRandomString(char *buffer, int length);
-void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
 
 // zb_zbotcheck.c
@@ -1519,17 +1519,6 @@ typedef struct {
 extern priv_t private_commands[PRIVATE_COMMANDS];
 void stuff_private_commands(int client, edict_t *ent);
 
-typedef struct {
-    char name[16];
-} user_dyn;
-
-typedef struct {
-    int id;
-    char ip[22];
-    char seen[32];
-    user_dyn dyn[10];
-} user_details;
-
 extern int WHOIS_COUNT;
 extern int whois_active;
 extern user_details* whois_details;
@@ -1537,14 +1526,6 @@ extern qboolean timers_active;
 extern int timers_min_seconds;
 extern int timers_max_seconds;
 qboolean can_do_new_cmds(int client);
-void whois_write_file(void);
-void whois_read_file(void);
-void whois_getid(int client, edict_t *ent);
-void whois(int client, edict_t *ent);
-void whois_adduser(int client, edict_t *ent);
-void whois_newname(int client, edict_t *ent);
-void whois_update_seen(int client, edict_t *ent);
-void whois_dumpdetails(int client, edict_t *ent, int userid);
 void timer_action(int client, edict_t *ent);
 void timer_stop(int client, edict_t *ent);
 void timer_start(int client, edict_t *ent);
