@@ -45,6 +45,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_base64.h"
 #include "g_checkvar.h"
 #include "g_crypto.h"
+#include "g_disable.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1677,16 +1678,6 @@ void checkOnVoting(void);
 
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
-
-// zb_disable.c
-void freeDisableLists(void);
-void readDisableLists(void);
-void reloadDisableFileRun(int startarg, edict_t *ent, int client);
-void listdisablesRun(int startarg, edict_t *ent, int client);
-void displayNextDisable(edict_t *ent, int client, long floodcmd);
-void disablecmdRun(int startarg, edict_t *ent, int client);
-void disableDelRun(int startarg, edict_t *ent, int client);
-qboolean checkDisabledCommand(char *cmd);
 
 // md4.c
 unsigned Com_BlockChecksum(void *buffer, int length);
