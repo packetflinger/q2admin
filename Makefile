@@ -80,7 +80,7 @@ HEADERS := 	game.h \
             q_shared.h \
             profile.h \
             regex.h \
-            q_platform.h
+            platform.h
 
 OBJS :=     g_admin.o \
             g_anticheat.o \
