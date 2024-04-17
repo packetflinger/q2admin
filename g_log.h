@@ -15,14 +15,44 @@ typedef struct {
     char filename[256];
 } logfile_t;
 
-logfile_t logFiles[32];
-
 typedef struct {
     char *logtype;
     qboolean log;
     unsigned long logfiles;
     char format[4096];
 } logtypes_t;
+
+/**
+ * Possible kinds of log entries
+ */
+enum zb_logtypesenum {
+    LT_ZBOT,
+    LT_ZBOTIMPULSES,
+    LT_IMPULSES,
+    LT_NAMECHANGE,
+    LT_SKINCHANGE,
+    LT_CHATBAN,
+    LT_CLIENTCONNECT,
+    LT_CLIENTBEGIN,
+    LT_CLIENTDISCONNECT,
+    LT_CLIENTKICK,
+    LT_CLIENTCMDS,
+    LT_CLIENTLRCON,
+    LT_BAN,
+    LT_CHAT,
+    LT_SERVERSTART,
+    LT_SERVERINIT,
+    LT_SERVEREND,
+    LT_INTERNALWARN,
+    LT_PERFORMANCEMONITOR,
+    LT_DISABLECMD,
+    LT_ENTITYCREATE,
+    LT_ENTITYDELETE,
+    LT_INVALIDIP,
+    LT_ADMINLOG,
+    LT_CLIENTUSERINFO,
+    LT_PRIVATELOG,
+};
 
 void clearlogfileRun(int startarg, edict_t *ent, int client);
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2);
