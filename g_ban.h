@@ -11,6 +11,9 @@
 #define BANLISTREMOTEFILE   "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
 #define DEFAULTCHABANMSG    "Message banned."
 
+#define LT_PERM     1
+#define LT_TEMP     2
+
 /**
  * Player name matching type
  */

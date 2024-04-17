@@ -812,9 +812,6 @@ struct edict_s {
 #define DEFAULTBANMSG           "You are banned from this server!"
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
-#define LT_PERM   1
-#define LT_TEMP   2
-
 typedef struct {
     byte command;
     float timeout;
