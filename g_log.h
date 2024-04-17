@@ -5,8 +5,9 @@
 
 #pragma once
 
-#define LOGFILECMD    "[sv] !logfile [view <logfilenum> / edit [filenum(1-32)] [mod] [filename] / del [filenum(1-32)]]\n"
-#define LOGEVENTCMD    "[sv] !logevent [view <logtype> / edit [logtype] <log [yes/no]> <logfiles [logfile[+logfile...]]> <format \"format\">]\n"
+#define LOGLISTFILE     "q2a_log.cfg"
+#define LOGFILECMD      "[sv] !logfile [view <logfilenum> / edit [filenum(1-32)] [mod] [filename] / del [filenum(1-32)]]\n"
+#define LOGEVENTCMD     "[sv] !logevent [view <logtype> / edit [logtype] <log [yes/no]> <logfiles [logfile[+logfile...]]> <format \"format\">]\n"
 #define LOGTYPES_MAX    (sizeof(logtypes) / sizeof(logtypes[0]))
 
 typedef struct {
