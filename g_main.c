@@ -49,8 +49,8 @@ char moddir[256];
 
 void ShutdownGame(void) {
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) return;
 
@@ -60,9 +60,9 @@ void ShutdownGame(void) {
     }
 
     if (q2adminrunmode) {
-        STARTPERFORMANCE(1);
+        profile_start(1);
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
-        STARTPERFORMANCE(2);
+        profile_start(2);
     }
 
     gi.TagFree(finalentities);
@@ -74,7 +74,7 @@ void ShutdownGame(void) {
     ge_mod->Shutdown();
 
     if (q2adminrunmode) {
-        STOPPERFORMANCE(2, "mod->ShutdownGame", 0, NULL);
+        profile_stop(2, "mod->ShutdownGame", 0, NULL);
     }
 
 #if (defined(_WIN32) || defined(_WIN64))
@@ -86,7 +86,7 @@ void ShutdownGame(void) {
     dllloaded = FALSE;
 
     if (q2adminrunmode) {
-        STOPPERFORMANCE(1, "q2admin->ShutdownGame", 0, NULL);
+        profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
     }
 }
 
@@ -103,8 +103,8 @@ void G_RunFrame(void) {
     char ReconnectString[RANDOM_STRING_LENGTH + 1];
     char rndConnectString[RANDOM_STRING_LENGTH + 1];
 
-    INITPERFORMANCE_2(1);
-    INITPERFORMANCE_2(2);
+    profile_init_2(1);
+    profile_init_2(2);
 
     if (!dllloaded) return;
 
@@ -114,7 +114,7 @@ void G_RunFrame(void) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     lframenum++;
     ltime = lframenum * FRAMETIME;
@@ -821,14 +821,14 @@ void G_RunFrame(void) {
 
     HTTP_RunDownloads();
 
-    STARTPERFORMANCE(2);
+    profile_start(2);
     ge_mod->RunFrame();
     CA_RunFrame();
-    STOPPERFORMANCE_2(2, "mod->G_RunFrame", 0, NULL);
+    profile_stop_2(2, "mod->G_RunFrame", 0, NULL);
 
     G_MergeEdicts();
 
-    STOPPERFORMANCE_2(1, "q2admin->G_RunFrame", 0, NULL);
+    profile_stop_2(1, "q2admin->G_RunFrame", 0, NULL);
 }
 
 

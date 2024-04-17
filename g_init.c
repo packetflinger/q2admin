@@ -375,8 +375,8 @@ char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow) {
 void InitGame(void) {
     int i;
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     proxyinfo = NULL;
 
@@ -394,14 +394,14 @@ void InitGame(void) {
         return;
     }
 
-    STARTPERFORMANCE(1);
-    STARTPERFORMANCE(2);
+    profile_start(1);
+    profile_start(2);
     
     /* Be carefull with all functions called from this one (like dprintf_internal) 
     to not use proxyinfo pointer because it's not initialized yet. -Harven */
     ge_mod->Init(); 
     
-    STOPPERFORMANCE(2, "mod->InitGame", 0, NULL);
+    profile_stop(2, "mod->InitGame", 0, NULL);
 
     G_MergeEdicts();
 
@@ -490,7 +490,7 @@ void InitGame(void) {
 
     finalentities = G_Malloc(0xffff);
 
-    STOPPERFORMANCE(1, "q2admin->InitGame", 0, NULL);
+    profile_stop(1, "q2admin->InitGame", 0, NULL);
 
     HTTP_Init();
 
@@ -608,8 +608,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     FILE *motdptr;
     int i;
     char *backupentities = entities;
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) {
         return;
@@ -621,7 +621,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         return;
     }
     
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     for (i = -1; i < maxclients->value; i++) {
 
@@ -793,10 +793,10 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     q2a_memset(finalentities, 0, sizeof(finalentities));
     //SubstituteEntities(finalentities, backupentities);
 
-    STARTPERFORMANCE(2);
+    profile_start(2);
     //ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
     ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
-    STOPPERFORMANCE(2, "mod->SpawnEntities", 0, NULL);
+    profile_stop(2, "mod->SpawnEntities", 0, NULL);
 
     G_MergeEdicts();
 
@@ -832,7 +832,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         CA_Map(mapname);
     }
 
-    STOPPERFORMANCE(1, "q2admin->SpawnEntities", 0, NULL);
+    profile_stop(1, "q2admin->SpawnEntities", 0, NULL);
 }
 
 /**
@@ -948,8 +948,8 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     qboolean ret;
     qboolean userInfoOverflow = FALSE;
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) return FALSE;
 
@@ -959,7 +959,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         return ret;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     // allways clearout just in case there isn't any clients (therefore runframe doesn't get called)
     if (maxReconnectList) {
@@ -1214,9 +1214,9 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
 
         if (doConnect) {
-            STARTPERFORMANCE(2);
+            profile_start(2);
             ret = ge_mod->ClientConnect(ent, userinfo);
-            STOPPERFORMANCE(2, "mod->ClientConnect", client, ent);
+            profile_stop(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
             CA_PlayerConnect(ent);
@@ -1241,7 +1241,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         }
     }
 
-    STOPPERFORMANCE(1, "q2admin->ClientConnect", client, ent);
+    profile_stop(1, "q2admin->ClientConnect", client, ent);
     return ret;
 }
 
@@ -1431,8 +1431,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     char *timescale_temp;
     int temp;
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) {
         return;
@@ -1444,7 +1444,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     client = getEntOffset(ent) - 1;
 
@@ -1485,9 +1485,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     }
 
     if (passon && !(proxyinfo[client].clientcommand & BANCHECK)) {
-        STARTPERFORMANCE(2);
+        profile_start(2);
         ge_mod->ClientUserinfoChanged(ent, userinfo);
-        STOPPERFORMANCE(2, "mod->ClientUserinfoChanged", client, ent);
+        profile_stop(2, "mod->ClientUserinfoChanged", client, ent);
 
         G_MergeEdicts();
     }
@@ -1637,7 +1637,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     CA_PlayerUpdate(client, proxyinfo[client].userinfo);
     
-    STOPPERFORMANCE(1, "q2admin->ClientUserinfoChanged", client, ent);
+    profile_stop(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
 
 /**
@@ -1646,8 +1646,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 void ClientDisconnect(edict_t *ent) {
     int client;
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) {
         return;
@@ -1659,7 +1659,7 @@ void ClientDisconnect(edict_t *ent) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     client = getEntOffset(ent) - 1;
 
@@ -1670,9 +1670,9 @@ void ClientDisconnect(edict_t *ent) {
     CA_PlayerDisconnect(ent);
     
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
-        STARTPERFORMANCE(2);
+        profile_start(2);
         ge_mod->ClientDisconnect(ent);
-        STOPPERFORMANCE(2, "mod->ClientDisconnect", client, ent);
+        profile_stop(2, "mod->ClientDisconnect", client, ent);
 
         G_MergeEdicts();
 
@@ -1750,7 +1750,7 @@ void ClientDisconnect(edict_t *ent) {
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
     q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
 
-    STOPPERFORMANCE(1, "q2admin->ClientDisconnect", 0, NULL);
+    profile_stop(1, "q2admin->ClientDisconnect", 0, NULL);
 }
 
 /**
@@ -1759,8 +1759,8 @@ void ClientDisconnect(edict_t *ent) {
 void ClientBegin(edict_t *ent) {
     int client;
     FILE *q2logfile;
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) {
         return;
@@ -1772,14 +1772,14 @@ void ClientBegin(edict_t *ent) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     client = getEntOffset(ent) - 1;
 
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
-        STARTPERFORMANCE(2);
+        profile_start(2);
         ge_mod->ClientBegin(ent);
-        STOPPERFORMANCE(2, "mod->ClientBegin", client, ent);
+        profile_stop(2, "mod->ClientBegin", client, ent);
 
         G_MergeEdicts();
     } else {
@@ -1788,7 +1788,7 @@ void ClientBegin(edict_t *ent) {
     }
 
     if (client >= maxclients->value) {
-        STOPPERFORMANCE(1, "q2admin->ClientBegin (client >= maxclients)", client, ent);
+        profile_stop(1, "q2admin->ClientBegin (client >= maxclients)", client, ent);
         return;
     }
 
@@ -1907,14 +1907,14 @@ void ClientBegin(edict_t *ent) {
     }
 
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
-    STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);
+    profile_stop(1, "q2admin->ClientBegin", client, ent);
 }
 
 /**
  *
  */
 void WriteGame(char *filename, qboolean autosave) {
-    INITPERFORMANCE(1);
+    profile_init(1);
     if (!dllloaded) {
         return;
     }
@@ -1923,17 +1923,17 @@ void WriteGame(char *filename, qboolean autosave) {
         G_MergeEdicts();
         return;
     }
-    STARTPERFORMANCE(1);
+    profile_start(1);
     ge_mod->WriteGame(filename, autosave);
     G_MergeEdicts();
-    STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
+    profile_stop(1, "q2admin->WriteGame", 0, NULL);
 }
 
 /**
  * Currently just a pass-through
  */
 void ReadGame(char *filename) {
-    INITPERFORMANCE(1);
+    profile_init(1);
     if (!dllloaded) {
         return;
     }
@@ -1942,17 +1942,17 @@ void ReadGame(char *filename) {
         G_MergeEdicts();
         return;
     }
-    STARTPERFORMANCE(1);
+    profile_start(1);
     ge_mod->ReadGame(filename);
     G_MergeEdicts();
-    STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
+    profile_stop(1, "q2admin->ReadGame", 0, NULL);
 }
 
 /**
  *
  */
 void WriteLevel(char *filename) {
-    INITPERFORMANCE(1);
+    profile_init(1);
     if (!dllloaded) {
         return;
     }
@@ -1961,17 +1961,17 @@ void WriteLevel(char *filename) {
         G_MergeEdicts();
         return;
     }
-    STARTPERFORMANCE(1);
+    profile_start(1);
     ge_mod->WriteLevel(filename);
     G_MergeEdicts();
-    STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
+    profile_stop(1, "q2admin->WriteLevel", 0, NULL);
 }
 
 /**
  *
  */
 void ReadLevel(char *filename) {
-    INITPERFORMANCE(1);
+    profile_init(1);
     if (!dllloaded) {
         return;
     }
@@ -1980,8 +1980,8 @@ void ReadLevel(char *filename) {
         G_MergeEdicts();
         return;
     }
-    STARTPERFORMANCE(1);
+    profile_start(1);
     ge_mod->ReadLevel(filename);
     G_MergeEdicts();
-    STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);
+    profile_stop(1, "q2admin->ReadLevel", 0, NULL);
 }

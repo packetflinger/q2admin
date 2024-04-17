@@ -195,8 +195,8 @@ int VectorCompare(vec3_t v1, vec3_t v2) {
 void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     int client;
     char *msg = 0;
-    INITPERFORMANCE_2(1);
-    INITPERFORMANCE_2(2);
+    profile_init_2(1);
+    profile_init_2(2);
 
     if (!dllloaded) return;
 
@@ -209,7 +209,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     client = getEntOffset(ent);
     client -= 1;
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     proxyinfo[client].frames_count++;
 
@@ -313,14 +313,14 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             }
         }
 
-        STARTPERFORMANCE(2);
+        profile_start(2);
         ge_mod->ClientThink(ent, ucmd);
-        STOPPERFORMANCE_2(2, "mod->ClientThink", 0, NULL);
+        profile_stop_2(2, "mod->ClientThink", 0, NULL);
 
         G_MergeEdicts();
     }
 
-    STOPPERFORMANCE_2(1, "q2admin->ClientThink", 0, NULL);
+    profile_stop_2(1, "q2admin->ClientThink", 0, NULL);
 }
 
 

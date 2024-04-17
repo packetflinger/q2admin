@@ -5,19 +5,19 @@
 
 #pragma once
 
-#define INITPERFORMANCE(instance) unsigned long performancetimer##instance
-#define INITPERFORMANCE_2(instance) \
+#define profile_init(instance) unsigned long performancetimer##instance
+#define profile_init_2(instance) \
             unsigned long performancetimer##instance; \
             static unsigned long totalperformancetimer##instance = 0; \
             static int countperformancetimer##instance = 0
 
-#define STARTPERFORMANCE(instance) \
+#define profile_start(instance) \
             if(isLogEvent(LT_PERFORMANCEMONITOR)) \
             { \
                 performancetimer##instance = clock(); \
             }
 
-#define STOPPERFORMANCE(instance, function, client, ent) \
+#define profile_stop(instance, function, client, ent) \
             if(isLogEvent(LT_PERFORMANCEMONITOR)) \
             { \
                 performancetimer##instance = clock() - performancetimer##instance; \
@@ -27,7 +27,7 @@
                 } \
             }
 
-#define STOPPERFORMANCE_2(instance, function, client, ent) \
+#define profile_stop_2(instance, function, client, ent) \
             if(isLogEvent(LT_PERFORMANCEMONITOR)) \
             { \
                 totalperformancetimer##instance += clock() - performancetimer##instance; \

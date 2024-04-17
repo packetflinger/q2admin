@@ -3076,8 +3076,8 @@ void ClientCommand(edict_t *ent) {
     qboolean checkforfloodafter = FALSE;
     char stemp[MAX_STRING_CHARS];
 
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) {
         return;
@@ -3089,7 +3089,7 @@ void ClientCommand(edict_t *ent) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
@@ -3124,9 +3124,9 @@ void ClientCommand(edict_t *ent) {
     lastClientCmd = clientnum;
     if (doClientCommand(ent, clientnum, &checkforfloodafter)) {
         if (!(proxyinfo[clientnum].clientcommand & BANCHECK)) {
-            STARTPERFORMANCE(2);
+            profile_start(2);
             ge_mod->ClientCommand(ent);
-            STOPPERFORMANCE(2, "mod->ClientCommand", 0, NULL);
+            profile_stop(2, "mod->ClientCommand", 0, NULL);
 
             G_MergeEdicts();
         }
@@ -3137,7 +3137,7 @@ void ClientCommand(edict_t *ent) {
     }
     lastClientCmd = -1;
 	
-    STOPPERFORMANCE(1, "q2admin->ClientCommand", 0, NULL);
+    profile_stop(1, "q2admin->ClientCommand", 0, NULL);
 }
 
 qboolean doServerCommand(void) {
@@ -3167,8 +3167,8 @@ qboolean doServerCommand(void) {
 }
 
 void ServerCommand(void) {
-    INITPERFORMANCE(1);
-    INITPERFORMANCE(2);
+    profile_init(1);
+    profile_init(2);
 
     if (!dllloaded) return;
 
@@ -3178,17 +3178,17 @@ void ServerCommand(void) {
         return;
     }
 
-    STARTPERFORMANCE(1);
+    profile_start(1);
 
     if (doServerCommand()) {
-        STARTPERFORMANCE(2);
+        profile_start(2);
         ge_mod->ServerCommand();
-        STOPPERFORMANCE(2, "mod->ServerCommand", 0, NULL);
+        profile_stop(2, "mod->ServerCommand", 0, NULL);
 
         G_MergeEdicts();
     }
 
-    STOPPERFORMANCE(1, "q2admin->ServerCommand", 0, NULL);
+    profile_stop(1, "q2admin->ServerCommand", 0, NULL);
 }
 
 void clientsidetimeoutInit(char *arg) {
