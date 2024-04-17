@@ -1517,18 +1517,6 @@ int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 void q_strupr(char *c);
 qboolean wildcard_match(char *pattern, char *haystack);
 
-// zb_lrcon.c
-void readLRconLists(void);
-void reloadlrconfileRun(int startarg, edict_t *ent, int client);
-void run_lrcon(edict_t *ent, int client);
-void listlrconsRun(int startarg, edict_t *ent, int client);
-void displayNextLRCon(edict_t *ent, int client, long lrconnum);
-void lrconRun(int startarg, edict_t *ent, int client);
-void lrconDelRun(int startarg, edict_t *ent, int client);
-void freeLRconLists(void);
-void lrcon_reset_rcon_password(int, edict_t *, int);
-void check_lrcon_password(void);
-
 // zb_zbot.c
 int checkForOverflows(edict_t *ent, int client);
 void serverLogZBot(edict_t *ent, int client);
