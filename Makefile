@@ -69,6 +69,7 @@ HEADERS := 	game.h \
             g_lrcon.h \
             g_queue.h \
             g_spawn.h \
+            g_timer.h \
             g_util.h \
             g_vote.h \
             g_vpn.h \
@@ -102,6 +103,7 @@ OBJS :=     g_admin.o \
             g_net.o \
             g_queue.o \
             g_spawn.o \
+            g_timer.o \
             g_util.o \
             g_vote.o \
             g_vpn.o \

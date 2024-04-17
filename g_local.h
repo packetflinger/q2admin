@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_lrcon.h"
 #include "g_queue.h"
 #include "g_spawn.h"
+#include "g_timer.h"
 #include "g_util.h"
 #include "g_vote.h"
 #include "g_vpn.h"
@@ -63,7 +64,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
 #define ALLOWED_MAXCMDS_SAFETY         45
-#define TIMERS_MAX                     4
 
 // maximum length of random strings used to check for hacked quake2.exe
 #define RANDOM_STRING_LENGTH           20
@@ -825,12 +825,6 @@ typedef struct {
     char *str;
 } cmd_queue_t;
 
-
-typedef struct {
-    char action[256];
-    int start;
-} timers_t;
-
 // not used yet
 struct ip_cache_s {
     byte ip[16];                // enough room for ipv6
@@ -1526,9 +1520,7 @@ extern qboolean timers_active;
 extern int timers_min_seconds;
 extern int timers_max_seconds;
 qboolean can_do_new_cmds(int client);
-void timer_action(int client, edict_t *ent);
-void timer_stop(int client, edict_t *ent);
-void timer_start(int client, edict_t *ent);
+
 
 typedef struct {
     char *model_name;
