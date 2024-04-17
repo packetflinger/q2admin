@@ -65,6 +65,7 @@ HEADERS := 	game.h \
             g_init.h \
             g_local.h \
             g_log.h \
+            g_lrcon.h \
             g_cloud.h \
             g_json.h \
             g_net.h \

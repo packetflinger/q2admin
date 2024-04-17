@@ -20,31 +20,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define LRCON_MAXCMDS         1024
-
-typedef struct {
-    char *lrconcmd;
-    char *password;
-    byte type;
-    regex_t *r;
-}
-lrconcmd_t;
-
-#define LRC_SW  0
-#define LRC_EX  1
-#define LRC_RE  2
-
 lrconcmd_t lrconcmds[LRCON_MAXCMDS];
 int maxlrcon_cmds = 0;
-
 qboolean rcon_random_password = qtrue;
-
 qboolean rcon_insecure = qtrue;
-
 int lrcon_timeout = 2;
 char orginal_rcon_password[50];
 float password_timeout = 0;
 
+/**
+ *
+ */
 qboolean ReadLRconFile(char *lrcname) {
     FILE *lrconfile;
     unsigned int uptoLine = 0;
@@ -158,12 +144,13 @@ qboolean ReadLRconFile(char *lrcname) {
             gi.dprintf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
         }
     }
-
     fclose(lrconfile);
-
     return TRUE;
 }
 
+/**
+ *
+ */
 void freeLRconLists(void) {
     while (maxlrcon_cmds) {
         maxlrcon_cmds--;
@@ -176,29 +163,35 @@ void freeLRconLists(void) {
     }
 }
 
+/**
+ *
+ */
 void readLRconLists(void) {
     qboolean ret;
 
     freeLRconLists();
-
     ret = ReadLRconFile(configfile_rcon->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_rcon->string);
     if (ReadLRconFile(buffer)) {
         ret = TRUE;
     }
-
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_rcon->string), IW_LRCONSETUPLOAD, 0.0);
     }
 }
 
+/**
+ *
+ */
 void reloadlrconfileRun(int startarg, edict_t *ent, int client) {
     readLRconLists();
     gi.cprintf(ent, PRINT_HIGH, "Lrcons reloaded.\n");
 }
 
+/**
+ *
+ */
 qboolean checklrcon(char *cp, int lrcon) {
     char strbuffer[256];
 
@@ -219,6 +212,9 @@ qboolean checklrcon(char *cp, int lrcon) {
     return FALSE;
 }
 
+/**
+ *
+ */
 void run_lrcon(edict_t *ent, int client) {
     unsigned int i;
 
@@ -299,27 +295,37 @@ void run_lrcon(edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "Unknown lrcon command\n");
 }
 
+/**
+ *
+ */
 void check_lrcon_password(void) {
     if (password_timeout && (password_timeout < ltime)) {
         lrcon_reset_rcon_password(0, 0, 0);
     }
 }
 
+/**
+ *
+ */
 void lrcon_reset_rcon_password(int startarg, edict_t *ent, int client) {
     if (password_timeout == 0) {
         return;
     }
-
     password_timeout = 0;
     gi.cvar_set("rcon_password", orginal_rcon_password);
 }
 
+/**
+ *
+ */
 void listlrconsRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPLRCONS, 0, 0, 0);
-
     gi.cprintf(ent, PRINT_HIGH, "Start lrcon's List:\n");
 }
 
+/**
+ *
+ */
 void displayNextLRCon(edict_t *ent, int client, long lrconnum) {
     if (lrconnum < maxlrcon_cmds) {
         switch (lrconcmds[lrconnum].type) {
@@ -342,10 +348,9 @@ void displayNextLRCon(edict_t *ent, int client, long lrconnum) {
     }
 }
 
-
-
-#define LRCONCMD     "[sv] !lrcon [SW/EX/RE] \"password\" \"command\"\n"
-
+/**
+ *
+ */
 void lrconRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     int len;
@@ -438,10 +443,9 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     maxlrcon_cmds++;
 }
 
-
-
-#define LRCONDELCMD     "[sv] !lrcondel lrconnum\n"
-
+/**
+ *
+ */
 void lrconDelRun(int startarg, edict_t *ent, int client) {
     int lrcon;
 
@@ -449,29 +453,22 @@ void lrconDelRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, LRCONDELCMD);
         return;
     }
-
     lrcon = q2a_atoi(gi.argv(startarg));
-
     if (lrcon < 1 || lrcon > maxlrcon_cmds) {
         gi.cprintf(ent, PRINT_HIGH, LRCONDELCMD);
         return;
     }
-
     lrcon--;
-
     gi.TagFree(lrconcmds[lrcon].password);
     gi.TagFree(lrconcmds[lrcon].lrconcmd);
     if (lrconcmds[lrcon].r) {
         regfree(lrconcmds[lrcon].r);
         gi.TagFree(lrconcmds[lrcon].r);
     }
-
     if (lrcon + 1 < maxlrcon_cmds) {
         q2a_memmove((lrconcmds + lrcon), (lrconcmds + lrcon + 1), sizeof (lrconcmd_t) * (maxlrcon_cmds - lrcon));
     }
-
     maxlrcon_cmds--;
-
     gi.cprintf(ent, PRINT_HIGH, "lrcon deleted\n");
 }
 
