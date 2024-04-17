@@ -55,6 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_spawn.h"
 #include "g_util.h"
 #include "g_vote.h"
+#include "g_vpn.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -842,25 +843,6 @@ struct ip_cache_s {
 typedef struct ip_cache_s ip_cache_t;
 extern ip_cache_t *ipcache;
 
-// states of VPN check
-typedef enum {
-    VPN_UNKNOWN,    // unchecked, not known
-    VPN_CHECKING,   // mid-lookup
-    VPN_POSITIVE,   // confirmed, vpn address
-    VPN_NEGATIVE,   // confirmed, non-vpn address
-} vpn_state_t;
-
-// Properties will be non-null if state == VPN_POSITIVE
-typedef struct {
-    vpn_state_t     state;
-    qboolean        is_vpn;
-    qboolean        is_proxy;
-    qboolean        is_tor;
-    qboolean        is_relay;
-    char            network[50];
-    char            asn[10];
-} vpn_t;
-
 typedef struct {
     qboolean admin;
     unsigned char retries;
@@ -1627,9 +1609,4 @@ typedef struct {
 } block_model;
 
 extern block_model block_models[MAX_BLOCK_MODELS];
-
-void LookupVPNStatus(edict_t *ent);
-void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
-
-void vpnUsersRun(int startarg, edict_t *ent, int client);
 

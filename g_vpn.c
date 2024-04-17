@@ -15,8 +15,7 @@
 
 #include "g_local.h"
 
-// figure out dns resolution later (vpnapi.io)
-char vpn_host[50] = "vpnapi.io";
+char vpn_host[50] = VPNAPIHOST;
 
 /**
  *
