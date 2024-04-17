@@ -1,6 +1,8 @@
-
+/**
+ * Q2Admin
+ * JSON parsing used with VPN API lookup
+ */
 /*
-
 <https://github.com/rafagafe/tiny-json>
      
   Licensed under the MIT License <http://opensource.org/licenses/MIT>.

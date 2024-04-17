@@ -27,8 +27,6 @@
 */
 
 #include "g_local.h"
-//#include <string.h>
-//#include <ctype.h>
 #include "g_json.h"
 
 /** Structure to handle a heap of JSON properties. */
