@@ -801,7 +801,6 @@ struct edict_s {
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
 #define LOGLISTFILE     "q2a_log.cfg"
-#define LRCONFILE       "q2a_lrcon.cfg"
 #define CFGFILE         "q2admin.cfg"
 
 #define DEFAULTVOTECOMMAND      "vote"

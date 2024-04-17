@@ -8,6 +8,7 @@
 
 #pragma once
 
+#define LRCONFILE       "q2a_lrcon.cfg"
 #define LRCONCMD        "[sv] !lrcon [SW/EX/RE] \"password\" \"command\"\n"
 #define LRCONDELCMD     "[sv] !lrcondel lrconnum\n"
 #define LRCON_MAXCMDS   1024
