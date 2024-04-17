@@ -342,20 +342,8 @@ static inline int Q_charascii(int c)
 }
 
 // portable case insensitive compare
-int Q_stricmp(char *s1, char *s2);
 int Q_strcasecmp(char *s1, char *s2);
-int Q_strncasecmp(const char *s1, const char *s2, size_t n);
-
-size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
-size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
-size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...);
-size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...);
-size_t Q_concat(char *dest, size_t size, ...);
-size_t Q_strlcat(char *dst, const char *src, size_t size);
 size_t Q_strlcpy(char *dst, const char *src, size_t size);
-char *Q_strcasestr(const char *s1, const char *s2);
-
-
 
 //=============================================
 
@@ -367,7 +355,6 @@ float BigFloat(float l);
 float LittleFloat(float l);
 
 void Swap_Init(void);
-char *va(const char *format, ...);
 
 //=============================================
 
@@ -378,10 +365,8 @@ char *va(const char *format, ...);
 #define MAX_INFO_VALUE  64
 #define MAX_INFO_STRING  512
 
-char *Info_ValueForKey(char *s, char *key);
 void Info_RemoveKey(char *s, char *key);
 void Info_SetValueForKey(char *s, char *key, char *value);
-qboolean Info_Validate(char *s);
 
 /*
 ==============================================================

@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_lrcon.h"
 #include "g_queue.h"
 #include "g_spawn.h"
+#include "g_util.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1500,24 +1501,6 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text);
 edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text);
 void Cmd_Teleport_f(edict_t *ent);
 
-// zb_util.c
-void stuffcmd(edict_t *e, char *s);
-//char *stringf(const char *format, ...) __attribute__((format(printf, 1, 2)));
-char *trim(char *s);
-qboolean startswith(char *needle, char *haystack);
-int Q_stricmp(char *s1, char *s2);
-char *Info_ValueForKey(char *s, char *key);
-void G_MergeEdicts(void);
-int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
-int startContains(char *src, char *cmp);
-int stringContains(char *buff1, char *buff2);
-int isBlank(char *buff1);
-char *processstring(char *output, char *input, int max, char end);
-qboolean getLogicalValue(char *arg);
-int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
-void q_strupr(char *c);
-qboolean wildcard_match(char *pattern, char *haystack);
-
 // zb_zbot.c
 int checkForOverflows(edict_t *ent, int client);
 void serverLogZBot(edict_t *ent, int client);
@@ -1661,5 +1644,3 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
 
 void vpnUsersRun(int startarg, edict_t *ent, int client);
 
-int q2a_ceil(float x);
-int q2a_floor(float x);

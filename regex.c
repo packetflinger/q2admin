@@ -82,10 +82,6 @@ that make sense only in Emacs. */
 //char *realloc();
 //endif
 
-char *q2admin_malloc(int size);
-char *q2admin_realloc();
-void q2admin_free();
-
 /* Define the syntax stuff for \<, \>, etc.  */
 
 /* This must be nonzero for the wordchar and notwordchar pattern
