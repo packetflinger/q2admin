@@ -38,7 +38,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_cloud.h"
 #include <ctype.h>
 #include "regex.h"
-#include "g_offsets.h"
 #include "g_json.h"
 #include "g_net.h"
 #include "g_anticheat.h"
