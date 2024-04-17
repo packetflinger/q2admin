@@ -345,43 +345,34 @@ skipwhite:
 /**
  * Get the IPv4/IPv6 address from the userinfo string
  */
-char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow)
-{
+char *FindIpAddressInUserInfo(char *userinfo, qboolean *userInfoOverflow) {
     char *ip = Info_ValueForKey(userinfo, "ip");
 
     if (userInfoOverflow) {
         *userInfoOverflow = qfalse;
     }
-
     if (*ip == 0) {
         char *ipuserinfo = userinfo + q2a_strlen(userinfo);
-
-        // find the last '\\'
-        while (ipuserinfo > userinfo && *ipuserinfo != '\\') {
+        while (ipuserinfo > userinfo && *ipuserinfo != '\\') { // find last "\\"
             ipuserinfo--;
         }
-
         if (ipuserinfo - 3 >= userinfo &&
                 *(ipuserinfo - 3) == '\\' &&
                 *(ipuserinfo - 2) == 'i' &&
                 *(ipuserinfo - 1) == 'p') {
-
             if (userInfoOverflow) {
                 *userInfoOverflow = qtrue;
             }
-
             return ipuserinfo + 1;
         }
     }
-
     return ip;
 }
 
 /**
  * Called when the server is initialized
  */
-void InitGame(void)
-{
+void InitGame(void) {
     int i;
 
     INITPERFORMANCE(1);
@@ -525,8 +516,7 @@ void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, qbo
 /**
  * Make a new entity string making any needed substitutions based on cvars
  */
-void SubstituteEntities(char *newents, char *oldents)
-{
+void SubstituteEntities(char *newents, char *oldents) {
     qboolean replaced;
 
     tune_spawn_railgun = gi.cvar("tune_spawn_railgun", "", CVAR_GENERAL);
@@ -613,8 +603,7 @@ void SubstituteEntities(char *newents, char *oldents)
 /**
  *
  */
-void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
-{
+void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     int len, currentlen;
     FILE *motdptr;
     int i;
@@ -849,8 +838,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint)
 /**
  *
  */
-qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboolean* userInfoOverflow)
-{
+qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboolean* userInfoOverflow) {
     char *ip = FindIpAddressInUserInfo(userinfo, userInfoOverflow);
 
     if (*ip) {
@@ -890,8 +878,7 @@ qboolean UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, qboo
 /**
  *
  */
-qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2)
-{
+qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
     if (reconnect_checklevel) {
         char *cp1 = FindIpAddressInUserInfo(userinfo1, 0);
         char *cp2 = FindIpAddressInUserInfo(userinfo2, 0);
@@ -938,8 +925,7 @@ qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2)
 /**
  *
  */
-qboolean checkReconnectList(char *username)
-{
+qboolean checkReconnectList(char *username) {
     unsigned int i;
 
     for (i = 0; i < maxclients->value; i++) {
@@ -948,15 +934,13 @@ qboolean checkReconnectList(char *username)
             return FALSE;
         }
     }
-
     return TRUE;
 }
 
 /**
  * Called when a new player first connects to the server, before entering the game
  */
-qboolean ClientConnect(edict_t *ent, char *userinfo)
-{
+qboolean ClientConnect(edict_t *ent, char *userinfo) {
     int client;
     char *s;
     char *skinname;
@@ -1264,8 +1248,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo)
 /**
  *
  */
-qboolean checkForNameChange(int client, edict_t *ent, char *userinfo)
-{
+qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "name");
     char oldname[sizeof (proxyinfo[client].name)];
     char newname[sizeof (proxyinfo[client].name)];
@@ -1366,8 +1349,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo)
 /**
  *
  */
-qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo)
-{
+qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "skin");
     char oldskin[sizeof (proxyinfo[client].skin)];
     char newskin[sizeof (proxyinfo[client].skin)];
@@ -1438,8 +1420,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo)
 /**
  * Client changed something (name, skin, rate, hand, etc)
  */
-void ClientUserinfoChanged(edict_t *ent, char *userinfo)
-{
+void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     int client;
     qboolean passon;
 
@@ -1662,8 +1643,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo)
 /**
  * Called when a client is disconnected or quits
  */
-void ClientDisconnect(edict_t *ent)
-{
+void ClientDisconnect(edict_t *ent) {
     int client;
 
     INITPERFORMANCE(1);
@@ -1776,8 +1756,7 @@ void ClientDisconnect(edict_t *ent)
 /**
  * Called when a client is actually spawned into the game
  */
-void ClientBegin(edict_t *ent)
-{
+void ClientBegin(edict_t *ent) {
     int client;
     FILE *q2logfile;
     INITPERFORMANCE(1);
@@ -1927,8 +1906,6 @@ void ClientBegin(edict_t *ent)
         }
     }
 
-    //RA_Send(CMD_CONNECT, "%d\\%s", client, proxyinfo[client].userinfo);
-    
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
     STOPPERFORMANCE(1, "q2admin->ClientBegin", client, ent);
 }
@@ -1936,99 +1913,75 @@ void ClientBegin(edict_t *ent)
 /**
  *
  */
-void WriteGame(char *filename, qboolean autosave)
-{
+void WriteGame(char *filename, qboolean autosave) {
     INITPERFORMANCE(1);
-
     if (!dllloaded) {
         return;
     }
-
     if (q2adminrunmode == 0) {
         ge_mod->WriteGame(filename, autosave);
         G_MergeEdicts();
         return;
     }
-
     STARTPERFORMANCE(1);
-
     ge_mod->WriteGame(filename, autosave);
     G_MergeEdicts();
-
     STOPPERFORMANCE(1, "q2admin->WriteGame", 0, NULL);
 }
 
 /**
- *
+ * Currently just a pass-through
  */
-void ReadGame(char *filename)
-{
+void ReadGame(char *filename) {
     INITPERFORMANCE(1);
-
     if (!dllloaded) {
         return;
     }
-
     if (q2adminrunmode == 0) {
         ge_mod->ReadGame(filename);
         G_MergeEdicts();
         return;
     }
-
     STARTPERFORMANCE(1);
-
     ge_mod->ReadGame(filename);
     G_MergeEdicts();
-
     STOPPERFORMANCE(1, "q2admin->ReadGame", 0, NULL);
 }
 
 /**
  *
  */
-void WriteLevel(char *filename)
-{
+void WriteLevel(char *filename) {
     INITPERFORMANCE(1);
-
     if (!dllloaded) {
         return;
     }
-
     if (q2adminrunmode == 0) {
         ge_mod->WriteLevel(filename);
         G_MergeEdicts();
         return;
     }
-
     STARTPERFORMANCE(1);
-
     ge_mod->WriteLevel(filename);
     G_MergeEdicts();
-
     STOPPERFORMANCE(1, "q2admin->WriteLevel", 0, NULL);
 }
 
 /**
  *
  */
-void ReadLevel(char *filename)
-{
+void ReadLevel(char *filename) {
     INITPERFORMANCE(1);
-
     if (!dllloaded) {
         return;
     }
-
     if (q2adminrunmode == 0) {
         ge_mod->ReadLevel(filename);
         G_MergeEdicts();
         return;
     }
-
     STARTPERFORMANCE(1);
-
     ge_mod->ReadLevel(filename);
     G_MergeEdicts();
-
     STOPPERFORMANCE(1, "q2admin->ReadLevel", 0, NULL);
 }

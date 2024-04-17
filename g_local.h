@@ -49,6 +49,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_disable.h"
 #include "g_flood.h"
 #include "g_http.h"
+#include "g_init.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1557,18 +1558,6 @@ void lrconDelRun(int startarg, edict_t *ent, int client);
 void freeLRconLists(void);
 void lrcon_reset_rcon_password(int, edict_t *, int);
 void check_lrcon_password(void);
-
-// zb_init.c
-void InitGame(void);
-void SpawnEntities(char *mapname, char *entities, char *spawnpoint);
-qboolean ClientConnect(edict_t *ent, char *userinfo);
-void ClientUserinfoChanged(edict_t *ent, char *userinfo);
-void ClientDisconnect(edict_t *ent);
-void ClientBegin(edict_t *ent);
-void WriteGame(char *filename, qboolean autosave);
-void ReadGame(char *filename);
-void WriteLevel(char *filename);
-void ReadLevel(char *filename);
 
 // zb_zbot.c
 int checkForOverflows(edict_t *ent, int client);
