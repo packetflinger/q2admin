@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "regex.h"
 #include "g_json.h"
 #include "g_net.h"
+#include "g_admin.h"
 #include "g_anticheat.h"
 #include "g_ban.h"
 #include "g_base64.h"
@@ -797,8 +798,6 @@ struct edict_s {
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define BYPASSFILE      "q2a_bypass.cfg"
-#define LOGINFILE       "q2a_login.cfg"
 #define LOGLISTFILE     "q2a_log.cfg"
 #define LRCONFILE       "q2a_lrcon.cfg"
 #define SPAWNFILE       "q2a_spawn.cfg"
@@ -1492,7 +1491,6 @@ void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 void generateRandomString(char *buffer, int length);
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
-void reloadLoginFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
 
 // zb_zbotcheck.c
@@ -1511,13 +1509,6 @@ extern int speedbot_check_type;
 extern int max_pmod_noreply;
 extern int msec_int;
 
-typedef struct {
-    char name[256];
-    char password[256];
-    char ip[256];
-    int level;
-} admin_type;
-
 // should be set at build time in Makefile
 #ifndef Q2A_COMMIT
 #define Q2A_COMMIT      "00~000000"
@@ -1527,8 +1518,7 @@ typedef struct {
 #define DEFAULTQ2AVER   "1.0"
 
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
-#define MAX_ADMINS          128
-#define ADMIN_AUTH_LEVEL    1
+
 #define MAX_BLOCK_MODELS    26
 
 #define VIRUS_KICK_MSG      "%s has not provided adequate authentication, this may be due to a virus.\n"
@@ -1548,14 +1538,6 @@ extern admin_type admin_pass[MAX_ADMINS];
 extern admin_type q2a_bypass_pass[MAX_ADMINS];
 extern int num_admins;
 extern int num_q2a_admins;
-
-void Read_Admin_cfg(void);
-void List_Admin_Commands(edict_t *ent, int client);
-int get_admin_level(char *givenpass, char *givenname);
-int get_bypass_level(char *givenpass, char *givenname);
-
-void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check);
-int ADMIN_process_command(edict_t *ent, int client);
 
 extern int client_map_cfg;
 extern qboolean do_franck_check;

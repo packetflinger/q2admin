@@ -53,6 +53,7 @@ CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
 RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 
 HEADERS := 	game.h \
+            g_admin.h \
             g_anticheat.h \
             g_ban.h \
             g_base64.h \
@@ -78,7 +79,8 @@ HEADERS := 	game.h \
             regex.h \
             q_platform.h
 
-OBJS :=     g_anticheat.o \
+OBJS :=     g_admin.o \
+            g_anticheat.o \
             g_ban.o \
             g_base64.o \
             g_checkvar.o \
