@@ -69,6 +69,7 @@ HEADERS := 	game.h \
             g_queue.h \
             g_spawn.h \
             g_util.h \
+            g_vote.h \
             g_cloud.h \
             g_json.h \
             g_net.h \

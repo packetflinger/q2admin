@@ -20,40 +20,24 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  
 #include "g_local.h"
 
-#define VOTE_MAXCMDS         1024
-
-typedef struct {
-    char *votecmd;
-    byte type;
-    regex_t *r;
-}
-votecmd_t;
-
-#define VOTE_SW  0
-#define VOTE_EX  1
-#define VOTE_RE  2
-
 votecmd_t votecmds[VOTE_MAXCMDS];
 int maxvote_cmds = 0;
-
 qboolean votecountnovotes = 1;
 int votepasspercent = 50;
 int voteminclients = 0;
-
-
 static qboolean voteinprogress = 0;
 static unsigned long votetimeout, voteremindtimeout;
 char cmdvote[2048];
-
 char cmdpassedvote[2048];
 char votecaller[16];
-
-
 int clientVoteTimeout = 60;
 int clientRemindTimeout = 10;
 int clientMaxVoteTimeout = 0;
 int clientMaxVotes = 0;
 
+/**
+ *
+ */
 qboolean ReadVoteFile(char *votename) {
     FILE *votefile;
     unsigned int uptoLine = 0;
@@ -87,11 +71,9 @@ qboolean ReadVoteFile(char *votename) {
                 case 'S':
                     votecmds[maxvote_cmds].type = VOTE_SW;
                     break;
-
                 case 'E':
                     votecmds[maxvote_cmds].type = VOTE_EX;
                     break;
-
                 case 'R':
                     votecmds[maxvote_cmds].type = VOTE_RE;
                     break;
@@ -116,7 +98,6 @@ qboolean ReadVoteFile(char *votename) {
 
                 votecmds[maxvote_cmds].r = gi.TagMalloc(sizeof (*votecmds[maxvote_cmds].r), TAG_LEVEL);
                 q2a_memset(votecmds[maxvote_cmds].r, 0x0, sizeof (*votecmds[maxvote_cmds].r));
-                //        if(regcomp(votecmds[maxvote_cmds].r, strbuffer, REG_EXTENDED))
                 if (regcomp(votecmds[maxvote_cmds].r, cp, 0)) {
                     gi.TagFree(votecmds[maxvote_cmds].r);
                     votecmds[maxvote_cmds].r = 0;
@@ -138,12 +119,13 @@ qboolean ReadVoteFile(char *votename) {
             gi.dprintf("Error loading VOTE from line %d in file %s\n", uptoLine, votename);
         }
     }
-
     fclose(votefile);
-
     return TRUE;
 }
 
+/**
+ *
+ */
 void freeVoteLists(void) {
     while (maxvote_cmds) {
         maxvote_cmds--;
@@ -155,80 +137,83 @@ void freeVoteLists(void) {
     }
 }
 
+/**
+ *
+ */
 void readVoteLists(void) {
     qboolean ret;
 
     freeVoteLists();
-
     ret = ReadVoteFile(configfile_vote->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_vote->string);
     if (ReadVoteFile(buffer)) {
         ret = TRUE;
     }
-
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_vote->string), IW_VOTESETUPLOAD, 0.0);
     }
 }
 
+/**
+ *
+ */
 void reloadVoteFileRun(int startarg, edict_t *ent, int client) {
     readVoteLists();
     gi.cprintf(ent, PRINT_HIGH, "Disbled entities reloaded.\n");
 }
 
+/**
+ *
+ */
 qboolean checkforvotecmd(char *cp, int votecmd) {
     switch (votecmds[votecmd].type) {
         case VOTE_SW:
             return startContains(cp, votecmds[votecmd].votecmd);
-
         case VOTE_EX:
             return !Q_stricmp(cp, votecmds[votecmd].votecmd);
-
         case VOTE_RE:
             return (regexec(votecmds[votecmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-
     return FALSE;
 }
 
+/**
+ *
+ */
 qboolean checkVoteCommand(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
-
     for (i = 0; i < maxvote_cmds; i++) {
         if (checkforvotecmd(buffer, i)) {
             return TRUE;
         }
     }
-
     return FALSE;
 }
 
-
-
-//===================================================================
-
+/**
+ *
+ */
 void listvotesRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPVOTE, 0, 0, 0);
-
     gi.cprintf(ent, PRINT_HIGH, "Start Vote Command List:\n");
 }
 
+/**
+ *
+ */
 void displayNextVote(edict_t *ent, int client, long votecmd) {
     if (votecmd < maxvote_cmds) {
         switch (votecmds[votecmd].type) {
             case VOTE_SW:
                 gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
-
             case VOTE_EX:
                 gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
-
             case VOTE_RE:
                 gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
@@ -240,10 +225,9 @@ void displayNextVote(edict_t *ent, int client, long votecmd) {
     }
 }
 
-
-
-#define VOTECMD     "[sv] !votecmd [SW/EX/RE] \"command\"\n"
-
+/**
+ *
+ */
 void votecmdRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     int len;
@@ -282,14 +266,12 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
 
     votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_LEVEL);
     processstring(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
-    //  q2a_strcpy(votecmds[maxvote_cmds].votecmd, cmd);
 
     if (votecmds[maxvote_cmds].type == VOTE_RE) {
         q_strupr(cmd);
 
         votecmds[maxvote_cmds].r = gi.TagMalloc(sizeof (*votecmds[maxvote_cmds].r), TAG_LEVEL);
         q2a_memset(votecmds[maxvote_cmds].r, 0x0, sizeof (*votecmds[maxvote_cmds].r));
-        //        if(regcomp(votecmds[maxvote_cmds].r, cmd, REG_EXTENDED))
         if (regcomp(votecmds[maxvote_cmds].r, cmd, 0)) {
             gi.TagFree(votecmds[maxvote_cmds].votecmd);
             gi.TagFree(votecmds[maxvote_cmds].r);
@@ -320,10 +302,9 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
     maxvote_cmds++;
 }
 
-
-
-#define VOTEDELCMD     "[sv] !votedel votenum\n"
-
+/**
+ *
+ */
 void voteDelRun(int startarg, edict_t *ent, int client) {
     int vote;
 
@@ -350,12 +331,13 @@ void voteDelRun(int startarg, edict_t *ent, int client) {
     if (vote + 1 < maxvote_cmds) {
         q2a_memmove((votecmds + vote), (votecmds + vote + 1), sizeof (votecmd_t) * (maxvote_cmds - vote));
     }
-
     maxvote_cmds--;
-
     gi.cprintf(ent, PRINT_HIGH, "Vote command deleted\n");
 }
 
+/**
+ *
+ */
 void displayVote(void) {
     int client;
     unsigned int maxclientsused = 0, voteyes = 0, voteno = 0, novote = 0;
@@ -400,6 +382,9 @@ void displayVote(void) {
     }
 }
 
+/**
+ *
+ */
 void run_vote(edict_t *ent, int client) {
     char *votecmd;
 
@@ -553,6 +538,9 @@ void run_vote(edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void checkOnVoting(void) {
     int client;
     unsigned int maxclientsused = 0, voteyes = 0, voteno = 0, novote = 0;
@@ -587,7 +575,6 @@ void checkOnVoting(void) {
                         novote++;
                     }
                 }
-
                 proxyinfo[client].clientcommand &= ~(CCMD_VOTEYES | CCMD_VOTED);
             }
 

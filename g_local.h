@@ -54,6 +54,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_queue.h"
 #include "g_spawn.h"
 #include "g_util.h"
+#include "g_vote.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1511,18 +1512,6 @@ void generateRandomString(char *buffer, int length);
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
 void reloadLoginFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
-
-// zb_vote.c
-void freeVoteLists(void);
-void readVoteLists(void);
-void reloadVoteFileRun(int startarg, edict_t *ent, int client);
-void listvotesRun(int startarg, edict_t *ent, int client);
-void displayNextVote(edict_t *ent, int client, long floodcmd);
-void votecmdRun(int startarg, edict_t *ent, int client);
-void voteDelRun(int startarg, edict_t *ent, int client);
-qboolean checkVoteCommand(char *votecmd);
-void run_vote(edict_t *ent, int client);
-void checkOnVoting(void);
 
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
