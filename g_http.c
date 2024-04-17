@@ -22,87 +22,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <winsock2.h>
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#endif
-
-#include <curl/curl.h>
-
-typedef struct dlhandle_s {
-    CURL            *curl;
-    size_t          fileSize;
-    size_t          position;
-    double          speed;
-    char            filePath[1024];
-    char            URL[2048];
-    char            *tempBuffer;
-    qboolean        inuse;
-    download_t      *handle;
-} dlhandle_t;
-
-//we need this high in case a sudden server switch causes a bunch of people
-//to connect, we want to be able to download their configs
-#define MAX_DOWNLOADS   16
-
-//size limits for configs, must be power of two
-#define MAX_DLSIZE  0x100000    // 1 MiB
-#define MIN_DLSIZE  0x8000      // 32 KiB
-
 dlhandle_t downloads[MAX_DOWNLOADS];
 
 static CURLM                *multi = NULL;
 static unsigned             handleCount = 0;
-
 static char                 otdm_api_ip[16];
 static char                 hostHeader[64];
 static struct curl_slist    *http_header_slist;
-
 static time_t               last_dns_lookup;
 
-void HandleDownload (download_t *download, char *buff, int len, int code)
-{
-    //handle went invalid (client->pers->download = zeroed), just ignore this download completely.
-    /*
-    if (!download->inuse) {
-        return;
-    }
-    */
-
-    //FIXME: observed a crash here due to NULL initiator
+/**
+ *
+ */
+void HandleDownload(download_t *download, char *buff, int len, int code) {
     if (!download->initiator) {
         gi.dprintf("HandleDownload: NULL initiator");
     }
-
-    //player left before download finished, lame!
-    //note on an extremely poor connection it's possible another player since occupied their slot, but
-    //for that to happen, the download must take 3+ seconds which should be unrealistic, so i don't
-    //deal with it.
-    //if (!download->initiator->inuse || download->initiator->client->pers.uniqueid != download->unique_id) {
-    //download->initiator = NULL;
-    //}
-
     download->onFinish(download, code, (byte *)buff, len);
 }
 
-/*
-===============
-HTTP_EscapePath
-
-Properly escapes a path with HTTP %encoding. libcurl's function
-seems to treat '/' and such as illegal chars and encodes almost
-the entire URL...
-===============
-*/
-static void HTTP_EscapePath(const char *filePath, char *escaped)
-{
+/**
+ * Properly escapes a path with HTTP %encoding. libcurl's function seems to
+ * treat '/' and such as illegal chars and encodes almost the entire URL...
+ */
+static void HTTP_EscapePath(const char *filePath, char *escaped) {
     int     i;
     size_t  len;
     char    *p;
@@ -136,15 +79,10 @@ static void HTTP_EscapePath(const char *filePath, char *escaped)
     }
 }
 
-/*
-===============
-HTTP_Recv
-
-libcurl callback.
-===============
-*/
-static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream)
-{
+/**
+ * libcurl callback
+ */
+static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream) {
     dlhandle_t  *dl;
     size_t      new_size, bytes;
 
@@ -192,8 +130,10 @@ oversize:
     return 0;
 }
 
-int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr)
-{
+/**
+ * Troubleshooting
+ */
+int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr) {
     if (type == CURLINFO_TEXT) {
         char    buff[4096];
         if (size > sizeof(buff)-1) {
@@ -205,27 +145,19 @@ int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr)
             gi.dprintf ("\n");
         }
     }
-
     return 0;
 }
 
-/*
-===============
-HTTP_ResolveOTDMServer
-
-Resolve the g_http_domain and cache it, so we don't do DNS
-lookups at critical times (eg mid match).
-===============
-*/
-void HTTP_ResolveVPNServer(void)
-{
+/**
+ *
+ */
+void HTTP_ResolveVPNServer(void) {
     if (!http_enable) {
         return;
     }
 
     //re-resolve if its been more than one day since we last did it
-    if (time(NULL) - last_dns_lookup > 86400)
-    {
+    if (time(NULL) - last_dns_lookup > 86400) {
         gi.cprintf(NULL, PRINT_HIGH, "Resolving VPN API server %s -> ", vpn_host);
         struct hostent  *h;
         h = gethostbyname(vpn_host);
@@ -235,24 +167,16 @@ void HTTP_ResolveVPNServer(void)
             gi.dprintf ("WARNING: Could not resolve VPN API server '%s'. HTTP functions unavailable.\n", vpn_host);
             return;
         }
-
         time(&last_dns_lookup);
-
         Q_strncpy(otdm_api_ip, inet_ntoa (*(struct in_addr *)h->h_addr_list[0]), sizeof(otdm_api_ip)-1);
         gi.cprintf(NULL, PRINT_HIGH, "%s\n", otdm_api_ip);
     }
 }
 
-/*
-===============
-HTTP_StartDownload
-
-Actually starts a download by adding it to the curl multi
-handle.
-===============
-*/
-void HTTP_StartDownload(dlhandle_t *dl)
-{
+/**
+ * Actually starts a download by adding it to the curl multi handle.
+ */
+void HTTP_StartDownload(dlhandle_t *dl) {
     char escapedFilePath[1024*3];
 
     dl->tempBuffer = NULL;
@@ -263,8 +187,6 @@ void HTTP_StartDownload(dlhandle_t *dl)
     if (!dl->curl) {
         dl->curl = curl_easy_init();
     }
-
-    //HTTP_EscapePath(dl->filePath, escapedFilePath);
 
     // format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
     snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", vpn_host, dl->filePath);
@@ -307,26 +229,21 @@ void HTTP_StartDownload(dlhandle_t *dl)
     handleCount++;
 }
 
-/*
-===============
-HTTP_Init
-
-Init libcurl.
-===============
-*/
-void HTTP_Init(void)
-{
+/**
+ *
+ */
+void HTTP_Init(void) {
     curl_global_init(CURL_GLOBAL_NOTHING);
     multi = curl_multi_init();
-
     snprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
     http_header_slist = curl_slist_append(http_header_slist, hostHeader);
-
     gi.dprintf("%s initialized.\n", curl_version());
 }
 
-void HTTP_Shutdown(void)
-{
+/**
+ *
+ */
+void HTTP_Shutdown(void) {
     if (multi) {
         curl_multi_cleanup(multi);
         multi = NULL;
@@ -335,16 +252,11 @@ void HTTP_Shutdown(void)
     curl_global_cleanup();
 }
 
-/*
-===============
-CL_FinishHTTPDownload
-
-A download finished, find out what it was, whether there were any errors and
-if so, how severe. If none, rename file and other such stuff.
-===============
-*/
-static void HTTP_FinishDownload(void)
-{
+/**
+ * A download finished, find out what it was, whether there were any errors and
+ * if so, how severe. If none, rename file and other such stuff.
+ */
+static void HTTP_FinishDownload(void) {
     int         msgs_in_queue;
     CURLMsg     *msg;
     CURLcode    result;
@@ -427,15 +339,15 @@ static void HTTP_FinishDownload(void)
         //all weird when reusing a download slot in this way. if you can figure
         //out why, please let me know.
         curl_multi_remove_handle(multi, dl->curl);
-
         dl->inuse = qfalse;
-
         gi.dprintf("HTTP: Finished %s: %.f bytes, %.2fkB/sec\n", dl->URL, fileSize, (fileSize / 1024.0) / timeTaken);
     } while (msgs_in_queue > 0);
 }
 
-qboolean HTTP_QueueDownload(download_t *d)
-{
+/**
+ *
+ */
+qboolean HTTP_QueueDownload(download_t *d) {
     unsigned    i;
 
     if (handleCount == MAX_DOWNLOADS) {
@@ -470,16 +382,11 @@ qboolean HTTP_QueueDownload(download_t *d)
     return qtrue;
 }
 
-/*
-===============
-HTTP_RunDownloads
-
-This calls curl_multi_perform to actually do stuff. Called every frame to process
-downloads.
-===============
-*/
-void HTTP_RunDownloads (void)
-{
+/**
+ * This calls curl_multi_perform to actually do stuff. Called every frame to
+ * process downloads.
+ */
+void HTTP_RunDownloads(void) {
     int         newHandleCount;
     CURLMcode   ret;
 

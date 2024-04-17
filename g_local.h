@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_crypto.h"
 #include "g_disable.h"
 #include "g_flood.h"
+#include "g_http.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -856,21 +857,6 @@ typedef struct {
     char            network[50];
     char            asn[10];
 } vpn_t;
-
-typedef enum {
-    DL_NONE,
-    DL_VPNAPI,
-} dltype_t;
-
-typedef struct download_s {
-    edict_t     *initiator;
-    //unsigned    unique_id;
-    dltype_t    type;
-    //char        name[32];
-    char        path[1024];
-    void        (*onFinish)(struct download_s *, int, byte *, int);
-    //qboolean    inuse;
-} download_t;
 
 typedef struct {
     qboolean admin;
@@ -1756,12 +1742,6 @@ extern block_model block_models[MAX_BLOCK_MODELS];
 
 void LookupVPNStatus(edict_t *ent);
 void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
-void HandleDownload (download_t *download, char *buff, int len, int code);
-void HTTP_ResolveVPNServer(void);
-void HTTP_Init(void);
-void HTTP_Shutdown(void);
-qboolean HTTP_QueueDownload(download_t *d);
-void HTTP_RunDownloads (void);
 
 void vpnUsersRun(int startarg, edict_t *ent, int client);
 
