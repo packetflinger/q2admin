@@ -2,6 +2,7 @@
  * Q2Admin
  * Text flood controls
  */
+#pragma once
 
 #define FLOODFILE       "q2a_flood.cfg"
 #define FLOODCMD        "[sv] !floodcmd [SW/EX/RE] \"command\"\n"
