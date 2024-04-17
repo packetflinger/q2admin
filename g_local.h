@@ -53,6 +53,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_log.h"
 #include "g_lrcon.h"
 #include "g_queue.h"
+#include "g_spawn.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1528,20 +1529,6 @@ void generateRandomString(char *buffer, int length);
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
 void reloadLoginFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
-
-// zb_spawn.c
-qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
-qboolean checkDisabledEntities(char *classname);
-void freeSpawnLists(void);
-void freeOneLevelSpawnLists(void);
-void readSpawnLists(void);
-void reloadSpawnFileRun(int startarg, edict_t *ent, int client);
-void listspawnsRun(int startarg, edict_t *ent, int client);
-void displayNextSpawn(edict_t *ent, int client, long floodcmd);
-void spawncmdRun(int startarg, edict_t *ent, int client);
-void spawnDelRun(int startarg, edict_t *ent, int client);
-void linkentity_internal(edict_t *ent);
-void unlinkentity_internal(edict_t *ent);
 
 // zb_vote.c
 void freeVoteLists(void);

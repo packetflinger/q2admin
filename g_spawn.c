@@ -20,26 +20,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define SPAWN_MAXCMDS         50
-
-typedef struct {
-    char *spawncmd;
-    byte type;
-    qboolean onelevelflag;
-    regex_t *r;
-} spawncmd_t;
-
-#define SPAWN_SW  0
-#define SPAWN_EX  1
-#define SPAWN_RE  2
-
 spawncmd_t spawncmds[SPAWN_MAXCMDS];
 int maxspawn_cmds = 0;
-
-
-
 int entity_classname_offset = (sizeof (struct edict_s)) + 20; // default byte offset to the classname variable.
 
+/**
+ *
+ */
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
     FILE *spawnfile;
     unsigned int uptoLine = 0;
@@ -115,17 +102,17 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
 
                 // don't allow disabling worldspawn. Bad things will happen
                 if (regexec(spawncmds[maxspawn_cmds].r, "WORLDSPAWN", 0, 0, 0) != REG_NOMATCH){
-                	q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
-                	spawncmds[maxspawn_cmds].r = 0;
-                	spawncmds[maxspawn_cmds].type = SPAWN_EX;
-                	continue;
+                    q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
+                    spawncmds[maxspawn_cmds].r = 0;
+                    spawncmds[maxspawn_cmds].type = SPAWN_EX;
+                    continue;
                 }
             } else {
-            	// Don't allow disabling worldspawn. Bad things will happen
-            	if (startContains(spawncmds[maxspawn_cmds].spawncmd, "world")) {
-            		q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
-            		continue;
-            	}
+                // Don't allow disabling worldspawn. Bad things will happen
+                if (startContains(spawncmds[maxspawn_cmds].spawncmd, "world")) {
+                    q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
+                    continue;
+                }
                 spawncmds[maxspawn_cmds].r = 0;
             }
 
@@ -138,12 +125,13 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
             gi.dprintf("Error loading SPAWN from line %d in file %s\n", uptoLine, spawnname);
         }
     }
-
     fclose(spawnfile);
-
     return TRUE;
 }
 
+/**
+ *
+ */
 void freeSpawnLists(void) {
     while (maxspawn_cmds) {
         maxspawn_cmds--;
@@ -155,6 +143,9 @@ void freeSpawnLists(void) {
     }
 }
 
+/**
+ *
+ */
 void freeOneLevelSpawnLists(void) {
     int spawn = 0;
 
@@ -177,78 +168,83 @@ void freeOneLevelSpawnLists(void) {
     }
 }
 
+/**
+ *
+ */
 void readSpawnLists(void) {
     qboolean ret;
 
     freeSpawnLists();
-
     ret = ReadSpawnFile(configfile_spawn->string, FALSE);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_spawn->string);
     if (ReadSpawnFile(buffer, FALSE)) {
         ret = TRUE;
     }
-
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_spawn->string), IW_SPAWNSETUPLOAD, 0.0);
     }
 }
 
+/**
+ *
+ */
 void reloadSpawnFileRun(int startarg, edict_t *ent, int client) {
     readSpawnLists();
     gi.cprintf(ent, PRINT_HIGH, "Disbled entities reloaded.\n");
 }
 
+/**
+ *
+ */
 qboolean checkforspawncmd(char *cp, int spawncmd) {
     switch (spawncmds[spawncmd].type) {
         case SPAWN_SW:
             return startContains(cp, spawncmds[spawncmd].spawncmd);
-
         case SPAWN_EX:
             return !Q_stricmp(cp, spawncmds[spawncmd].spawncmd);
-
         case SPAWN_RE:
             return (regexec(spawncmds[spawncmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-
     return FALSE;
 }
 
+/**
+ *
+ */
 qboolean checkDisabledEntities(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
-
     for (i = 0; i < maxspawn_cmds; i++) {
         if (checkforspawncmd(buffer, i)) {
             return TRUE;
         }
     }
-
     return FALSE;
 }
 
-//===================================================================
-
+/**
+ *
+ */
 void listspawnsRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPSPAWN, 0, 0, 0);
-
     gi.cprintf(ent, PRINT_HIGH, "Start disbled-entities List:\n");
 }
 
+/**
+ *
+ */
 void displayNextSpawn(edict_t *ent, int client, long spawncmd) {
     if (spawncmd < maxspawn_cmds) {
         switch (spawncmds[spawncmd].type) {
             case SPAWN_SW:
                 gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
-
             case SPAWN_EX:
                 gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
-
             case SPAWN_RE:
                 gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
@@ -260,8 +256,9 @@ void displayNextSpawn(edict_t *ent, int client, long spawncmd) {
     }
 }
 
-#define SPAWNCMD     "[sv] !spawncmd [SW/EX/RE] \"command\"\n"
-
+/**
+ *
+ */
 void spawncmdRun(int startarg, edict_t *ent, int client) {
     char *cmd;
     int len;
@@ -340,8 +337,9 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
     maxspawn_cmds++;
 }
 
-#define SPAWNDELCMD     "[sv] !spawndel spawnnum\n"
-
+/**
+ *
+ */
 void spawnDelRun(int startarg, edict_t *ent, int client) {
     int spawn;
 
@@ -370,28 +368,29 @@ void spawnDelRun(int startarg, edict_t *ent, int client) {
     }
 
     maxspawn_cmds--;
-
     gi.cprintf(ent, PRINT_HIGH, "Disbled-entities command deleted\n");
 }
 
+/**
+ *
+ */
 void linkentity_internal(edict_t *ent) {
     if (spawnentities_internal_enable && spawnentities_enable) {
         if (checkDisabledEntities(*((char **) ((unsigned long) ent + entity_classname_offset)))) {
             char **classnameptr = ((char **) ((unsigned long) ent + entity_classname_offset));
-
             *classnameptr = NULL;
             ent->inuse = FALSE;
             return;
         }
     }
-
     logEvent(LT_ENTITYCREATE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0);
-
     gi.linkentity(ent);
 }
 
+/**
+ *
+ */
 void unlinkentity_internal(edict_t *ent) {
     logEvent(LT_ENTITYDELETE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0);
-
     gi.unlinkentity(ent);
 }
