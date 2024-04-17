@@ -5,6 +5,7 @@
 
 #pragma once
 
+#define SPAWNFILE       "q2a_spawn.cfg"
 #define SPAWNCMD        "[sv] !spawncmd [SW/EX/RE] \"command\"\n"
 #define SPAWNDELCMD     "[sv] !spawndel spawnnum\n"
 #define SPAWN_MAXCMDS   50
