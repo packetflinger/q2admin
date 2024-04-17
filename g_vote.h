@@ -5,6 +5,7 @@
 
 #pragma once
 
+#define VOTEFILE        "q2a_vote.cfg"
 #define VOTECMD         "[sv] !votecmd [SW/EX/RE] \"command\"\n"
 #define VOTEDELCMD      "[sv] !votedel votenum\n"
 #define VOTE_MAXCMDS    1024
