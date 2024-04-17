@@ -4,6 +4,7 @@
  */
 #pragma once
 
+#define CHECKVARFILE    "q2a_cvar.cfg"
 #define CHECKVARCMD     "[sv] !checkvarcmd [CT/RG] \"variable\" [\"value\" | \"lower\" \"upper\"]\n"
 #define CHECKVARDELCMD  "[sv] !checkvardel checkvarnum\n"
 

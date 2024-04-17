@@ -789,9 +789,6 @@ struct edict_s {
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
 #define BYPASSFILE      "q2a_bypass.cfg"
-#define CHECKVARFILE    "q2a_cvar.cfg"
-#define CLOUDFILE       "q2a_cloud.cfg"
-#define DISABLEFILE     "q2a_disable.cfg"
 #define FLOODFILE       "q2a_flood.cfg"
 #define LOGINFILE       "q2a_login.cfg"
 #define LOGLISTFILE     "q2a_log.cfg"

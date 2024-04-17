@@ -5,6 +5,7 @@
 
 #pragma once
 
+#define DISABLEFILE         "q2a_disable.cfg"
 #define DISABLECMD          "[sv] !disablecmd [SW/EX/RE] \"command\"\n"
 #define DISABLEDELCMD       "[sv] !disabledel disablenum\n"
 
