@@ -20,6 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+/**
+ *
+ */
 void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str) {
     char tmptext[128];
 
@@ -42,6 +45,9 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
     }
 }
 
+/**
+ *
+ */
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
     unsigned int i;
 
@@ -66,14 +72,15 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
                     (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t)
                 );
             }
-
             return TRUE;
         }
     }
-
     return FALSE;
 }
 
+/**
+ *
+ */
 void removeClientCommand(int client, byte command) {
     unsigned int i = 0;
 
@@ -90,6 +97,9 @@ void removeClientCommand(int client, byte command) {
     }
 }
 
+/**
+ *
+ */
 void removeClientCommands(int client) {
     proxyinfo[client].maxCmds = 0;
 }

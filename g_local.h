@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_init.h"
 #include "g_log.h"
 #include "g_lrcon.h"
+#include "g_queue.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -1527,12 +1528,6 @@ void generateRandomString(char *buffer, int length);
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
 void reloadLoginFileRun(int startarg, edict_t *ent, int client);
 void readIpFromLog(int client, edict_t *ent);
-
-// zb_msgqueue.c
-void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str);
-qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str);
-void removeClientCommand(int client, byte command);
-void removeClientCommands(int client);
 
 // zb_spawn.c
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
