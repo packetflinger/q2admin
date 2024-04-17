@@ -87,7 +87,6 @@ OBJS :=     g_anticheat.o \
             g_log.o \
             g_lrcon.o \
             g_main.o \
-            g_mdfour.o \
             g_net.o \
             g_queue.o \
             g_spawn.o \
