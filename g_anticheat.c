@@ -87,3 +87,91 @@ void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
     AC_LoadExceptions();
     gi.cprintf(ent, PRINT_HIGH, "Exceptionlist loaded.\n");
 }
+
+/**
+ *
+ */
+qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
+    URL_FILE *handle;
+    FILE *outf;
+
+    Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, blname);
+
+    // copy from url line by line with fgets //
+    outf = fopen(buffer, "w");
+    if (!outf) {
+        gi.dprintf("Error opening local hash list file.\n");
+        return FALSE;
+    }
+
+    handle = url_fopen(bfname, "r");
+    if (!handle) {
+        gi.dprintf("Error opening remote hash list file.\n");
+        fclose(outf);
+        return FALSE;
+    }
+
+    while (!url_feof(handle)) {
+        if (!url_fgets(buffer, sizeof (buffer), handle)) {
+            // if it did timeout we are not trying again forever... - hifi
+            gi.dprintf("Timeout while waiting for remote hashlist reply.\n");
+            url_fclose(handle);
+            fclose(outf);
+            return FALSE;
+        }
+        fwrite(buffer, 1, strlen(buffer), outf);
+    }
+    url_fclose(handle);
+    fclose(outf);
+    return TRUE;
+}
+
+/**
+ * download up to date anticheat config file including all execptions for r1ch
+ * ugly code.. ;x
+ */
+void getR1chHashList(char *hashname) {
+
+    char cfgHashList_enabled[100];
+    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+
+    if (cfgHashList_enabled[0] == '1') {
+        qboolean ret;
+        char cfgHashRemoteList[100];
+
+        if (!q2adminhashlist_dir || isBlank(q2adminhashlist_dir->string)) {
+            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, HASHLISTREMOTEDIR, sizeof(cfgHashRemoteList)), "/"), hashname);
+        } else {
+            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)), "/"), hashname);
+        }
+        ret = ReadRemoteHashListFile(cfgHashRemoteList, hashname);
+
+        if (!ret) {
+            gi.dprintf("WARNING: " HASHLISTREMOTEDIR " could not be found\n");
+            logEvent(LT_INTERNALWARN, 0, NULL, HASHLISTREMOTEDIR " could not be found", IW_BANSETUPLOAD, 0.0);
+        }
+    }
+}
+
+/**
+ * Load the cvar, hash and tokens hash lists
+ */
+void loadhashlist(void) {
+    char cfgHashList_enabled[100];
+    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+    if (cfgHashList_enabled[0] == '1') {
+        getR1chHashList("anticheat-cvars.txt");
+        getR1chHashList("anticheat-hashes.txt");
+        getR1chHashList("anticheat-tokens.txt");
+        q2a_strcpy(buffer, "svacupdate\n");
+        gi.AddCommandString(buffer);
+    }
+}
+
+/**
+ * Called for the reloadhashlist command
+ */
+void reloadhashlistRun(int startarg, edict_t *ent, int client) {
+    loadhashlist();
+    gi.cprintf(ent, PRINT_HIGH, "Remote hashlist loaded.\n");
+}

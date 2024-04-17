@@ -788,10 +788,6 @@ struct edict_s {
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define ANTICHEATEXCEPTIONREMOTEFILE    "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
-#define ANTICHEATEXCEPTIONLOCALFILE     "ac.cfg"
-#define HASHLISTREMOTEDIR               "http://www.q2admin.net/server"
-
 #define BYPASSFILE      "q2a_bypass.cfg"
 #define CHECKVARFILE    "q2a_cvar.cfg"
 #define CLOUDFILE       "q2a_cloud.cfg"
@@ -1569,10 +1565,6 @@ qboolean getLogicalValue(char *arg);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 void q_strupr(char *c);
 qboolean wildcard_match(char *pattern, char *haystack);
-
-// zb_ban.c
-void reloadhashlistRun(int startarg, edict_t *ent, int client);
-void loadhashlist(void);
 
 // zb_lrcon.c
 void readLRconLists(void);
