@@ -47,6 +47,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_checkvar.h"
 #include "g_crypto.h"
 #include "g_disable.h"
+#include "g_flood.h"
 
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
@@ -789,7 +790,6 @@ struct edict_s {
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
 #define BYPASSFILE      "q2a_bypass.cfg"
-#define FLOODFILE       "q2a_flood.cfg"
 #define LOGINFILE       "q2a_login.cfg"
 #define LOGLISTFILE     "q2a_log.cfg"
 #define LRCONFILE       "q2a_lrcon.cfg"
@@ -804,9 +804,6 @@ struct edict_s {
 #define DEFAULTTSDISPLAY        "%s is using a speed cheat."
 #define DEFAULTHACKDISPLAY      "%s is using a modified client."
 #define DEFAULTSKINCRASHMSG     "%s tried to crash the server."
-#define DEFAULTFLOODMSG         "%s changed names too many times."
-#define DEFAULTCHATFLOODMSG     "%s is making too much noise."
-#define DEFAULTSKINFLOODMSG     "%s changed skin too many times."
 #define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
 #define DEFAULTBANMSG           "You are banned from this server!"
@@ -1615,28 +1612,6 @@ void logfileRun(int startarg, edict_t *ent, int client);
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum);
 void logeventRun(int startarg, edict_t *ent, int client);
 void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly);
-
-// zb_flood.c
-void freeFloodLists(void);
-void readFloodLists(void);
-void reloadFloodFileRun(int startarg, edict_t *ent, int client);
-void nameChangeFloodProtectInit(char *arg);
-void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client);
-void chatFloodProtectInit(char *arg);
-void chatFloodProtectRun(int startarg, edict_t *ent, int client);
-void muteRun(int startarg, edict_t *ent, int client);
-void clientchatfloodprotectRun(int startarg, edict_t *ent, int client);
-qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg);
-qboolean checkForFlood(int client);
-qboolean checkforfloodcmds(char *cp);
-void listfloodsRun(int startarg, edict_t *ent, int client);
-void displayNextFlood(edict_t *ent, int client, long floodcmd);
-void floodcmdRun(int startarg, edict_t *ent, int client);
-void floodDelRun(int startarg, edict_t *ent, int client);
-void skinChangeFloodProtectInit(char *arg);
-void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client);
-void stifleRun(int startarg, edict_t *ent, int client);
-void unstifleRun(int startarg, edict_t *ent, int client);
 
 // zb_spawn.c
 qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag);
