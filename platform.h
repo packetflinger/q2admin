@@ -24,145 +24,140 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <sys/stat.h>
 
 #ifdef _WIN32
-#define DLLNAME ("gamex86.real.dll")
+  #define DLLNAME ("gamex86.real.dll")
 #elif defined(_WIN64)
-#define DLLNAME ("gamex86_64.real.dll")
+  #define DLLNAME ("gamex86_64.real.dll")
 #else /*_WIN32 */
-#ifdef __x86_64__
-#define DLLNAME ("gamex86_64.real.so")
-#else /*__x86_64__*/
-#define DLLNAME ("gamex86.real.so")
-#endif /*__x86_64__*/
+  #ifdef __x86_64__
+    #define DLLNAME ("gamex86_64.real.so")
+  #else /*__x86_64__*/
+    #define DLLNAME ("gamex86.real.so")
+  #endif /*__x86_64__*/
 #endif /*_WIN32*/
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <io.h>
-#include <direct.h>
-#include <winsock2.h>
-#include <winsock.h>
-#include <windows.h>
-#include <ws2tcpip.h>
-#define boolean        qboolean
+  #define WIN32_LEAN_AND_MEAN
+  #include <io.h>
+  #include <direct.h>
+  #include <winsock2.h>
+  #include <winsock.h>
+  #include <windows.h>
+  #include <ws2tcpip.h>
+  #define boolean        qboolean
 #else
-#include <dlfcn.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#define closesocket     close
-#define ioctlsocket     ioctl
+  #include <dlfcn.h>
+  #include <unistd.h>
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+  #include <netdb.h>
+  #include <sys/ioctl.h>
+  #define closesocket     close
+  #define ioctlsocket     ioctl
 #endif
 
 #ifdef _WIN32
-#define MSG_DONTWAIT 	0
-#define AI_ADDRCONFIG	0x00000400
+  #define MSG_DONTWAIT 	0
+  #define AI_ADDRCONFIG	0x00000400
 #endif
 
 #ifdef _WIN32
-#define PRIz    "Iu"
+  #define PRIz    "Iu"
 #else
-#define PRIz    "zu"
+  #define PRIz    "zu"
 #endif
 
 #ifdef _WIN32
-#define LIBSUFFIX   ".dll"
+  #define LIBSUFFIX   ".dll"
 #else
-#define LIBSUFFIX   ".so"
+  #define LIBSUFFIX   ".so"
 #endif
 
 #ifdef _WIN32
-#define PATH_SEP_CHAR       '\\'
-#define PATH_SEP_STRING     "\\"
+  #define PATH_SEP_CHAR       '\\'
+  #define PATH_SEP_STRING     "\\"
 #else
-#define PATH_SEP_CHAR       '/'
-#define PATH_SEP_STRING     "/"
+  #define PATH_SEP_CHAR       '/'
+  #define PATH_SEP_STRING     "/"
 #endif
 
 #ifdef _WIN32
-#define os_mkdir(p)         _mkdir(p)
-#define os_unlink(p)        _unlink(p)
-#define os_stat(p, s)       _stat(p, s)
-#define os_fstat(f, s)      _fstat(f, s)
-#define os_fileno(f)        _fileno(f)
-#define os_access(p, m)     _access(p, m)
-#define Q_ISREG(m)          (((m) & _S_IFMT) == _S_IFREG)
-#define Q_ISDIR(m)          (((m) & _S_IFMT) == _S_IFDIR)
-#define Q_STATBUF           struct _stat
+  #define os_mkdir(p)         _mkdir(p)
+  #define os_unlink(p)        _unlink(p)
+  #define os_stat(p, s)       _stat(p, s)
+  #define os_fstat(f, s)      _fstat(f, s)
+  #define os_fileno(f)        _fileno(f)
+  #define os_access(p, m)     _access(p, m)
+  #define Q_ISREG(m)          (((m) & _S_IFMT) == _S_IFREG)
+  #define Q_ISDIR(m)          (((m) & _S_IFMT) == _S_IFDIR)
+  #define Q_STATBUF           struct _stat
 #else
-#define os_mkdir(p)         mkdir(p, 0775)
-#define os_unlink(p)        unlink(p)
-#define os_stat(p, s)       stat(p, s)
-#define os_fstat(f, s)      fstat(f, s)
-#define os_fileno(f)        fileno(f)
-#define os_access(p, m)     access(p, m)
-#define Q_ISREG(m)          S_ISREG(m)
-#define Q_ISDIR(m)          S_ISDIR(m)
-#define Q_STATBUF           struct stat
-#define q2a_inet_ntop		inet_ntop
+  #define os_mkdir(p)         mkdir(p, 0775)
+  #define os_unlink(p)        unlink(p)
+  #define os_stat(p, s)       stat(p, s)
+  #define os_fstat(f, s)      fstat(f, s)
+  #define os_fileno(f)        fileno(f)
+  #define os_access(p, m)     access(p, m)
+  #define Q_ISREG(m)          S_ISREG(m)
+  #define Q_ISDIR(m)          S_ISDIR(m)
+  #define Q_STATBUF           struct stat
+  #define q2a_inet_ntop       inet_ntop
 #endif
 
 #ifndef F_OK
-#define F_OK    0
-#define X_OK    1
-#define W_OK    2
-#define R_OK    4
+  #define F_OK    0
+  #define X_OK    1
+  #define W_OK    2
+  #define R_OK    4
 #endif
 
 #ifdef __GNUC__
+  #define q_printf(f, a)      __attribute__((format(printf, f, a)))
+  #define q_noreturn          __attribute__((noreturn))
+  #define q_malloc            __attribute__((malloc))
+  #if __GNUC__ >= 4
+    #define q_sentinel          __attribute__((sentinel))
+  #else
+    #define q_sentinel
+  #endif
 
-#define q_printf(f, a)      __attribute__((format(printf, f, a)))
-#define q_noreturn          __attribute__((noreturn))
-#define q_malloc            __attribute__((malloc))
-#if __GNUC__ >= 4
-#define q_sentinel          __attribute__((sentinel))
-#else
-#define q_sentinel
-#endif
+  #define q_likely(x)         __builtin_expect(!!(x), 1)
+  #define q_unlikely(x)       __builtin_expect(!!(x), 0)
+  #if __GNUC__ >= 4
+    #define q_offsetof(t, m)    __builtin_offsetof(t, m)
+  #else
+    #define q_offsetof(t, m)    ((size_t)&((t *)0)->m)
+  #endif
 
-#define q_likely(x)         __builtin_expect(!!(x), 1)
-#define q_unlikely(x)       __builtin_expect(!!(x), 0)
-#if __GNUC__ >= 4
-#define q_offsetof(t, m)    __builtin_offsetof(t, m)
-#else
-#define q_offsetof(t, m)    ((size_t)&((t *)0)->m)
-#endif
+  #ifdef _WIN32
+    #define q_gameabi           __attribute__((callee_pop_aggregate_return(0)))
+  #else
+    #define q_gameabi
+  #endif
 
-#ifdef _WIN32
-#define q_gameabi           __attribute__((callee_pop_aggregate_return(0)))
-#else
-#define q_gameabi
-#endif
+  #ifdef _WIN32
+    #define q_exported          __attribute__((dllexport))
+  #else
+    #define q_exported          __attribute__((visibility("default")))
+  #endif
 
-#ifdef _WIN32
-#define q_exported          __attribute__((dllexport))
-#else
-#define q_exported          __attribute__((visibility("default")))
-#endif
-
-#define q_unused            __attribute__((unused))
-
+  #define q_unused            __attribute__((unused))
 #else /* __GNUC__ */
+  #define q_printf(f, a)
+  #define q_noreturn
+  #define q_malloc
+  #define q_sentinel
 
-#define q_printf(f, a)
-#define q_noreturn
-#define q_malloc
-#define q_sentinel
+  #define q_likely(x)         !!(x)
+  #define q_unlikely(x)       !!(x)
+  #define q_offsetof(t, m)    ((size_t)&((t *)0)->m)
 
-#define q_likely(x)         !!(x)
-#define q_unlikely(x)       !!(x)
-#define q_offsetof(t, m)    ((size_t)&((t *)0)->m)
+  #define q_gameabi
 
-#define q_gameabi
-
-#ifdef _WIN32
-#define q_exported          __declspec(dllexport)
-#else
-#define q_exported
-#endif
-
-#define q_unused
-
+  #ifdef _WIN32
+    #define q_exported          __declspec(dllexport)
+  #else
+    #define q_exported
+  #endif
+  #define q_unused
 #endif /* !__GNUC__ */
