@@ -46,6 +46,11 @@ typedef struct dlhandle_s {
 #define MAX_DLSIZE      0x100000    // 1 MiB
 #define MIN_DLSIZE      0x8000      // 32 KiB
 
+extern char http_cacert_path[256];
+extern qboolean http_debug;
+extern qboolean http_enable;
+extern qboolean http_verifyssl;
+
 int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
 void HandleDownload(download_t *download, char *buff, int len, int code);
 void HTTP_Init(void);
