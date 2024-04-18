@@ -840,7 +840,7 @@ q2acmd_t q2aCommands[] = {
         "q2adminrunmode",
         CMDWHERE_CFGFILE,
         CMDTYPE_NUMBER,
-        &q2adminrunmode
+        &runmode
     },
     {
         "randomwaitreporttime",
@@ -1471,7 +1471,7 @@ void dprintf_internal(char *fmt, ...) {
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 
-    if (q2adminrunmode == 0 || !proxyinfo) {
+    if (runmode == 0 || !proxyinfo) {
         gi.dprintf("%s", cbuffer);
         return;
     }
@@ -1549,7 +1549,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         gi.cprintf(ent, printlevel, "%s", cbuffer);
         return;
     }
@@ -1632,7 +1632,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
     va_end(arglist);
 	
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         gi.bprintf(printlevel, "%s", cbuffer);
         return;
     }
@@ -1722,7 +1722,7 @@ void AddCommandString_internal(char *text) {
     char *str;
     qboolean mapChangeFound = qfalse;
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         gi.AddCommandString(text);
         return;
     }
@@ -3052,7 +3052,7 @@ void ClientCommand(edict_t *ent) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ClientCommand(ent);
         G_MergeEdicts();
         return;
@@ -3144,7 +3144,7 @@ void ServerCommand(void) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ServerCommand();
         G_MergeEdicts();
         return;

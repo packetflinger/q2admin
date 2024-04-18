@@ -165,7 +165,7 @@ void serverLogZBot(edict_t *ent, int client) {
 }
 
 void Pmove_internal(pmove_t *pmove) {
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         gi.Pmove(pmove);
         return;
     }
@@ -188,7 +188,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     if (!dllloaded) return;
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ClientThink(ent, ucmd);
         G_MergeEdicts();
         return;
