@@ -86,13 +86,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DEAD_DEAD                      2
 #define DEAD_RESPAWNABLE               3
 
-// armor types
-#define ARMOR_NONE                     0
-#define ARMOR_JACKET                   1
-#define ARMOR_COMBAT                   2
-#define ARMOR_BODY                     3
-#define ARMOR_SHARD                    4
-
 // Contains the map entities string. This string is potentially a different
 // size than the original entities string due to cvar-based substitutions.
 extern char *finalentities;
