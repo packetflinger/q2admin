@@ -35,13 +35,13 @@
 
 
 // Remote Admin flags
-#define RFL_FRAGS       1 << 0    // 1
-#define RFL_CHAT        1 << 1    // 2
-#define RFL_TELEPORT    1 << 2    // 4
-#define RFL_INVITE      1 << 3    // 8
-#define RFL_FIND        1 << 4    // 16
-#define RFL_WHOIS       1 << 5    // 32
-#define RFL_DEBUG       1 << 11   // 1024
+#define RFL_FRAGS       BIT(0)
+#define RFL_CHAT        BIT(1)
+#define RFL_TELEPORT    BIT(2)
+#define RFL_INVITE      BIT(3)
+#define RFL_FIND        BIT(4)
+#define RFL_WHOIS       BIT(5)
+#define RFL_DEBUG       BIT(11)   // 1024
 #define RFL(f)          ((cloud.flags & RFL_##f) != 0)
 
 #define MAX_MSG_LEN     1000
@@ -77,7 +77,6 @@ typedef struct {
     uint32_t  index;    // for reading
 } message_queue_t;
 
-
 /**
  * For pinging the server, if no reply after x frames, assuming
  * connection is broken and reconnect.
@@ -89,7 +88,6 @@ typedef struct {
     uint8_t   miss_count;   // how many sent without a reply
 } ping_t;
 
-
 /**
  * Authenticating with a Remote Admin server is a 4-way handshake.
  * These describe those levels
@@ -100,7 +98,6 @@ typedef enum {
     RA_AUTH_SENT_SV_NONCE,
     RA_AUTH_REC_ACK,
 } ca_auth_t;
-
 
 /**
  * Connection specific stuff. Also holds the asymmetric and
@@ -154,7 +151,6 @@ typedef struct {
     ping_t           ping;
 } cloud_t;
 
-
 /**
  * Major client (q2server) to server (q2admin server)
  * commands.
@@ -176,7 +172,6 @@ typedef enum {
     CMD_AUTH
 } ca_client_cmd_t;
 
-
 /**
  * Server to client commands
  */
@@ -194,7 +189,6 @@ typedef enum {
     SCMD_GETPLAYERS,
 } ca_server_cmd_t;
 
-
 /**
  * Sub commands. These are initiated by players
  */
@@ -203,7 +197,6 @@ typedef enum {
     CMD_COMMAND_INVITE,
     CMD_COMMAND_WHOIS
 } remote_cmd_command_t;
-
 
 void        CA_Send(void);
 void        CA_Init(void);
@@ -267,9 +260,7 @@ void        CA_printf(char *fmt, ...);
 void        CA_dprintf(char *fmt, ...);
 void        ReadCloudConfigFile(void);
 
-
 extern cloud_t  cloud;
 extern cvar_t    *gamelib;
-
 
 #endif
