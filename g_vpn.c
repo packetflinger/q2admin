@@ -111,6 +111,10 @@ qboolean isVPN(int clientnum)
 void vpnUsersRun(int startarg, edict_t *ent, int client)
 {
     int i;
+    if (!vpn_enable) {
+        gi.cprintf(NULL, PRINT_HIGH, "VPN tracking is currently disabled\n");
+        return;
+    }
 
     for (i=0; i<(int)maxclients->value; i++) {
         if (!proxyinfo[i].inuse) {
