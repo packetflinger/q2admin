@@ -29,7 +29,7 @@
 #define CA_FRAME        (cloud.frame_number)
 
 // arg in seconds
-#define FUTURE_FRAME(t) (CA_FRAME + SECS_TO_FRAMES(t))
+#define FUTURE_CA_FRAME(t) (CA_FRAME + SECS_TO_FRAMES(t))
 
 #define CLOUDCMD_LAYOUT "sv !cloud <status|(dis|en)able|rule>"
 

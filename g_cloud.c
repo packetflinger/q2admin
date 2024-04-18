@@ -63,7 +63,7 @@ void CA_Init() {
     G_StartThread(&CA_LookupAddress, NULL);
 
     // delay connection by a few seconds
-    cloud.connect_retry_frame = FUTURE_FRAME(5);
+    cloud.connect_retry_frame = FUTURE_CA_FRAME(5);
 }
 
 /**
@@ -363,13 +363,13 @@ void CA_Disconnect(void)
 static uint32_t next_connect_frame(void)
 {
     if (cloud.connection_attempts < 12) {  // 2 minutes
-        return FUTURE_FRAME(10);
+        return FUTURE_CA_FRAME(10);
     } else if (cloud.connection_attempts < 20) { // 10 minutes
-        return FUTURE_FRAME(30);
+        return FUTURE_CA_FRAME(30);
     } else if (cloud.connection_attempts < 50) { // 30 minutes
-        return FUTURE_FRAME(60);
+        return FUTURE_CA_FRAME(60);
     } else {
-        return FUTURE_FRAME(120);
+        return FUTURE_CA_FRAME(120);
     }
 }
 
@@ -420,7 +420,7 @@ void CA_Connect(void)
     if (ret == -1) {
         CA_printf("error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
         cloud.state = CA_STATE_DISCONNECTED;
-        cloud.connect_retry_frame = FUTURE_FRAME(30);
+        cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
     }
 
     errno = 0;
@@ -492,7 +492,7 @@ void CA_CheckConnection(void)
         CA_printf("connection unfinished: %s\n", strerror(errno));
         closesocket(c->socket);
         cloud.state = CA_STATE_DISCONNECTED;
-        cloud.connect_retry_frame = FUTURE_FRAME(10);
+        cloud.connect_retry_frame = FUTURE_CA_FRAME(10);
         return;
     }
 
@@ -502,13 +502,13 @@ void CA_CheckConnection(void)
         getpeername(c->socket, (struct sockaddr *)&addr, &len);
 
         if (errno) {
-            cloud.connect_retry_frame = FUTURE_FRAME(30);
+            cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
             cloud.state = CA_STATE_DISCONNECTED;
             closesocket(c->socket);
         } else {
             CA_printf("connected\n");
             cloud.state = CA_STATE_CONNECTED;
-            cloud.ping.frame_next = FUTURE_FRAME(10);
+            cloud.ping.frame_next = FUTURE_CA_FRAME(10);
             cloud.connected_frame = CA_FRAME;
             CA_SayHello();
         }
@@ -923,7 +923,7 @@ void CA_DisconnectedPeer(void)
     // try reconnecting a reasonably random amount of time later
     srand((unsigned) time(NULL));
     secs = rand() & 0xff;
-    cloud.connect_retry_frame = FUTURE_FRAME(10) + secs;
+    cloud.connect_retry_frame = FUTURE_CA_FRAME(10) + secs;
     CA_dprintf("trying to reconnect in %d seconds\n",
         FRAMES_TO_SECS(cloud.connect_retry_frame - cloud.frame_number)
     );
