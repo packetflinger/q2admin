@@ -98,8 +98,6 @@ extern char *finalentities;
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define CFGFILE         "q2admin.cfg"
-
 #define DEFAULTRECONNECTMSG     "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."
 
 #define DEFAULTUSERDISPLAY      "%s is using a client side proxy."

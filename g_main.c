@@ -18,20 +18,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// g_main.c
-//
-// copyright 2000 Shane Powell
-//
-
 #include "g_local.h"
 
+#define CFGFILE         "q2admin.cfg"
+
 #if defined(_WIN32) || defined(_WIN64)
-HINSTANCE hdll;
+  HINSTANCE hdll;
 #else
-void *hdll = NULL;
+  void *hdll = NULL;
 #endif
 
 typedef game_export_t *GAMEAPI(game_import_t *import);
@@ -47,49 +41,48 @@ qboolean soloadlazy;
 
 char moddir[256];
 
+/**
+ * Called from server when shutting down
+ */
 void ShutdownGame(void) {
-
     profile_init(1);
     profile_init(2);
 
-    if (!dllloaded) return;
-
+    if (!dllloaded) {
+        return;
+    }
     if (whois_active) {
         whois_write_file();
-        gi.TagFree(whois_details);
+        G_Free(whois_details);
     }
-
     if (q2adminrunmode) {
         profile_start(1);
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
         profile_start(2);
     }
-
-    gi.TagFree(finalentities);
-
+    G_Free(finalentities);
     CA_Shutdown();
 
-    // reset the password just in case something has gone wrong...
     lrcon_reset_rcon_password(0, 0, 0);
     ge_mod->Shutdown();
 
     if (q2adminrunmode) {
         profile_stop(2, "mod->ShutdownGame", 0, NULL);
     }
-
 #if (defined(_WIN32) || defined(_WIN64))
     FreeLibrary(hdll);
 #else
     dlclose(hdll);
 #endif
-
     dllloaded = qfalse;
-
     if (q2adminrunmode) {
         profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
     }
 }
 
+/**
+ * Run from server every FPS
+ */
 void G_RunFrame(void) {
     unsigned int j, required_cmdlist;
 
@@ -106,7 +99,9 @@ void G_RunFrame(void) {
     profile_init_2(1);
     profile_init_2(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->RunFrame();
@@ -816,9 +811,7 @@ void G_RunFrame(void) {
     if (client >= maxclients->value) {
         client = -1;
     }
-
     checkOnVoting();
-
     HTTP_RunDownloads();
 
     profile_start(2);
@@ -831,26 +824,20 @@ void G_RunFrame(void) {
     profile_stop_2(1, "q2admin->G_RunFrame", 0, NULL);
 }
 
-
-/*
-=================
-GetGameAPI
-
-Returns a pointer to the structure with all entry points
-and global variables
-=================
+/**
+ * Returns a pointer to the structure with all entry points and global
+ * variables
  */
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
     cvar_t *gamelib;
+    unsigned int i;
 
     dllloaded = qfalse;
     gi = *import;
 
     q2a_strcpy(version, "r");
     q2a_strcat(version, Q2A_COMMIT);
-
-    //gi.dprintf("Q2Admin %s\n", version);
 
     // real game lib will use these internal functions
     import->bprintf = bprintf_internal;
@@ -864,21 +851,17 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     ge.Init = InitGame;
     ge.Shutdown = ShutdownGame;
     ge.SpawnEntities = SpawnEntities;
-
     ge.WriteGame = WriteGame;
     ge.ReadGame = ReadGame;
     ge.WriteLevel = WriteLevel;
     ge.ReadLevel = ReadLevel;
-
     ge.ClientThink = ClientThink;
     ge.ClientConnect = ClientConnect;
     ge.ClientUserinfoChanged = ClientUserinfoChanged;
     ge.ClientDisconnect = ClientDisconnect;
     ge.ClientBegin = ClientBegin;
     ge.ClientCommand = ClientCommand;
-
     ge.RunFrame = G_RunFrame;
-
     ge.ServerCommand = ServerCommand;
 
     serverbindip = gi.cvar("ip", "", 0);
@@ -914,11 +897,9 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
         q2a_strcpy(moddir, "baseq2");
     }
 
-    unsigned int i;
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         private_commands[i].command[0] = 0;
     }
-
 
     q2a_strcpy(client_msg, DEFAULTQ2AMSG);
     q2a_strcpy(zbotuserdisplay, DEFAULTUSERDISPLAY);
