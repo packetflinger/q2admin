@@ -461,7 +461,7 @@ extern int clientRemindTimeout;
 extern int randomwaitreporttime;
 extern int proxy_bwproxy;
 extern int proxy_nitro2;
-extern int runmode;
+extern int q2adminrunmode;
 extern int maxMsgLevel;
 
 extern char zbotmotd[256];
@@ -494,7 +494,7 @@ extern char zbot_testchar2;
 extern char testchars[];
 
 extern int testcharslength;
-extern int runmode;
+extern int q2adminrunmode;
 extern int maxclientsperframe;
 extern int framesperprocess;
 

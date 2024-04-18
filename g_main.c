@@ -53,7 +53,7 @@ void ShutdownGame(void) {
         whois_write_file();
         G_Free(whois_details);
     }
-    if (runmode) {
+    if (q2adminrunmode) {
         profile_start(1);
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
         profile_start(2);
@@ -64,7 +64,7 @@ void ShutdownGame(void) {
     lrcon_reset_rcon_password(0, 0, 0);
     ge_mod->Shutdown();
 
-    if (runmode) {
+    if (q2adminrunmode) {
         profile_stop(2, "mod->ShutdownGame", 0, NULL);
     }
 #if (defined(_WIN32) || defined(_WIN64))
@@ -73,7 +73,7 @@ void ShutdownGame(void) {
     dlclose(hdll);
 #endif
     dllloaded = qfalse;
-    if (runmode) {
+    if (q2adminrunmode) {
         profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
     }
 }
@@ -101,7 +101,7 @@ void G_RunFrame(void) {
         return;
     }
 
-    if (runmode == 0) {
+    if (q2adminrunmode == 0) {
         ge_mod->RunFrame();
         G_MergeEdicts();
         return;
@@ -923,7 +923,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
     readCfgFiles();
 
-    if (runmode) {
+    if (q2adminrunmode) {
         loadLogList();
     }
 
@@ -991,7 +991,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     dllloaded = qtrue;
     G_MergeEdicts();
 
-    if (runmode) {
+    if (q2adminrunmode) {
         logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);
     }
 
