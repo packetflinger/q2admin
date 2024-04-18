@@ -54,9 +54,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // maximum length of random strings used to check for hacked quake2.exe
 #define RANDOM_STRING_LENGTH           20
 
-
-#define G_Malloc(x)                    (gi.TagMalloc(x, TAG_GAME))
-
 // protocol bytes that can be directly added to messages
 #define SVC_STUFFTEXT                  11
 
@@ -79,6 +76,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME                       765  // clear when unloading the dll
 #define TAG_LEVEL                      766  // clear when loading a new level
+
+#define G_Malloc(x)                    (gi.TagMalloc(x, TAG_GAME))
+#define G_Free(x)                      (gi.TagFree(x))
 
 typedef enum {
     WEAPON_READY,
