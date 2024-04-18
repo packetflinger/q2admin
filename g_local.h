@@ -437,12 +437,6 @@ extern byte maxImpulses;
 
 extern qboolean displayimpulses;
 
-//r1ch 2005-01-26 disable hugely buggy commands BEGIN
-/*extern qboolean   play_team_enable;
-extern qboolean   play_all_enable;
-extern qboolean   play_person_enable;*/
-//r1ch 2005-01-26 disable hugely buggy commands END
-
 extern qboolean printmessageonplaycmds;
 extern qboolean say_person_enable;
 extern qboolean say_group_enable;
