@@ -26,10 +26,10 @@
 
 #define QUEUE_SIZE      0x55FF
 
-#define CURFRAME        (cloud.frame_number)
+#define CA_FRAME        (cloud.frame_number)
 
 // arg in seconds
-#define FUTURE_FRAME(t) (CURFRAME + SECS_TO_FRAMES(t))
+#define FUTURE_FRAME(t) (CA_FRAME + SECS_TO_FRAMES(t))
 
 #define CLOUDCMD_LAYOUT "sv !cloud <status|(dis|en)able|rule>"
 

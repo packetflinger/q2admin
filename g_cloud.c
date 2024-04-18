@@ -266,7 +266,7 @@ void CA_Ping(void)
     }
 
     // not time yet
-    if (cloud.ping.frame_next > CURFRAME) {
+    if (cloud.ping.frame_next > CA_FRAME) {
         return;
     }
 
@@ -280,9 +280,9 @@ void CA_Ping(void)
     }
 
     // state stuff
-    cloud.ping.frame_sent = CURFRAME;
+    cloud.ping.frame_sent = CA_FRAME;
     cloud.ping.waiting = qtrue;
-    cloud.ping.frame_next = CURFRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
+    cloud.ping.frame_next = CA_FRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
     // send it
     CA_WriteByte(CMD_PING);
@@ -509,7 +509,7 @@ void CA_CheckConnection(void)
             CA_printf("connected\n");
             cloud.state = CA_STATE_CONNECTED;
             cloud.ping.frame_next = FUTURE_FRAME(10);
-            cloud.connected_frame = CURFRAME;
+            cloud.connected_frame = CA_FRAME;
             CA_SayHello();
         }
     }
