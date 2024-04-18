@@ -47,6 +47,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_whois.h"
 #include "profile.h"
 
+extern game_import_t gi;        // server access from inside game lib
+extern game_export_t ge;        // game access from inside server
+extern game_export_t *ge_mod;   // real game access from inside proxy game lib
+extern edict_t *g_edicts;
+
+#define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
+#define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
+
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
 #define ALLOWED_MAXCMDS_SAFETY         45
@@ -83,11 +91,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 // Contains the map entities string. This string is potentially a different
 // size than the original entities string due to cvar-based substitutions.
 extern char *finalentities;
-
-extern game_import_t gi;
-extern game_export_t ge;
-
-extern edict_t *g_edicts;
 
 #define random()                       ((rand () & 0x7fff) / ((float)0x7fff))
 
@@ -353,9 +356,6 @@ enum _commands {
 #define MINIMUMTIMEOUT  5
 #define MAXSTARTTRY     500
 
-#define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
-#define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
-
 // where the command can't be run?
 #define CMDWHERE_CFGFILE        BIT(0)
 #define CMDWHERE_CLIENTCONSOLE  BIT(1)
@@ -378,10 +378,6 @@ typedef struct {
     CMDRUNFUNC *runfunc;
     CMDINITFUNC *initfunc;
 } q2acmd_t;
-
-extern game_import_t gi;        // server access from inside game lib
-extern game_export_t ge;        // game access from inside server
-extern game_export_t *ge_mod;   // real game access from inside proxy game lib
 
 extern cvar_t *rcon_password,
               *gamedir,
