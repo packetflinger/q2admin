@@ -10,6 +10,8 @@
 #define VOTEDELCMD      "[sv] !votedel votenum\n"
 #define VOTE_MAXCMDS    1024
 
+#define DEFAULTVOTECOMMAND  "vote"
+
 #define VOTE_SW  0
 #define VOTE_EX  1
 #define VOTE_RE  2
