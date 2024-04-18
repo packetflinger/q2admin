@@ -245,27 +245,6 @@ void G_StartThread(void *func, void *arg) {
 }
 
 /**
- * Replace the die() function pointer for each player edict.
- * For capturing frag events
- */
-static void ca_replace_die(void)
-{
-    static uint8_t i;
-
-    for (i=0; i<=cloud.maxclients; i++) {
-        if (proxyinfo[i].inuse) {
-
-            // replace player edict's die() pointer
-            if (proxyinfo[i].ent && *proxyinfo[i].ent->die != PlayerDie_Internal) {
-                proxyinfo[i].die = *proxyinfo[i].ent->die;
-                proxyinfo[i].ent->die = &PlayerDie_Internal;
-            }
-        }
-    }
-}
-
-
-/**
  *
  */
 void debug_print(char *str)
@@ -331,9 +310,6 @@ void CA_RunFrame(void)
 
         // receive any pending messages from server
         CA_ReadMessages();
-
-        // update player die() pointers
-        ca_replace_die();
 
         // periodically make sure connection is alive
         CA_Ping();
@@ -980,33 +956,6 @@ void CA_PlayerList(void)
             CA_WriteString("%s", ca_userinfo(i));
         }
     }
-}
-
-/**
- * Allows for RA to send frag notifications
- *
- * Self is the fragged player
- * inflictor is what did the damage (rocket, bolt, grenade)
- *   in the case of hitscan weapons, the inflictor will be the attacking player
- * attacker is the player doing the attacking
- * damage is how much dmg was done
- * point is where on the map the damage was dealt
- */
-void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point) {
-    uint8_t id = getEntOffset(self) - 1;
-    uint8_t aid = getEntOffset(attacker) - 1;
-    gitem_t *weapon;
-
-    if (self->deadflag != DEAD_DEAD) {
-        if (strcmp(attacker->classname,"player") == 0) {
-            CA_Frag(id, aid);
-        } else {
-            CA_Frag(id, aid);
-        }
-    }
-
-    // call the player's real die() function
-    proxyinfo[id].die(self, inflictor, attacker, damage, point);
 }
 
 /**

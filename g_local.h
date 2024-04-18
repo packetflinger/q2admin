@@ -627,7 +627,6 @@ typedef struct {
     int blocklist;
     int speedfreeze;
     int enteredgame;
-    void (*die)(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
     edict_t *ent;	// the actual entity
     int remote_reported;
     int next_report;
@@ -1144,8 +1143,6 @@ void readIpFromLog(int client, edict_t *ent);
 
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
-
-void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
 extern char client_msg[256];
 extern qboolean private_command_kick;
