@@ -658,6 +658,7 @@ typedef struct {
 #define CCMD_VOTED                  BIT(9)
 #define CCMD_VOTEYES                BIT(10)
 #define CCMD_NITRO2PROXY            BIT(11)
+#define CCMD_RATBOTDETECT           BIT(12)
 #define CCMD_RATBOTDETECTNAME       BIT(13)
 #define CCMD_ZBOTCLEAR              BIT(14)
 #define CCMD_RBOTCLEAR              BIT(15)
@@ -812,7 +813,6 @@ extern cvar_t *rcon_password,
               *q2adminbanremotetxt_enable,
               *q2adminanticheat_enable,
               *q2adminanticheat_file,
-#define CCMD_RATBOTDETECT           BIT(12)
               *q2adminhashlist_enable,
               *q2adminhashlist_dir,
               *tune_spawn_railgun,
