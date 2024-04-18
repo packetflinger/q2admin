@@ -333,7 +333,6 @@ skipwhite:
     } while (c > 32);
 
     if (len == MAX_TOKEN_CHARS) {
-        //    Com_Printf ("Token exceeded %i chars, discarded.\n", MAX_TOKEN_CHARS);
         len = 0;
     }
     com_token[len] = 0;
