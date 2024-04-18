@@ -509,31 +509,16 @@ extern char customServerCmdConnect[256];
 extern qboolean rcon_insecure;
 extern qboolean rcon_random_password;
 extern qboolean zbc_enable;
-extern qboolean nameChangeFloodProtect;
-extern qboolean skinChangeFloodProtect;
-
-extern char nameChangeFloodProtectMsg[256];
-extern char skinChangeFloodProtectMsg[256];
-extern char chatFloodProtectMsg[256];
 
 extern int maxlrcon_cmds;
 extern int lrcon_timeout;
 extern int logfilecheckcount;
-extern int nameChangeFloodProtectNum;
-extern int nameChangeFloodProtectSec;
-extern int nameChangeFloodProtectSilence;
-extern int skinChangeFloodProtectNum;
-extern int skinChangeFloodProtectSec;
-extern int skinChangeFloodProtectSilence;
-
-extern struct chatflood_s floodinfo;
 
 extern qboolean kickOnNameChange;
 extern qboolean disablecmds_enable;
 extern qboolean checkvarcmds_enable;
 extern qboolean swap_attack_use;
 extern qboolean timescaledetect;
-extern qboolean fpsFloodExempt;
 
 extern char *currentBanMsg;
 

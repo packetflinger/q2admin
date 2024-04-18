@@ -25,6 +25,20 @@ typedef struct {
     regex_t *r;
 } floodcmd_t;
 
+extern qboolean fpsFloodExempt;
+extern qboolean nameChangeFloodProtect;
+extern qboolean skinChangeFloodProtect;
+extern char nameChangeFloodProtectMsg[256];
+extern char skinChangeFloodProtectMsg[256];
+extern char chatFloodProtectMsg[256];
+extern int nameChangeFloodProtectNum;
+extern int nameChangeFloodProtectSec;
+extern int nameChangeFloodProtectSilence;
+extern int skinChangeFloodProtectNum;
+extern int skinChangeFloodProtectSec;
+extern int skinChangeFloodProtectSilence;
+extern struct chatflood_s floodinfo;
+
 void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
 qboolean checkForFlood(int client);
