@@ -91,12 +91,6 @@ extern edict_t *g_edicts;
 
 #define random()                       ((rand () & 0x7fff) / ((float)0x7fff))
 
-typedef struct {
-    void    (*aifunc)(edict_t *self, float dist);
-    float   dist;
-    void    (*thinkfunc)(edict_t *self);
-} mframe_t;
-
 #define MAXIMPULSESTOTEST 256
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
