@@ -461,7 +461,6 @@ extern int clientRemindTimeout;
 extern int randomwaitreporttime;
 extern int proxy_bwproxy;
 extern int proxy_nitro2;
-extern int runmode;
 extern int maxMsgLevel;
 
 extern char zbotmotd[256];
