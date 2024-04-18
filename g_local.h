@@ -646,13 +646,7 @@ extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
 
-#define SKIPBLANK(str) \
-{\
-    while(*str == ' ' || *str == '\t') \
-    { \
-        str++; \
-    } \
-}
+
 
 #define RATBOT_CHANGENAMETEST "pwsnskle"
 #define BOTDETECT_CHAR1   'F'

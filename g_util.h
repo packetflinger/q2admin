@@ -5,6 +5,14 @@
 
 #pragma once
 
+#define SKIPBLANK(str) \
+{\
+    while(*str == ' ' || *str == '\t') \
+    { \
+        str++; \
+    } \
+}
+
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 qboolean can_do_new_cmds(int client);
 void G_MergeEdicts(void);
