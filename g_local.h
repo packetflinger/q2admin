@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_ban.h"
 #include "g_base64.h"
 #include "g_checkvar.h"
+#include "g_cmd.h"
 #include "g_crypto.h"
 #include "g_disable.h"
 #include "g_flood.h"
@@ -356,29 +357,6 @@ enum _commands {
 #define MINIMUMTIMEOUT  5
 #define MAXSTARTTRY     500
 
-// where the command can't be run?
-#define CMDWHERE_CFGFILE        BIT(0)
-#define CMDWHERE_CLIENTCONSOLE  BIT(1)
-#define CMDWHERE_SERVERCONSOLE  BIT(2)
-
-// type of command
-#define CMDTYPE_NONE        0
-#define CMDTYPE_LOGICAL     1   // boolean
-#define CMDTYPE_NUMBER      2
-#define CMDTYPE_STRING      3
-
-typedef void CMDRUNFUNC(int startarg, edict_t *ent, int client);
-typedef void CMDINITFUNC(char *arg);
-
-typedef struct {
-    char *cmdname;
-    byte cmdwhere;
-    byte cmdtype;
-    void *datapoint;
-    CMDRUNFUNC *runfunc;
-    CMDINITFUNC *initfunc;
-} q2acmd_t;
-
 extern cvar_t *rcon_password,
               *gamedir,
               *maxclients,
@@ -598,7 +576,6 @@ extern char *currentBanMsg;
 extern proxyinfo_t *proxyinfo;
 extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
-extern q2acmd_t q2aCommands[];
 
 extern int clientsidetimeout;
 extern int zbotdetectactivetimeout;
@@ -646,8 +623,6 @@ extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
 
-
-
 #define RATBOT_CHANGENAMETEST "pwsnskle"
 #define BOTDETECT_CHAR1   'F'
 #define BOTDETECT_CHAR2   'U'
@@ -684,21 +659,6 @@ void *q2a_memset(void *dest, int c, size_t count);
 #endif
 
 const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
-
-// zb_cmd.c
-void readCfgFiles(void);
-qboolean readCfgFile(char *cfgfilename);
-void ClientCommand(edict_t *ent);
-void ServerCommand(void);
-void dprintf_internal(char *fmt, ...);
-void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...);
-void bprintf_internal(int printlevel, char *fmt, ...);
-void AddCommandString_internal(char *text);
-void stuffNextLine(edict_t *ent, int client);
-char *getArgs(void);
-int getClientsFromArg(int client, edict_t *ent, char *cp, char **text);
-edict_t *getClientFromArg(int client, edict_t *ent, int *cleintret, char *cp, char **text);
-void Cmd_Teleport_f(edict_t *ent);
 
 // zb_zbot.c
 int checkForOverflows(edict_t *ent, int client);

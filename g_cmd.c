@@ -22,32 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int lastClientCmd = -1;
 
-// prototypes for command structure
-void clientsidetimeoutInit(char *arg);
-void zbotversionRun(int startarg, edict_t *ent, int client);
-void clientsidetimeoutRun(int startarg, edict_t *ent, int client);
-void setadminRun(int startarg, edict_t *ent, int client);
-void maxrateallowedRun(int startarg, edict_t *ent, int client);
-void minrateallowedRun(int startarg, edict_t *ent, int client);
-void maxfpsallowedRun(int startarg, edict_t *ent, int client);
-void maxfpsallowedInit(char *arg);
-void minfpsallowedRun(int startarg, edict_t *ent, int client);
-void minfpsallowedInit(char *arg);
-void impulsesToKickOnRun(int startarg, edict_t *ent, int client);
-void impulsesToKickOnInit(char *arg);
-void zbotmotdRun(int startarg, edict_t *ent, int client);
-void stuffClientRun(int startarg, edict_t *ent, int client);
-void sayGroupRun(int startarg, edict_t *ent, int client);
-void sayPersonRun(int startarg, edict_t *ent, int client);
-void sayPersonLowRun(int startarg, edict_t *ent, int client);
-void ipRun(int startarg, edict_t *ent, int client);
-void kickRun(int startarg, edict_t *ent, int client);
-void cvarsetRun(int startarg, edict_t *ent, int client);
-void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
-void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client);
-void lockDownServerRun(int startarg, edict_t *ent, int client);
-void Cmd_Remote_Status_f(edict_t *ent);
-
 block_model block_models[MAX_BLOCK_MODELS] ={
     //projected model wallhack protection list.
     {
@@ -1454,36 +1428,39 @@ q2acmd_t q2aCommands[] = {
 //===================================================================
 char mutedText[8192] = "";
 
-void Cmd_Teleport_f(edict_t *ent)
-{
+/**
+ *
+ */
+void Cmd_Teleport_f(edict_t *ent) {
     if (!(cloud.flags & RFL_TELEPORT)) {
         gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
         return;
     }
-
     uint8_t id = getEntOffset(ent) - 1;
-
     CA_Teleport(id);
 }
 
+/**
+ *
+ */
 void Cmd_Invite_f(edict_t *ent) {
     if (!(cloud.flags & RFL_INVITE)) {
             gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
             return;
     }
-
     char *invitetext;
     uint8_t id = getEntOffset(ent) - 1;
-
     if (gi.argc() > 1) {
             invitetext = gi.args();
     } else {
             invitetext = "";
     }
-
     CA_Invite(id, invitetext);
 }
 
+/**
+ *
+ */
 void dprintf_internal(char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
@@ -1551,9 +1528,7 @@ void dprintf_internal(char *fmt, ...) {
             cp++;
         }
     }
-
     gi.dprintf("%s", cbuffer);
-
     if (clienti != -1 && (floodinfo.chatFloodProtect || proxyinfo[clienti].floodinfo.chatFloodProtect)) {
         if (checkForFlood(clienti)) {
             return;
@@ -1561,6 +1536,9 @@ void dprintf_internal(char *fmt, ...) {
     }
 }
 
+/**
+ *
+ */
 void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
@@ -1641,6 +1619,9 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     }
 }
 
+/**
+ *
+ */
 void bprintf_internal(int printlevel, char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
@@ -1734,6 +1715,9 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     }
 }
 
+/**
+ *
+ */
 void AddCommandString_internal(char *text) {
     char *str;
     qboolean mapChangeFound = qfalse;
@@ -1756,9 +1740,7 @@ void AddCommandString_internal(char *text) {
             if (str != buffer) {
                 q2a_memcpy(buffer, text, str - buffer);
             }
-
             q2a_memcpy(str, text + ((str + 4) - buffer), q2a_strlen(text) - ((str + 4) - buffer) + 1);
-
             text = buffer;
         }
     }
@@ -1773,7 +1755,6 @@ void AddCommandString_internal(char *text) {
         while (*str == ' ') {
             str++;
         }
-
         if (*str == '\"') {
             str++;
             str = text + (str - buffer);
@@ -1788,7 +1769,6 @@ void AddCommandString_internal(char *text) {
             while (*str == ' ') {
                 str++;
             }
-
             if (*str == '\"') {
                 str++;
                 str = text + (str - buffer);
@@ -1807,14 +1787,11 @@ void AddCommandString_internal(char *text) {
             gi.AddCommandString(buffer);
 
             q2a_strncpy(buffer, "exec ", sizeof(buffer));
-
             nameBuffer = buffer + q2a_strlen(buffer);
             while (*str && *str != '\"') {
                 *nameBuffer++ = *str++;
             }
-
             *nameBuffer = 0;
-
             q2a_strcat(buffer, "-pre.cfg\n");
             gi.AddCommandString(buffer);
         }
@@ -1822,12 +1799,11 @@ void AddCommandString_internal(char *text) {
         // force all clients to report if map changes
         uint32_t i;
         for (i=0; i<cloud.maxclients; i++) {
-        	if (proxyinfo[i].inuse) {
-        		proxyinfo[i].remote_reported = 0;
-        	}
+            if (proxyinfo[i].inuse) {
+                proxyinfo[i].remote_reported = 0;
+            }
         }
     }
-
     gi.AddCommandString(text);
 }
 
@@ -1836,34 +1812,35 @@ void AddCommandString_internal(char *text) {
 
 char argtext[2048];
 
+/**
+ *
+ */
 char *getArgs(void) {
     char *p;
 
     p = gi.args();
     q2a_strncpy(argtext, p, sizeof(argtext));
     p = argtext;
-
     if (*p == '"') {
         p++;
         p[q2a_strlen(p) - 1] = 0;
     }
-
     return p;
 }
 
+/**
+ *
+ */
 void processCommand(int cmdidx, int startarg, edict_t *ent) {
-	
-	// save value
+    // save value
     if (gi.argc() > startarg) {
         switch (q2aCommands[cmdidx].cmdtype) {
             case CMDTYPE_LOGICAL:
                 *((qboolean *) q2aCommands[cmdidx].datapoint) = getLogicalValue(gi.argv(startarg));
                 break;
-
             case CMDTYPE_NUMBER:
                 *((int *) q2aCommands[cmdidx].datapoint) = q2a_atoi(gi.argv(startarg));
                 break;
-
             case CMDTYPE_STRING:
                 processstring(q2aCommands[cmdidx].datapoint, gi.argv(startarg), 255, 0);
                 break;
@@ -1875,31 +1852,31 @@ void processCommand(int cmdidx, int startarg, edict_t *ent) {
         case CMDTYPE_LOGICAL:
             gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, *((qboolean *) q2aCommands[cmdidx].datapoint) ? "Yes" : "No");
             break;
-
         case CMDTYPE_NUMBER:
             gi.cprintf(ent, PRINT_HIGH, "%s = %d\n", q2aCommands[cmdidx].cmdname, *((int *) q2aCommands[cmdidx].datapoint));
             break;
-
         case CMDTYPE_STRING:
             gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, (char *) q2aCommands[cmdidx].datapoint);
             break;
     }
 }
 
+/**
+ *
+ */
 qboolean readCfgFile(char *cfgfilename) {
     FILE *cfgfile;
     char buff1[256];
     char buff2[256];
 
     cfgfile = fopen(cfgfilename, "rt");
-    if (!cfgfile)
-    	return qfalse;
+    if (!cfgfile) {
+        return qfalse;
+    }
 
     while (fgets(buffer, 256, cfgfile) != NULL) {
         char *cp = buffer;
-
         SKIPBLANK(cp);
-
         if (!(cp[0] == ';' || cp[0] == '\n' || isBlank(cp))) {
             if (breakLine(cp, buff1, buff2, sizeof (buff2) - 1)) {
                 unsigned int i;
@@ -1908,29 +1885,26 @@ qboolean readCfgFile(char *cfgfilename) {
                     if ((q2aCommands[i].cmdwhere & CMDWHERE_CFGFILE) && startContains(q2aCommands[i].cmdname, buff1)) {
                         if (q2aCommands[i].initfunc) {
                             (*q2aCommands[i].initfunc)(buff2);
-                        } else switch (q2aCommands[i].cmdtype) {
+                        } else {
+                            switch (q2aCommands[i].cmdtype) {
                                 case CMDTYPE_LOGICAL:
                                     *((qboolean *) q2aCommands[i].datapoint) = getLogicalValue(buff2);
                                     break;
-
                                 case CMDTYPE_NUMBER:
                                     *((int *) q2aCommands[i].datapoint) = q2a_atoi(buff2);
                                     break;
-
                                 case CMDTYPE_STRING:
                                     q2a_strcpy(q2aCommands[i].datapoint, buff2);
                                     break;
                             }
-
+                        }
                         break;
                     }
                 }
             }
         }
     }
-
     fclose(cfgfile);
-
     return qtrue;
 }
 
@@ -1946,17 +1920,18 @@ void readCfgFiles(void) {
     qboolean ret;
 
     ret = readCfgFile(q2aconfig->string);
-
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, q2aconfig->string);
     if (readCfgFile(buffer)) {
         ret = qtrue;
     }
-
     if (!ret) {
         gi.dprintf("Q2A: %s could not be found\n", q2aconfig->string);
     }
 }
 
+/**
+ *
+ */
 int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     int8_t clienti;
     uint8_t like, maxi;
@@ -2062,6 +2037,9 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     return 0;
 }
 
+/**
+ *
+ */
 edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
     int8_t clienti, foundclienti;
     uint8_t like, matchcount;
@@ -2105,7 +2083,6 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
         SKIPBLANK(cp);
     }
 
-
     if (like < 3) {
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             if (proxyinfo[clienti].inuse) {
@@ -2124,18 +2101,15 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                                 gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
                                 return NULL;
                             }
-
                             foundclienti = clienti;
                         }
                         break;
-
                     case 1:
                         if (stringContains(proxyinfo[clienti].name, strbuffer)) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
                                 return NULL;
                             }
-
                             foundclienti = clienti;
                         }
                         break;
@@ -2143,7 +2117,6 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
             }
         }
     }
-
     if (foundclienti != -1) {
         *text = cp;
         *clientret = foundclienti;
@@ -2151,7 +2124,6 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
     } else {
         gi.cprintf(ent, PRINT_HIGH, "no player name matches found.\n");
     }
-
     return NULL;
 }
 
@@ -2166,9 +2138,7 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
     char tmptext[2100];
 
     SKIPBLANK(cp);
-
     enti = getClientFromArg(client, ent, &clienti, cp, &text);
-
     if (enti) {
         // make sure the text doesn't overflow the internal buffer...
         if (q2a_strlen(text) > 2000) {
@@ -2202,10 +2172,8 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
                 text
         );
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
-
         return qfalse;
     }
-
     return qtrue;
 }
 
@@ -2227,14 +2195,12 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     enti = getClientFromArg(client, ent, &clienti, text, &text);
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-    	text[MAX_STRING_CHARS - 40] = 0;
+        text[MAX_STRING_CHARS - 40] = 0;
 
         // for server console
         Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", proxyinfo[clienti].name, text);
@@ -2248,6 +2214,9 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
     char *cp = args, *text;
     edict_t *enti;
@@ -2256,9 +2225,7 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
     int max;
 
     SKIPBLANK(cp);
-
     max = getClientsFromArg(client, ent, cp, &text);
-
     if (max) {
         // make sure the text doesn't overflow the internal buffer...
         if (q2a_strlen(text) > 2000) {
@@ -2298,13 +2265,14 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
                 cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
             }
         }
-
         return qfalse;
     }
-
     return qtrue;
 }
 
+/**
+ *
+ */
 void proxyDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -6;
     removeClientCommand(client, QCMD_TESTRATBOT2);
@@ -2324,16 +2292,17 @@ void proxyDetected(edict_t *ent, int client) {
             gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
         }
     }
-
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-
     if (disconnectuser) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
     }
 }
 
+/**
+ *
+ */
 void ratbotDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -3;
     removeClientCommand(client, QCMD_TESTRATBOT2);
@@ -2353,16 +2322,17 @@ void ratbotDetected(edict_t *ent, int client) {
             gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
         }
     }
-
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-
     if (disconnectuser) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
     }
 }
 
+/**
+ *
+ */
 void timescaleDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -5;
     removeClientCommand(client, QCMD_TESTRATBOT2);
@@ -2392,29 +2362,30 @@ void timescaleDetected(edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void hackDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -8;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     removeClientCommand(client, QCMD_TESTALIASCMD2);
-
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
-
     q2a_strncpy(buffer, hackuserdisplay, sizeof(buffer));
     q2a_strcat(buffer, "\n");
-
     gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
-
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-
     if (disconnectuser) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, hackuserdisplay);
     }
 }
 
+/**
+ *
+ */
 qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter) {
     unsigned int i, cnt, sameip;
     char abuffer[256];
@@ -2425,11 +2396,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     qboolean dont_print;
     char *cmd;
     char text[2048];
-
-    //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-    //edict_t *enti;
-    //int clienti;
-    //r1ch 2005-01-26 disable hugely buggy commands END
 
     if (client >= maxclients->value) {
         return qfalse;
@@ -3040,12 +3006,13 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0);
         return qfalse;
     }
-
     logEvent(LT_CLIENTCMDS, client, ent, proxyinfo[client].lastcmd, 0, 0.0);
-
     return qtrue;
 }
 
+/**
+ *
+ */
 void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         qboolean newcl_pitchspeed_enable = getLogicalValue(gi.argv(startarg));
@@ -3064,10 +3031,12 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
             cl_pitchspeed_enable = newcl_pitchspeed_enable;
         }
     }
-
     gi.cprintf(ent, PRINT_HIGH, "cl_pitchspeed_enable = %s\n", cl_pitchspeed_enable ? "Yes" : "No");
 }
 
+/**
+ *
+ */
 void ClientCommand(edict_t *ent) {
     char *cmd;
     cmd = gi.argv(0);
@@ -3136,16 +3105,17 @@ void ClientCommand(edict_t *ent) {
         checkForFlood(clientnum);
     }
     lastClientCmd = -1;
-	
     profile_stop(1, "q2admin->ClientCommand", 0, NULL);
 }
 
+/**
+ *
+ */
 qboolean doServerCommand(void) {
     char *cmd;
     uint8_t i;
 
     cmd = gi.argv(1);
-
     if (*cmd == '!') {
         for (i = 0; i < lengthof(q2aCommands); i++) {
             if ((q2aCommands[i].cmdwhere & CMDWHERE_SERVERCONSOLE) && startContains(q2aCommands[i].cmdname, cmd + 1)) {
@@ -3154,23 +3124,25 @@ qboolean doServerCommand(void) {
                 } else {
                     processCommand(i, 2, NULL);
                 }
-
                 return qfalse;
             }
         }
-
         gi.cprintf(NULL, PRINT_HIGH, "Unknown q2admin command!\n");
         return qfalse;
     }
-
     return qtrue;
 }
 
+/**
+ *
+ */
 void ServerCommand(void) {
     profile_init(1);
     profile_init(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (q2adminrunmode == 0) {
         ge_mod->ServerCommand();
@@ -3191,18 +3163,26 @@ void ServerCommand(void) {
     profile_stop(1, "q2admin->ServerCommand", 0, NULL);
 }
 
+/**
+ *
+ */
 void clientsidetimeoutInit(char *arg) {
     clientsidetimeout = q2a_atoi(arg);
-
     if (clientsidetimeout < MINIMUMTIMEOUT) {
         clientsidetimeout = MINIMUMTIMEOUT;
     }
 }
 
+/**
+ *
+ */
 void zbotversionRun(int startarg, edict_t *ent, int client) {
-	gi.cprintf(ent, PRINT_HIGH, "Q2Admin version %s\n", version);
+    gi.cprintf(ent, PRINT_HIGH, "Q2Admin version %s\n", version);
 }
 
+/**
+ *
+ */
 void clientsidetimeoutRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         clientsidetimeout = q2a_atoi(gi.argv(startarg));
@@ -3210,14 +3190,19 @@ void clientsidetimeoutRun(int startarg, edict_t *ent, int client) {
             clientsidetimeout = MINIMUMTIMEOUT;
         }
     }
-
     gi.cprintf(ent, PRINT_HIGH, "clientsidetimeout = %d\n", clientsidetimeout);
 }
 
+/**
+ *
+ */
 void setadminRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "You are already in q2admin's admin mode.\n");
 }
 
+/**
+ *
+ */
 void maxrateallowedRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         int newmaxrate = q2a_atoi(gi.argv(startarg));
@@ -3244,6 +3229,9 @@ void maxrateallowedRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void minrateallowedRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         int newminrate = q2a_atoi(gi.argv(startarg));
@@ -3292,6 +3280,9 @@ void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "cl_anglespeedkey_enable = %s\n", cl_anglespeedkey_enable ? "Yes" : "No");
 }
 
+/**
+ *
+ */
 void maxfpsallowedRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         int oldmaxfps = maxfpsallowed;
@@ -3325,6 +3316,9 @@ void maxfpsallowedRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void minfpsallowedRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         int oldminfps = minfpsallowed;
@@ -3358,22 +3352,29 @@ void minfpsallowedRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void maxfpsallowedInit(char *arg) {
     maxfpsallowed = q2a_atoi(arg);
-
     if (minfpsallowed && maxfpsallowed && maxfpsallowed < minfpsallowed) {
         maxfpsallowed = minfpsallowed;
     }
 }
 
+/**
+ *
+ */
 void minfpsallowedInit(char *arg) {
     minfpsallowed = q2a_atoi(arg);
-
     if (minfpsallowed && maxfpsallowed && maxfpsallowed < minfpsallowed) {
         minfpsallowed = maxfpsallowed;
     }
 }
 
+/**
+ *
+ */
 void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
     unsigned int i;
     char *cp = gi.argv(startarg);
@@ -3387,66 +3388,58 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
 
     while (startarg < gi.argc() && maxImpulses < MAXIMPULSESTOTEST) {
         impulsesToKickOn[maxImpulses] = q2a_atoi(gi.argv(startarg));
-
         maxImpulses++;
         startarg++;
     }
-
     gi.cprintf(ent, PRINT_HIGH, "impulsestokickon = ");
-
     if (maxImpulses) {
         gi.cprintf(ent, PRINT_HIGH, "%d", impulsesToKickOn[0]);
-
         for (i = 1; i < maxImpulses; i++) {
             gi.cprintf(ent, PRINT_HIGH, ", %d", impulsesToKickOn[i]);
         }
-
         gi.cprintf(ent, PRINT_HIGH, "\n");
     } else {
         gi.cprintf(ent, PRINT_HIGH, "ALL\n");
     }
 }
 
+/**
+ *
+ */
 void impulsesToKickOnInit(char *arg) {
     while (*arg && maxImpulses < MAXIMPULSESTOTEST) {
         impulsesToKickOn[maxImpulses] = q2a_atoi(arg);
-
         maxImpulses++;
-
         while (*arg && *arg != ' ') {
             arg++;
         }
-
         SKIPBLANK(arg);
     }
 }
 
+/**
+ *
+ */
 void zbotmotdRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         FILE *motdptr;
         int len, currentlen;
 
         processstring(zbotmotd, gi.argv(startarg), sizeof (zbotmotd), 0);
-
         motdptr = fopen(zbotmotd, "rt");
-
         if (!motdptr) {
             gi.cprintf(ent, PRINT_HIGH, "MOTD file could not be opened\n");
         } else {
-
             motd[0] = 0;
             len = 0;
             while (fgets(buffer, 256, motdptr)) {
                 currentlen = q2a_strlen(buffer);
-
                 if (len + currentlen > sizeof (motd)) {
                     break;
                 }
-
                 len += currentlen;
                 q2a_strcat(motd, buffer);
             }
-
             fclose(motdptr);
             gi.cprintf(ent, PRINT_HIGH, "MOTD Loaded\n");
         }
@@ -3456,6 +3449,9 @@ void zbotmotdRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void stuffClientRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -3469,27 +3465,20 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     enti = getClientFromArg(client, ent, &clienti, text, &text);
 
     if (enti) {
         SKIPBLANK(text);
-
         if (startContains(text, "FILE")) {
             text += 4;
             SKIPBLANK(text);
-
             if (proxyinfo[clienti].stuffFile) {
                 gi.cprintf(ent, PRINT_HIGH, "Client already being stuffed... please wait\n");
                 return;
             }
-
             processstring(buffer, text, sizeof (buffer) - 1, 0);
-
             proxyinfo[clienti].stuffFile = fopen(buffer, "rt");
-
             if (proxyinfo[clienti].stuffFile) {
                 addCmdQueue(clienti, QCMD_STUFFCLIENT, 0, 0, 0);
                 gi.cprintf(ent, PRINT_HIGH, "Stuffing client %d (%s)\n", clienti, proxyinfo[clienti].name);
@@ -3504,7 +3493,6 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
                 processstring(buffer, text, sizeof (buffer) - 2, 0);
             }
             q2a_strcat(buffer, "\n");
-
             stuffcmd(enti, buffer);
             gi.cprintf(ent, PRINT_HIGH, "Command sent to client!\n");
         }
@@ -3513,6 +3501,9 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void stuffNextLine(edict_t *ent, int client) {
     if (!proxyinfo[client].stuffFile) {
         return;
@@ -3528,6 +3519,9 @@ void stuffNextLine(edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void sayGroupRun(int startarg, edict_t *ent, int client) {
     char *text;
     char tmptext[MAX_STRING_CHARS];
@@ -3536,22 +3530,17 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
 
     // skip the first part (!say_xxx)
     text = getArgs();
-
     if (!ent) {
         while (*text != ' ') {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     max = getClientsFromArg(client, ent, text, &text);
-
     if (max) {
         if (q2a_strlen(text) > MAX_STRING_CHARS - 40) {
             text[MAX_STRING_CHARS - 40] = 0;
         }
-
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
                 enti = getEnt((clienti + 1));
@@ -3571,6 +3560,9 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void sayPersonRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -3579,15 +3571,12 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
 
     // skip the first part (!say_xxx)
     text = getArgs();
-
     if (!ent) {
         while (*text != ' ') {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     enti = getClientFromArg(client, ent, &clienti, text, &text);
 
     // make sure the text doesn't overflow the internal buffer...
@@ -3606,6 +3595,9 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void ipRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
@@ -3614,15 +3606,12 @@ void ipRun(int startarg, edict_t *ent, int client) {
 
     // skip the first part (!ip)
     text = getArgs();
-
     if (!ent) {
         while (*text != ' ') {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     enti = getClientFromArg(client, ent, &clienti, text, &text);
 
     // make sure the text doesn't overflow the internal buffer...
@@ -3634,6 +3623,9 @@ void ipRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void kickRun(int startarg, edict_t *ent, int client) {
     char *text;
     char tmptext[100];
@@ -3642,20 +3634,15 @@ void kickRun(int startarg, edict_t *ent, int client) {
 
     // skip the first part (!say_xxx)
     text = getArgs();
-
     if (!ent) {
         while (*text != ' ') {
             text++;
         }
     }
-
     SKIPBLANK(text);
-
     max = getClientsFromArg(client, ent, text, &text);
-
     if (max) {
         gi.AddCommandString("\n");
-
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
                 Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", clienti);
@@ -3667,6 +3654,9 @@ void kickRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ *
+ */
 void cvarsetRun(int startarg, edict_t *ent, int client) {
     char cbuffer[256];
     char *cvar = gi.argv(startarg);
@@ -3674,24 +3664,22 @@ void cvarsetRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() < startarg + 1) {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !cvarset <cvarname> <value>\n");
     }
-
     processstring(cbuffer, gi.argv(startarg + 1), 255, 0);
-
     if (Q_stricmp(cbuffer, "none") == 0) {
         cbuffer[0] = 0;
     }
-
     gi.cvar_set(cvar, cbuffer);
     gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", cvar, cbuffer);
 }
 
+/**
+ *
+ */
 void lockDownServerRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
         lockDownServer = getLogicalValue(gi.argv(startarg));
     }
-
     gi.cprintf(ent, PRINT_HIGH, "lock = %s\n", lockDownServer ? "Yes" : "No");
-
     // clear all the reconnect user info...
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
 }
