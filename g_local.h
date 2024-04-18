@@ -658,7 +658,6 @@ typedef struct {
 #define CCMD_VOTED                  BIT(9)
 #define CCMD_VOTEYES                BIT(10)
 #define CCMD_NITRO2PROXY            BIT(11)
-#define CCMD_RATBOTDETECT           BIT(12)
 #define CCMD_RATBOTDETECTNAME       BIT(13)
 #define CCMD_ZBOTCLEAR              BIT(14)
 #define CCMD_RBOTCLEAR              BIT(15)
@@ -774,9 +773,9 @@ enum _commands {
 #define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
 // where the command can't be run?
-#define CMDWHERE_CFGFILE        0x01
-#define CMDWHERE_CLIENTCONSOLE  0x02
-#define CMDWHERE_SERVERCONSOLE  0x04
+#define CMDWHERE_CFGFILE        BIT(0)
+#define CMDWHERE_CLIENTCONSOLE  BIT(1)
+#define CMDWHERE_SERVERCONSOLE  BIT(2)
 
 // type of command
 #define CMDTYPE_NONE        0
@@ -813,6 +812,7 @@ extern cvar_t *rcon_password,
               *q2adminbanremotetxt_enable,
               *q2adminanticheat_enable,
               *q2adminanticheat_file,
+#define CCMD_RATBOTDETECT           BIT(12)
               *q2adminhashlist_enable,
               *q2adminhashlist_dir,
               *tune_spawn_railgun,
@@ -1076,21 +1076,18 @@ extern int maxretryList;
 
 #define SKIPBLANK(str) \
 {\
-while(*str == ' ' || *str == '\t') \
-{ \
-str++; \
-} \
+    while(*str == ' ' || *str == '\t') \
+    { \
+        str++; \
+    } \
 }
 
 #define RATBOT_CHANGENAMETEST "pwsnskle"
 #define BOTDETECT_CHAR1   'F'
 #define BOTDETECT_CHAR2   'U'
 
-#define itoa(x, y, z)   itoaNotAUnixFunction(z, y, z)
-
 // zb_clib.c
 #ifdef Q2ADMINCLIB
-
 char *q2a_strcpy(char *strDestination, const char *strSource);
 char *q2a_strncpy(char *strDest, const char *strSource, size_t count);
 char *q2a_strcat(char *strDestination, const char *strSource);
@@ -1098,17 +1095,13 @@ char *q2a_strstr(const char *string, const char *strCharSet);
 char *q2a_strchr(const char *string, int c);
 int q2a_strcmp(const char *string1, const char *string2);
 size_t q2a_strlen(const char *string);
-
 int q2a_atoi(const char *string);
 double q2a_atof(const char *string);
-
 int q2a_memcmp(const void *buf1, const void *buf2, size_t count);
 void *q2a_memcpy(void *dest, const void *src, size_t count);
 void *q2a_memmove(void *dest, const void *src, size_t count);
 void *q2a_memset(void *dest, int c, size_t count);
-
 #else
-
 #define q2a_strcpy  strcpy
 #define q2a_strncpy strncpy
 #define q2a_strcat  strcat
@@ -1116,16 +1109,14 @@ void *q2a_memset(void *dest, int c, size_t count);
 #define q2a_strstr  strstr
 #define q2a_strchr  strchr
 #define q2a_strlen  strlen
-
 #define q2a_atoi    atoi
 #define q2a_atof    atof
-
 #define q2a_memcmp  memcmp
 #define q2a_memcpy  memcpy
 #define q2a_memmove memmove
 #define q2a_memset  memset
-
 #endif
+
 const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 
 // zb_cmd.c
@@ -1154,9 +1145,6 @@ void readIpFromLog(int client, edict_t *ent);
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
 
-// md4.c
-unsigned Com_BlockChecksum(void *buffer, int length);
-
 void PlayerDie_Internal(edict_t *self, edict_t *inflictor, edict_t *attacker, int damage, vec3_t point);
 
 extern char client_msg[256];
@@ -1172,8 +1160,6 @@ extern int msec_int;
 #define Q2A_COMMIT      "00~000000"
 #define Q2A_REVISION    0
 #endif
-
-#define DEFAULTQ2AVER   "1.0"
 
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
 
