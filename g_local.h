@@ -50,6 +50,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define CFGFILE         "q2admin.cfg"
 
+#define NAME(x)         (proxyinfo[x].name)
+
 extern game_import_t gi;        // server access from inside game lib
 extern game_export_t ge;        // game access from inside server
 extern game_export_t *ge_mod;   // real game access from inside proxy game lib
@@ -264,6 +266,10 @@ typedef struct {
 
 #define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
 
+/**
+ * These are commands that the server should do for or to the client. Clients
+ * have no say or influence on these commands.
+ */
 enum _commands {
     QCMD_STARTUP,
     QCMD_STARTUPTEST,
