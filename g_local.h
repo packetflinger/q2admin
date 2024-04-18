@@ -767,10 +767,6 @@ void stuff_private_commands(int client, edict_t *ent);
 extern int WHOIS_COUNT;
 extern int whois_active;
 extern user_details* whois_details;
-extern qboolean timers_active;
-extern int timers_min_seconds;
-extern int timers_max_seconds;
-
 
 typedef struct {
     char *model_name;
