@@ -80,13 +80,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define G_Malloc(x)                    (gi.TagMalloc(x, TAG_GAME))
 #define G_Free(x)                      (gi.TagFree(x))
 
-typedef enum {
-    WEAPON_READY,
-    WEAPON_ACTIVATING,
-    WEAPON_DROPPING,
-    WEAPON_FIRING
-} weaponstate_t;
-
 //deadflag
 #define DEAD_NO                        0
 #define DEAD_DYING                     1
