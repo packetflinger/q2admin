@@ -80,12 +80,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define G_Malloc(x)                    (gi.TagMalloc(x, TAG_GAME))
 #define G_Free(x)                      (gi.TagFree(x))
 
-//deadflag
-#define DEAD_NO                        0
-#define DEAD_DYING                     1
-#define DEAD_DEAD                      2
-#define DEAD_RESPAWNABLE               3
-
 // Contains the map entities string. This string is potentially a different
 // size than the original entities string due to cvar-based substitutions.
 extern char *finalentities;
