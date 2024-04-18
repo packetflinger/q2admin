@@ -18,6 +18,10 @@ typedef struct {
     user_dyn dyn[10];
 } user_details;
 
+extern int WHOIS_COUNT;
+extern int whois_active;
+extern user_details *whois_details;
+
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
 void whois_getid(int client, edict_t *ent);
 void whois(int client, edict_t *ent);

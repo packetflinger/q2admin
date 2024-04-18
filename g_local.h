@@ -764,10 +764,6 @@ typedef struct {
 extern priv_t private_commands[PRIVATE_COMMANDS];
 void stuff_private_commands(int client, edict_t *ent);
 
-extern int WHOIS_COUNT;
-extern int whois_active;
-extern user_details* whois_details;
-
 typedef struct {
     char *model_name;
 } block_model;
