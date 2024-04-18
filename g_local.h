@@ -117,123 +117,6 @@ typedef struct {
     void    (*thinkfunc)(edict_t *self);
 } mframe_t;
 
-typedef struct {
-    int         firstframe;
-    int         lastframe;
-    mframe_t    *frame;
-    void        (*endfunc)(edict_t *self);
-} mmove_t;
-
-typedef struct {
-    mmove_t     *currentmove;
-    int         aiflags;
-    int         nextframe;
-    float       scale;
-
-    void        (*stand)(edict_t *self);
-    void        (*idle)(edict_t *self);
-    void        (*search)(edict_t *self);
-    void        (*walk)(edict_t *self);
-    void        (*run)(edict_t *self);
-    void        (*dodge)(edict_t *self, edict_t *other, float eta);
-    void        (*attack)(edict_t *self);
-    void        (*melee)(edict_t *self);
-    void        (*sight)(edict_t *self, edict_t *other);
-    qboolean    (*checkattack)(edict_t *self);
-
-    float       pausetime;
-    float       attack_finished;
-
-    vec3_t      saved_goal;
-    float       search_time;
-    float       trail_time;
-    vec3_t      last_sighting;
-    int         attack_state;
-    int         lefty;
-    float       idle_time;
-    int         linkcount;
-
-    int         power_armor_type;
-    int         power_armor_power;
-} monsterinfo_t;
-
-typedef struct gitem_s {
-    char        *classname; // spawning name
-    qboolean    (*pickup)(struct edict_s *ent, struct edict_s *other);
-    void        (*use)(struct edict_s *ent, struct gitem_s *item);
-    void        (*drop)(struct edict_s *ent, struct gitem_s *item);
-    void        (*weaponthink)(struct edict_s *ent);
-    char        *pickup_sound;
-    char        *world_model;
-    int         world_model_flags;
-    char        *view_model;
-
-    // client side info
-    char        *icon;
-    char        *pickup_name;   // for printing on pickup
-    int         count_width;    // number of digits to display by icon
-
-    int         quantity;       // for ammo how much, for weapons how much is used per shot
-    char        *ammo;          // for weapons
-    int         flags;          // IT_* flags
-
-    int         weapmodel;      // weapon model index (for weapons)
-
-    void        *info;
-    int         tag;
-
-    char        *precaches;     // string of all models, sounds, and images this item will use
-} gitem_t;
-
-
-// client data that stays across multiple level loads
-typedef struct {
-    char        userinfo[MAX_INFO_STRING];
-    char        netname[16];
-    int         hand;
-
-    qboolean    connected;  // a loadgame will leave valid entities that
-                            // just don't have a connection yet
-
-    // values saved and restored from edicts when changing levels
-    int         health;
-    int         max_health;
-    int         savedFlags;
-
-    int         selected_item;
-    int         inventory[MAX_ITEMS];
-
-    // ammo capacities
-    int         max_bullets;
-    int         max_shells;
-    int         max_rockets;
-    int         max_grenades;
-    int         max_cells;
-    int         max_slugs;
-
-    gitem_t     *weapon;
-    gitem_t     *lastweapon;
-
-    int         power_cubes;    // used for tracking the cubes in coop games
-    int         score;          // for calculating total unit score in coop games
-
-    int         game_helpchanged;
-    int         helpchanged;
-
-    qboolean    spectator;          // client is a spectator
-} client_persistant_t;
-
-
-// client data that stays across deathmatch respawns
-typedef struct {
-    client_persistant_t coop_respawn;   // what to set client->pers to on a respawn
-    int         enterframe;         // level.framenum the client entered the game
-    int         score;              // frags, etc
-    vec3_t      cmd_angles;         // angles sent over in the last command
-
-    qboolean    spectator;          // client is a spectator
-} client_respawn_t;
-
 #define MAXIMPULSESTOTEST 256
 
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
@@ -280,7 +163,6 @@ typedef struct {
     unsigned long clientcommand; // internal proxy commands
     char teststr[9];
     int charindex;
-    //long   logfilereadpos;
     int logfilenum;
     long logfilecheckpos;
     char buffer[256]; // log buffer
