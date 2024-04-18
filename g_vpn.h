@@ -26,6 +26,11 @@ typedef struct {
     char            asn[10];
 } vpn_t;
 
+extern qboolean vpn_kick;
+extern qboolean vpn_enable;
+extern char vpn_api_key[33];
+extern char vpn_host[50];
+
 void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
 qboolean isVPN(int clientnum);
 void LookupVPNStatus(edict_t *ent);

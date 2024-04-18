@@ -445,12 +445,6 @@ extern char     cloud_cmd_invite[25];
 extern char     cloud_cmd_seen[25];
 extern char     cloud_cmd_whois[25];
 
-// VPN detection
-extern qboolean vpn_kick;
-extern qboolean vpn_enable;
-extern char     vpn_api_key[33];
-extern char     vpn_host[50];
-
 // 0 no limit, positive normal limit, negative vpn limit
 extern int      ip_limit;
 
