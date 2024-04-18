@@ -646,31 +646,31 @@ typedef struct {
 
 #define MAXDETECTRETRIES   3
 
-#define CCMD_STARTUPTEST            0x00000001
-#define CCMD_ZPROXYCHECK2           0x00000002
-#define CCMD_ZBOTDETECTED           0x00000004
-#define CCMD_BANNED                 0x00000008
-#define CCMD_NCSILENCE              0x00000010  // name change silence
-#define CCMD_KICKED                 0x00000020
-#define CCMD_SELECTED               0x00000040
-#define CCMD_CSILENCE               0x00000080  // temporarily muted
-#define CCMD_PCSILENCE              0x00000100  // permanently muted
-#define CCMD_VOTED                  0x00000200
-#define CCMD_VOTEYES                0x00000400
-#define CCMD_NITRO2PROXY            0x00000800
-#define CCMD_RATBOTDETECT           0x00001000
-#define CCMD_RATBOTDETECTNAME       0x00002000
-#define CCMD_ZBOTCLEAR              0x00004000
-#define CCMD_RBOTCLEAR              0x00008000
-#define CCMD_SCSILENCE              0x00010000  // skin change silence
-#define CCMD_RECONNECT              0x00020000
-#define CCMD_ALIASCHECKSTARTED      0x00040000
-#define CCMD_WAITFORALIASREPLY1     0x00080000
-#define CCMD_WAITFORALIASREPLY2     0x00100000
-#define CCMD_WAITFORCONNECTREPLY    0x00200000
-#define CCMD_REMEMBERHACK           0x00400000
-#define CCMD_CLIENTOVERFLOWED       0x00800000
-#define CCMD_STIFLED                0x01000000  // half-muted
+#define CCMD_STARTUPTEST            BIT(0)
+#define CCMD_ZPROXYCHECK2           BIT(1)
+#define CCMD_ZBOTDETECTED           BIT(2)
+#define CCMD_BANNED                 BIT(3)
+#define CCMD_NCSILENCE              BIT(4)  // name change silence
+#define CCMD_KICKED                 BIT(5)
+#define CCMD_SELECTED               BIT(6)
+#define CCMD_CSILENCE               BIT(7)  // temporarily muted
+#define CCMD_PCSILENCE              BIT(8)  // permanently muted
+#define CCMD_VOTED                  BIT(9)
+#define CCMD_VOTEYES                BIT(10)
+#define CCMD_NITRO2PROXY            BIT(11)
+#define CCMD_RATBOTDETECT           BIT(12)
+#define CCMD_RATBOTDETECTNAME       BIT(13)
+#define CCMD_ZBOTCLEAR              BIT(14)
+#define CCMD_RBOTCLEAR              BIT(15)
+#define CCMD_SCSILENCE              BIT(16)  // skin change silence
+#define CCMD_RECONNECT              BIT(17)
+#define CCMD_ALIASCHECKSTARTED      BIT(18)
+#define CCMD_WAITFORALIASREPLY1     BIT(19)
+#define CCMD_WAITFORALIASREPLY2     BIT(20)
+#define CCMD_WAITFORCONNECTREPLY    BIT(21)
+#define CCMD_REMEMBERHACK           BIT(22)
+#define CCMD_CLIENTOVERFLOWED       BIT(23)
+#define CCMD_STIFLED                BIT(24)  // half-muted
 
 #define STIFLE_TIME                 SECS_TO_FRAMES(60)
 
