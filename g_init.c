@@ -234,7 +234,7 @@ float ltime;
 int proxy_bwproxy = 1;
 int proxy_nitro2 = 1;
 
-int q2adminrunmode = 100;
+int runmode = 100;
 int maxclientsperframe = 100;
 int framesperprocess = 0;
 
@@ -383,11 +383,11 @@ void InitGame(void) {
         return;
     }
 
-    if (q2adminrunmode < 100) {
-        gi.dprintf("(Q2Admin runlevel %d)\n", q2adminrunmode);
+    if (runmode < 100) {
+        gi.dprintf("(Q2Admin runlevel %d)\n", runmode);
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->Init();
         G_MergeEdicts();
         return;
@@ -614,7 +614,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
         G_MergeEdicts();
         return;
@@ -952,7 +952,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
     if (!dllloaded) return qfalse;
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ret = ge_mod->ClientConnect(ent, userinfo);
         G_MergeEdicts();
         return ret;
@@ -1437,7 +1437,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ClientUserinfoChanged(ent, userinfo);
         G_MergeEdicts();
         return;
@@ -1652,7 +1652,7 @@ void ClientDisconnect(edict_t *ent) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ClientDisconnect(ent);
         G_MergeEdicts();
         return;
@@ -1765,7 +1765,7 @@ void ClientBegin(edict_t *ent) {
         return;
     }
 
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ClientBegin(ent);
         G_MergeEdicts();
         return;
@@ -1917,7 +1917,7 @@ void WriteGame(char *filename, qboolean autosave) {
     if (!dllloaded) {
         return;
     }
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->WriteGame(filename, autosave);
         G_MergeEdicts();
         return;
@@ -1936,7 +1936,7 @@ void ReadGame(char *filename) {
     if (!dllloaded) {
         return;
     }
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ReadGame(filename);
         G_MergeEdicts();
         return;
@@ -1955,7 +1955,7 @@ void WriteLevel(char *filename) {
     if (!dllloaded) {
         return;
     }
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->WriteLevel(filename);
         G_MergeEdicts();
         return;
@@ -1974,7 +1974,7 @@ void ReadLevel(char *filename) {
     if (!dllloaded) {
         return;
     }
-    if (q2adminrunmode == 0) {
+    if (runmode == 0) {
         ge_mod->ReadLevel(filename);
         G_MergeEdicts();
         return;
