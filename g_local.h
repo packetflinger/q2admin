@@ -742,11 +742,6 @@ extern int msec_int;
 #define Q2A_PRV_KICK_MSG        "Failed the private commands check.\n"
 #define FRKQ2_KICK_MSG          "Failed the client authentication.\n"
 
-extern admin_type admin_pass[MAX_ADMINS];
-extern admin_type q2a_bypass_pass[MAX_ADMINS];
-extern int num_admins;
-extern int num_q2a_admins;
-
 extern int client_map_cfg;
 extern qboolean do_franck_check;
 extern qboolean q2a_command_check;
