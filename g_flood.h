@@ -11,7 +11,9 @@
 
 #define DEFAULTFLOODMSG     "%s changed names too many times."
 #define DEFAULTCHATFLOODMSG "%s is making too much noise."
-#define DEFAULTSKINFLOODMSG "%s changed skin too many times."
+#define DEFAULTSKINFLOODMSG "%s changed skin too many times."\
+
+#define STIFLE_TIME         SECS_TO_FRAMES(60)
 
 #define FLOOD_SW  0
 #define FLOOD_EX  1
