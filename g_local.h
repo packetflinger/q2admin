@@ -528,12 +528,6 @@ extern int skinChangeFloodProtectSilence;
 
 extern struct chatflood_s floodinfo;
 
-extern baninfo_t *banhead;
-extern chatbaninfo_t *cbanhead;
-
-extern qboolean IPBanning_Enable;
-extern qboolean NickBanning_Enable;
-extern qboolean ChatBanning_Enable;
 extern qboolean kickOnNameChange;
 extern qboolean disablecmds_enable;
 extern qboolean checkvarcmds_enable;
@@ -541,8 +535,6 @@ extern qboolean swap_attack_use;
 extern qboolean timescaledetect;
 extern qboolean fpsFloodExempt;
 
-extern char defaultBanMsg[256];
-extern char defaultChatBanMsg[256];
 extern char *currentBanMsg;
 
 extern proxyinfo_t *proxyinfo;

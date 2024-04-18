@@ -74,6 +74,14 @@ typedef struct chatbanstruct {
 #define CHATLIKE    1
 #define CHATRE      2
 
+extern baninfo_t *banhead;
+extern chatbaninfo_t *cbanhead;
+extern qboolean IPBanning_Enable;
+extern qboolean NickBanning_Enable;
+extern qboolean ChatBanning_Enable;
+extern char defaultBanMsg[256];
+extern char defaultChatBanMsg[256];
+
 void banRun(int startarg, edict_t *ent, int client);
 void chatbanRun(int startarg, edict_t *ent, int client);
 int checkBanList(edict_t *ent, int client);
