@@ -18,26 +18,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// game.h
-//
-// copyright 2000 Shane Powell
-//
-
 // game.h -- game dll information visible to server
 
 #define GAME_API_VERSION 3
 
-// edict->svflags
-
-#define SVF_NOCLIENT   0x00000001 // don't send entity to clients, even if it has effects
-#define SVF_DEADMONSTER   0x00000002 // treat as CONTENTS_DEADMONSTER for collision
-#define SVF_MONSTER    0x00000004 // treat as CONTENTS_MONSTER for collision
 
 // edict->solid values
-
 typedef enum {
     SOLID_NOT, // no interaction with other objects
     SOLID_TRIGGER, // only touch when inside, after moving
@@ -45,25 +31,20 @@ typedef enum {
     SOLID_BSP // bsp clip, touch on edge
 } solid_t;
 
-//===============================================================
-
 // link_t is only used for entity area links now
-
 typedef struct link_s {
     struct link_s *prev, *next;
 } link_t;
 
 #define MAX_ENT_CLUSTERS 16
 
-
 typedef struct edict_s edict_t;
 typedef struct gclient_s gclient_t;
-
 
 #ifndef GAME_INCLUDE
 
 struct gclient_s {
-    player_state_t ps; // communicated by server to clients
+    player_state_t ps;  // communicated by server to clients
     int ping;
     // the game dll can add anything it wants after
     // this point in the structure
@@ -74,18 +55,12 @@ struct edict_s {
     struct gclient_s *client;
     qboolean inuse;
     int linkcount;
-
-    // FIXME: move these fields to a server private sv_entity_t
-    link_t area; // linked to a division node or leaf
-
-    int num_clusters; // if -1, use headnode instead
+    link_t area;        // linked to a division node or leaf
+    int num_clusters;   // if -1, use headnode instead
     int clusternums[MAX_ENT_CLUSTERS];
-    int headnode; // unused if num_clusters != -1
+    int headnode;       // unused if num_clusters != -1
     int areanum, areanum2;
-
-    //================================
-
-    int svflags; // SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
+    int svflags;        // SVF_NOCLIENT, SVF_DEADMONSTER, SVF_MONSTER, etc
     vec3_t mins, maxs;
     vec3_t absmin, absmax, size;
     solid_t solid;
@@ -98,12 +73,7 @@ struct edict_s {
 
 #endif  // GAME_INCLUDE
 
-//===============================================================
-
-//
 // functions provided by the main engine
-//
-
 typedef struct {
     // special messages
     void (* q_printf(2, 3) bprintf) (int printlevel, char *fmt, ...);
@@ -179,10 +149,7 @@ typedef struct {
     void (*DebugGraph) (float value, int color);
 } game_import_t;
 
-//
 // functions exported by the game subsystem
-//
-
 typedef struct {
     int apiversion;
 
