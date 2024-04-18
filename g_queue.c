@@ -72,10 +72,10 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
                     (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t)
                 );
             }
-            return TRUE;
+            return qtrue;
         }
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**

@@ -32,10 +32,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
 
-qboolean IPBanning_Enable = FALSE;
-qboolean NickBanning_Enable = FALSE;
-qboolean ChatBanning_Enable = FALSE;
-qboolean kickOnNameChange = FALSE;
+qboolean IPBanning_Enable = qfalse;
+qboolean NickBanning_Enable = qfalse;
+qboolean ChatBanning_Enable = qfalse;
+qboolean kickOnNameChange = qfalse;
 
 char defaultBanMsg[256];
 char *currentBanMsg;
@@ -57,7 +57,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
     banfile = url_fopen(bfname, "rt");
     if (!banfile) {
         gi.dprintf("Error opening remote banlist.\n");
-        return FALSE;
+        return qfalse;
     }
 
     while (url_fgets(buffer, 256, banfile)) {
@@ -80,13 +80,13 @@ qboolean ReadRemoteBanFile(char *bfname) {
                 if (*cp == '-') {
                     cp++;
                     SKIPBLANK(cp);
-                    newentry->exclude = TRUE;
+                    newentry->exclude = qtrue;
                 } else if (*cp == '+') {
                     cp++;
                     SKIPBLANK(cp);
-                    newentry->exclude = FALSE;
+                    newentry->exclude = qfalse;
                 } else {
-                    newentry->exclude = TRUE;
+                    newentry->exclude = qtrue;
                 }
 
                 if (startContains(cp, "ALL")) {
@@ -95,27 +95,27 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
                     q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
-                    all = TRUE;
+                    all = qtrue;
                     cp += 3;
                     SKIPBLANK(cp);
                 } else {
-                    all = FALSE;
+                    all = qfalse;
                     if (startContains(cp, "NAME")) {
                         cp += 4;
                         SKIPBLANK(cp);
                         if (startContains(cp, "LIKE")) {
                             cp += 4;
-                            like = TRUE;
-                            re = FALSE;
+                            like = qtrue;
+                            re = qfalse;
                             SKIPBLANK(cp);
                         } else if (startContains(cp, "RE")) {
                             cp += 2;
-                            like = FALSE;
-                            re = TRUE;
+                            like = qfalse;
+                            re = qtrue;
                             SKIPBLANK(cp);
                         } else {
-                            like = FALSE;
-                            re = FALSE;
+                            like = qfalse;
+                            re = qfalse;
                         }
 
                         if (startContains(cp, "BLANK")) {
@@ -229,12 +229,12 @@ qboolean ReadRemoteBanFile(char *bfname) {
                     }
                     SKIPBLANK(cp);
                     if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
-                        newentry->floodinfo.chatFloodProtect = TRUE;
+                        newentry->floodinfo.chatFloodProtect = qtrue;
                     } else {
-                        newentry->floodinfo.chatFloodProtect = FALSE;
+                        newentry->floodinfo.chatFloodProtect = qfalse;
                     }
                 } else {
-                    newentry->floodinfo.chatFloodProtect = FALSE;
+                    newentry->floodinfo.chatFloodProtect = qfalse;
                 }
 
                 // get MSG
@@ -395,7 +395,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
         }
     }
     url_fclose(banfile);
-    return TRUE;
+    return qtrue;
 }
 
 qboolean ReadBanFile(char *bfname) {
@@ -409,7 +409,7 @@ qboolean ReadBanFile(char *bfname) {
 
     banfile = fopen(bfname, "rt");
     if (!banfile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, banfile)) {
@@ -442,13 +442,13 @@ qboolean ReadBanFile(char *bfname) {
                 if (*cp == '-') {
                     cp++;
                     SKIPBLANK(cp);
-                    newentry->exclude = TRUE;
+                    newentry->exclude = qtrue;
                 } else if (*cp == '+') {
                     cp++;
                     SKIPBLANK(cp);
-                    newentry->exclude = FALSE;
+                    newentry->exclude = qfalse;
                 } else {
-                    newentry->exclude = TRUE;
+                    newentry->exclude = qtrue;
                 }
 
                 if (startContains(cp, "ALL")) {
@@ -457,12 +457,12 @@ qboolean ReadBanFile(char *bfname) {
                     newentry->numberofconnects = 0;
                     newentry->msg = NULL;
                     q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
-                    all = TRUE;
+                    all = qtrue;
 
                     cp += 3;
                     SKIPBLANK(cp);
                 } else {
-                    all = FALSE;
+                    all = qfalse;
 
                     // Name:
                     if (startContains(cp, "NAME")) {
@@ -472,19 +472,19 @@ qboolean ReadBanFile(char *bfname) {
                         // Like?
                         if (startContains(cp, "LIKE")) {
                             cp += 4;
-                            like = TRUE;
-                            re = FALSE;
+                            like = qtrue;
+                            re = qfalse;
                             SKIPBLANK(cp);
 
                         }//re?
                         else if (startContains(cp, "RE")) {
                             cp += 2;
-                            like = FALSE;
-                            re = TRUE;
+                            like = qfalse;
+                            re = qtrue;
                             SKIPBLANK(cp);
                         } else {
-                            like = FALSE;
-                            re = FALSE;
+                            like = qfalse;
+                            re = qfalse;
                         }
 
                         // BLANK or ALL or name
@@ -643,12 +643,12 @@ qboolean ReadBanFile(char *bfname) {
                     SKIPBLANK(cp);
 
                     if (newentry->floodinfo.chatFloodProtectNum && newentry->floodinfo.chatFloodProtectSec) {
-                        newentry->floodinfo.chatFloodProtect = TRUE;
+                        newentry->floodinfo.chatFloodProtect = qtrue;
                     } else {
-                        newentry->floodinfo.chatFloodProtect = FALSE;
+                        newentry->floodinfo.chatFloodProtect = qfalse;
                     }
                 } else {
-                    newentry->floodinfo.chatFloodProtect = FALSE;
+                    newentry->floodinfo.chatFloodProtect = qfalse;
                 }
 
                 // get MSG
@@ -855,7 +855,7 @@ qboolean ReadBanFile(char *bfname) {
 
     fclose(banfile);
 
-    return TRUE;
+    return qtrue;
 }
 
 void freeBanLists(void) {
@@ -902,7 +902,7 @@ void readBanLists(void) {
     ret = ReadBanFile(configfile_ban->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_ban->string);
     if (ReadBanFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
 
     if (!ret) {
@@ -925,7 +925,7 @@ void readBanLists(void) {
 
         Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, cfgRemoteFile);
         if (ReadBanFile(buffer)) {
-            ret = TRUE;
+            ret = qtrue;
         }
 
         if (!ret) {
@@ -944,7 +944,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     baninfo_t *newentry;
     char savecmd[384];
     char strbuffer[384];
-    qboolean nocheck = FALSE;
+    qboolean nocheck = qfalse;
     char *ipstr;
     char tempip[INET6_ADDRSTRLEN];
 
@@ -967,7 +967,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
     // get +/-
     if (*cp == '-') {
-        newentry->exclude = TRUE;
+        newentry->exclude = qtrue;
 
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -980,7 +980,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         startarg++;
 
     } else if (*cp == '+') {
-        newentry->exclude = FALSE;
+        newentry->exclude = qfalse;
 
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -994,7 +994,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
         q2a_strcat(savecmd, "+ ");
     } else {
-        newentry->exclude = TRUE;
+        newentry->exclude = qtrue;
     }
 
     if (startContains(cp, "ALL")) {
@@ -1002,9 +1002,9 @@ void banRun(int startarg, edict_t *ent, int client) {
         newentry->maxnumberofconnects = 0;
         newentry->numberofconnects = 0;
         newentry->msg = NULL;
-        newentry->floodinfo.chatFloodProtect = FALSE;
+        newentry->floodinfo.chatFloodProtect = qfalse;
         q2a_memset(&newentry->addr, 0, sizeof(netadr_t));
-        all = TRUE;
+        all = qtrue;
 
 
         if (gi.argc() <= startarg) {
@@ -1014,7 +1014,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             startarg++;
         }
     } else {
-        all = FALSE;
+        all = qfalse;
 
         // Name:
         if (startContains(cp, "NAME")) {
@@ -1032,7 +1032,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
             // Like?
             if (startContains(cp, "LIKE")) {
-                like = TRUE;
+                like = qtrue;
 
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1048,8 +1048,8 @@ void banRun(int startarg, edict_t *ent, int client) {
 
             }//re?
             else if (startContains(cp, "RE")) {
-                like = FALSE;
-                re = TRUE;
+                like = qfalse;
+                re = qtrue;
 
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1063,7 +1063,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
                 q2a_strcat(savecmd, "RE ");
             } else {
-                like = FALSE;
+                like = qfalse;
             }
 
             // BLANK or ALL or name
@@ -1404,12 +1404,12 @@ void banRun(int startarg, edict_t *ent, int client) {
                     newentry->floodinfo.chatFloodProtectSec,
                     newentry->floodinfo.chatFloodProtectSilence
             );
-            newentry->floodinfo.chatFloodProtect = TRUE;
+            newentry->floodinfo.chatFloodProtect = qtrue;
         } else {
-            newentry->floodinfo.chatFloodProtect = FALSE;
+            newentry->floodinfo.chatFloodProtect = qfalse;
         }
     } else {
-        newentry->floodinfo.chatFloodProtect = FALSE;
+        newentry->floodinfo.chatFloodProtect = qfalse;
     }
 
 
@@ -1548,7 +1548,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             startarg++;
         }
 
-        nocheck = TRUE;
+        nocheck = qtrue;
     }
 
     if (*cp != 0) {

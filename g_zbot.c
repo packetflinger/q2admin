@@ -30,10 +30,10 @@ char testchars[] = "!@#%^&*()_=|?.>,<[{]}\':";
 int testcharslength = sizeof (testchars) - 1;
 
 
-qboolean zbc_enable = TRUE;
-qboolean timescaledetect = TRUE;
-qboolean swap_attack_use = FALSE;
-qboolean dopversion = TRUE;
+qboolean zbc_enable = qtrue;
+qboolean timescaledetect = qtrue;
+qboolean swap_attack_use = qfalse;
+qboolean dopversion = qtrue;
 
 
 byte impulsesToKickOn[MAXIMPULSESTOTEST];
@@ -53,16 +53,16 @@ qboolean checkImpulse(byte impulse) {
     unsigned int i;
 
     if (!maxImpulses) {
-        return TRUE;
+        return qtrue;
     }
 
     for (i = 0; i < maxImpulses; i++) {
         if (impulsesToKickOn[i] == impulse) {
-            return TRUE;
+            return qtrue;
         }
     }
 
-    return FALSE;
+    return qfalse;
 }
 
 void readIpFromLog(int client, edict_t *ent) {

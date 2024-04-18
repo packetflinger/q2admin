@@ -379,9 +379,9 @@ qboolean getLogicalValue(char *arg) {
     if (Q_stricmp(arg, "Yes") == 0 ||
             Q_stricmp(arg, "1") == 0 ||
             Q_stricmp(arg, "Y") == 0) {
-        return TRUE;
+        return qtrue;
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**
@@ -648,9 +648,9 @@ int q2a_floor(float x) {
 qboolean can_do_new_cmds(int client) {
     if (proxyinfo[client].newcmd_timeout <= ltime) {
         proxyinfo[client].newcmd_timeout = ltime + 3;
-        return TRUE;
+        return qtrue;
     } else {
-        return FALSE;
+        return qfalse;
     }
 }
 

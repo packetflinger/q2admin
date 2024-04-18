@@ -646,13 +646,6 @@ extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
 
-#ifndef FALSE
-#define FALSE   0
-#endif
-#ifndef TRUE
-#define TRUE   1
-#endif
-
 #define SKIPBLANK(str) \
 {\
     while(*str == ' ' || *str == '\t') \

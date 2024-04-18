@@ -1530,7 +1530,7 @@ void dprintf_internal(char *fmt, ...) {
     }
 
     if (clienti != -1) {
-        if (checkForMute(clienti, getEnt((clienti + 1)), TRUE)) {
+        if (checkForMute(clienti, getEnt((clienti + 1)), qtrue)) {
             q2a_strncpy(mutedText, cbuffer, sizeof(mutedText));
             return;
         }
@@ -1700,7 +1700,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     }
 
     if (printlevel == PRINT_CHAT && clienti != -1) {
-        if (checkForMute(clienti, getEnt((clienti + 1)), TRUE)) {
+        if (checkForMute(clienti, getEnt((clienti + 1)), qtrue)) {
             return;
         }
     }
@@ -1736,7 +1736,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
 
 void AddCommandString_internal(char *text) {
     char *str;
-    qboolean mapChangeFound = FALSE;
+    qboolean mapChangeFound = qfalse;
 
     if (q2adminrunmode == 0) {
         gi.AddCommandString(text);
@@ -1777,7 +1777,7 @@ void AddCommandString_internal(char *text) {
         if (*str == '\"') {
             str++;
             str = text + (str - buffer);
-            mapChangeFound = TRUE;
+            mapChangeFound = qtrue;
         }
     } else {
         str = q2a_strstr(buffer, "MAP");
@@ -1792,7 +1792,7 @@ void AddCommandString_internal(char *text) {
             if (*str == '\"') {
                 str++;
                 str = text + (str - buffer);
-                mapChangeFound = TRUE;
+                mapChangeFound = qtrue;
             }
         }
     }
@@ -1893,7 +1893,7 @@ qboolean readCfgFile(char *cfgfilename) {
 
     cfgfile = fopen(cfgfilename, "rt");
     if (!cfgfile)
-    	return FALSE;
+    	return qfalse;
 
     while (fgets(buffer, 256, cfgfile) != NULL) {
         char *cp = buffer;
@@ -1931,7 +1931,7 @@ qboolean readCfgFile(char *cfgfilename) {
 
     fclose(cfgfile);
 
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -1949,7 +1949,7 @@ void readCfgFiles(void) {
 
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, q2aconfig->string);
     if (readCfgFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
 
     if (!ret) {
@@ -2180,7 +2180,7 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0);
-            return FALSE;
+            return qfalse;
         }
 
         Q_snprintf(
@@ -2203,10 +2203,10 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
         );
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
 
-        return FALSE;
+        return qfalse;
     }
 
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -2270,7 +2270,7 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0);
-            return FALSE;
+            return qfalse;
         }
 
         for (clienti = 0; clienti < maxclients->value; clienti++) {
@@ -2299,10 +2299,10 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
             }
         }
 
-        return FALSE;
+        return qfalse;
     }
 
-    return TRUE;
+    return qtrue;
 }
 
 void proxyDetected(edict_t *ent, int client) {
@@ -2432,7 +2432,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     //r1ch 2005-01-26 disable hugely buggy commands END
 
     if (client >= maxclients->value) {
-        return FALSE;
+        return qfalse;
     }
 
     cmd = gi.argv(0);
@@ -2451,7 +2451,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
             gi.dprintf("%s\n", abuffer);
 
-            return FALSE;
+            return qfalse;
         }
     }
 
@@ -2484,16 +2484,16 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 }
             }
         }
-        return FALSE;
+        return qfalse;
     } else if (proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2) // check for proxy string
     {
         if (!zbotdetect || !proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         if (proxyinfo[client].teststr[0] && Q_stricmp(cmd, proxyinfo[client].teststr) == 0) {
             if (!proxyinfo[client].inuse) {
-                return FALSE;
+                return qfalse;
             }
 
             // we have passed the test!!
@@ -2509,12 +2509,12 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
             proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
             removeClientCommand(client, QCMD_ZPROXYCHECK2);
-            return FALSE;
+            return qfalse;
         } else if (Q_stricmp(cmd, zbot_teststring_test3) == 0) {
-            return FALSE;
+            return qfalse;
         } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) {
             if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED) || checkForOverflows(ent, client)) {
-                return FALSE;
+                return qfalse;
             }
 
             if (proxyinfo[client].retries < MAXDETECTRETRIES) {
@@ -2526,7 +2526,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 addCmdQueue(client, QCMD_CLEAR, 0, 0, 0);
                 addCmdQueue(client, QCMD_RESTART, 2 + (3 * random()), 0, 0);
                 proxyinfo[client].retries++;
-                return FALSE;
+                return qfalse;
             }
 
             // log zbot user
@@ -2542,14 +2542,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
             // try and get "unknown command" off the screen as fast as possible
             gi.cprintf(ent, PRINT_HIGH, "\n\n\n\n\n\n");
-            return FALSE;
+            return qfalse;
         }
     } else if (Q_stricmp(cmd, zbot_teststring_test3) == 0) {
-        return FALSE;
+        return qfalse;
     } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) // check for end proxy string
     {
         if (!proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         // do we have more char's to check?
@@ -2560,13 +2560,13 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             //        gi.cprintf (ent, PRINT_HIGH, "Finished checking...");
         }
 
-        return FALSE;
+        return qfalse;
 
     }
 
     if (q2a_strcmp(cmd, proxyinfo[client].hack_timescale) == 0) {
         if (!proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         if (atoi(gi.argv(1)) != 1) {
@@ -2577,16 +2577,16 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             }
         }
 
-        return FALSE;
+        return qfalse;
     }
 
     if (q2a_strcmp(cmd, proxyinfo[client].hack_checkvar) == 0) {
         if (!proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         checkVariableValid(ent, client, gi.argv(1));
-        return FALSE;
+        return qfalse;
     }
 
     if (proxyinfo[client].clientcommand & CCMD_RATBOTDETECT) {
@@ -2595,14 +2595,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
             if (Q_stricmp(args, "help me : What is a Bot ??") == 0) {
                 ratbotDetected(ent, client);
-                return FALSE;
+                return qfalse;
             }
         } else if (Q_stricmp(cmd, "Yeah") == 0) {
             char *args = getArgs();
 
             if (Q_stricmp(args, "!!! I am a R A T B O T !!!!! ??") == 0) {
                 ratbotDetected(ent, client);
-                return FALSE;
+                return qfalse;
             }
         }
     }
@@ -2616,11 +2616,11 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         // clear retries just in case...
         proxyinfo[client].retries = 0;
 
-        return FALSE; //ignore because it's from a older level or something
+        return qfalse; //ignore because it's from a older level or something
     } else if (startContains(cmd, ZBOT_TESTSTRING_TEST1_OLD) || startContains(cmd, ZBOT_TESTSTRING_TEST2_OLD) ||
             (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2 && (cmd[7] == 0 || cmd[8] == 0))) {
         if (!zbotdetect || !proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         Q_snprintf(
@@ -2635,10 +2635,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
         // clear retries just in case...
         proxyinfo[client].retries = 0;
-        return FALSE;
+        return qfalse;
     } else if (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2) {
         if (!zbotdetect || !proxyinfo[client].inuse) {
-            return FALSE;
+            return qfalse;
         }
 
         Q_snprintf(
@@ -2656,7 +2656,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         if (Q_stricmp(cmd, "alias") == 0) {
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
             //hackDetected(ent, client);
-            return FALSE;
+            return qfalse;
         }
 
         if (proxyinfo[client].hacked_disconnect == 1) {
@@ -2667,7 +2667,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             if (sameip == 1) {
                 proxyinfo[client].hacked_disconnect = 0;
                 //hackDetected(ent, client);
-                return FALSE;
+                return qfalse;
             }
             proxyinfo[client].hacked_disconnect = 0;
         }
@@ -2678,7 +2678,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
                 hackDetected(ent, client);
-                return FALSE;
+                return qfalse;
             }
         }
 
@@ -2687,11 +2687,11 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring1) == 0) {
             //hackDetected(ent, client);
-            return FALSE;
+            return qfalse;
         }
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring2) == 0) {
             proxyinfo[client].clientcommand &= ~CCMD_WAITFORALIASREPLY2;
-            return FALSE;
+            return qfalse;
         }
     }
 
@@ -2700,7 +2700,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         proxyinfo[client].clientcommand &= ~CCMD_WAITFORCONNECTREPLY;
         proxyinfo[client].hacked_disconnect = 1;
         proxyinfo[client].hacked_disconnect_addr = proxyinfo[client].address;
-        return FALSE;
+        return qfalse;
     }
 
     if (gi.argc() > 1) {
@@ -2715,7 +2715,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     if (disablecmds_enable && checkDisabledCommand(proxyinfo[client].lastcmd)) {
         gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabled command: %s\n", proxyinfo[client].name, proxyinfo[client].lastcmd);
         logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0);
-        return FALSE;
+        return qfalse;
     }
 
     if (Q_stricmp(cmd, "admin") == 0 ||
@@ -2735,7 +2735,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 if (Q_stricmp(proxyinfo[client].lastcmd, private_commands[i].command) == 0) {
                     //we got a response on this command and don't spam
                     proxyinfo[client].private_command_got[i] = qtrue;
-                    return FALSE;
+                    return qfalse;
                 }
             }
         }
@@ -2753,7 +2753,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         }
 
         if (cnt > 5) {
-            return FALSE;
+            return qfalse;
         }
 
         //this check is for non standard p_Ver/p_mod replies
@@ -2791,13 +2791,13 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                         }
                     }
                 }
-                return FALSE; //dont spam
+                return qfalse; //dont spam
             } else if (q2a_strstr(gi.args(), "SERVERIP")) {
                 //gi.dprintf("pooy test : %s , %s\n",proxyinfo[client].serverip,gi.args());
                 //1.20
                 if (!*serverip) {
                     proxyinfo[client].cmdlist |= 4;
-                    return FALSE;
+                    return qfalse;
                 }
                 //compare random char with what we gave them
                 if (strcmp(gi.argv(5), proxyinfo[client].serverip) == 0) {
@@ -2817,7 +2817,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
-                return FALSE;
+                return qfalse;
             }
         }
 
@@ -2855,10 +2855,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     }
                     if (gl_driver_check & 2) {
                         if (dont_print)
-                            return FALSE; //dont spam
+                            return qfalse; //dont spam
                     } else {
                         //dont print ever
-                        return FALSE;
+                        return qfalse;
                     }
                 }
             }
@@ -2871,12 +2871,12 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
             } else {
                 proxyDetected(ent, client);
-                return FALSE;
+                return qfalse;
             }
         }
 
-        if (checkForMute(client, ent, TRUE)) {
-            return FALSE;
+        if (checkForMute(client, ent, qtrue)) {
+            return qfalse;
         }
 
         if (extendedsay_enable) {
@@ -2888,29 +2888,29 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     gi.cprintf(ent, PRINT_HIGH, "say !p [LIKE/CL] name message\n");
                 }
 
-                return FALSE;
+                return qfalse;
             } else if (say_group_enable && startContains(args, "!g")) // say_group
             {
                 if (sayGroupCmd(ent, client, args + 2)) {
                     gi.cprintf(ent, PRINT_HIGH, "say !g [LIKE/CL] name message\n");
                 }
 
-                return FALSE;
+                return qfalse;
             }
         }
     } else if (checkforfloodcmds(cmd)) {
-        if (checkForMute(client, ent, TRUE)) {
-            return FALSE;
+        if (checkForMute(client, ent, qtrue)) {
+            return qfalse;
         }
 
-        *checkforfloodafter = TRUE;
+        *checkforfloodafter = qtrue;
     }
 
     if (cmd[0] == '!') {
         if (proxyinfo[client].q2a_admin) {
             q2a_admin_command = ADMIN_process_command(ent, client);
             if (q2a_admin_command) {
-                return FALSE;
+                return qfalse;
             }
         }
 
@@ -2918,7 +2918,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             //pooy admin
             if (num_admins) {
                 if (gi.argc() != 3) {
-                    return FALSE;
+                    return qfalse;
                 }
                 alevel = get_admin_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
@@ -2932,12 +2932,12 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     List_Admin_Commands(ent, client);
                 }
             }
-            return FALSE;
+            return qfalse;
         } else if (Q_stricmp(cmd, "!bypass") == 0) {
             //pooy admin
             if (num_q2a_admins) {
                 if (gi.argc() != 3) {
-                    return FALSE;
+                    return qfalse;
                 }
                 alevel = get_bypass_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
@@ -2948,14 +2948,14 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     proxyinfo[client].q2a_bypass = alevel;
                 }
             }
-            return FALSE;
+            return qfalse;
         } else if (!proxyinfo[client].admin) {
             if (Q_stricmp(cmd, "!version") == 0) {
                 gi.cprintf(ent, PRINT_HIGH, "Q2Admin Version %s\n", version);
-                return FALSE;
+                return qfalse;
             } else if (adminpassword[0] && Q_stricmp(cmd, "!setadmin") == 0) {
                 if (gi.argc() != 2) {
-                    return FALSE;
+                    return qfalse;
                 }
 
                 if (q2a_strcmp(gi.argv(1), adminpassword) == 0) {
@@ -2963,7 +2963,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     gi.cprintf(ent, PRINT_HIGH, "\nAdmin password set.\n");
                 }
 
-                return FALSE;
+                return qfalse;
             }
         } else if (adminpassword[0] && proxyinfo[client].admin) {
             for (i = 0; i < lengthof(q2aCommands); i++) {
@@ -2973,64 +2973,64 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     } else {
                         processCommand(i, 1, ent);
                     }
-                    return FALSE;
+                    return qfalse;
                 }
             }
 
             gi.cprintf(ent, PRINT_HIGH, "Unknown q2admin command!\n");
-            return FALSE;
+            return qfalse;
         }
     } else if (say_person_enable && Q_stricmp(cmd, "say_person") == 0) {
-        if (checkForMute(client, ent, TRUE)) {
-            return FALSE;
+        if (checkForMute(client, ent, qtrue)) {
+            return qfalse;
         }
 
         if (sayPersonCmd(ent, client, getArgs())) {
             gi.cprintf(ent, PRINT_HIGH, "say_person [CL <id>]|name message\n");
         }
 
-        return FALSE;
+        return qfalse;
     } else if (say_group_enable && Q_stricmp(cmd, "say_group") == 0) {
-        if (checkForMute(client, ent, TRUE)) {
-            return FALSE;
+        if (checkForMute(client, ent, qtrue)) {
+            return qfalse;
         }
 
         if (sayGroupCmd(ent, client, getArgs())) {
             gi.cprintf(ent, PRINT_HIGH, "say_group [CL <id>]|name message\n");
         }
 
-        return FALSE;
+        return qfalse;
     } else if (maxlrcon_cmds && rconpassword->string[0] && Q_stricmp(cmd, "lrcon") == 0) {
         run_lrcon(ent, client);
-        return FALSE;
+        return qfalse;
     } else if (vote_enable && Q_stricmp(cmd, clientVoteCommand) == 0) {
         run_vote(ent, client);
-        return FALSE;
+        return qfalse;
     }
     else if (Q_stricmp(cmd, "showfps") == 0) {
         proxyinfo[client].show_fps = !proxyinfo[client].show_fps;
         gi.cprintf(ent, PRINT_HIGH, "FPS Display %s\n", proxyinfo[client].show_fps ? "on" : "off");
-        return FALSE;
+        return qfalse;
     } else if (Q_stricmp(cmd, "whois") == 0) {
         if (whois_active) {
             whois(client, ent);
-            return FALSE;
+            return qfalse;
         }
     } else if (Q_stricmp(cmd, "timer_start") == 0) {
         if (timers_active) {
             timer_start(client, ent);
-            return FALSE;
+            return qfalse;
         }
     } else if (Q_stricmp(cmd, "timer_stop") == 0) {
         if (timers_active) {
             timer_stop(client, ent);
-            return FALSE;
+            return qfalse;
         }
     } 
 
     else if (zbotmotd[0] && Q_stricmp(cmd, "motd") == 0) {
         gi.centerprintf(ent, motd);
-        return FALSE;
+        return qfalse;
     }
 
     // check for banned chat words
@@ -3038,12 +3038,12 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
         gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
         logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0);
-        return FALSE;
+        return qfalse;
     }
 
     logEvent(LT_CLIENTCMDS, client, ent, proxyinfo[client].lastcmd, 0, 0.0);
 
-    return TRUE;
+    return qtrue;
 }
 
 void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
@@ -3073,7 +3073,7 @@ void ClientCommand(edict_t *ent) {
     cmd = gi.argv(0);
 
     int clientnum = getEntOffset(ent) - 1;
-    qboolean checkforfloodafter = FALSE;
+    qboolean checkforfloodafter = qfalse;
     char stemp[MAX_STRING_CHARS];
 
     profile_init(1);
@@ -3155,15 +3155,15 @@ qboolean doServerCommand(void) {
                     processCommand(i, 2, NULL);
                 }
 
-                return FALSE;
+                return qfalse;
             }
         }
 
         gi.cprintf(NULL, PRINT_HIGH, "Unknown q2admin command!\n");
-        return FALSE;
+        return qfalse;
     }
 
-    return TRUE;
+    return qtrue;
 }
 
 void ServerCommand(void) {

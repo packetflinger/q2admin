@@ -83,7 +83,7 @@ void ShutdownGame(void) {
     dlclose(hdll);
 #endif
 
-    dllloaded = FALSE;
+    dllloaded = qfalse;
 
     if (q2adminrunmode) {
         profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
@@ -534,7 +534,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_DISPLOGFILELIST) {
                 displayLogFileListCont(ent, client, data);
             } else if (command == QCMD_DISPLOGEVENTLIST) {
-                displayLogEventListCont(ent, client, data, FALSE);
+                displayLogEventListCont(ent, client, data, qfalse);
             } else if (command == QCMD_GETIPALT) {
                 // open logfile and read IP address from log
                 readIpFromLog(client, ent);
@@ -680,7 +680,7 @@ void G_RunFrame(void) {
                                 gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
                                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_PRV_KICK_MSG);
                                 //dont want this printed
-                                //return FALSE;
+                                //return qfalse;
                             }
                         }
                     }
@@ -844,7 +844,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
     cvar_t *gamelib;
 
-    dllloaded = FALSE;
+    dllloaded = qfalse;
     gi = *import;
 
     q2a_strcpy(version, "r");
@@ -1009,7 +1009,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     gi.cprintf(NULL, PRINT_HIGH, "Q2Admin %s -> %s\n", version, dllname);
 
     ge_mod = (*getapi)(import);
-    dllloaded = TRUE;
+    dllloaded = qtrue;
     G_MergeEdicts();
 
     if (q2adminrunmode) {

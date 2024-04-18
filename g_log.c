@@ -23,32 +23,32 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 logfile_t logFiles[32];
 
 logtypes_t logtypes[] ={
-    { "ZBOT", FALSE, 0, ""},
-    { "ZBOTIMPULSES", FALSE, 0, ""},
-    { "IMPULSES", FALSE, 0, ""},
-    { "NAMECHANGE", FALSE, 0, ""},
-    { "SKINCHANGE", FALSE, 0, ""},
-    { "CHATBAN", FALSE, 0, ""},
-    { "CLIENTCONNECT", FALSE, 0, ""},
-    { "CLIENTBEGIN", FALSE, 0, ""},
-    { "CLIENTDISCONNECT", FALSE, 0, ""},
-    { "CLIENTKICK", FALSE, 0, ""},
-    { "CLIENTCMDS", FALSE, 0, ""},
-    { "CLIENTLRCON", FALSE, 0, ""},
-    { "BAN", FALSE, 0, ""},
-    { "CHAT", FALSE, 0, ""},
-    { "SERVERSTART", FALSE, 0, ""},
-    { "SERVERINIT", FALSE, 0, ""},
-    { "SERVEREND", FALSE, 0, ""},
-    { "INTERNALWARN", FALSE, 0, ""},
-    { "PERFORMANCEMONITOR", FALSE, 0, ""},
-    { "DISABLECMD", FALSE, 0, ""},
-    { "ENTITYCREATE", FALSE, 0, ""},
-    { "ENTITYDELETE", FALSE, 0, ""},
-    { "INVALIDIP", FALSE, 0, ""},
-    { "ADMINLOG", FALSE, 0, ""},
-    { "CLIENTUSERINFO", FALSE, 0, ""},
-    { "PRIVATELOG", FALSE, 0, ""},
+    { "ZBOT", qfalse, 0, ""},
+    { "ZBOTIMPULSES", qfalse, 0, ""},
+    { "IMPULSES", qfalse, 0, ""},
+    { "NAMECHANGE", qfalse, 0, ""},
+    { "SKINCHANGE", qfalse, 0, ""},
+    { "CHATBAN", qfalse, 0, ""},
+    { "CLIENTCONNECT", qfalse, 0, ""},
+    { "CLIENTBEGIN", qfalse, 0, ""},
+    { "CLIENTDISCONNECT", qfalse, 0, ""},
+    { "CLIENTKICK", qfalse, 0, ""},
+    { "CLIENTCMDS", qfalse, 0, ""},
+    { "CLIENTLRCON", qfalse, 0, ""},
+    { "BAN", qfalse, 0, ""},
+    { "CHAT", qfalse, 0, ""},
+    { "SERVERSTART", qfalse, 0, ""},
+    { "SERVERINIT", qfalse, 0, ""},
+    { "SERVEREND", qfalse, 0, ""},
+    { "INTERNALWARN", qfalse, 0, ""},
+    { "PERFORMANCEMONITOR", qfalse, 0, ""},
+    { "DISABLECMD", qfalse, 0, ""},
+    { "ENTITYCREATE", qfalse, 0, ""},
+    { "ENTITYDELETE", qfalse, 0, ""},
+    { "INVALIDIP", qfalse, 0, ""},
+    { "ADMINLOG", qfalse, 0, ""},
+    { "CLIENTUSERINFO", qfalse, 0, ""},
+    { "PRIVATELOG", qfalse, 0, ""},
 };
 
 /**
@@ -129,7 +129,7 @@ qboolean loadLogListFile(char *filename) {
 
     loglist = fopen(filename, "rt");
     if (!loglist) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(readbuf, 4096, loglist)) {
@@ -161,9 +161,9 @@ qboolean loadLogListFile(char *filename) {
                         cp += 3;
                         SKIPBLANK(cp);
 
-                        logFiles[lognum].mod = TRUE;
+                        logFiles[lognum].mod = qtrue;
                     } else {
-                        logFiles[lognum].mod = FALSE;
+                        logFiles[lognum].mod = qfalse;
                     }
 
                     if (*cp == '\"') {
@@ -175,9 +175,9 @@ qboolean loadLogListFile(char *filename) {
                         expandOutPortNum(logFiles[lognum].filename, sizeof (logFiles[lognum].filename) - 1);
 
                         if (!isBlank(logFiles[lognum].filename)) {
-                            logFiles[lognum].inuse = TRUE;
+                            logFiles[lognum].inuse = qtrue;
                         } else {
-                            logFiles[lognum].inuse = FALSE;
+                            logFiles[lognum].inuse = qfalse;
                             gi.dprintf("Error loading LOGFILE from line %d in file %s\n", uptoLine, filename);
                         }
                     } else {
@@ -203,7 +203,7 @@ qboolean loadLogListFile(char *filename) {
                             logtypes[i].logfiles = 0;
 
                             lognum = q2a_atoi(cp);
-                            logtypes[i].log = FALSE;
+                            logtypes[i].log = qfalse;
 
                             if (lognum >= 1 || lognum <= 32) {
                                 lognum--;
@@ -244,7 +244,7 @@ qboolean loadLogListFile(char *filename) {
                                     cp = processstring(logtypes[i].format, cp, sizeof (logtypes[i].format) - 1, '\"');
 
                                     if (!isBlank(logtypes[i].format)) {
-                                        logtypes[i].log = TRUE;
+                                        logtypes[i].log = qtrue;
                                     } else {
                                         gi.dprintf("Error loading LOGTYPE from line %d in file %s\n", uptoLine, filename);
                                     }
@@ -253,7 +253,7 @@ qboolean loadLogListFile(char *filename) {
                                 }
                             }
                         } else if (startContains(cp, "NO")) {
-                            logtypes[i].log = FALSE;
+                            logtypes[i].log = qfalse;
                         }
 
                         break;
@@ -267,7 +267,7 @@ qboolean loadLogListFile(char *filename) {
         }
     }
     fclose(loglist);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -279,12 +279,12 @@ void loadLogList(void) {
 
     q2a_memset(logFiles, 0x0, sizeof (logFiles));
     for (i = 0; i < LOGTYPES_MAX; i++) {
-        logtypes[i].log = FALSE;
+        logtypes[i].log = qfalse;
     }
     ret = loadLogListFile(configfile_log->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_log->string);
     if (loadLogListFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
     if (!ret) {
         gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_log->string);
@@ -590,7 +590,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
         if (!isBlank(filename)) {
             logFiles[logfilenum].mod = mod;
             q2a_strncpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename));
-            logFiles[logfilenum].inuse = TRUE;
+            logFiles[logfilenum].inuse = qtrue;
             gi.cprintf(ent, PRINT_HIGH, "Log file Added!\n");
         } else {
             gi.cprintf(ent, PRINT_HIGH, LOGFILECMD);
@@ -611,7 +611,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
         if (!logFiles[logfilenum].inuse) {
             gi.cprintf(ent, PRINT_HIGH, "Log file not in use!\n");
         } else {
-            logFiles[logfilenum].inuse = FALSE;
+            logFiles[logfilenum].inuse = qfalse;
             gi.cprintf(ent, PRINT_HIGH, "Log file turned off!\n");
         }
     } else {
@@ -664,7 +664,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
 
             for (i = 0; i < LOGTYPES_MAX; i++) {
                 if (startContains(logtypes[i].logtype, lt)) {
-                    displayLogEventListCont(ent, client, i, TRUE);
+                    displayLogEventListCont(ent, client, i, qtrue);
                 }
             }
 
@@ -705,9 +705,9 @@ void logeventRun(int startarg, edict_t *ent, int client) {
                     cmd = gi.argv(argi);
 
                     if (startContains(cmd, "YES")) {
-                        log = TRUE;
+                        log = qtrue;
                     } else {
-                        log = FALSE;
+                        log = qfalse;
                     }
 
                 } else if (Q_stricmp(cmd, "LOGFILES") == 0) {
@@ -786,7 +786,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
             logtypes[i].logfiles = logfiles;
             q2a_strcpy(logtypes[i].format, format);
 
-            displayLogEventListCont(ent, client, i, TRUE);
+            displayLogEventListCont(ent, client, i, qtrue);
         } else {
             gi.cprintf(ent, PRINT_HIGH, LOGEVENTCMD);
         }

@@ -43,12 +43,12 @@ qboolean ReadVoteFile(char *votename) {
     unsigned int uptoLine = 0;
 
     if (maxvote_cmds >= VOTE_MAXCMDS) {
-        return FALSE;
+        return qfalse;
     }
 
     votefile = fopen(votename, "rt");
     if (!votefile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, votefile)) {
@@ -120,7 +120,7 @@ qboolean ReadVoteFile(char *votename) {
         }
     }
     fclose(votefile);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -147,7 +147,7 @@ void readVoteLists(void) {
     ret = ReadVoteFile(configfile_vote->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_vote->string);
     if (ReadVoteFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
@@ -175,7 +175,7 @@ qboolean checkforvotecmd(char *cp, int votecmd) {
         case VOTE_RE:
             return (regexec(votecmds[votecmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**
@@ -188,10 +188,10 @@ qboolean checkVoteCommand(char *cp) {
     q_strupr(buffer);
     for (i = 0; i < maxvote_cmds; i++) {
         if (checkforvotecmd(buffer, i)) {
-            return TRUE;
+            return qtrue;
         }
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**

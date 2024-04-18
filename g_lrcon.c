@@ -36,12 +36,12 @@ qboolean ReadLRconFile(char *lrcname) {
     unsigned int uptoLine = 0;
 
     if (maxlrcon_cmds >= LRCON_MAXCMDS) {
-        return FALSE;
+        return qfalse;
     }
 
     lrconfile = fopen(lrcname, "rt");
     if (!lrconfile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, lrconfile)) {
@@ -145,7 +145,7 @@ qboolean ReadLRconFile(char *lrcname) {
         }
     }
     fclose(lrconfile);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -173,7 +173,7 @@ void readLRconLists(void) {
     ret = ReadLRconFile(configfile_rcon->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_rcon->string);
     if (ReadLRconFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
@@ -209,7 +209,7 @@ qboolean checklrcon(char *cp, int lrcon) {
             return (regexec(lrconcmds[lrcon].r, strbuffer, 0, 0, 0) != REG_NOMATCH);
     }
 
-    return FALSE;
+    return qfalse;
 }
 
 /**

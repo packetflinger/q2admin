@@ -32,12 +32,12 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
     unsigned int uptoLine = 0;
 
     if (maxspawn_cmds >= SPAWN_MAXCMDS) {
-        return FALSE;
+        return qfalse;
     }
 
     spawnfile = fopen(spawnname, "rt");
     if (!spawnfile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, spawnfile)) {
@@ -126,7 +126,7 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
         }
     }
     fclose(spawnfile);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -175,10 +175,10 @@ void readSpawnLists(void) {
     qboolean ret;
 
     freeSpawnLists();
-    ret = ReadSpawnFile(configfile_spawn->string, FALSE);
+    ret = ReadSpawnFile(configfile_spawn->string, qfalse);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_spawn->string);
-    if (ReadSpawnFile(buffer, FALSE)) {
-        ret = TRUE;
+    if (ReadSpawnFile(buffer, qfalse)) {
+        ret = qtrue;
     }
     if (!ret) {
         gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
@@ -206,7 +206,7 @@ qboolean checkforspawncmd(char *cp, int spawncmd) {
         case SPAWN_RE:
             return (regexec(spawncmds[spawncmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**
@@ -219,10 +219,10 @@ qboolean checkDisabledEntities(char *cp) {
     q_strupr(buffer);
     for (i = 0; i < maxspawn_cmds; i++) {
         if (checkforspawncmd(buffer, i)) {
-            return TRUE;
+            return qtrue;
         }
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**
@@ -286,7 +286,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
         return;
     }
 
-    spawncmds[maxspawn_cmds].onelevelflag = FALSE;
+    spawncmds[maxspawn_cmds].onelevelflag = qfalse;
 
     cmd = gi.argv(startarg + 1);
 
@@ -379,7 +379,7 @@ void linkentity_internal(edict_t *ent) {
         if (checkDisabledEntities(*((char **) ((unsigned long) ent + entity_classname_offset)))) {
             char **classnameptr = ((char **) ((unsigned long) ent + entity_classname_offset));
             *classnameptr = NULL;
-            ent->inuse = FALSE;
+            ent->inuse = qfalse;
             return;
         }
     }

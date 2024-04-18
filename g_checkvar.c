@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 
 checkvar_t checkvarList[CHECKVAR_MAX];
-qboolean checkvarcmds_enable = FALSE;
+qboolean checkvarcmds_enable = qfalse;
 int checkvar_poll_time = 60;
 int maxcheckvars = 0;
 
@@ -33,12 +33,12 @@ qboolean ReadCheckVarFile(char *checkvarname) {
     unsigned int uptoLine = 0;
 
     if (maxcheckvars >= CHECKVAR_MAX) {
-        return FALSE;
+        return qfalse;
     }
 
     checkvarfile = fopen(checkvarname, "rt");
     if (!checkvarfile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, checkvarfile)) {
@@ -148,7 +148,7 @@ qboolean ReadCheckVarFile(char *checkvarname) {
         }
     }
     fclose(checkvarfile);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -161,7 +161,7 @@ void readCheckVarLists(void) {
     ret = ReadCheckVarFile(configfile_cvar->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cvar->string);
     if (ReadCheckVarFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
     if (!ret) {
         gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_cvar->string);

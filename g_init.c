@@ -71,8 +71,8 @@ cvar_t *configfile_rcon;
 cvar_t *configfile_spawn;
 cvar_t *configfile_vote;
 
-qboolean quake2dirsupport = TRUE;
-qboolean fpsFloodExempt = FALSE;
+qboolean quake2dirsupport = qtrue;
+qboolean fpsFloodExempt = qfalse;
 
 char dllname[256];
 char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
@@ -129,69 +129,69 @@ qboolean q2a_command_check = qfalse;
 qboolean do_vid_restart = qfalse;
 qboolean private_command_kick = qfalse;
 
-qboolean dllloaded = FALSE;
+qboolean dllloaded = qfalse;
 
-qboolean zbotdetect = TRUE;
-qboolean mapcfgexec = FALSE;
-qboolean checkClientIpAddress = TRUE;
+qboolean zbotdetect = qtrue;
+qboolean mapcfgexec = qfalse;
+qboolean checkClientIpAddress = qtrue;
 
-qboolean nameChangeFloodProtect = FALSE;
+qboolean nameChangeFloodProtect = qfalse;
 int nameChangeFloodProtectNum = 5;
 int nameChangeFloodProtectSec = 2;
 int nameChangeFloodProtectSilence = 10;
 char nameChangeFloodProtectMsg[256];
 
-qboolean skinChangeFloodProtect = FALSE;
+qboolean skinChangeFloodProtect = qfalse;
 int skinChangeFloodProtectNum = 5;
 int skinChangeFloodProtectSec = 2;
 int skinChangeFloodProtectSilence = 10;
 char skinChangeFloodProtectMsg[256];
 
 struct chatflood_s floodinfo = {
-    FALSE, 5, 2, 10
+    qfalse, 5, 2, 10
 };
 
 char chatFloodProtectMsg[256];
 
 
-qboolean disconnectuser = TRUE;
-qboolean displayzbotuser = TRUE;
+qboolean disconnectuser = qtrue;
+qboolean displayzbotuser = qtrue;
 int numofdisplays = 4;
 char zbotuserdisplay[256];
 char timescaleuserdisplay[256];
 char hackuserdisplay[256];
 char skincrashmsg[256];
 char defaultreconnectmessage[256];
-qboolean displaynamechange = TRUE;
-qboolean disconnectuserimpulse = FALSE;
+qboolean displaynamechange = qtrue;
+qboolean disconnectuserimpulse = qfalse;
 int maximpulses = 1;
 
 
-qboolean displayimpulses = FALSE;
+qboolean displayimpulses = qfalse;
 
 //r1ch 2005-01-26 disable hugely buggy commands BEGIN
-/*qboolean play_team_enable = FALSE;
-qboolean play_all_enable = FALSE;
-qboolean play_person_enable = FALSE;*/
+/*qboolean play_team_enable = qfalse;
+qboolean play_all_enable = qfalse;
+qboolean play_person_enable = qfalse;*/
 //r1ch 2005-01-26 disable hugely buggy commands END
 
-qboolean say_person_enable = FALSE;
-qboolean say_group_enable = FALSE;
-qboolean extendedsay_enable = FALSE;
-qboolean spawnentities_enable = FALSE;
-qboolean spawnentities_internal_enable = FALSE;
-qboolean vote_enable = FALSE;
-qboolean consolechat_disable = FALSE;
-qboolean gamemaptomap = FALSE;
-qboolean banOnConnect = TRUE;
-qboolean lockDownServer = FALSE;
-qboolean printmessageonplaycmds = TRUE;
+qboolean say_person_enable = qfalse;
+qboolean say_group_enable = qfalse;
+qboolean extendedsay_enable = qfalse;
+qboolean spawnentities_enable = qfalse;
+qboolean spawnentities_internal_enable = qfalse;
+qboolean vote_enable = qfalse;
+qboolean consolechat_disable = qfalse;
+qboolean gamemaptomap = qfalse;
+qboolean banOnConnect = qtrue;
+qboolean lockDownServer = qfalse;
+qboolean printmessageonplaycmds = qtrue;
 
 int randomwaitreporttime = 55;
 
 int maxMsgLevel = 3;
 
-qboolean serverinfoenable = TRUE;
+qboolean serverinfoenable = qtrue;
 
 char zbotmotd[256];
 char motd[4096];
@@ -239,17 +239,17 @@ int maxclientsperframe = 100;
 int framesperprocess = 0;
 
 
-qboolean cl_pitchspeed_display = TRUE;
-qboolean cl_pitchspeed_enable = FALSE;
-qboolean cl_pitchspeed_kick = FALSE;
+qboolean cl_pitchspeed_display = qtrue;
+qboolean cl_pitchspeed_enable = qfalse;
+qboolean cl_pitchspeed_kick = qfalse;
 char cl_pitchspeed_kickmsg[256];
 
-qboolean cl_anglespeedkey_display = TRUE;
-qboolean cl_anglespeedkey_enable = FALSE;
-qboolean cl_anglespeedkey_kick = FALSE;
+qboolean cl_anglespeedkey_display = qtrue;
+qboolean cl_anglespeedkey_enable = qfalse;
+qboolean cl_anglespeedkey_kick = qfalse;
 char cl_anglespeedkey_kickmsg[256];
 
-qboolean filternonprintabletext = FALSE;
+qboolean filternonprintabletext = qfalse;
 
 char lockoutmsg[256];
 
@@ -460,7 +460,7 @@ void InitGame(void) {
         proxyinfo[i].admin = 0;
         proxyinfo[i].clientcommand = 0;
         proxyinfo[i].stuffFile = 0;
-        proxyinfo[i].floodinfo.chatFloodProtect = FALSE;
+        proxyinfo[i].floodinfo.chatFloodProtect = qfalse;
         proxyinfo[i].impulsesgenerated = 0;
         proxyinfo[i].retries = 0;
         proxyinfo[i].rbotretries = 0;
@@ -638,7 +638,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             proxyinfo[i].q2a_bypass = 0;
             proxyinfo[i].admin = 0;
             proxyinfo[i].clientcommand = 0;
-            proxyinfo[i].floodinfo.chatFloodProtect = FALSE;
+            proxyinfo[i].floodinfo.chatFloodProtect = qfalse;
             proxyinfo[i].stuffFile = 0;
         } else {
             proxyinfo[i].clientcommand &= (LEVELCHANGE_KEEP);
@@ -715,7 +715,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         q2a_strcat(buffer, "/q2adminmaps/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, ".q2aspawn");
-        ReadSpawnFile(buffer, TRUE);
+        ReadSpawnFile(buffer, qtrue);
 
         qboolean replaceteam;
         qboolean entremoved;
@@ -884,7 +884,7 @@ qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
         char *bp = cp1;
 
         if (*cp1 == 0 || *cp2 == 0) {
-            return FALSE;
+            return qfalse;
         }
 
         while (*bp && *bp != ':') {
@@ -902,14 +902,14 @@ qboolean checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
         *bp = 0;
 
         if (q2a_strcmp(cp1, cp2) != 0) {
-            return FALSE;
+            return qfalse;
         }
 
         cp1 = Info_ValueForKey(userinfo1, "name");
         cp2 = Info_ValueForKey(userinfo2, "name");
 
         if (q2a_strcmp(cp1, cp2) != 0) {
-            return FALSE;
+            return qfalse;
         }
 
         cp1 = Info_ValueForKey(userinfo1, "skin");
@@ -929,11 +929,11 @@ qboolean checkReconnectList(char *username) {
 
     for (i = 0; i < maxclients->value; i++) {
         if (reconnectproxyinfo[i].inuse && q2a_strcmp(reconnectproxyinfo[i].name, username) == 0) {
-            reconnectproxyinfo[i].inuse = FALSE;
-            return FALSE;
+            reconnectproxyinfo[i].inuse = qfalse;
+            return qfalse;
         }
     }
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -945,12 +945,12 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     char *skinname;
 
     qboolean ret;
-    qboolean userInfoOverflow = FALSE;
+    qboolean userInfoOverflow = qfalse;
 
     profile_init(1);
     profile_init(2);
 
-    if (!dllloaded) return FALSE;
+    if (!dllloaded) return qfalse;
 
     if (q2adminrunmode == 0) {
         ret = ge_mod->ClientConnect(ent, userinfo);
@@ -1039,7 +1039,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     proxyinfo[client].skin[0] = 0;
     proxyinfo[client].stuffFile = 0;
     proxyinfo[client].impulsesgenerated = 0;
-    proxyinfo[client].floodinfo.chatFloodProtect = FALSE;
+    proxyinfo[client].floodinfo.chatFloodProtect = qfalse;
     proxyinfo[client].cl_pitchspeed = 0;
     proxyinfo[client].cl_anglespeedkey = 0.0;
     proxyinfo[client].votescast = 0;
@@ -1076,19 +1076,19 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     s = Info_ValueForKey(userinfo, "name");
     if (*s == 0) {
         s = NULL;
-        return FALSE;
+        return qfalse;
     }
 
     q2a_strncpy(proxyinfo[client].name, s, sizeof (proxyinfo[client].name) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (*skinname == 0) {
-        return FALSE;
+        return qfalse;
     }
 
     if (strlen(skinname) > 38) {
         gi.cprintf(NULL, PRINT_HIGH, "%s: Skin name exceeds 38 characters (IP = %s)\n", proxyinfo[client].name, IP(client));
-        return FALSE;
+        return qfalse;
     }
 
     q2a_strncpy(proxyinfo[client].skin, skinname, sizeof (proxyinfo[client].skin) - 1);
@@ -1131,7 +1131,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
     } else if (ret && !(proxyinfo[client].clientcommand & CCMD_BANNED)) {
-        qboolean doConnect = TRUE;
+        qboolean doConnect = qtrue;
 
         // is reconnect_address set?
         if (!isBlank(reconnect_address)) {
@@ -1141,7 +1141,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
             if (*ip == 0) {
                 // force a reconnect and exit...
-                doConnect = FALSE;
+                doConnect = qfalse;
                 proxyinfo[client].clientcommand |= CCMD_RECONNECT;
             } else {
                 while (*bp && *bp != ':') {
@@ -1205,7 +1205,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
                 } else {
                     // force a reconnect and exit...
 
-                    doConnect = FALSE;
+                    doConnect = qfalse;
                     proxyinfo[client].clientcommand |= CCMD_RECONNECT;
                 }
             }
@@ -1266,7 +1266,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
 
             // ok not a ratbot.. turn off detection
             //      addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
-            return FALSE;
+            return qfalse;
         }
 
         // check for flooding..
@@ -1281,7 +1281,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
                     addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
 
                     gi.cprintf(ent, PRINT_HIGH, "%d seconds of name change silence left.\n", secleft);
-                    return FALSE;
+                    return qfalse;
                 }
             }
         }
@@ -1333,7 +1333,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
                             proxyinfo[client].namechangetimeout = ltime + nameChangeFloodProtectSilence;
                             proxyinfo[client].clientcommand |= CCMD_NCSILENCE;
                         }
-                        return FALSE;
+                        return qfalse;
                     }
 
                     proxyinfo[client].namechangecount++;
@@ -1342,7 +1342,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
         }
     }
 
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -1372,7 +1372,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                     addCmdQueue(client, QCMD_CHANGESKIN, 0, 0, 0);
 
                     gi.cprintf(ent, PRINT_HIGH, "%d seconds of skin change silence left.\n", secleft);
-                    return FALSE;
+                    return qfalse;
                 }
             }
         }
@@ -1397,7 +1397,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                         proxyinfo[client].skinchangetimeout = ltime + skinChangeFloodProtectSilence;
                         proxyinfo[client].clientcommand |= CCMD_SCSILENCE;
                     }
-                    return FALSE;
+                    return qfalse;
                 }
 
                 proxyinfo[client].skinchangecount++;
@@ -1410,10 +1410,10 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
         Q_snprintf(buffer, sizeof(buffer), skincrashmsg, proxyinfo[client].name);
         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
         addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skincrashmsg);
-        return FALSE;
+        return qfalse;
     }
 
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -1480,7 +1480,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     passon = checkForNameChange(client, ent, userinfo);
     if (!checkForSkinChange(client, ent, userinfo)) {
-        passon = FALSE;
+        passon = qfalse;
     }
 
     if (passon && !(proxyinfo[client].clientcommand & BANCHECK)) {
@@ -1682,7 +1682,7 @@ void ClientDisconnect(edict_t *ent) {
             for (i = 0; i < maxclients->value; i++) {
                 if (!reconnectproxyinfo[i].inuse) {
                     q2a_strcpy(reconnectproxyinfo[i].name, proxyinfo[client].name);
-                    reconnectproxyinfo[i].inuse = TRUE;
+                    reconnectproxyinfo[i].inuse = qtrue;
                     break;
                 }
             }
@@ -1712,7 +1712,7 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].skin[0] = 0;
     proxyinfo[client].stuffFile = 0;
     proxyinfo[client].impulsesgenerated = 0;
-    proxyinfo[client].floodinfo.chatFloodProtect = FALSE;
+    proxyinfo[client].floodinfo.chatFloodProtect = qfalse;
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;

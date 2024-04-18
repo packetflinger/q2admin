@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 disablecmd_t disablecmds[DISABLE_MAXCMDS];
 int maxdisable_cmds = 0;
-qboolean disablecmds_enable = FALSE;
+qboolean disablecmds_enable = qfalse;
 
 /**
  *
@@ -32,12 +32,12 @@ qboolean ReadDisableFile(char *disablename) {
     unsigned int uptoLine = 0;
 
     if (maxdisable_cmds >= DISABLE_MAXCMDS) {
-        return FALSE;
+        return qfalse;
     }
 
     disablefile = fopen(disablename, "rt");
     if (!disablefile) {
-        return FALSE;
+        return qfalse;
     }
 
     while (fgets(buffer, 256, disablefile)) {
@@ -111,7 +111,7 @@ qboolean ReadDisableFile(char *disablename) {
         }
     }
     fclose(disablefile);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -138,7 +138,7 @@ void readDisableLists(void) {
     ret = ReadDisableFile(configfile_disable->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_disable->string);
     if (ReadDisableFile(buffer)) {
-        ret = TRUE;
+        ret = qtrue;
     }
     if (!ret) {
         gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_disable->string);
@@ -166,7 +166,7 @@ qboolean checkfordisablecmd(char *cp, int disablecmd) {
         case DISABLE_RE:
             return (regexec(disablecmds[disablecmd].r, cp, 0, 0, 0) != REG_NOMATCH);
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**
@@ -179,10 +179,10 @@ qboolean checkDisabledCommand(char *cmd) {
     q_strupr(buffer);
     for (i = 0; i < maxdisable_cmds; i++) {
         if (checkfordisablecmd(buffer, i)) {
-            return TRUE;
+            return qtrue;
         }
     }
-    return FALSE;
+    return qfalse;
 }
 
 /**

@@ -32,15 +32,15 @@ qboolean AC_GetRemoteFile(char *bfname) {
     outf = fopen(localfilename, "r");
     if (!outf) {
         gi.cprintf(NULL, PRINT_HIGH, "Error opening local anticheat exception file.\n");
-        return FALSE;
+        return qfalse;
     }
     if (!GetURLContents(bfname)) {
         gi.cprintf(NULL, PRINT_HIGH, "Error fetching remote anticheat file: %s\n", bfname);
         fclose(outf);
-        return FALSE;
+        return qfalse;
     }
     fclose(outf);
-    return TRUE;
+    return qtrue;
 }
 
 /**
@@ -101,14 +101,14 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
     outf = fopen(buffer, "w");
     if (!outf) {
         gi.dprintf("Error opening local hash list file.\n");
-        return FALSE;
+        return qfalse;
     }
 
     handle = url_fopen(bfname, "r");
     if (!handle) {
         gi.dprintf("Error opening remote hash list file.\n");
         fclose(outf);
-        return FALSE;
+        return qfalse;
     }
 
     while (!url_feof(handle)) {
@@ -117,13 +117,13 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
             gi.dprintf("Timeout while waiting for remote hashlist reply.\n");
             url_fclose(handle);
             fclose(outf);
-            return FALSE;
+            return qfalse;
         }
         fwrite(buffer, 1, strlen(buffer), outf);
     }
     url_fclose(handle);
     fclose(outf);
-    return TRUE;
+    return qtrue;
 }
 
 /**
