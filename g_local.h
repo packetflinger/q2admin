@@ -47,6 +47,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_whois.h"
 #include "profile.h"
 
+#define CFGFILE         "q2admin.cfg"
+
 extern game_import_t gi;        // server access from inside game lib
 extern game_export_t ge;        // game access from inside server
 extern game_export_t *ge_mod;   // real game access from inside proxy game lib

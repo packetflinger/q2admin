@@ -20,8 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-#define CFGFILE         "q2admin.cfg"
-
 #if defined(_WIN32) || defined(_WIN64)
   HINSTANCE hdll;
 #else
