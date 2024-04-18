@@ -90,9 +90,9 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
             Q_snprintf(buffer, sizeof(buffer), "VPN connections not allowed, please reconnect without it\n", maxMsgLevel + 1);
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
-            gi.cprintf(NULL, PRINT_HIGH, "%s disconnected for using a VPN [%s - %s]\n",
-                    download->initiator->client->pers.netname, IP(i), v->asn
-            );
+            //gi.cprintf(NULL, PRINT_HIGH, "%s disconnected for using a VPN [%s - %s]\n",
+            //        download->initiator->client->pers.netname, IP(i), v->asn
+            //);
         }
     }
 }
