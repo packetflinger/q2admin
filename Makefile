@@ -77,7 +77,7 @@ HEADERS := 	game.h \
             g_cloud.h \
             g_json.h \
             g_net.h \
-            q_shared.h \
+            shared.h \
             profile.h \
             regex.h \
             platform.h

@@ -18,16 +18,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-//
-// q2admin
-//
-// q_shared.h
-//
-// copyright 2000 Shane Powell
-//
-
-// q_shared.h -- included first by ALL program modules
-
 #ifdef _WIN32
 // unknown pragmas are SUPPOSED to be ignored, but....
 #pragma warning(disable : 4244)     // MIPS
