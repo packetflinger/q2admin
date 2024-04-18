@@ -198,6 +198,21 @@ typedef enum {
     CMD_COMMAND_WHOIS
 } remote_cmd_command_t;
 
+extern qboolean cloud_enabled;
+extern char cloud_address[256];
+extern int cloud_port;
+extern qboolean cloud_encryption;
+extern char cloud_privatekey[256];
+extern char cloud_publickey[256];
+extern char cloud_serverkey[256];
+extern char cloud_uuid[37];
+extern char cloud_dns[3];
+extern int cloud_flags;
+extern char cloud_cmd_teleport[25];
+extern char cloud_cmd_invite[25];
+extern char cloud_cmd_seen[25];
+extern char cloud_cmd_whois[25];
+
 void        CA_Send(void);
 void        CA_Init(void);
 void        CA_Shutdown(void);
