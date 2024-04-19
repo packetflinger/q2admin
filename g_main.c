@@ -173,7 +173,7 @@ void G_RunFrame(void) {
 
         if (timers_active) {
             timer_action(client, ent);
-		}
+        }
 
         if (getCommandFromQueue(client, &command, &data, &str)) {
             if (!proxyinfo[client].inuse) {
@@ -580,7 +580,6 @@ void G_RunFrame(void) {
             } else if (command == QCMD_RECONNECT) {
                 Q_snprintf(buffer, sizeof(buffer), "\nconnect %s\n", reconnect_address);
                 stuffcmd(ent, buffer);
-                //        addCmdQueue(client, QCMD_KICK, 0, 0, NULL);
             } else if (command == QCMD_CLIPTOMAXRATE) {
                 Q_snprintf(buffer, sizeof(buffer), "rate %d\n", maxrateallowed);
                 stuffcmd(ent, buffer);
@@ -613,8 +612,7 @@ void G_RunFrame(void) {
                 displayNextFlood(ent, client, data);
             } else if (command == QCMD_DISPSPAWN) {
                 displayNextSpawn(ent, client, data);
-            }
-            else if (command == QCMD_DISPVOTE) {
+            } else if (command == QCMD_DISPVOTE) {
                 displayNextVote(ent, client, data);
             } else if (command == QCMD_DISPDISABLE) {
                 displayNextDisable(ent, client, data);

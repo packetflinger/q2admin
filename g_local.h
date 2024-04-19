@@ -273,9 +273,9 @@ typedef struct {
 enum _commands {
     QCMD_STARTUP,
     QCMD_STARTUPTEST,
-    QCMD_CLEAR,
+    QCMD_CLEAR,                 // clears the client's console/chat area
     QCMD_DISCONNECT,
-    QCMD_CUSTOM,
+    QCMD_CUSTOM,                // stuff customClientCmd
     QCMD_ZPROXYCHECK1,
     QCMD_ZPROXYCHECK2,
     QCMD_DISPLOGFILE,
