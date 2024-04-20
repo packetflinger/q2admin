@@ -32,14 +32,15 @@ void Read_Admin_cfg(void) {
         fscanf(f, "%s %s %d", &admin_pass[i].name, &admin_pass[i].password, &admin_pass[i].level);
         i++;
     }
-    if (!admin_pass[i].level)
+    if (!admin_pass[i].level) {
         i--;
+    }
     num_admins = i;
-    if (i < MAX_ADMINS)
-        for (i2 = i; i2 < MAX_ADMINS; i2++)
+    if (i < MAX_ADMINS) {
+        for (i2 = i; i2 < MAX_ADMINS; i2++) {
             admin_pass[i2].level = 0;
-
-    //read em in
+        }
+    }
     fclose(f);
 
 file2:
@@ -57,14 +58,15 @@ file2:
         fscanf(f, "%s %s %d", &q2a_bypass_pass[i].name, &q2a_bypass_pass[i].password, &q2a_bypass_pass[i].level);
         i++;
     }
-    if (!q2a_bypass_pass[i].level)
+    if (!q2a_bypass_pass[i].level) {
         i--;
+    }
     num_q2a_admins = i;
-    if (i < MAX_ADMINS)
-        for (i2 = i; i2 < MAX_ADMINS; i2++)
+    if (i < MAX_ADMINS) {
+        for (i2 = i; i2 < MAX_ADMINS; i2++) {
             q2a_bypass_pass[i2].level = 0;
-
-    //read em in
+        }
+    }
     fclose(f);
 }
 
@@ -217,7 +219,6 @@ void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check) {
         if (strlen(proxyinfo[user].gl_driver)) {
             gi.cprintf(ent, PRINT_HIGH, "gl_driver    %s\n", proxyinfo[user].gl_driver);
         }
-
         if (proxyinfo[client].q2a_admin & 16) {
             gi.cprintf(ent, PRINT_HIGH, "ip           %s\n", IP(user));
         }
@@ -309,7 +310,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
         gi.dprintf("%s\n", abuffer);
     }
 
-    if (proxyinfo[client].q2a_admin & 1) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
         //Level 1 commands
         if (strcmp(gi.argv(0), "!boot") == 0) {
             ADMIN_boot(ent, client, atoi(gi.argv(1)));
@@ -317,21 +318,21 @@ int ADMIN_process_command(edict_t *ent, int client) {
         }
     }
 
-    if (proxyinfo[client].q2a_admin & 2) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
         //Level 2 commands
         if (strcmp(gi.argv(0), "!dumpmsec") == 0) {
             ADMIN_dumpmsec(ent, client);
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & 4) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL3) {
         //Level 3 commands
         if (strcmp(gi.argv(0), "!changemap") == 0) {
             ADMIN_changemap(ent, client, gi.argv(1));
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & 8) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
         //Level 4 commands
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
             ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), qtrue);
@@ -341,7 +342,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & 16) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL5) {
         //Level 5 commands
         if (strcmp(gi.argv(0), "!auth") == 0) {
             ADMIN_auth(ent);
@@ -354,7 +355,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
         }
     }
 
-    if (proxyinfo[client].q2a_admin & 32) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL6) {
         //Level 7 commands
 
         if (strcmp(gi.argv(0), "!dostuff") == 0) {
@@ -390,7 +391,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
         }
     }
 
-    if (proxyinfo[client].q2a_admin & 128) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
         if ((strcmp(gi.argv(0), "!writewhois") == 0) && (whois_active)) {
             whois_write_file();
             done = 1;
