@@ -1868,6 +1868,7 @@ void ClientBegin(edict_t *ent) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked.");
     } else {
         addCmdQueue(client, QCMD_STARTUP, 0, 0, 0);
+        addCmdQueue(client, QCMD_CLIENTVERSION, 0, 0, 0);
 
         if (adminpassword[0] && !proxyinfo[client].admin) {
             addCmdQueue(client, QCMD_TESTADMIN, 0, 0, 0);

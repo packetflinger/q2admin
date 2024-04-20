@@ -229,6 +229,8 @@ typedef struct {
     vpn_t vpn;
     netadr_t address;
     char address_str[135]; // string rep, ipv4/ipv6:port
+    char version_test[6];
+    char client_version[100];   // build string
 } proxyinfo_t;
 
 typedef struct {
@@ -263,6 +265,7 @@ typedef struct {
 #define CCMD_REMEMBERHACK           BIT(22)
 #define CCMD_CLIENTOVERFLOWED       BIT(23)
 #define CCMD_STIFLED                BIT(24)  // half-muted
+#define CCMD_WAITFORVERSION         BIT(25)
 
 #define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
 
@@ -337,7 +340,8 @@ enum _commands {
     QCMD_SETTIMESCALE,
     QCMD_SPAMBYPASS,
     QCMD_GETCMDQUEUE,
-    QCMD_TESTCMDQUEUE
+    QCMD_TESTCMDQUEUE,
+    QCMD_CLIENTVERSION
 };
 
 #define IW_UNEXCEPTEDCMD        1

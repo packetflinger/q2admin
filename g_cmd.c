@@ -2451,6 +2451,18 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             }
         }
         return qfalse;
+    } else if (proxyinfo[client].clientcommand & CCMD_WAITFORVERSION) {
+        if (gi.argc() > 1) {
+            if (Q_stricmp(cmd, proxyinfo[client].version_test) == 0) {
+                proxyinfo[client].clientcommand &= ~CCMD_WAITFORVERSION;
+                q2a_strncpy(
+                        proxyinfo[client].client_version,
+                        gi.args(),
+                        sizeof(proxyinfo[client].client_version)
+                );
+                return qfalse;
+            }
+        }
     } else if (proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2) // check for proxy string
     {
         if (!zbotdetect || !proxyinfo[client].inuse) {

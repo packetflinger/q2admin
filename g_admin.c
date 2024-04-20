@@ -229,6 +229,7 @@ void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check) {
         if (proxyinfo[client].q2a_admin & 128) {
             gi.cprintf(ent, PRINT_HIGH, "full         %s\n", proxyinfo[user].userinfo);
         }
+        gi.cprintf(ent, PRINT_HIGH, "client ver   %s\n", proxyinfo[user].client_version);
     }
 }
 

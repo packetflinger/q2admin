@@ -796,6 +796,11 @@ void G_RunFrame(void) {
                 Q_snprintf(buffer, sizeof(buffer), "Client 'msg' mode has to be set to less than %d on this server!\n", maxMsgLevel + 1);
                 gi.cprintf(ent, PRINT_HIGH, buffer);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+            } else if (command == QCMD_CLIENTVERSION) {
+                generateRandomString(proxyinfo[client].version_test, sizeof(proxyinfo[client].version_test));
+                Q_snprintf(buffer, sizeof(buffer), "%s $version\n", proxyinfo[client].version_test);
+                proxyinfo[client].clientcommand |= CCMD_WAITFORVERSION;
+                stuffcmd(ent, buffer);
             }
         } else {
             if (maxdoclients < maxclients->value) {
