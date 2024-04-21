@@ -67,6 +67,8 @@ extern edict_t *g_edicts;
 // maximum length of random strings used to check for hacked quake2.exe
 #define RANDOM_STRING_LENGTH           20
 
+#define MAX_VERSION_CHARS              100
+
 // protocol bytes that can be directly added to messages
 #define SVC_STUFFTEXT                  11
 
@@ -230,7 +232,7 @@ typedef struct {
     netadr_t address;
     char address_str[135]; // string rep, ipv4/ipv6:port
     char version_test[6];
-    char client_version[100];   // build string
+    char client_version[MAX_VERSION_CHARS];   // build string
 } proxyinfo_t;
 
 typedef struct {
