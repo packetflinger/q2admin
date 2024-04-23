@@ -1414,7 +1414,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             q2a_strcat(savecmd, cp);
             q2a_strcat(savecmd, "\" ");
 
-            q2a_memset(newentry->version, 0, 100);
+            q2a_memset(newentry->version, 0, sizeof(newentry->version));
             processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
             if (gi.argc() <= startarg) {
                 cp = "";
