@@ -32,9 +32,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
 
+qboolean ChatBanning_Enable = qfalse;
 qboolean IPBanning_Enable = qfalse;
 qboolean NickBanning_Enable = qfalse;
-qboolean ChatBanning_Enable = qfalse;
+qboolean VersionBanning_Enable = qfalse;
+
 qboolean kickOnNameChange = qfalse;
 
 char defaultBanMsg[256];
@@ -53,6 +55,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
     chatbaninfo_t *cnewentry;
     char strbuffer[256];
     unsigned int uptoLine = 0;
+    qboolean allver;
 
     banfile = url_fopen(bfname, "rt");
     if (!banfile) {
@@ -170,6 +173,40 @@ qboolean ReadRemoteBanFile(char *bfname) {
                         }
                         SKIPBLANK(cp);
                     }
+
+                    if (startContains(cp, "VERSION")) {
+                        cp += 7;
+                        SKIPBLANK(cp);
+                        if (startContains(cp, "LIKE")) {
+                            newentry->vtype = VERSION_LIKE;
+                            cp += 4;
+                            SKIPBLANK(cp);
+                        } else if (startContains(cp, "RE")) {
+                            newentry->vtype = VERSION_REGEX;
+                            cp += 2;
+                            SKIPBLANK(cp);
+                        } else {
+                            newentry->vtype = VERSION_EQUALS;
+                        }
+
+                        q2a_memset(newentry->version, 0, sizeof(newentry->version));
+                        cp++; // eat the opening quote
+                        processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
+                        cp += strlen(newentry->version);
+                        allver = qfalse;
+                        if (newentry->vtype == VERSION_REGEX) {
+                            q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
+                            q_strupr(strbuffer);
+                            newentry->vr = gi.TagMalloc(sizeof(*newentry->vr), TAG_LEVEL);
+                            q2a_memset(newentry->vr, 0x0, sizeof(*newentry->vr));
+                            if (regcomp(newentry->vr, strbuffer, 0)) {
+                                gi.TagFree(newentry->vr);
+                                gi.TagFree(newentry);
+                            }
+                        }
+                    } else {
+                        allver = qtrue;
+                    }
                 }
 
                 // get PASSWORD
@@ -262,7 +299,7 @@ qboolean ReadRemoteBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -406,6 +443,7 @@ qboolean ReadBanFile(char *bfname) {
     unsigned int uptoLine = 0;
     char *tempcp;
     char ipstr[INET6_ADDRSTRLEN];
+    qboolean allver;
 
     banfile = fopen(bfname, "rt");
     if (!banfile) {
@@ -424,18 +462,12 @@ qboolean ReadBanFile(char *bfname) {
 
         if (!(cp[0] == ';' || cp[0] == '\n' || isBlank(cp))) {
             if (startContains(cp, "BAN:")) {
-                // create include / exclude ban.
-                // BAN: [+/-(-)] [ALL/[NAME [LIKE/RE] "name"/BLANK/ALL(ALL)] [IP xxx[.xxx(0)[.xxx(0)[.xxx(0)]]][/yy(32)]] [PASSWORD "xxx"] [MAX 0-xxx(0)] [FLOOD xxx xxx xxx] [MSG "xxx"]
-
                 // allocate memory for ban record
                 newentry = gi.TagMalloc(sizeof (baninfo_t), TAG_LEVEL);
-
                 newentry->loadType = LT_PERM;
                 newentry->timeout = 0.0;
                 newentry->r = 0;
-
                 cp += 4;
-
                 SKIPBLANK(cp);
 
                 // get +/-
@@ -529,8 +561,6 @@ qboolean ReadBanFile(char *bfname) {
                                 newentry->r = 0;
                             }
                         }
-
-
                         SKIPBLANK(cp);
                     } else {
                         newentry->type = NICKALL;
@@ -541,7 +571,6 @@ qboolean ReadBanFile(char *bfname) {
 
                     if (startContains(cp, "IP")) {
                         cp += 2;
-
                         SKIPBLANK(cp);
 
                         if (isxdigit(*cp)) {
@@ -555,11 +584,43 @@ qboolean ReadBanFile(char *bfname) {
                             newentry->addr = net_parseIPAddressMask(ipstr);
                             cp = tempcp;
                         }
-
                         SKIPBLANK(cp);
                     }
-                }
 
+                    if (startContains(cp, "VERSION")) {
+                        cp += 7;
+                        SKIPBLANK(cp);
+                        if (startContains(cp, "LIKE")) {
+                            newentry->vtype = VERSION_LIKE;
+                            cp += 4;
+                            SKIPBLANK(cp);
+                        } else if (startContains(cp, "RE")) {
+                            newentry->vtype = VERSION_REGEX;
+                            cp += 2;
+                            SKIPBLANK(cp);
+                        } else {
+                            newentry->vtype = VERSION_EQUALS;
+                        }
+
+                        q2a_memset(newentry->version, 0, sizeof(newentry->version));
+                        cp++; // eat the opening quote
+                        processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
+                        cp += strlen(newentry->version);
+                        allver = qfalse;
+                        if (newentry->vtype == VERSION_REGEX) {
+                            q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
+                            q_strupr(strbuffer);
+                            newentry->vr = gi.TagMalloc(sizeof(*newentry->vr), TAG_LEVEL);
+                            q2a_memset(newentry->vr, 0x0, sizeof(*newentry->vr));
+                            if (regcomp(newentry->vr, strbuffer, 0)) {
+                                gi.TagFree(newentry->vr);
+                                gi.TagFree(newentry);
+                            }
+                        }
+                    } else {
+                        allver = qtrue;
+                    }
+                }
 
                 // get PASSWORD
                 if (!newentry->exclude && startContains(cp, "PASSWORD")) {
@@ -687,7 +748,7 @@ qboolean ReadBanFile(char *bfname) {
 
                 // do you have a valid ban record?
                 if (newentry->type == NOTUSED ||
-                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) ||
+                        (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) ||
                         (newentry->type == NICKRE && !newentry->r)) {
                     // no, abort
                     if (newentry->msg) {
@@ -947,8 +1008,8 @@ void banRun(int startarg, edict_t *ent, int client) {
     qboolean nocheck = qfalse;
     char *ipstr;
     char tempip[INET6_ADDRSTRLEN];
-
-    // [sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%p x/BLANK/ALL(ALL)] [IP [xxx[.xxx(0)[.xxx(0)[.xxx(0)]]]/%p x][/yy(32)]] [PASSWORD xxx] [MAX 0-xxx(0)]] [FLOOD xxx xxx xxx] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+    qboolean allver;
+    char *masktoken;
 
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -979,6 +1040,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         cp = gi.argv(startarg);
         startarg++;
 
+        q2a_strcat(savecmd, "- ");
     } else if (*cp == '+') {
         newentry->exclude = qfalse;
 
@@ -995,6 +1057,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         q2a_strcat(savecmd, "+ ");
     } else {
         newentry->exclude = qtrue;
+        q2a_strcat(savecmd, "- ");
     }
 
     if (startContains(cp, "ALL")) {
@@ -1064,6 +1127,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strcat(savecmd, "RE ");
             } else {
                 like = qfalse;
+                re = qfalse;
             }
 
             // BLANK or ALL or name
@@ -1094,7 +1158,12 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (like) {
                     newentry->type = NICKLIKE;
                 } else if (re) {
-                    newentry->type = NICKRE;
+                    // This is NICKLIKE instead of NICKRE on purpose. Since
+                    // you're limited to the player's name when using %P
+                    // making the rule a regex is a waste of resources. A LIKE
+                    // rule will be an identical match without the overhead of
+                    // compiling a regex_t and all that nonsense.
+                    newentry->type = NICKLIKE;
                 } else {
                     newentry->type = NICKEQ;
                 }
@@ -1108,8 +1177,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     return;
                 }
 
-                q2a_strncpy(newentry->nick, proxyinfo[clienti].name, 80);
-
+                q2a_strncpy(newentry->nick, proxyinfo[clienti].name, sizeof(newentry->nick));
                 q2a_strcat(savecmd, "\"");
                 q2a_strcat(savecmd, proxyinfo[clienti].name);
                 q2a_strcat(savecmd, "\" ");
@@ -1117,10 +1185,8 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (newentry->type == NICKRE) { // compile RE
                     q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                     q_strupr(strbuffer);
-
                     newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
                     q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                    //          if(regcomp(newentry->r, strbuffer, REG_EXTENDED))
                     if (regcomp(newentry->r, strbuffer, 0)) {
                         gi.TagFree(newentry->r);
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1143,16 +1209,15 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strcat(savecmd, "\" ");
 
                 // copy name
-                processstring(newentry->nick, cp, sizeof (newentry->nick) - 1, 0);
+                processstring(newentry->nick, cp, sizeof(newentry->nick) - 1, 0);
             }
 
             if (newentry->type == NICKRE) { // compile RE
                 q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                 q_strupr(strbuffer);
 
-                newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
+                newentry->r = gi.TagMalloc(sizeof(*newentry->r), TAG_LEVEL);
                 q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                //        if(regcomp(newentry->r, strbuffer, REG_EXTENDED))
                 if (regcomp(newentry->r, strbuffer, 0)) {
                     gi.TagFree(newentry->r);
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1221,6 +1286,24 @@ void banRun(int startarg, edict_t *ent, int client) {
                 }
 
                 clienti = q2a_atoi(cp);
+                newentry->addr = proxyinfo[clienti].address;
+
+                while (isdigit(*cp)) {
+                    cp++;
+                }
+
+                // catch use of a mask (eg: %p #/##)
+                if (startContains(cp, "/")) {
+                    cp++;
+                    int masklen = q2a_atoi(cp);
+                    if (masklen >= 0 && masklen <= 128) {
+                        newentry->addr.mask_bits = masklen;
+                    }
+                    while (isdigit(*cp)) {
+                        cp++;
+                    }
+                    SKIPBLANK(cp);
+                }
 
                 if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1233,8 +1316,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     gi.TagFree(newentry);
                     return;
                 }
-
-                newentry->addr = proxyinfo[clienti].address;
 
                 ipstr = IPSTRMASK(&newentry->addr);
                 Q_snprintf(
@@ -1284,6 +1365,80 @@ void banRun(int startarg, edict_t *ent, int client) {
                 startarg++;
             }
         }
+
+        if (startContains(cp, "VERSION")) {
+            if (gi.argc() <= startarg) {
+                gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                if (newentry->r) {
+                    regfree(newentry->r);
+                    gi.TagFree(newentry->r);
+                }
+                gi.TagFree(newentry);
+                return;
+            }
+
+            cp = gi.argv(startarg);
+            startarg++;
+
+            q2a_strcat(savecmd, "VERSION ");
+            if (startContains(cp, "LIKE")) {
+                newentry->vtype = VERSION_LIKE;
+
+                if (gi.argc() <= startarg) {
+                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                    gi.TagFree(newentry);
+                    return;
+                }
+
+                cp = gi.argv(startarg);
+                startarg++;
+                q2a_strcat(savecmd, "LIKE ");
+            } else if (startContains(cp, "RE")) {
+                newentry->vtype = VERSION_REGEX;
+                if (gi.argc() <= startarg) {
+                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                    gi.TagFree(newentry);
+                    return;
+                }
+                cp = gi.argv(startarg);
+                startarg++;
+                q2a_strcat(savecmd, "RE ");
+            } else {
+                newentry->vtype = VERSION_EQUALS;
+            }
+
+            q2a_strcat(savecmd, "\"");
+            q2a_strcat(savecmd, cp);
+            q2a_strcat(savecmd, "\" ");
+
+            q2a_memset(newentry->version, 0, 100);
+            processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
+            if (gi.argc() <= startarg) {
+                cp = "";
+            } else {
+                cp = gi.argv(startarg);
+                startarg++;
+            }
+            allver = qfalse;
+            if (newentry->vtype == VERSION_REGEX) {
+                q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
+                q_strupr(strbuffer);
+                newentry->vr = gi.TagMalloc(sizeof(*newentry->vr), TAG_LEVEL);
+                q2a_memset(newentry->vr, 0x0, sizeof(*newentry->vr));
+                if (regcomp(newentry->vr, strbuffer, 0)) {
+                    gi.TagFree(newentry->vr);
+                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                    gi.TagFree(newentry);
+                    return;
+                }
+            }
+        } else {
+            allver = qtrue;
+        }
     }
 
     // get PASSWORD
@@ -1304,13 +1459,11 @@ void banRun(int startarg, edict_t *ent, int client) {
         startarg++;
 
         q2a_strcat(savecmd, "PASSWORD ");
-
         q2a_strcat(savecmd, "\"");
         q2a_strcat(savecmd, cp);
         q2a_strcat(savecmd, "\" ");
 
         // copy password
-
         processstring(newentry->password, cp, sizeof (newentry->password) - 1, 0);
 
         if (gi.argc() <= startarg) {
@@ -1552,7 +1705,6 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     if (*cp != 0) {
-
         // something is wrong...
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
@@ -1569,7 +1721,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     // do you have a valid ban record?
-    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0) {
+    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) {
         // no, abort
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
@@ -1579,6 +1731,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             regfree(newentry->r);
             gi.TagFree(newentry->r);
         }
+        gi.dprintf("problems!\n");
         gi.TagFree(newentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -1635,8 +1788,14 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "Bans reloaded.\n");
 }
 
+/**
+ * Check if a particular client is banned
+ *
+ * Called from ClientConnect()
+ */
 int checkBanList(edict_t *ent, int client) {
-    baninfo_t *checkentry = banhead, *prevcheckentry = NULL;
+    baninfo_t *checkentry = banhead;
+    baninfo_t *prevcheckentry = NULL;
     char strbuffer[256];
 
     while (checkentry) {
@@ -1667,13 +1826,11 @@ int checkBanList(edict_t *ent, int client) {
                 }
                 gi.TagFree(checkentry);
 
-
                 if (prevcheckentry) {
                     checkentry = prevcheckentry->next;
                 } else {
                     checkentry = banhead;
                 }
-
                 continue;
             }
 
@@ -1732,6 +1889,31 @@ int checkBanList(edict_t *ent, int client) {
                 }
             }
 
+            // check version
+            if (VersionBanning_Enable && checkentry->version[0] != 0) {
+                if (checkentry->vtype == VERSION_EQUALS) {
+                    if (Q_stricmp(checkentry->version, proxyinfo[client].client_version) != 0) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    }
+                } else if (checkentry->vtype == VERSION_LIKE) {
+                    if (!stringContains(proxyinfo[client].client_version, checkentry->version)) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    }
+                } else if (checkentry->vtype == VERSION_REGEX) {
+                    q2a_strncpy(strbuffer, proxyinfo[client].client_version, sizeof(strbuffer));
+                    q_strupr(strbuffer);
+                    if (regexec(checkentry->vr, strbuffer, 0, 0, 0) == REG_NOMATCH) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    }
+                }
+            }
+
             if (checkentry->exclude) {  // ban situation
                 if (checkentry->msg) {
                     currentBanMsg = checkentry->msg;
@@ -1742,14 +1924,18 @@ int checkBanList(edict_t *ent, int client) {
             if (checkentry->password[0]) {
                 char *s = Info_ValueForKey(proxyinfo[client].userinfo, "pw");
 
-                Q_snprintf(strbuffer, sizeof(strbuffer), "INCLUDE - %s", s);
+                Q_snprintf(
+                        strbuffer,
+                        sizeof(strbuffer),
+                        "%s allowed using password (ban id:%d)",
+                        NAME(client), checkentry->bannum
+                );
                 logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0);
 
                 if (q2a_strcmp(checkentry->password, s)) {
                     if (checkentry->msg) {
                         currentBanMsg = checkentry->msg;
                     }
-
                     return 1;
                 }
             }
@@ -1791,7 +1977,7 @@ int checkCheckIfBanned(edict_t *ent, int client) {
         }
         proxyinfo[client].baninfo = NULL;
     }
-    if (!IPBanning_Enable && !NickBanning_Enable) {
+    if (!IPBanning_Enable && !NickBanning_Enable && !VersionBanning_Enable) {
         return 0;
     }
     currentBanMsg = defaultBanMsg;
@@ -1831,9 +2017,11 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
 
         if (!findentry->exclude) {
             q2a_strcat(buffer, " +");
+        } else {
+            q2a_strcat(buffer, " -");
         }
 
-        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0) {
+        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0 && !findentry->version) {
             q2a_strcat(buffer, " ALL");
         } else {
             if (findentry->type != NICKALL) {
@@ -1862,6 +2050,15 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                         net_addressToString(&findentry->addr, qfalse, qfalse, qtrue)
                 );
             }
+        }
+
+        if (findentry->version[0] != 0) {
+            Q_snprintf(
+                    buffer + q2a_strlen(buffer),
+                    sizeof(buffer) - q2a_strlen(buffer),
+                    " VERSION %s\"%s\"",
+                    (findentry->vtype == VERSION_REGEX) ? "RE " : (findentry->vtype == VERSION_LIKE) ? "LIKE " : "", findentry->version
+            );
         }
 
         if (!findentry->exclude && findentry->password[0]) {
@@ -1948,6 +2145,11 @@ void delbanRun(int startarg, edict_t *ent, int client) {
             if (findentry->r) {
                 regfree(findentry->r);
                 gi.TagFree(findentry->r);
+            }
+
+            if (findentry->vr) {
+                regfree(findentry->vr);
+                gi.TagFree(findentry->vr);
             }
             gi.TagFree(findentry);
 

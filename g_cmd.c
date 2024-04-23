@@ -1107,6 +1107,12 @@ q2acmd_t q2aCommands[] = {
         zbotversionRun
     },
     {
+        "versionbanning_enable",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &VersionBanning_Enable
+    },
+    {
         "votecmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,

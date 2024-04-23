@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
+#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
 #define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
 
 #define BANLISTFILE         "q2a_ban.cfg"
@@ -26,6 +26,14 @@
 #define NICKRE      4
 #define NICKBLANK   5
 
+typedef enum {
+    VERSION_NONE,
+    VERSION_ALL,
+    VERSION_EQUALS,
+    VERSION_REGEX,
+    VERSION_LIKE,
+} versiontype_t;
+
 /**
  * Flood tracking
  */
@@ -46,6 +54,9 @@ typedef struct banstruct {
     byte type;
     byte loadType;
     netadr_t addr;
+    versiontype_t vtype;
+    regex_t  *vr;
+    char version[100];
     char nick[80];
     char password[80];
     char *msg;
@@ -76,9 +87,10 @@ typedef struct chatbanstruct {
 
 extern baninfo_t *banhead;
 extern chatbaninfo_t *cbanhead;
+extern qboolean ChatBanning_Enable;
 extern qboolean IPBanning_Enable;
 extern qboolean NickBanning_Enable;
-extern qboolean ChatBanning_Enable;
+extern qboolean VersionBanning_Enable;
 extern char defaultBanMsg[256];
 extern char defaultChatBanMsg[256];
 
