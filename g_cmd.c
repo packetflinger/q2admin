@@ -2466,6 +2466,10 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                         gi.args(),
                         sizeof(proxyinfo[client].client_version)
                 );
+                if (checkBanList(ent, client)) {
+                    gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
+                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
+                }
                 return qfalse;
             }
         }

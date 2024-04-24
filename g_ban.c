@@ -573,16 +573,21 @@ qboolean ReadBanFile(char *bfname) {
                         cp += 2;
                         SKIPBLANK(cp);
 
-                        if (isxdigit(*cp)) {
-                            tempcp = cp;
-                            // find the end of the IP string
-                            while (!isspace(*tempcp)) {
-                                tempcp++;
+                        if (startContains(cp, "VPN")) {
+                            newentry->vpn = qtrue;
+                            cp += 3;
+                        } else {
+                            if (isxdigit(*cp)) {
+                                tempcp = cp;
+                                // find the end of the IP string
+                                while (!isspace(*tempcp)) {
+                                    tempcp++;
+                                }
+                                q2a_memset(ipstr, 0, sizeof(ipstr));
+                                q2a_memcpy(ipstr, cp, (tempcp-cp));
+                                newentry->addr = net_parseIPAddressMask(ipstr);
+                                cp = tempcp;
                             }
-                            q2a_memset(ipstr, 0, sizeof(ipstr));
-                            q2a_memcpy(ipstr, cp, (tempcp-cp));
-                            newentry->addr = net_parseIPAddressMask(ipstr);
-                            cp = tempcp;
                         }
                         SKIPBLANK(cp);
                     }
@@ -1256,106 +1261,110 @@ void banRun(int startarg, edict_t *ent, int client) {
             startarg++;
 
             q2a_strcat(savecmd, "IP ");
+            if (startContains(cp, "VPN")) {
+                newentry->vpn = qtrue;
+                q2a_strcat(savecmd, "VPN ");
+            } else {
+                if (startContains(cp, "%P")) {
+                    if (gi.argc() <= startarg) {
+                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
 
-            if (startContains(cp, "%P")) {
-                if (gi.argc() <= startarg) {
-                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                    if (newentry->r) {
-                        regfree(newentry->r);
-                        gi.TagFree(newentry->r);
+                        if (newentry->r) {
+                            regfree(newentry->r);
+                            gi.TagFree(newentry->r);
+                        }
+                        gi.TagFree(newentry);
+                        return;
                     }
-                    gi.TagFree(newentry);
-                    return;
-                }
 
-                cp = gi.argv(startarg);
-                startarg++;
+                    cp = gi.argv(startarg);
+                    startarg++;
 
-                if (!isdigit(*cp)) {
-                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                    if (!isdigit(*cp)) {
+                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
 
-                    if (newentry->r) {
-                        regfree(newentry->r);
-                        gi.TagFree(newentry->r);
+                        if (newentry->r) {
+                            regfree(newentry->r);
+                            gi.TagFree(newentry->r);
+                        }
+                        gi.TagFree(newentry);
+                        return;
                     }
-                    gi.TagFree(newentry);
-                    return;
-                }
 
-                clienti = q2a_atoi(cp);
-                newentry->addr = proxyinfo[clienti].address;
+                    clienti = q2a_atoi(cp);
+                    newentry->addr = proxyinfo[clienti].address;
 
-                while (isdigit(*cp)) {
-                    cp++;
-                }
-
-                // catch use of a mask (eg: %p #/##)
-                if (startContains(cp, "/")) {
-                    cp++;
-                    int masklen = q2a_atoi(cp);
-                    if (masklen >= 0 && masklen <= 128) {
-                        newentry->addr.mask_bits = masklen;
-                    }
                     while (isdigit(*cp)) {
                         cp++;
                     }
+
+                    // catch use of a mask (eg: %p #/##)
+                    if (startContains(cp, "/")) {
+                        cp++;
+                        int masklen = q2a_atoi(cp);
+                        if (masklen >= 0 && masklen <= 128) {
+                            newentry->addr.mask_bits = masklen;
+                        }
+                        while (isdigit(*cp)) {
+                            cp++;
+                        }
+                        SKIPBLANK(cp);
+                    }
+
+                    if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
+                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+
+                        if (newentry->r) {
+                            regfree(newentry->r);
+                            gi.TagFree(newentry->r);
+                        }
+                        gi.TagFree(newentry);
+                        return;
+                    }
+
+                    ipstr = IPSTRMASK(&newentry->addr);
+                    Q_snprintf(
+                        savecmd + q2a_strlen(savecmd),
+                        INET6_ADDRSTRLEN,
+                        "%s ",
+                        ipstr
+                    );
+
+                    while (isdigit(*cp)) {
+                        cp++;
+                    }
+
+                    if (*cp != 0) {
+                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+
+                        if (newentry->r) {
+                            regfree(newentry->r);
+                            gi.TagFree(newentry->r);
+                        }
+                        gi.TagFree(newentry);
+                        return;
+                    }
+                } else {
+                    q2a_strcat(savecmd, cp);
+                    q2a_strcat(savecmd, " ");
+
+                    if (isxdigit(*cp)) {
+                        tempcp = cp;
+                        // find the end of the IP string
+                        while (!isspace(*tempcp)) {
+                            tempcp++;
+                        }
+                        q2a_memset(tempip, 0, sizeof(tempip));
+                        q2a_memcpy(tempip, cp, (tempcp-cp));
+                        newentry->addr = net_parseIPAddressMask(tempip);
+                        cp = tempcp;
+                    }
                     SKIPBLANK(cp);
                 }
-
-                if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
-                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                    if (newentry->r) {
-                        regfree(newentry->r);
-                        gi.TagFree(newentry->r);
-                    }
-                    gi.TagFree(newentry);
-                    return;
-                }
-
-                ipstr = IPSTRMASK(&newentry->addr);
-                Q_snprintf(
-                    savecmd + q2a_strlen(savecmd),
-                    INET6_ADDRSTRLEN,
-                    "%s ",
-                    ipstr
-                );
-
-                while (isdigit(*cp)) {
-                    cp++;
-                }
-
-                if (*cp != 0) {
-                    gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                    gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                    if (newentry->r) {
-                        regfree(newentry->r);
-                        gi.TagFree(newentry->r);
-                    }
-                    gi.TagFree(newentry);
-                    return;
-                }
-            } else {
-                q2a_strcat(savecmd, cp);
-                q2a_strcat(savecmd, " ");
-
-                if (isxdigit(*cp)) {
-                    tempcp = cp;
-                    // find the end of the IP string
-                    while (!isspace(*tempcp)) {
-                        tempcp++;
-                    }
-                    q2a_memset(tempip, 0, sizeof(tempip));
-                    q2a_memcpy(tempip, cp, (tempcp-cp));
-                    newentry->addr = net_parseIPAddressMask(tempip);
-                    cp = tempcp;
-                }
-                SKIPBLANK(cp);
             }
 
             if (gi.argc() <= startarg) {
@@ -1881,8 +1890,15 @@ int checkBanList(edict_t *ent, int client) {
             }
 
             // check IP
-            if (IPBanning_Enable && checkentry->addr.mask_bits > 0) {
-                if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
+            if (IPBanning_Enable) {
+                if (checkentry->addr.mask_bits > 0) {
+                    if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    }
+                }
+                if (checkentry->vpn && !proxyinfo[client].vpn.is_vpn) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
                     continue;
@@ -2048,6 +2064,14 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                         sizeof(buffer) - q2a_strlen(buffer),
                         " IP %s",
                         net_addressToString(&findentry->addr, qfalse, qfalse, qtrue)
+                );
+            }
+
+            if (findentry->vpn) {
+                Q_snprintf(
+                        buffer + q2a_strlen(buffer),
+                        sizeof(buffer) - q2a_strlen(buffer),
+                        " IP VPN"
                 );
             }
         }
