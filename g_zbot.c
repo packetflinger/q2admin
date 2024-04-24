@@ -65,44 +65,6 @@ qboolean checkImpulse(byte impulse) {
     return qfalse;
 }
 
-void readIpFromLog(int client, edict_t *ent) {
-    FILE *dumpfile;
-    long fpos;
-
-    if (HASIP(client)) {
-        return;
-    }
-
-    Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
-    dumpfile = fopen(buffer, "rt");
-    if (!dumpfile) {
-        return;
-    }
-
-    fseek(dumpfile, 0, SEEK_END);
-    fpos = ftell(dumpfile) - 1;
-
-    while (getLastLine(buffer, dumpfile, &fpos)) {
-        if (startContains(buffer, "ip")) {
-            char *cp = buffer + 3;
-            char *dp = IP(client);
-
-            SKIPBLANK(cp);
-
-            while (*cp && *cp != ' ' && *cp != '\n') {
-                *dp++ = *cp++;
-            }
-
-            *dp = 0;
-            break;
-        } else if (startContains(buffer, "userinfo")) {
-            break;
-        }
-    }
-
-    fclose(dumpfile);
-}
-
 int checkForOverflows(edict_t *ent, int client) {
     FILE *q2logfile;
     char checkmask1[100], checkmask2[100];

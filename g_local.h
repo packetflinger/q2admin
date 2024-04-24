@@ -289,7 +289,6 @@ enum _commands {
     QCMD_LOGTOFILE1,
     QCMD_LOGTOFILE2,
     QCMD_LOGTOFILE3,
-    QCMD_GETIPALT,
     QCMD_RESTART,
     QCMD_CLIPTOMAXRATE,
     QCMD_CLIPTOMINRATE,
@@ -619,7 +618,6 @@ void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
-void readIpFromLog(int client, edict_t *ent);
 
 // zb_zbotcheck.c
 qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);

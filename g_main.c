@@ -528,10 +528,6 @@ void G_RunFrame(void) {
                 displayLogFileListCont(ent, client, data);
             } else if (command == QCMD_DISPLOGEVENTLIST) {
                 displayLogEventListCont(ent, client, data, qfalse);
-            } else if (command == QCMD_GETIPALT) {
-                // open logfile and read IP address from log
-                readIpFromLog(client, ent);
-                addCmdQueue(client, QCMD_GETIPALT, 0, 0, 0);
             } else if (command == QCMD_LOGTOFILE1) {
                 logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0);
             } else if (command == QCMD_LOGTOFILE2) {
