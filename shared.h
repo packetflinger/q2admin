@@ -148,8 +148,6 @@ struct cplane_s;
 #define VectorNegate(a,b)  (b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])
 #define VectorSet(v, x, y, z) (v[0]=(x), v[1]=(y), v[2]=(z))
 
-int VectorCompare(vec3_t v1, vec3_t v2);
-
 #define Q_isupper(c)    ((c) >= 'A' && (c) <= 'Z')
 #define Q_islower(c)    ((c) >= 'a' && (c) <= 'z')
 #define Q_isdigit(c)    ((c) >= '0' && (c) <= '9')
