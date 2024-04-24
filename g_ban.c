@@ -893,20 +893,19 @@ qboolean ReadBanFile(char *bfname) {
                     cnewentry->next = chatbanhead;
                     chatbanhead = cnewentry;
                 }
-            } else if (startContains(cp, "INCLUDE:")) {
-                // include another ban file..
-                // INCLUDE: "banfile"
-
+            } else if (startContains(cp, "INCLUDE:")) { // INCLUDE: "banfile"
                 cp += 8;
-
                 SKIPBLANK(cp);
-
                 if (*cp == '\"') {
                     cp++;
                     cp = processstring(strbuffer, cp, sizeof (strbuffer) - 1, '\"');
-
                     if (strbuffer[0]) {
-                        ReadBanFile(strbuffer);
+                        if (validatePath(strbuffer) == PATH_INVALID) {
+                            gi.cprintf(NULL, PRINT_HIGH, "[q2admin] invalid path in ban config: %s\n", strbuffer);
+                        } else {
+                            gi.cprintf(NULL, PRINT_HIGH, "[q2admin] reading included ban file: %s\n", strbuffer);
+                            ReadBanFile(strbuffer);
+                        }
                     } else {
                         gi.dprintf("Error with INCLUDE in line %d in file %s\n", uptoLine, bfname);
                     }
@@ -918,9 +917,7 @@ qboolean ReadBanFile(char *bfname) {
             }
         }
     }
-
     fclose(banfile);
-
     return qtrue;
 }
 

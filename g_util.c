@@ -664,3 +664,26 @@ void generateRandomString(char *buffer, int length) {
     }
     buffer[index] = 0;
 }
+
+/**
+ * Ensure a filesystem path is valid and appropriate.
+ * - relative paths only
+ * - no ".."s
+ * - only printable characters
+ */
+pathtype_t validatePath(const char *s) {
+    int res = PATH_VALID;
+
+    if (*s == "/") {
+        return PATH_INVALID;
+    }
+    if (stringContains(s, "..")) {
+        return PATH_INVALID;
+    }
+    for (; *s; s++) {
+        if (!Q_isprint(*s)) {
+            return PATH_INVALID;
+        }
+    }
+    return res;
+}

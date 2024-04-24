@@ -13,6 +13,12 @@
     } \
 }
 
+typedef enum {
+    PATH_VALID,
+    PATH_MIXED_CASE,
+    PATH_INVALID,
+} pathtype_t;
+
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 qboolean can_do_new_cmds(int client);
 void G_MergeEdicts(void);
@@ -45,4 +51,5 @@ int stringContains(char *buff1, char *buff2);
 void stuffcmd(edict_t *e, char *s);
 char *trim(char *s);
 char *va(const char *format, ...);
+pathtype_t validatePath(const char *s);
 qboolean wildcard_match(char *pattern, char *haystack);
