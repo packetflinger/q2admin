@@ -113,7 +113,6 @@ extern char *finalentities;
 #define DEFAULTSKINCRASHMSG     "%s tried to crash the server."
 #define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
-#define DEFAULTBANMSG           "You are banned from this server!"
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
 typedef struct {

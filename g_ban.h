@@ -9,6 +9,7 @@
 
 #define BANLISTFILE         "q2a_ban.cfg"
 #define BANLISTREMOTEFILE   "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
+#define DEFAULTBANMSG       "You are banned from this server!"
 #define DEFAULTCHABANMSG    "Message banned."
 
 #define BANCHECK     (CCMD_BANNED | CCMD_RECONNECT)
