@@ -396,6 +396,8 @@ void InitGame(void) {
     profile_start(1);
     profile_start(2);
     
+    curl_global_init(CURL_GLOBAL_ALL);
+
     /* Be carefull with all functions called from this one (like dprintf_internal) 
     to not use proxyinfo pointer because it's not initialized yet. -Harven */
     ge_mod->Init(); 
