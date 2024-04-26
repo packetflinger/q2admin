@@ -6,6 +6,7 @@
 
 #define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
 #define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
+#define CHATBANFILE_LAYOUT  "CHATBAN: [LIKE/RE(LIKE)] \"xxx\" [MSG  \"xxx\"]"
 
 #define BANLISTFILE         "q2a_ban.cfg"
 #define BANLISTREMOTEFILE   "http://q2.packetflinger.com/dl/q2admin/ban.cfg"
@@ -96,6 +97,9 @@ extern qboolean VersionBanning_Enable;
 extern char defaultBanMsg[256];
 extern char defaultChatBanMsg[256];
 
+char *ban_parseBan(char *cp);
+char *ban_parseChatban(char *cp);
+char *ban_parseInclude(char *in);
 void banRun(int startarg, edict_t *ent, int client);
 void chatbanRun(int startarg, edict_t *ent, int client);
 int checkBanList(edict_t *ent, int client);
@@ -108,6 +112,7 @@ void displayNextChatBan(edict_t *ent, int client, long chatbannum);
 void freeBanLists(void);
 void listbansRun(int startarg, edict_t *ent, int client);
 void listchatbansRun(int startarg, edict_t *ent, int client);
+qboolean parseBanFileContents(char *data);
 qboolean ReadBanFile(char *bfname);
 void readBanLists(void);
 qboolean ReadRemoteBanFile(char *bfname);

@@ -18,6 +18,12 @@
 
 #include <curl/curl.h>
 
+typedef struct {
+    unsigned char *data;
+    size_t index;
+    size_t size;
+} generic_file_t;
+
 typedef enum {
     DL_NONE,
     DL_VPNAPI,
@@ -53,6 +59,7 @@ extern qboolean http_verifyssl;
 
 int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
 void HandleDownload(download_t *download, char *buff, int len, int code);
+size_t HTTP_GetFile(generic_file_t *output, const char *url);
 void HTTP_Init(void);
 qboolean HTTP_QueueDownload(download_t *d);
 void HTTP_ResolveVPNServer(void);

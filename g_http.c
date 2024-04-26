@@ -407,3 +407,32 @@ void HTTP_RunDownloads(void) {
         gi.dprintf("HTTP_RunDownloads: curl_multi_perform error.\n");
     }
 }
+
+static size_t http_GetFile_callback(void *ptr, size_t size, size_t nmemb, void *out) {
+    generic_file_t *gf = (generic_file_t *)out;
+    size_t total = size * nmemb;
+    memcpy(gf->data, ptr, total);
+    gf->index += total;
+    return total;
+}
+
+/**
+ * Download any file.
+ *
+ * Returned char pointer needs to be free'd!
+ */
+size_t HTTP_GetFile(generic_file_t *output, const char *url) {
+    CURL *curl_handle;
+
+    q2a_memset(output->data, 0, output->size);
+    curl_handle = curl_easy_init();
+    curl_easy_setopt(curl_handle, CURLOPT_URL, url);
+    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
+    curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, http_GetFile_callback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, output);
+    curl_easy_perform(curl_handle);
+    curl_easy_cleanup(curl_handle);
+    return output->index;
+}
