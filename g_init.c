@@ -479,22 +479,18 @@ void InitGame(void) {
     }
 
     ipcache = 0;
-
     Read_Admin_cfg();
 
     if (whois_active) {
-        whois_details = G_Malloc(whois_active * sizeof (user_details));
-        memset(whois_details, 0, whois_active * sizeof (user_details));
-        gi.dprintf("Reading whois file...\n");
+        whois_details = G_Malloc(whois_active * sizeof(user_details));
+        memset(whois_details, 0, whois_active * sizeof(user_details));
+        gi.dprintf("[q2admin] reading whois file\n");
         whois_read_file();
     }
 
     finalentities = G_Malloc(0xffff);
-
     profile_stop(1, "q2admin->InitGame", 0, NULL);
-
     HTTP_Init();
-
     CA_Init();
 }
 
