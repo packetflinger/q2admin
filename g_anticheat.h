@@ -7,7 +7,7 @@
 
 #define ANTICHEATEXCEPTIONREMOTEFILE    "http://q2.packetflinger.com/dl/q2admin/ac.cfg"
 #define ANTICHEATEXCEPTIONLOCALFILE     "ac.cfg"
-#define HASHLISTREMOTEDIR               "http://www.q2admin.net/server"
+#define HASHLISTREMOTEDIR               "https://q2admin.net/server"
 
 qboolean AC_GetRemoteFile(char *bfname);
 void AC_LoadExceptions(void);

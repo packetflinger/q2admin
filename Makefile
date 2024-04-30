@@ -61,7 +61,6 @@ HEADERS := 	game.h \
             g_cmd.h \
             g_crypto.h \
             g_disable.h \
-            g_file.h \
             g_flood.h \
             g_http.h \
             g_init.h \
@@ -92,7 +91,6 @@ OBJS :=     g_admin.o \
             g_cmd.o \
             g_crypto.o \
             g_disable.o \
-            g_file.o \
             g_flood.o \
             g_http.o \
             g_init.o \

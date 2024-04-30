@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include "g_local.h"
-#include "g_file.h"
 
 /**
  * Fetch an Anticheat exception file from an HTTP server
@@ -92,37 +91,28 @@ void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
  *
  */
 qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
-    URL_FILE *handle;
     FILE *outf;
+    generic_file_t file;
+    size_t len;
 
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, blname);
-
-    // copy from url line by line with fgets //
     outf = fopen(buffer, "w");
     if (!outf) {
         gi.dprintf("Error opening local hash list file.\n");
         return qfalse;
     }
 
-    handle = url_fopen(bfname, "r");
-    if (!handle) {
-        gi.dprintf("Error opening remote hash list file.\n");
-        fclose(outf);
+    file.size = 0xffff;
+    file.data = G_Malloc(file.size);
+    file.index = 0;
+
+    HTTP_GetFile(&file, bfname);
+    len = fwrite(file.data, file.index, 1, outf);
+    fclose(outf);
+    G_Free(file.data);
+    if (!(len == 1 || len == file.index)) {
         return qfalse;
     }
-
-    while (!url_feof(handle)) {
-        if (!url_fgets(buffer, sizeof (buffer), handle)) {
-            // if it did timeout we are not trying again forever... - hifi
-            gi.dprintf("Timeout while waiting for remote hashlist reply.\n");
-            url_fclose(handle);
-            fclose(outf);
-            return qfalse;
-        }
-        fwrite(buffer, 1, strlen(buffer), outf);
-    }
-    url_fclose(handle);
-    fclose(outf);
     return qtrue;
 }
 
@@ -163,8 +153,6 @@ void loadhashlist(void) {
         getR1chHashList("anticheat-cvars.txt");
         getR1chHashList("anticheat-hashes.txt");
         getR1chHashList("anticheat-tokens.txt");
-        q2a_strcpy(buffer, "svacupdate\n");
-        gi.AddCommandString(buffer);
     }
 }
 
