@@ -105,21 +105,4 @@ static inline bool NET_IsEqualBaseAdrMask(const netadr_t *a,
         return false;
     }
 }
-
-static inline bool NET_IsLanAddress(const netadr_t *adr)
-{
-    switch (adr->type) {
-    case NA_LOOPBACK:
-        return true;
-    case NA_IP:
-    case NA_BROADCAST:
-        return adr->ip.u8[0] == 127 || adr->ip.u8[0] == 10 ||
-            adr->ip.u16[0] == MakeRawShort(192, 168) ||
-            adr->ip.u16[0] == MakeRawShort(172,  16);
-    case NA_IP6:
-        return adr->ip.u8[0] == 0xfe && (adr->ip.u8[1] & 0xc0) == 0x80;
-    default:
-        return false;
-    }
-}
 #endif // G_NET_H
