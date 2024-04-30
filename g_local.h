@@ -570,20 +570,13 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 #define Q2A_REVISION    0
 #endif
 
-#define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
-
-#define VIRUS_KICK_MSG      "%s has not provided adequate authentication, this may be due to a virus.\n"
+#define DEFAULTQ2AMSG       "\nThis server requires %s anti cheat client.\n"
 #define NOMATCH_KICK_MSG    "%s has not provided adequate authentication.\n"
-#define OUTOFTIME_KICK_MSG  "%s failed to authenticate.\n"
 #define MOD_KICK_MSG        "%s failed the pmodified check on this map, error %d.\n"
 #define PRV_KICK_MSG        "%s is using a modified client.\n"
-
-#define Q2A_VIRUS_KICK_MSG      "Inadequate authentication, may be a virus.\n"
-#define Q2A_NOMATCH_KICK_MSG    "Inadequate authentication.\n"
-#define Q2A_OUTOFTIME_KICK_MSG  "Failed to respond.\n"
-#define Q2A_MOD_KICK_MSG        "Failed the pmodified check on this map.\n"
-#define Q2A_PRV_KICK_MSG        "Failed the private commands check.\n"
-#define FRKQ2_KICK_MSG          "Failed the client authentication.\n"
+#define Q2A_MOD_KICK_MSG    "Failed the pmodified check on this map.\n"
+#define Q2A_PRV_KICK_MSG    "Failed the private commands check.\n"
+#define FRKQ2_KICK_MSG      "Failed the client authentication.\n"
 
 extern int client_map_cfg;
 extern qboolean do_franck_check;
