@@ -250,7 +250,10 @@ typedef struct {
 #define CCMD_STIFLED                BIT(24)  // half-muted
 #define CCMD_WAITFORVERSION         BIT(25)
 
-#define LEVELCHANGE_KEEP   (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | CCMD_RECONNECT | CCMD_REMEMBERHACK )
+#define LEVELCHANGE_KEEP (CCMD_SCSILENCE | CCMD_CSILENCE | CCMD_PCSILENCE | \
+                          CCMD_ZBOTDETECTED | CCMD_KICKED | CCMD_NITRO2PROXY | \
+                          CCMD_ZBOTCLEAR | CCMD_RBOTCLEAR | CCMD_BANNED | \
+                          CCMD_RECONNECT | CCMD_REMEMBERHACK)
 
 /**
  * These are commands that the server should do for or to the client. Clients
