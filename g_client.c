@@ -29,6 +29,9 @@ char testchars[] = "!@#%^&*()_=|?.>,<[{]}\':";
 //                            1         2          3         4         5         6         7         8
 int testcharslength = sizeof (testchars) - 1;
 
+int zbc_jittermax = 4;
+int zbc_jittertime = 10;
+int zbc_jittermove = 500;
 
 qboolean zbc_enable = qtrue;
 qboolean timescaledetect = qtrue;
@@ -302,4 +305,44 @@ void stuff_private_commands(int client, edict_t *ent) {
         }
         proxyinfo[client].private_command_got[i] = qfalse;
     }
+}
+
+/**
+ * ZbotCheck v1.01 for Quake 2 by Matt "WhiteFang" Ayres (matt@lithium.com)
+ *
+ * This is provided for mod authors to implement Zbot detection, nothing more.
+ * The code has so far proven to be reliable at detecting Zbot auto-aim clients
+ * (cheaters).  However, no guarantees of any kind are made.  This is provided
+ * as-is.  You must be familiar with Quake 2 mod coding to make use of this.
+ *
+ * Called from ClientThink()
+ */
+qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd) {
+    int tog0, tog1;
+
+    tog0 = proxyinfo[client].zbc_tog;
+    proxyinfo[client].zbc_tog ^= 1;
+    tog1 = proxyinfo[client].zbc_tog;
+
+    if (ucmd->angles[0] == proxyinfo[client].zbc_angles[tog1][0] &&
+            ucmd->angles[1] == proxyinfo[client].zbc_angles[tog1][1] &&
+            ucmd->angles[0] != proxyinfo[client].zbc_angles[tog0][0] &&
+            ucmd->angles[1] != proxyinfo[client].zbc_angles[tog0][1] &&
+            abs(ucmd->angles[0] - proxyinfo[client].zbc_angles[tog0][0]) +
+            abs(ucmd->angles[1] - proxyinfo[client].zbc_angles[tog0][1]) >= zbc_jittermove) {
+        if (ltime <= proxyinfo[client].zbc_jitter_last + 0.1) {
+            if (!proxyinfo[client].zbc_jitter)
+                proxyinfo[client].zbc_jitter_time = ltime;
+            if (proxyinfo[client].zbc_jitter++ >= zbc_jittermax)
+                return qtrue;
+        }
+        proxyinfo[client].zbc_jitter_last = ltime;
+    }
+    proxyinfo[client].zbc_angles[tog1][0] = ucmd->angles[0];
+    proxyinfo[client].zbc_angles[tog1][1] = ucmd->angles[1];
+
+    if (ltime > (proxyinfo[client].zbc_jitter_time + zbc_jittertime))
+        proxyinfo[client].zbc_jitter = 0;
+
+    return qfalse;
 }

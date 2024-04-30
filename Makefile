@@ -58,6 +58,7 @@ HEADERS :=  game.h \
             g_ban.h \
             g_cloud.h \
             g_checkvar.h \
+            g_client.h \
             g_cmd.h \
             g_crypto.h \
             g_disable.h \
@@ -85,6 +86,7 @@ OBJS :=     g_admin.o \
             g_anticheat.o \
             g_ban.o \
             g_checkvar.o \
+            g_client.o \
             g_cloud.o \
             g_cmd.o \
             g_crypto.o \
@@ -105,9 +107,7 @@ OBJS :=     g_admin.o \
             g_util.o \
             g_vote.o \
             g_vpn.o \
-            g_whois.o \
-            g_zbot.o \
-            g_zbotcheck.o
+            g_whois.o
 
 ifdef CONFIG_WINDOWS
     CPU := x86

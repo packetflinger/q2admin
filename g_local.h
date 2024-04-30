@@ -30,6 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_anticheat.h"
 #include "g_ban.h"
 #include "g_checkvar.h"
+#include "g_client.h"
 #include "g_cmd.h"
 #include "g_crypto.h"
 #include "g_disable.h"
@@ -610,16 +611,6 @@ void *q2a_memset(void *dest, int c, size_t count);
 #endif
 
 const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
-
-// zb_zbot.c
-int checkForOverflows(edict_t *ent, int client);
-void serverLogZBot(edict_t *ent, int client);
-void ClientThink(edict_t *ent, usercmd_t *ucmd);
-void G_RunFrame(void);
-void Pmove_internal(pmove_t *pmove);
-
-// zb_zbotcheck.c
-qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
 
 extern char client_msg[256];
 extern qboolean private_command_kick;
