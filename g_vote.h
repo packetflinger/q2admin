@@ -19,7 +19,7 @@
 typedef struct {
     char *votecmd;
     byte type;
-    regex_t *r;
+    re_t r;
 } votecmd_t;
 
 qboolean checkforvotecmd(char *cp, int votecmd);

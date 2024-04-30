@@ -119,14 +119,8 @@ qboolean ReadLRconFile(char *lrcname) {
 
             if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
                 q_strupr(cp);
-
-                lrconcmds[maxlrcon_cmds].r = gi.TagMalloc(sizeof (*lrconcmds[maxlrcon_cmds].r), TAG_LEVEL);
-                q2a_memset(lrconcmds[maxlrcon_cmds].r, 0x0, sizeof (*lrconcmds[maxlrcon_cmds].r));
-                //        if(regcomp(lrconcmds[maxlrcon_cmds].r, strbuffer, REG_EXTENDED))
-                if (regcomp(lrconcmds[maxlrcon_cmds].r, cp, 0)) {
-                    gi.TagFree(lrconcmds[maxlrcon_cmds].r);
-                    lrconcmds[maxlrcon_cmds].r = 0;
-
+                lrconcmds[maxlrcon_cmds].r = re_compile(cp);
+                if (!lrconcmds[maxlrcon_cmds].r) {
                     // malformed re... skip this lrcon
                     gi.dprintf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                     continue;
@@ -156,10 +150,6 @@ void freeLRconLists(void) {
         maxlrcon_cmds--;
         gi.TagFree(lrconcmds[maxlrcon_cmds].password);
         gi.TagFree(lrconcmds[maxlrcon_cmds].lrconcmd);
-        if (lrconcmds[maxlrcon_cmds].r) {
-            regfree(lrconcmds[maxlrcon_cmds].r);
-            gi.TagFree(lrconcmds[maxlrcon_cmds].r);
-        }
     }
 }
 
@@ -206,7 +196,8 @@ qboolean checklrcon(char *cp, int lrcon) {
             //r1ch: overflow fix
             q2a_strncpy(strbuffer, cp, sizeof (strbuffer) - 1);
             q_strupr(strbuffer);
-            return (regexec(lrconcmds[lrcon].r, strbuffer, 0, 0, 0) != REG_NOMATCH);
+            int len;
+            return (re_matchp(lrconcmds[lrcon].r, strbuffer, &len) == 0);
     }
 
     return qfalse;
@@ -408,15 +399,10 @@ void lrconRun(int startarg, edict_t *ent, int client) {
 
     if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
         q_strupr(cmd);
-
-        lrconcmds[maxlrcon_cmds].r = gi.TagMalloc(sizeof (*lrconcmds[maxlrcon_cmds].r), TAG_LEVEL);
-        q2a_memset(lrconcmds[maxlrcon_cmds].r, 0x0, sizeof (*lrconcmds[maxlrcon_cmds].r));
-        //        if(regcomp(lrconcmds[maxlrcon_cmds].r, cmd, REG_EXTENDED))
-        if (regcomp(lrconcmds[maxlrcon_cmds].r, cmd, 0)) {
+        lrconcmds[maxlrcon_cmds].r = re_compile(cmd);
+        if (!lrconcmds[maxlrcon_cmds].r) {
             gi.TagFree(lrconcmds[maxlrcon_cmds].password);
             gi.TagFree(lrconcmds[maxlrcon_cmds].lrconcmd);
-            gi.TagFree(lrconcmds[maxlrcon_cmds].r);
-            lrconcmds[maxlrcon_cmds].r = 0;
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -461,10 +447,6 @@ void lrconDelRun(int startarg, edict_t *ent, int client) {
     lrcon--;
     gi.TagFree(lrconcmds[lrcon].password);
     gi.TagFree(lrconcmds[lrcon].lrconcmd);
-    if (lrconcmds[lrcon].r) {
-        regfree(lrconcmds[lrcon].r);
-        gi.TagFree(lrconcmds[lrcon].r);
-    }
     if (lrcon + 1 < maxlrcon_cmds) {
         q2a_memmove((lrconcmds + lrcon), (lrconcmds + lrcon + 1), sizeof (lrconcmd_t) * (maxlrcon_cmds - lrcon));
     }

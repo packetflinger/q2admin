@@ -86,13 +86,8 @@ qboolean ReadDisableFile(char *disablename) {
 
             if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
                 q_strupr(cp);
-
-                disablecmds[maxdisable_cmds].r = gi.TagMalloc(sizeof (*disablecmds[maxdisable_cmds].r), TAG_LEVEL);
-                q2a_memset(disablecmds[maxdisable_cmds].r, 0x0, sizeof (*disablecmds[maxdisable_cmds].r));
-                if (regcomp(disablecmds[maxdisable_cmds].r, cp, 0)) {
-                    gi.TagFree(disablecmds[maxdisable_cmds].r);
-                    disablecmds[maxdisable_cmds].r = 0;
-
+                disablecmds[maxdisable_cmds].r = re_compile(cp);
+                if (!disablecmds[maxdisable_cmds].r) {
                     // malformed re... skip this disable command
                     gi.dprintf("Error loading DISABLE from line %d in file %s\n", uptoLine, disablename);
                     continue;
@@ -121,10 +116,6 @@ void freeDisableLists(void) {
     while (maxdisable_cmds) {
         maxdisable_cmds--;
         gi.TagFree(disablecmds[maxdisable_cmds].disablecmd);
-        if (disablecmds[maxdisable_cmds].r) {
-            regfree(disablecmds[maxdisable_cmds].r);
-            gi.TagFree(disablecmds[maxdisable_cmds].r);
-        }
     }
 }
 
@@ -158,13 +149,14 @@ void reloadDisableFileRun(int startarg, edict_t *ent, int client) {
  *
  */
 qboolean checkfordisablecmd(char *cp, int disablecmd) {
+    int len;
     switch (disablecmds[disablecmd].type) {
         case DISABLE_SW:
             return startContains(cp, disablecmds[disablecmd].disablecmd);
         case DISABLE_EX:
             return !Q_stricmp(cp, disablecmds[disablecmd].disablecmd);
         case DISABLE_RE:
-            return (regexec(disablecmds[disablecmd].r, cp, 0, 0, 0) != REG_NOMATCH);
+            return (re_matchp(disablecmds[disablecmd].r, cp, &len) == 0);
     }
     return qfalse;
 }
@@ -256,12 +248,9 @@ void disablecmdRun(int startarg, edict_t *ent, int client) {
 
     if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
         q_strupr(cmd);
-        disablecmds[maxdisable_cmds].r = gi.TagMalloc(sizeof (*disablecmds[maxdisable_cmds].r), TAG_LEVEL);
-        q2a_memset(disablecmds[maxdisable_cmds].r, 0x0, sizeof (*disablecmds[maxdisable_cmds].r));
-        if (regcomp(disablecmds[maxdisable_cmds].r, cmd, 0)) {
+        disablecmds[maxdisable_cmds].r = re_compile(cmd);
+        if (!disablecmds[maxdisable_cmds].r) {
             gi.TagFree(disablecmds[maxdisable_cmds].disablecmd);
-            gi.TagFree(disablecmds[maxdisable_cmds].r);
-            disablecmds[maxdisable_cmds].r = 0;
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -302,10 +291,6 @@ void disableDelRun(int startarg, edict_t *ent, int client) {
     }
     disable--;
     gi.TagFree(disablecmds[disable].disablecmd);
-    if (disablecmds[disable].r) {
-        regfree(disablecmds[disable].r);
-        gi.TagFree(disablecmds[disable].r);
-    }
     if (disable + 1 < maxdisable_cmds) {
         q2a_memmove((disablecmds + disable), (disablecmds + disable + 1), sizeof (disablecmd_t) * (maxdisable_cmds - disable));
     }

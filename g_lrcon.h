@@ -21,7 +21,7 @@ typedef struct {
     char *lrconcmd;
     char *password;
     byte type;
-    regex_t *r;
+    re_t r;
 } lrconcmd_t;
 
 void check_lrcon_password(void);

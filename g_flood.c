@@ -84,14 +84,8 @@ qboolean ReadFloodFile(char *floodname) {
 
             if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
                 q_strupr(cp);
-
-                floodcmds[maxflood_cmds].r = gi.TagMalloc(sizeof (*floodcmds[maxflood_cmds].r), TAG_LEVEL);
-                q2a_memset(floodcmds[maxflood_cmds].r, 0x0, sizeof (*floodcmds[maxflood_cmds].r));
-                //        if(regcomp(floodcmds[maxflood_cmds].r, strbuffer, REG_EXTENDED))
-                if (regcomp(floodcmds[maxflood_cmds].r, cp, 0)) {
-                    gi.TagFree(floodcmds[maxflood_cmds].r);
-                    floodcmds[maxflood_cmds].r = 0;
-
+                floodcmds[maxflood_cmds].r = re_compile(cp);
+                if (!floodcmds[maxflood_cmds].r) {
                     // malformed re... skip this flood command
                     continue;
                 }
@@ -117,10 +111,6 @@ void freeFloodLists(void) {
     while (maxflood_cmds) {
         maxflood_cmds--;
         gi.TagFree(floodcmds[maxflood_cmds].floodcmd);
-        if (floodcmds[maxflood_cmds].r) {
-            regfree(floodcmds[maxflood_cmds].r);
-            gi.TagFree(floodcmds[maxflood_cmds].r);
-        }
     }
 }
 
@@ -155,6 +145,7 @@ void reloadFloodFileRun(int startarg, edict_t *ent, int client) {
  *
  */
 qboolean checkforfloodcmd(char *cp, int floodcmd) {
+    int len;
     switch (floodcmds[floodcmd].type) {
         case FLOOD_SW:
             return startContains(cp, floodcmds[floodcmd].floodcmd);
@@ -163,7 +154,7 @@ qboolean checkforfloodcmd(char *cp, int floodcmd) {
             return !Q_stricmp(cp, floodcmds[floodcmd].floodcmd);
 
         case FLOOD_RE:
-            return (regexec(floodcmds[floodcmd].r, cp, 0, 0, 0) != REG_NOMATCH);
+            return (re_matchp(floodcmds[floodcmd].r, cp, &len) == 0);
     }
     return qfalse;
 }
@@ -709,13 +700,9 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
         q_strupr(cmd);
-
-        floodcmds[maxflood_cmds].r = gi.TagMalloc(sizeof (*floodcmds[maxflood_cmds].r), TAG_LEVEL);
-        q2a_memset(floodcmds[maxflood_cmds].r, 0x0, sizeof (*floodcmds[maxflood_cmds].r));
-        if (regcomp(floodcmds[maxflood_cmds].r, cmd, 0)) {
+        floodcmds[maxflood_cmds].r = re_compile(cmd);
+        if (!floodcmds[maxflood_cmds].r) {
             gi.TagFree(floodcmds[maxflood_cmds].floodcmd);
-            gi.TagFree(floodcmds[maxflood_cmds].r);
-            floodcmds[maxflood_cmds].r = 0;
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -760,10 +747,6 @@ void floodDelRun(int startarg, edict_t *ent, int client) {
 
     flood--;
     gi.TagFree(floodcmds[flood].floodcmd);
-    if (floodcmds[flood].r) {
-        regfree(floodcmds[flood].r);
-        gi.TagFree(floodcmds[flood].r);
-    }
 
     if (flood + 1 < maxflood_cmds) {
         q2a_memmove((floodcmds + flood), (floodcmds + flood + 1), sizeof (floodcmd_t) * (maxflood_cmds - flood));

@@ -88,20 +88,16 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
 
             if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {
                 q_strupr(cp);
-
-                spawncmds[maxspawn_cmds].r = gi.TagMalloc(sizeof (*spawncmds[maxspawn_cmds].r), TAG_GAME);
-                q2a_memset(spawncmds[maxspawn_cmds].r, 0x0, sizeof (*spawncmds[maxspawn_cmds].r));
-                if (regcomp(spawncmds[maxspawn_cmds].r, cp, 0)) {
-                    gi.TagFree(spawncmds[maxspawn_cmds].r);
-                    spawncmds[maxspawn_cmds].r = 0;
-
+                spawncmds[maxspawn_cmds].r = re_compile(cp);
+                if (!spawncmds[maxspawn_cmds].r) {
                     // malformed re... skip this spawn command
                     gi.dprintf("Error loading SPAWN from line %d in file %s\n", uptoLine, spawnname);
                     continue;
                 }
 
                 // don't allow disabling worldspawn. Bad things will happen
-                if (regexec(spawncmds[maxspawn_cmds].r, "WORLDSPAWN", 0, 0, 0) != REG_NOMATCH){
+                int len;
+                if (re_matchp(spawncmds[maxspawn_cmds].r, "WORLDSPAWN", &len) == 0){
                     q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, "removed");
                     spawncmds[maxspawn_cmds].r = 0;
                     spawncmds[maxspawn_cmds].type = SPAWN_EX;
@@ -136,10 +132,6 @@ void freeSpawnLists(void) {
     while (maxspawn_cmds) {
         maxspawn_cmds--;
         gi.TagFree(spawncmds[maxspawn_cmds].spawncmd);
-        if (spawncmds[maxspawn_cmds].r) {
-            regfree(spawncmds[maxspawn_cmds].r);
-            gi.TagFree(spawncmds[maxspawn_cmds].r);
-        }
     }
 }
 
@@ -152,10 +144,6 @@ void freeOneLevelSpawnLists(void) {
     while (spawn < maxspawn_cmds) {
         if (spawncmds[spawn].onelevelflag) {
             gi.TagFree(spawncmds[spawn].spawncmd);
-            if (spawncmds[spawn].r) {
-                regfree(spawncmds[spawn].r);
-                gi.TagFree(spawncmds[spawn].r);
-            }
 
             if (spawn + 1 < maxspawn_cmds) {
                 q2a_memmove((spawncmds + spawn), (spawncmds + spawn + 1), sizeof (spawncmd_t) * (maxspawn_cmds - spawn));
@@ -198,13 +186,14 @@ void reloadSpawnFileRun(int startarg, edict_t *ent, int client) {
  *
  */
 qboolean checkforspawncmd(char *cp, int spawncmd) {
+    int len;
     switch (spawncmds[spawncmd].type) {
         case SPAWN_SW:
             return startContains(cp, spawncmds[spawncmd].spawncmd);
         case SPAWN_EX:
             return !Q_stricmp(cp, spawncmds[spawncmd].spawncmd);
         case SPAWN_RE:
-            return (regexec(spawncmds[spawncmd].r, cp, 0, 0, 0) != REG_NOMATCH);
+            return (re_matchp(spawncmds[spawncmd].r, cp, &len) == 0);
     }
     return qfalse;
 }
@@ -303,14 +292,9 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
 
     if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {
         q_strupr(cmd);
-
-        spawncmds[maxspawn_cmds].r = gi.TagMalloc(sizeof (*spawncmds[maxspawn_cmds].r), TAG_GAME);
-        q2a_memset(spawncmds[maxspawn_cmds].r, 0x0, sizeof (*spawncmds[maxspawn_cmds].r));
-        //        if(regcomp(spawncmds[maxspawn_cmds].r, cmd, REG_EXTENDED))
-        if (regcomp(spawncmds[maxspawn_cmds].r, cmd, 0)) {
+        spawncmds[maxspawn_cmds].r = re_compile(cmd);
+        if (!spawncmds[maxspawn_cmds].r) {
             gi.TagFree(spawncmds[maxspawn_cmds].spawncmd);
-            gi.TagFree(spawncmds[maxspawn_cmds].r);
-            spawncmds[maxspawn_cmds].r = 0;
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -358,10 +342,6 @@ void spawnDelRun(int startarg, edict_t *ent, int client) {
     spawn--;
 
     gi.TagFree(spawncmds[spawn].spawncmd);
-    if (spawncmds[spawn].r) {
-        regfree(spawncmds[spawn].r);
-        gi.TagFree(spawncmds[spawn].r);
-    }
 
     if (spawn + 1 < maxspawn_cmds) {
         q2a_memmove((spawncmds + spawn), (spawncmds + spawn + 1), sizeof (spawncmd_t) * (maxspawn_cmds - spawn));

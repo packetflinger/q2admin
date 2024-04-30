@@ -109,10 +109,6 @@ void freeBanLists(void) {
             gi.TagFree(freeentry->msg);
         }
 
-        if (freeentry->r) {
-            regfree(freeentry->r);
-            gi.TagFree(freeentry->r);
-        }
         gi.TagFree(freeentry);
     }
 
@@ -124,10 +120,6 @@ void freeBanLists(void) {
             gi.TagFree(freeentry->msg);
         }
 
-        if (freeentry->r) {
-            regfree(freeentry->r);
-            gi.TagFree(freeentry->r);
-        }
         gi.TagFree(freeentry);
     }
 
@@ -214,8 +206,8 @@ void banRun(int startarg, edict_t *ent, int client) {
     startarg++;
 
     // allocate memory for ban record
-    newentry = gi.TagMalloc(sizeof (baninfo_t), TAG_LEVEL);
-    newentry->r = 0;
+    newentry = gi.TagMalloc(sizeof(baninfo_t), TAG_LEVEL);
+    q2a_memset(newentry, 0, sizeof(baninfo_t));
 
     q2a_strncpy(savecmd, "BAN: ", sizeof(savecmd));
 
@@ -355,8 +347,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     // This is NICKLIKE instead of NICKRE on purpose. Since
                     // you're limited to the player's name when using %P
                     // making the rule a regex is a waste of resources. A LIKE
-                    // rule will be an identical match without the overhead of
-                    // compiling a regex_t and all that nonsense.
+                    // rule will be an identical match without the overhead.
                     newentry->type = NICKLIKE;
                 } else {
                     newentry->type = NICKEQ;
@@ -379,10 +370,9 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (newentry->type == NICKRE) { // compile RE
                     q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                     q_strupr(strbuffer);
-                    newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
-                    q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                    if (regcomp(newentry->r, strbuffer, 0)) {
-                        gi.TagFree(newentry->r);
+
+                    newentry->r = re_compile(strbuffer);
+                    if (!newentry->r) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
                         gi.TagFree(newentry);
@@ -410,10 +400,8 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                 q_strupr(strbuffer);
 
-                newentry->r = gi.TagMalloc(sizeof(*newentry->r), TAG_LEVEL);
-                q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                if (regcomp(newentry->r, strbuffer, 0)) {
-                    gi.TagFree(newentry->r);
+                newentry->r = re_compile(strbuffer);
+                if (!newentry->r) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
                     gi.TagFree(newentry);
@@ -437,11 +425,6 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                if (newentry->r) {
-                    regfree(newentry->r);
-                    gi.TagFree(newentry->r);
-                }
                 gi.TagFree(newentry);
                 return;
             }
@@ -458,11 +441,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (gi.argc() <= startarg) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
                         gi.TagFree(newentry);
                         return;
                     }
@@ -473,11 +451,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (!isdigit(*cp)) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
                         gi.TagFree(newentry);
                         return;
                     }
@@ -505,11 +478,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
                         gi.TagFree(newentry);
                         return;
                     }
@@ -529,11 +497,6 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (*cp != 0) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-                        if (newentry->r) {
-                            regfree(newentry->r);
-                            gi.TagFree(newentry->r);
-                        }
                         gi.TagFree(newentry);
                         return;
                     }
@@ -568,10 +531,6 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                if (newentry->r) {
-                    regfree(newentry->r);
-                    gi.TagFree(newentry->r);
-                }
                 gi.TagFree(newentry);
                 return;
             }
@@ -624,10 +583,8 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (newentry->vtype == VERSION_REGEX) {
                 q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
                 q_strupr(strbuffer);
-                newentry->vr = gi.TagMalloc(sizeof(*newentry->vr), TAG_LEVEL);
-                q2a_memset(newentry->vr, 0x0, sizeof(*newentry->vr));
-                if (regcomp(newentry->vr, strbuffer, 0)) {
-                    gi.TagFree(newentry->vr);
+                newentry->vr = re_compile(strbuffer);
+                if (!newentry->vr) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
                     gi.TagFree(newentry);
@@ -644,11 +601,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
-            }
             gi.TagFree(newentry);
             return;
         }
@@ -680,11 +632,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
-            }
             gi.TagFree(newentry);
             return;
         }
@@ -715,11 +662,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg + 2) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
-            }
             gi.TagFree(newentry);
             return;
         }
@@ -769,11 +711,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
-            }
             gi.TagFree(newentry);
             return;
         }
@@ -816,11 +753,6 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (newentry->msg) {
                 gi.TagFree(newentry->msg);
             }
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
-            }
             gi.TagFree(newentry);
             return;
         }
@@ -853,11 +785,6 @@ void banRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
             if (newentry->msg) {
                 gi.TagFree(newentry->msg);
-            }
-
-            if (newentry->r) {
-                regfree(newentry->r);
-                gi.TagFree(newentry->r);
             }
             gi.TagFree(newentry);
             return;
@@ -907,11 +834,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
         }
-
-        if (newentry->r) {
-            regfree(newentry->r);
-            gi.TagFree(newentry->r);
-        }
         gi.TagFree(newentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -923,11 +845,6 @@ void banRun(int startarg, edict_t *ent, int client) {
         // no, abort
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
-        }
-
-        if (newentry->r) {
-            regfree(newentry->r);
-            gi.TagFree(newentry->r);
         }
         gi.dprintf("problems!\n");
         gi.TagFree(newentry);
@@ -1018,10 +935,6 @@ int checkBanList(edict_t *ent, int client) {
                     gi.TagFree(checkentry->msg);
                 }
 
-                if (checkentry->r) {
-                    regfree(checkentry->r);
-                    gi.TagFree(checkentry->r);
-                }
                 gi.TagFree(checkentry);
 
                 if (prevcheckentry) {
@@ -1061,7 +974,8 @@ int checkBanList(edict_t *ent, int client) {
                         q2a_strncpy(strbuffer, proxyinfo[client].name, sizeof(strbuffer));
                         q_strupr(strbuffer);
 
-                        if (regexec(checkentry->r, strbuffer, 0, 0, 0) == REG_NOMATCH) {
+                        int len;
+                        if (re_matchp(checkentry->r, strbuffer, &len) != 0) {
                             prevcheckentry = checkentry;
                             checkentry = checkentry->next;
                             continue;
@@ -1111,7 +1025,8 @@ int checkBanList(edict_t *ent, int client) {
                 } else if (checkentry->vtype == VERSION_REGEX) {
                     q2a_strncpy(strbuffer, proxyinfo[client].client_version, sizeof(strbuffer));
                     q_strupr(strbuffer);
-                    if (regexec(checkentry->vr, strbuffer, 0, 0, 0) == REG_NOMATCH) {
+                    int len;
+                    if (re_matchp(checkentry->vr, strbuffer, &len) != 0) {
                         prevcheckentry = checkentry;
                         checkentry = checkentry->next;
                         continue;
@@ -1344,28 +1259,15 @@ void delbanRun(int startarg, edict_t *ent, int client) {
                     proxyinfo[clienti].baninfo = NULL;
                 }
             }
-
             if (prevban) {
                 prevban->next = findentry->next;
             } else {
                 banhead = findentry->next;
             }
-
             if (findentry->msg) {
                 gi.TagFree(findentry->msg);
             }
-
-            if (findentry->r) {
-                regfree(findentry->r);
-                gi.TagFree(findentry->r);
-            }
-
-            if (findentry->vr) {
-                regfree(findentry->vr);
-                gi.TagFree(findentry->vr);
-            }
             gi.TagFree(findentry);
-
             gi.cprintf(ent, PRINT_HIGH, "Ban deleted.\n");
         } else {
             gi.cprintf(ent, PRINT_HIGH, "Ban not found.\n");
@@ -1442,11 +1344,8 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     if (cnewentry->type == CHATRE) { // compile RE
         q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
         q_strupr(strbuffer);
-
-        cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
-        q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
-        if (regcomp(cnewentry->r, strbuffer, 0)) {
-            gi.TagFree(cnewentry->r);
+        cnewentry->r = re_compile(strbuffer);
+        if (!cnewentry->r) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
             gi.TagFree(cnewentry);
@@ -1466,11 +1365,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
-
-            if (cnewentry->r) {
-                regfree(cnewentry->r);
-                gi.TagFree(cnewentry->r);
-            }
             gi.TagFree(cnewentry);
             return;
         }
@@ -1537,11 +1431,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         // something is wrong...
         if (cnewentry->msg) {
             gi.TagFree(cnewentry->msg);
-        }
-
-        if (cnewentry->r) {
-            regfree(cnewentry->r);
-            gi.TagFree(cnewentry->r);
         }
         gi.TagFree(cnewentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1616,7 +1505,8 @@ int checkCheckIfChatBanned(char *txt) {
             case CHATRE:
                 q2a_strncpy(strbuffer, txt, sizeof(strbuffer));
                 q_strupr(strbuffer);
-                if (regexec(checkentry->r, strbuffer, 0, 0, 0) == REG_NOMATCH) {
+                int len;
+                if (re_matchp(checkentry->r, strbuffer, &len) != 0) {
                     checkentry = checkentry->next;
                     continue;
                 }
@@ -1702,17 +1592,10 @@ void delchatbanRun(int startarg, edict_t *ent, int client) {
             } else {
                 chatbanhead = findentry->next;
             }
-
             if (findentry->msg) {
                 gi.TagFree(findentry->msg);
             }
-
-            if (findentry->r) {
-                regfree(findentry->r);
-                gi.TagFree(findentry->r);
-            }
             gi.TagFree(findentry);
-
             gi.cprintf(ent, PRINT_HIGH, "Chat Ban deleted.\n");
         } else {
             gi.cprintf(ent, PRINT_HIGH, "Chat Ban not found.\n");
@@ -1866,11 +1749,9 @@ char *ban_parseBan(char *cp) {
             if (newentry->type == NICKRE) { // compile RE
                 q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer));
                 q_strupr(strbuffer);
-                newentry->r = gi.TagMalloc(sizeof (*newentry->r), TAG_LEVEL);
-                q2a_memset(newentry->r, 0x0, sizeof (*newentry->r));
-                if (regcomp(newentry->r, strbuffer, 0)) {
-                    gi.TagFree(newentry->r);
-                    newentry->r = 0;
+                newentry->r = re_compile(strbuffer);
+                if (!newentry->r) {
+                    newentry->type = NICKEQ;
                 }
             }
             SKIPBLANK(cp);
@@ -1927,10 +1808,8 @@ char *ban_parseBan(char *cp) {
             if (newentry->vtype == VERSION_REGEX) {
                 q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
                 q_strupr(strbuffer);
-                newentry->vr = gi.TagMalloc(sizeof(*newentry->vr), TAG_LEVEL);
-                q2a_memset(newentry->vr, 0x0, sizeof(*newentry->vr));
-                if (regcomp(newentry->vr, strbuffer, 0)) {
-                    gi.TagFree(newentry->vr);
+                newentry->vr = re_compile(strbuffer);
+                if (!newentry->vr) {
                     gi.TagFree(newentry);
                 }
             }
@@ -2037,11 +1916,6 @@ char *ban_parseBan(char *cp) {
         if (newentry->msg) {
             gi.TagFree(newentry->msg);
         }
-
-        if (newentry->r) {
-            regfree(newentry->r);
-            gi.TagFree(newentry->r);
-        }
         gi.TagFree(newentry);
         gi.dprintf("Error loading BAN\n");
     } else {
@@ -2098,11 +1972,9 @@ char *ban_parseChatban(char *cp) {
         if (cnewentry->type == CHATRE) { // compile RE
             q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
             q_strupr(strbuffer);
-            cnewentry->r = gi.TagMalloc(sizeof (*cnewentry->r), TAG_LEVEL);
-            q2a_memset(cnewentry->r, 0x0, sizeof (*cnewentry->r));
-            if (regcomp(cnewentry->r, strbuffer, 0)) {
-                gi.TagFree(cnewentry->r);
-                cnewentry->r = 0;
+            cnewentry->r = re_compile(strbuffer);
+            if (!cnewentry->r) {
+                cnewentry->type = CHATLIKE;
             }
         }
     } else {
@@ -2139,11 +2011,6 @@ char *ban_parseChatban(char *cp) {
         // no, abort
         if (cnewentry->msg) {
             gi.TagFree(cnewentry->msg);
-        }
-
-        if (cnewentry->r) {
-            regfree(cnewentry->r);
-            gi.TagFree(cnewentry->r);
         }
         gi.TagFree(cnewentry);
         gi.dprintf("[q2admin] invalid chatban, syntax: %s\n", CHATBANFILE_LAYOUT);

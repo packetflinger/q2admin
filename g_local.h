@@ -21,9 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "platform.h"
 #include "shared.h"
 #include "game.h"
+#include "g_regex.h"
 #include "g_cloud.h"
 #include <ctype.h>
-#include "regex.h"
 #include "g_json.h"
 #include "g_net.h"
 #include "g_admin.h"

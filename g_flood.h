@@ -22,7 +22,7 @@
 typedef struct {
     char *floodcmd;
     byte type;
-    regex_t *r;
+    re_t r;
 } floodcmd_t;
 
 extern qboolean fpsFloodExempt;

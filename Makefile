@@ -70,6 +70,7 @@ HEADERS :=  game.h \
             g_lrcon.h \
             g_net.h \
             g_queue.h \
+            g_regex.h \
             g_spawn.h \
             g_timer.h \
             g_util.h \
@@ -78,7 +79,6 @@ HEADERS :=  game.h \
             g_whois.h \
             platform.h \
             profile.h \
-            regex.h \
             shared.h
 
 OBJS :=     g_admin.o \
@@ -99,6 +99,7 @@ OBJS :=     g_admin.o \
             g_main.o \
             g_net.o \
             g_queue.o \
+            g_regex.o \
             g_spawn.o \
             g_timer.o \
             g_util.o \
@@ -106,8 +107,7 @@ OBJS :=     g_admin.o \
             g_vpn.o \
             g_whois.o \
             g_zbot.o \
-            g_zbotcheck.o \
-            regex.o
+            g_zbotcheck.o
 
 ifdef CONFIG_WINDOWS
     CPU := x86

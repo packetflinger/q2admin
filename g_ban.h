@@ -51,13 +51,13 @@ struct chatflood_s {
  * They're combined into a linked list
  */
 typedef struct banstruct {
-    regex_t *r;
+    re_t r;
     qboolean exclude;
     byte type;
     byte loadType;
     netadr_t addr;
     versiontype_t vtype;
-    regex_t  *vr;
+    re_t  vr;
     char version[100];
     char nick[80];
     char password[80];
@@ -75,7 +75,7 @@ typedef struct banstruct {
  * Chat ban stuff
  */
 typedef struct chatbanstruct {
-    regex_t *r;
+    re_t r;
     byte type;
     byte loadType;
     long bannum;

@@ -17,7 +17,7 @@
 typedef struct {
     char *disablecmd;
     byte type;
-    regex_t *r;
+    re_t r;
 } disablecmd_t;
 
 qboolean checkDisabledCommand(char *cmd);

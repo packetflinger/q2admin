@@ -18,7 +18,7 @@ typedef struct {
     char *spawncmd;
     byte type;
     qboolean onelevelflag;
-    regex_t *r;
+    re_t r;
 } spawncmd_t;
 
 qboolean checkDisabledEntities(char *classname);
