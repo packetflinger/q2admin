@@ -25,7 +25,6 @@ qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
  */
 char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport, qboolean incmask)
 {
-    int i;
     char temp[INET6_ADDRSTRLEN];
     static char dest[INET6_ADDRSTRLEN];
 
