@@ -115,13 +115,6 @@ extern char *finalentities;
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
-typedef struct {
-    byte command;
-    float timeout;
-    unsigned long data;
-    char *str;
-} cmd_queue_t;
-
 // not used yet
 struct ip_cache_s {
     byte ip[16];                // enough room for ipv6
