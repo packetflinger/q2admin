@@ -56,7 +56,6 @@ HEADERS := 	game.h \
             g_admin.h \
             g_anticheat.h \
             g_ban.h \
-            g_base64.h \
             g_checkvar.h \
             g_cmd.h \
             g_crypto.h \
@@ -85,7 +84,6 @@ HEADERS := 	game.h \
 OBJS :=     g_admin.o \
             g_anticheat.o \
             g_ban.o \
-            g_base64.o \
             g_checkvar.o \
             g_cloud.o \
             g_cmd.o \

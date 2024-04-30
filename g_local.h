@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_admin.h"
 #include "g_anticheat.h"
 #include "g_ban.h"
-#include "g_base64.h"
 #include "g_checkvar.h"
 #include "g_cmd.h"
 #include "g_crypto.h"
