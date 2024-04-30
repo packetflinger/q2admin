@@ -109,14 +109,6 @@ OBJS :=     g_admin.o \
             g_zbotcheck.o \
             regex.o
 
-ifdef CONFIG_SQLITE
-    SQLITE_CFLAGS ?=
-    SQLITE_LIBS ?= -lsqlite3
-    CFLAGS += -DUSE_SQLITE=1 $(SQLITE_CFLAGS)
-    LIBS += $(SQLITE_LIBS)
-    OBJS += g_sqlite.o
-endif
-
 ifdef CONFIG_WINDOWS
     CPU := x86
     TARGET ?= game$(CPU)-q2admin-r$(VER).dll
