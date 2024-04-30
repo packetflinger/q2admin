@@ -44,6 +44,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
   #include <windows.h>
   #include <ws2tcpip.h>
   #define boolean        qboolean
+  #define in_addr_t uint32_t
 #else
   #include <dlfcn.h>
   #include <unistd.h>
