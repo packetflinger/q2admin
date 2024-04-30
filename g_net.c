@@ -187,7 +187,6 @@ netadr_t net_parseIPAddressBase(const char *ip)
 {
     netadr_t address;
     char *delim;
-    int addrlen;           // number of characters in IP string
     char addr[40];         // temporarily hold just the IP part
     struct in6_addr addr6; // use for both versions
 
@@ -228,7 +227,6 @@ netadr_t net_parseIPAddressMask(const char *ip)
 {
     netadr_t address;
     char *delim;
-    int addrlen;           // number of characters in IP string
     char addr[40];         // temporarily hold just the IP part
     struct in6_addr addr6; // use for both versions
 
