@@ -99,20 +99,9 @@ extern edict_t *g_edicts;
 // size than the original entities string due to cvar-based substitutions.
 extern char *finalentities;
 
-#define random()                       ((rand () & 0x7fff) / ((float)0x7fff))
-
-#define MAXIMPULSESTOTEST 256
-
+#define random()        ((rand () & 0x7fff) / ((float)0x7fff))
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
-#define DEFAULTRECONNECTMSG     "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."
-
-#define DEFAULTUSERDISPLAY      "%s is using a client side proxy."
-#define DEFAULTTSDISPLAY        "%s is using a speed cheat."
-#define DEFAULTHACKDISPLAY      "%s is using a modified client."
-#define DEFAULTSKINCRASHMSG     "%s tried to crash the server."
-#define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
-#define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
 // not used yet
@@ -439,7 +428,6 @@ extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
 
 extern qboolean displayimpulses;
-
 extern qboolean printmessageonplaycmds;
 extern qboolean say_person_enable;
 extern qboolean say_group_enable;
@@ -463,31 +451,6 @@ extern int maxMsgLevel;
 extern char zbotmotd[256];
 extern char motd[4096];
 extern char clientVoteCommand[256];
-
-extern int maxrateallowed;
-extern int minrateallowed;
-extern int maxfpsallowed;
-extern int minfpsallowed;
-extern int zbc_jittermax;
-extern int zbc_jittertime;
-extern int zbc_jittermove;
-
-#define ZBOT_TESTSTRING1            "q2startxx\n"
-
-#define ZBOT_TESTSTRING_TEST1       "q2startxx"
-#define ZBOT_TESTSTRING_TEST2       "q2exx"
-#define ZBOT_TESTSTRING_TEST3       ".please.disconnect.all.bots"
-
-#define ZBOT_TESTSTRING_TEST1_OLD   "q2start"
-#define ZBOT_TESTSTRING_TEST2_OLD   "q2e"
-
-extern char zbot_teststring1[];
-extern char zbot_teststring_test1[];
-extern char zbot_teststring_test2[];
-extern char zbot_teststring_test3[];
-extern char zbot_testchar1;
-extern char zbot_testchar2;
-extern char testchars[];
 
 extern int testcharslength;
 extern int runmode;
@@ -568,10 +531,6 @@ extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
 
-#define RATBOT_CHANGENAMETEST "pwsnskle"
-#define BOTDETECT_CHAR1   'F'
-#define BOTDETECT_CHAR2   'U'
-
 // zb_clib.c
 #ifdef Q2ADMINCLIB
 char *q2a_strcpy(char *strDestination, const char *strSource);
@@ -605,14 +564,6 @@ void *q2a_memset(void *dest, int c, size_t count);
 
 const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 
-extern char client_msg[256];
-extern qboolean private_command_kick;
-extern int msec_kick_on_bad;
-extern int msec_max;
-extern int speedbot_check_type;
-extern int max_pmod_noreply;
-extern int msec_int;
-
 // should be set at build time in Makefile
 #ifndef Q2A_COMMIT
 #define Q2A_COMMIT      "00~000000"
@@ -620,8 +571,6 @@ extern int msec_int;
 #endif
 
 #define DEFAULTQ2AMSG   "\nThis server requires %s anti cheat client.\n"
-
-#define MAX_BLOCK_MODELS    26
 
 #define VIRUS_KICK_MSG      "%s has not provided adequate authentication, this may be due to a virus.\n"
 #define NOMATCH_KICK_MSG    "%s has not provided adequate authentication.\n"
@@ -652,10 +601,3 @@ typedef struct {
 
 extern priv_t private_commands[PRIVATE_COMMANDS];
 void stuff_private_commands(int client, edict_t *ent);
-
-typedef struct {
-    char *model_name;
-} block_model;
-
-extern block_model block_models[MAX_BLOCK_MODELS];
-

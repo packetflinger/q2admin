@@ -15,6 +15,8 @@
 #define CMDTYPE_NUMBER      2
 #define CMDTYPE_STRING      3
 
+#define MAX_BLOCK_MODELS    26
+
 typedef void CMDRUNFUNC(int startarg, edict_t *ent, int client);
 typedef void CMDINITFUNC(char *arg);
 
@@ -26,8 +28,12 @@ typedef struct {
     CMDRUNFUNC *runfunc;
     CMDINITFUNC *initfunc;
 } q2acmd_t;
-
 extern q2acmd_t q2aCommands[];
+
+typedef struct {
+    char *model_name;
+} block_model;
+extern block_model block_models[MAX_BLOCK_MODELS];
 
 void AddCommandString_internal(char *text);
 void bprintf_internal(int printlevel, char *fmt, ...);
