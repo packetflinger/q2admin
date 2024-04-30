@@ -708,7 +708,13 @@ void G_RunFrame(void) {
                 }
             } else if (command == QCMD_SPAMBYPASS) {
                 if (proxyinfo[client].q2a_bypass) {
-                    gi.bprintf(PRINT_HIGH, "%s has logged on without an anti-cheat client because of an arrangement\nƒ  with the server admin.  This is most likely because %s is using a linux\nƒ  or mac client - contact the server admin if you have issues with %s.\n", proxyinfo[client].name, proxyinfo[client].name, proxyinfo[client].name);
+                    gi.bprintf(PRINT_HIGH,
+                            "%s has logged on without an anti-cheat client "
+                            "because of an arrangement\n with the server "
+                            "admin.  This is most likely because %s is using "
+                            "a linux\n or mac client - contact the server "
+                            "admin if you have issues with %s.",
+                            NAME(client), NAME(client), NAME(client));
                 }
             } else if (command == QCMD_GETCMDQUEUE) {
                 addCmdQueue(client, QCMD_TESTCMDQUEUE, 5, 0, 0);
