@@ -52,10 +52,11 @@ endif
 CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
 RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 
-HEADERS := 	game.h \
+HEADERS :=  game.h \
             g_admin.h \
             g_anticheat.h \
             g_ban.h \
+            g_cloud.h \
             g_checkvar.h \
             g_cmd.h \
             g_crypto.h \
@@ -63,9 +64,11 @@ HEADERS := 	game.h \
             g_flood.h \
             g_http.h \
             g_init.h \
+            g_json.h \
             g_local.h \
             g_log.h \
             g_lrcon.h \
+            g_net.h \
             g_queue.h \
             g_spawn.h \
             g_timer.h \
@@ -73,13 +76,10 @@ HEADERS := 	game.h \
             g_vote.h \
             g_vpn.h \
             g_whois.h \
-            g_cloud.h \
-            g_json.h \
-            g_net.h \
-            shared.h \
+            platform.h \
             profile.h \
             regex.h \
-            platform.h
+            shared.h
 
 OBJS :=     g_admin.o \
             g_anticheat.o \
