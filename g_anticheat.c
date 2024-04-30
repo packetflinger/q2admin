@@ -33,11 +33,13 @@ qboolean AC_GetRemoteFile(char *bfname) {
         gi.cprintf(NULL, PRINT_HIGH, "Error opening local anticheat exception file.\n");
         return qfalse;
     }
+    /*
     if (!GetURLContents(bfname)) {
         gi.cprintf(NULL, PRINT_HIGH, "Error fetching remote anticheat file: %s\n", bfname);
         fclose(outf);
         return qfalse;
     }
+    */
     fclose(outf);
     return qtrue;
 }
