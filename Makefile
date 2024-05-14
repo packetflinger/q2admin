@@ -41,10 +41,36 @@ LIBS ?= deps/$(CPU)/curl/lib/libcurl.a \
         -ldl
 
 ifdef CONFIG_WINDOWS
-    CFLAGS += -DQ2ADMINCLIB=1
+    CC = i686-w64-mingw32-gcc
+    STRIP = i686-w64-mingw32-strip
+    WINDRES = i686-w64-mingw32-windres
+    CFLAGS += -DQ2ADMINCLIB=1 -static -static-libgcc -DCURL_STATICLIB
     CFLAGS += -Wno-unknown-pragmas
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
+    LIBS =  deps/win32/lib/libws2_32.a \
+	    deps/win32/lib/libcurl.a \
+	    deps/win32/lib/libcrypto.a \
+	    deps/win32/lib/libcrypt32.a \
+	    deps/win32/lib/libz.a \
+	    deps/win32/lib/libssl.a \
+	    deps/win32/lib/libssh2.a \
+	    deps/win32/lib/libidn2.a \
+	    deps/win32/lib/libssp.a \
+	    deps/win32/lib/libiconv.a \
+	    deps/win32/lib/libintl.a \
+	    deps/win32/lib/libwldap32.a \
+	    deps/win32/lib/libgdi32.a \
+	    deps/win32/lib/libcrypto.a \
+	    deps/win32/lib/libcrypt32.a \
+	    deps/win32/lib/libws2_32.a \
+	    deps/win32/lib/libSDL2main.a \
+	    deps/win32/lib/libmingw32.a \
+	    deps/win32/lib/libdl.a \
+	    -static -static-libgcc \
+	    -lpthread -ldl
+    CFLAGS += -I/usr/i686-w64-mingw32/sys-root/mingw/include
+    INCLUDE = 
 else
     CFLAGS += -fPIC -ffast-math -w -DLINUX
 endif
