@@ -44,7 +44,6 @@ char defaultChatBanMsg[256];
  */
 qboolean ReadRemoteBanFile(char *bfname) {
     generic_file_t file;
-    size_t dataLen;
 
     file.size = 0xffff;
     file.data = G_Malloc(file.size);
@@ -186,7 +185,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     char *cp;
     char *tempcp;
     int clienti, num;
-    unsigned int i, save;
+    unsigned int save;
     qboolean like, all, re;
     baninfo_t *newentry;
     char savecmd[384];
@@ -195,7 +194,6 @@ void banRun(int startarg, edict_t *ent, int client) {
     char *ipstr;
     char tempip[INET6_ADDRSTRLEN];
     qboolean allver;
-    char *masktoken;
 
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -1659,7 +1657,6 @@ char *ban_parseBan(char *cp) {
     char ipstr[INET6_ADDRSTRLEN];
     qboolean allver;
     int num;
-    unsigned int i;
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
     newentry = gi.TagMalloc(sizeof(baninfo_t), TAG_LEVEL);
