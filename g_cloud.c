@@ -1510,7 +1510,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "state:", (connected)? "trusted" : "disconnected");
         gi.cprintf(ent, PRINT_HIGH, "%-20s%d\n", "disconnects:", cloud.disconnect_count);
         if (connected) {
-            secsToTime(&connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
+            secsToTime(connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
             gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
             gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected time:", connected_time);
         }
