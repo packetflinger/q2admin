@@ -5,7 +5,7 @@
 
 #pragma once
 
-#define profile_init(instance) unsigned long performancetimer##instance
+#define profile_init(instance) unsigned long performancetimer##instance = 0;
 #define profile_init_2(instance) \
             unsigned long performancetimer##instance = 0; \
             static unsigned long totalperformancetimer##instance = 0; \
