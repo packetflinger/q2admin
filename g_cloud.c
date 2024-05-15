@@ -593,7 +593,6 @@ void CA_SendMessages(void)
 void CA_ReadMessages(void)
 {
     uint32_t ret;
-    size_t expectedLength = 0;
     struct timeval tv;
     message_queue_t *in;
     message_queue_t dec;
