@@ -1479,8 +1479,7 @@ int checkCheckIfChatBanned(char *txt) {
             if (!isprint(*cp)) {
                 *cp = ' ';
             }
-
-            *cp++;
+            cp++;
         }
     }
 
