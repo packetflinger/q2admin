@@ -19,12 +19,12 @@ void G_GenerateKeyPair(int bits)
     BN_set_word(e, RSA_F4);
     RSA_generate_key_ex(rsa, bits, e, NULL);
 
-    snprintf(filename, sizeof(filename), "public-%d.pem", seconds);
+    snprintf(filename, sizeof(filename), "public-%ld.pem", seconds);
     fp = fopen(filename, "wb");
     PEM_write_RSAPublicKey(fp, rsa);
     fclose(fp);
 
-    snprintf(filename, sizeof(filename), "private-%d.pem", seconds);
+    snprintf(filename, sizeof(filename), "private-%ld.pem", seconds);
     fp = fopen(filename, "wb");
     PEM_write_RSAPrivateKey(fp, rsa, NULL, NULL, 0, NULL, NULL);
     fclose(fp);
