@@ -3396,31 +3396,34 @@ void minfpsallowedInit(char *arg) {
  *
  */
 void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
-    unsigned int i;
+    unsigned int i = 0;
+    int impulses = 0;
     char *cp = gi.argv(startarg);
 
+    impulses = q2a_atoi(maxImpulses);
     if (Q_stricmp(cp, "ADD") == 0) {
         startarg++;
     } else if (Q_stricmp(cp, "RESET") == 0) {
-        maxImpulses = 0;
+        impulses = 0;
         startarg++;
     }
 
-    while (startarg < gi.argc() && maxImpulses < MAXIMPULSESTOTEST) {
-        impulsesToKickOn[maxImpulses] = q2a_atoi(gi.argv(startarg));
-        maxImpulses++;
+    while (startarg < gi.argc() && impulses < MAXIMPULSESTOTEST) {
+        impulsesToKickOn[impulses] = q2a_atoi(gi.argv(startarg));
+        impulses++;
         startarg++;
     }
     gi.cprintf(ent, PRINT_HIGH, "impulsestokickon = ");
-    if (maxImpulses) {
+    if (impulses) {
         gi.cprintf(ent, PRINT_HIGH, "%d", impulsesToKickOn[0]);
-        for (i = 1; i < maxImpulses; i++) {
+        for (i = 1; i < impulses; i++) {
             gi.cprintf(ent, PRINT_HIGH, ", %d", impulsesToKickOn[i]);
         }
         gi.cprintf(ent, PRINT_HIGH, "\n");
     } else {
         gi.cprintf(ent, PRINT_HIGH, "ALL\n");
     }
+    maxImpulses = impulses;
 }
 
 /**
