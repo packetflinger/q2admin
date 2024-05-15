@@ -1494,25 +1494,25 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     command = gi.argv(startarg);
 
     if (Q_stricmp(command, "status") == 0) {
-        gi.cprintf(ent, "PRINT_HIGH", "[cloud admin status]\n");
+        gi.cprintf(ent, PRINT_HIGH, "[cloud admin status]\n");
         if (connected) {
             getCloudIP(connected_ip, &remote_port, &local_port);
-            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_port));
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_port));
         } else {
-            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
         }
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "client uuid:", cloud_uuid);
+        gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "client uuid:", cloud_uuid);
         if (cloud.state == CA_STATE_DISABLED) {
-            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", "disabled");
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "state:", "disabled");
             return;
         }
 
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "state:", (connected)? "trusted" : "disconnected");
-        gi.cprintf(ent, "PRINT_HIGH", "%-20s%d\n", "disconnects:", cloud.disconnect_count);
+        gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "state:", (connected)? "trusted" : "disconnected");
+        gi.cprintf(ent, PRINT_HIGH, "%-20s%d\n", "disconnects:", cloud.disconnect_count);
         if (connected) {
             secsToTime(&connected_time, FRAMES_TO_SECS(cloud.frame_number - cloud.connected_frame));
-            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
-            gi.cprintf(ent, "PRINT_HIGH", "%-20s%s\n", "connected time:", connected_time);
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "transit:", (cloud.connection.encrypted) ? "encrypted" : "clear text");
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected time:", connected_time);
         }
         return;
     }
