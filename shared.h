@@ -48,7 +48,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #define BIT(n)  (1U << (n))
-typedef unsigned char byte;
+typedef char byte;
 typedef enum {
     qfalse,
     qtrue
