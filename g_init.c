@@ -491,7 +491,6 @@ void InitGame(void) {
     finalentities = G_Malloc(0xffff);
     profile_stop(1, "q2admin->InitGame", 0, NULL);
     HTTP_Init();
-    q2a_memset(&cloud, 0, sizeof(cloud_t));
     CA_Init();
 }
 
