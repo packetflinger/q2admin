@@ -1152,7 +1152,7 @@ void CA_WriteString(const char *fmt, ...) {
 
     len = strlen(str);
     
-    if (!str || len == 0) {
+    if (!*str || len == 0) {
         CA_WriteByte(0);
         return;
     }
