@@ -974,7 +974,7 @@ void CA_SayHello(void)
 
     byte challenge[RSA_LEN];
     q2a_memset(challenge, 0, sizeof(challenge));
-    int chal_len = G_PublicEncrypt(cloud.connection.server_key, challenge,
+    G_PublicEncrypt(cloud.connection.server_key, challenge,
             cloud.connection.cl_nonce, CHALLENGE_LEN);
 
     CA_WriteLong(MAGIC_CLIENT);
