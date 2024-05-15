@@ -1470,7 +1470,7 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport)
     }
 
     localport = (int *)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
-    remoteport = cloud_port;
+    remoteport = &cloud_port;
 }
 
 /**
