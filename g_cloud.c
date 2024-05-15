@@ -1478,7 +1478,6 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport)
  */
 void cloudRun(int startarg, edict_t *ent, int client) {
     char *command;
-    char *time;
     qboolean connected;
     char connected_time[25];
     char connected_ip[INET6_ADDRSTRLEN];
