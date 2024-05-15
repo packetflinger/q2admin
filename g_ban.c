@@ -1608,10 +1608,10 @@ void delchatbanRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean parseBanFileContents(char *data) {
+qboolean parseBanFileContents(unsigned char *data) {
     unsigned int uptoLine = 0;
     size_t len;
-    char *start = data;
+    unsigned char *start = data;
 
     if (!data) {
         return qfalse;
@@ -1650,12 +1650,12 @@ qboolean parseBanFileContents(char *data) {
  *
  * Returns a pointer to the end of the current line
  */
-char *ban_parseBan(char *cp) {
+char *ban_parseBan(unsigned char *cp) {
     baninfo_t *newentry;
     qboolean all;
     qboolean like, re;
     char strbuffer[256];
-    char *tempcp;
+    unsigned char *tempcp;
     char ipstr[INET6_ADDRSTRLEN];
     qboolean allver;
     int num;
@@ -1933,7 +1933,7 @@ char *ban_parseBan(char *cp) {
 /**
  * Parse a CHATBAN: message in a ban file.
  */
-char *ban_parseChatban(char *cp) {
+char *ban_parseChatban(unsigned char *cp) {
     chatbaninfo_t *cnewentry;
     char strbuffer[256];
     int num;
@@ -2029,7 +2029,7 @@ char *ban_parseChatban(char *cp) {
 /**
  * Parse an INCLUDE: message in a ban file.
  */
-char *ban_parseInclude(char *in) {
+char *ban_parseInclude(unsigned char *in) {
     char strbuffer[256];
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
