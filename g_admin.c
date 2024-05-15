@@ -29,7 +29,7 @@ void Read_Admin_cfg(void) {
 
     i = 0;
     while ((!feof(f)) && (i < MAX_ADMINS)) {
-        fscanf(f, "%s %s %d", &admin_pass[i].name, &admin_pass[i].password, &admin_pass[i].level);
+        fscanf(f, "%s %s %d", admin_pass[i].name, admin_pass[i].password, &admin_pass[i].level);
         i++;
     }
     if (!admin_pass[i].level) {
@@ -55,7 +55,7 @@ file2:
 
     i = 0;
     while ((!feof(f)) && (i < MAX_ADMINS)) {
-        fscanf(f, "%s %s %d", &q2a_bypass_pass[i].name, &q2a_bypass_pass[i].password, &q2a_bypass_pass[i].level);
+        fscanf(f, "%s %s %d", q2a_bypass_pass[i].name, q2a_bypass_pass[i].password, &q2a_bypass_pass[i].level);
         i++;
     }
     if (!q2a_bypass_pass[i].level) {
