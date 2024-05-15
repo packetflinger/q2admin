@@ -1631,7 +1631,7 @@ qboolean parseBanFileContents(char *data) {
                         "[q2admin] invalid ban at line %d, ignoring\n",
                         uptoLine);
                 // just jump to the next line and try again
-                while (data[0] != '\n' && data[0] != NULL) {
+                while (*data != '\n' || *data != NULL) {
                     data++;
                 }
                 continue;
