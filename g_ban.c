@@ -186,7 +186,9 @@ void banRun(int startarg, edict_t *ent, int client) {
     char *tempcp;
     int clienti, num;
     unsigned int save;
-    qboolean like, all, re;
+    qboolean like = qfalse;
+    qboolean all = qfalse;
+    qboolean re = qfalse;
     baninfo_t *newentry;
     char savecmd[384];
     char strbuffer[384];
