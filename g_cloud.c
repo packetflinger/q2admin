@@ -451,7 +451,6 @@ void CA_CheckConnection(void)
     ca_connection_t *c;
     uint32_t ret;
     qboolean connected = qfalse;
-    qboolean exception = qfalse;
     struct sockaddr_storage addr;
     socklen_t len;
     struct timeval tv;
@@ -477,8 +476,6 @@ void CA_CheckConnection(void)
         getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &len);
         if (number == 0) {
             connected = qtrue;
-        } else {
-            exception = qtrue;
         }
 #else
         if (FD_ISSET(c->socket, &c->set_w)) {
