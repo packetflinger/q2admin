@@ -1598,8 +1598,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
             if (!isprint(*cp) && *(cp + 1) != 0) {
                 *cp = ' ';
             }
-
-            *cp++;
+            cp++;
         }
     }
 
@@ -1700,8 +1699,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
                 if (!isprint(*cp) && *(cp + 1) != 0) {
                     *cp = ' ';
                 }
-
-                *cp++;
+                cp++;
             }
         }
 
