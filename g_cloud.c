@@ -1469,7 +1469,7 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport)
         q2a_strcpy(remoteip, va("%s", addr));
     }
 
-    localport = (int *)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
+    *localport = (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
     remoteport = &cloud_port;
 }
 
