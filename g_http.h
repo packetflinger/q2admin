@@ -19,7 +19,7 @@
 #include <curl/curl.h>
 
 typedef struct {
-    unsigned char *data;
+    char *data;
     size_t index;
     size_t size;
 } generic_file_t;
