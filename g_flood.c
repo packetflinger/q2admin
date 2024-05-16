@@ -637,15 +637,15 @@ void displayNextFlood(edict_t *ent, int client, long floodcmd) {
     if (floodcmd < maxflood_cmds) {
         switch (floodcmds[floodcmd].type) {
             case FLOOD_SW:
-                gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
                 break;
 
             case FLOOD_EX:
-                gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld EX:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
                 break;
 
             case FLOOD_RE:
-                gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld RE:\"%s\"\n", floodcmd + 1, floodcmds[floodcmd].floodcmd);
                 break;
         }
         floodcmd++;
