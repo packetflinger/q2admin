@@ -65,7 +65,7 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->private_key);
+        EVP_PKEY_free(c->private_key);
         return qfalse;
     }
 
@@ -75,7 +75,7 @@ qboolean G_LoadKeys(void)
 
     if (!c->public_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
-        RSA_free(c->private_key);
+        EVP_PKEY_free(c->private_key);
         return qfalse;
     }
 
@@ -84,8 +84,8 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        RSA_free(c->private_key);
-        RSA_free(c->public_key);
+        EVP_PKEY_free(c->private_key);
+        EVP_PKEY_free(c->public_key);
         return qfalse;
     }
 
@@ -94,8 +94,8 @@ qboolean G_LoadKeys(void)
 
     if (!c->server_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
-        RSA_free(c->private_key);
-        RSA_free(c->public_key);
+        EVP_PKEY_free(c->private_key);
+        EVP_PKEY_free(c->public_key);
         return qfalse;
     }
 
