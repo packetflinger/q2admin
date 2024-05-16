@@ -525,7 +525,6 @@ void unstifleRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
     int clienti;
-    int seconds;
 
     // skip the first part (!unstifle)
     text = getArgs();
