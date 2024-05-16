@@ -192,13 +192,13 @@ void displayNextDisable(edict_t *ent, int client, long disablecmd) {
     if (disablecmd < maxdisable_cmds) {
         switch (disablecmds[disablecmd].type) {
             case DISABLE_SW:
-                gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
                 break;
             case DISABLE_EX:
-                gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld EX:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
                 break;
             case DISABLE_RE:
-                gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld RE:\"%s\"\n", disablecmd + 1, disablecmds[disablecmd].disablecmd);
                 break;
         }
         disablecmd++;
