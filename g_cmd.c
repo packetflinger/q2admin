@@ -1465,7 +1465,11 @@ void Cmd_Invite_f(edict_t *ent) {
 }
 
 /**
+ * Called when real game library calls gi.dprintf()
  *
+ * Checks if it's a chat mmessage (has player name prepended) and filters if
+ * instructed to, checks for mutes, flood protection and also checks for and
+ * filters non-printable characters if instructed to.
  */
 void dprintf_internal(char *fmt, ...) {
     char cbuffer[8192];
@@ -1488,11 +1492,8 @@ void dprintf_internal(char *fmt, ...) {
         if (maxclients) {
             for (i = 0; i < maxclients->value; i++) {
                 if (proxyinfo[i].inuse
-                        && startContains(cbuffer,
-                        proxyinfo[i].name)) {
-                    if (q2a_strstr
-                            (cbuffer,
-                            proxyinfo[i].lastcmd)) {
+                        && startContains(cbuffer, proxyinfo[i].name)) {
+                    if (q2a_strstr(cbuffer, proxyinfo[i].lastcmd)) {
                         if (consolechat_disable) {
                             return;
                         }
