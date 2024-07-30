@@ -94,8 +94,9 @@ void List_Admin_Commands(edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dostuff <num> <commands>\n");
     }
     if (proxyinfo[client].q2a_admin & 128) {
-        if (whois_active)
+        if (whois_active) {
             gi.cprintf(ent, PRINT_HIGH, "    - !writewhois\n");
+        }
     }
     gi.cprintf(ent, PRINT_HIGH, "\n");
 }
