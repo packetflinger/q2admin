@@ -1465,7 +1465,10 @@ void Cmd_Invite_f(edict_t *ent) {
 }
 
 /**
- * Called when real game library calls gi.dprintf()
+ * dprintf is for printf-style formatted debug printing to the server console.
+ *
+ * Called when the real game library calls gi.dprintf(), does some stuff on
+ * the input and then sends the result to the real dprintf() from the server.
  *
  * Checks if it's a chat mmessage (has player name prepended) and filters if
  * instructed to, checks for mutes, flood protection and also checks for and
