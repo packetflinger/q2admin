@@ -1817,7 +1817,10 @@ void AddCommandString_internal(char *text) {
 char argtext[2048];
 
 /**
+ * Fetch the entire set of args as a single string, remove beginning and ending
+ * quotes.
  *
+ * Called by a bunch of funcs in g_cmd.c and a few in g_flood.c
  */
 char *getArgs(void) {
     char *p;
