@@ -1547,7 +1547,19 @@ void dprintf_internal(char *fmt, ...) {
 }
 
 /**
+ * cprintf is for printf-style formatted client printing. Used for printing
+ * strings to the player's client (on screen and in the console. Supplying a
+ * NULL edict_t arg will send the print to the server console instead of a
+ * player.
  *
+ * Called when the real game library calls gi.cprintf()
+ *
+ * ent          = the client entity to send the print to
+ * printlevel   = how the client should handle it
+ *   PRINT_HIGH for important stuff like chats (plays a sound, emphasized)
+ *   PRINT_MED for obituaries
+ *   PRINT_LOW for pickups
+ * fmt          = the printf style format
  */
 void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
     char cbuffer[8192];
