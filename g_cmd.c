@@ -1869,7 +1869,10 @@ char *getArgs(void) {
 }
 
 /**
+ * Figure out what kind of args (string, numeric, boolean) a command has and
+ * store it appropriately.
  *
+ * Boolean values can be 1/0, yes/no, y/n (case insensitive)
  */
 void processCommand(int cmdidx, int startarg, edict_t *ent) {
     // save value
