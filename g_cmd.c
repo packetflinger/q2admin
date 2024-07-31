@@ -1641,7 +1641,16 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
 }
 
 /**
+ * bprintf is for printf-style formatted broadcast printing. It will send the
+ * print string to all players connected to the server.
  *
+ * Called when real game library calls gi.bprintf()
+ *
+ * printlevel   = how the client should handle it
+ *   PRINT_HIGH for important stuff like chats (plays a sound, emphasized)
+ *   PRINT_MED for obituaries
+ *   PRINT_LOW for pickups
+ * fmt          = the printf style format
  */
 void bprintf_internal(int printlevel, char *fmt, ...) {
     char cbuffer[8192];
