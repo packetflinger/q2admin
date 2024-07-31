@@ -1745,6 +1745,14 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
 }
 
 /**
+ * Add a command to execute to the server's command buffer.
+ *
+ * Called when the upstream game library calls gi.addcommandstring()
+ *
+ * Handles gamemap<->map command auto-conversion
+ * Forces server to load map-specific configs before changing map
+ *   `mapcfg/{mapname}-end.cfg`
+ *   `{mapname}-pre.cfg`
  *
  */
 void AddCommandString_internal(char *text) {
