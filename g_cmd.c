@@ -1905,7 +1905,9 @@ void processCommand(int cmdidx, int startarg, edict_t *ent) {
 }
 
 /**
+ * Open, read and parse a q2admin config file.
  *
+ * Only returns false if the file doesn't exist.
  */
 qboolean readCfgFile(char *cfgfilename) {
     FILE *cfgfile;
