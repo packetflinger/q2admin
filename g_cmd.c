@@ -2101,7 +2101,9 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 }
 
 /**
+ * Resolve a single player edict from command args.
  *
+ * Either "CL {number}" or "name"
  */
 edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
     int8_t clienti, foundclienti;
