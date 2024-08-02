@@ -1975,17 +1975,34 @@ void readCfgFiles(void) {
 }
 
 /**
+ * Parse players out of command arguments. Can be player index or name,
+ * multiple indexes are supported.
  *
+ * Returns the number of players selected
+ *
+ * Actual players that have been selected have the CCMD_SELECTED bit set
+ * on their clientcommand.
+ *
+ * Examples
+ *   {some_command} CL {playernum1} [+ playernum2 [+ playernumN]] {other args}
+ *   {some_command} {player_name} {other args}
+ *   {some_command} "{player_name}" {other args}
+ * {player_name} can be partial or wildcard (glob) matched, case insensitive.
+ *
+ * client   = index of player who issued the command
+ * ent      = edict of the player who issued the command
+ * cp       = the complete set of args from the command
+ * text     = pointer to name parsed if not using CL
  */
 int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     int8_t clienti;
     uint8_t like, maxi;
     char strbuffer[sizeof(buffer)];
-	char strbuffer2[sizeof(buffer)];
+    char strbuffer2[sizeof(buffer)];
 
     maxi = 0;
 
-	if (startContains(cp, "CL")) {
+    if (startContains(cp, "CL")) {
         like = 3;
 
         cp += 2;
@@ -1995,6 +2012,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
             return 0;
         }
 
+        // un-select all players in case they were left from some other cmd
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             proxyinfo[clienti].clientcommand &= ~CCMD_SELECTED;
         }
