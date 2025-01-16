@@ -221,8 +221,8 @@ proxyinfo_t *proxyinfo;
 proxyinfo_t *proxyinfoBase;
 proxyreconnectinfo_t *reconnectproxyinfo;
 
-reconnect_info* reconnectlist;
-retrylist_info* retrylist;
+reconnect_info *reconnectlist;
+retrylist_info *retrylist;
 int maxReconnectList = 0;
 int maxretryList = 0;
 
@@ -235,7 +235,6 @@ int proxy_nitro2 = 1;
 int runmode = 100;
 int maxclientsperframe = 100;
 int framesperprocess = 0;
-
 
 qboolean cl_pitchspeed_display = qtrue;
 qboolean cl_pitchspeed_enable = qfalse;
@@ -945,7 +944,9 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     profile_init(1);
     profile_init(2);
 
-    if (!dllloaded) return qfalse;
+    if (!dllloaded) {
+        return qfalse;
+    }
 
     if (runmode == 0) {
         ret = ge_mod->ClientConnect(ent, userinfo);
@@ -955,7 +956,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
     profile_start(1);
 
-    // allways clearout just in case there isn't any clients (therefore runframe doesn't get called)
+    // always clear out just in case there isn't any clients (therefore runframe doesn't get called)
     if (maxReconnectList) {
         unsigned int i;
 
