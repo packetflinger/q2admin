@@ -2702,7 +2702,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
         if (Q_stricmp(cmd, "alias") == 0) {
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
-            //hackDetected(ent, client);
+            hackDetected(ent, client);
+            gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY1\n");
             return qfalse;
         }
 
@@ -2713,7 +2714,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             }
             if (sameip == 1) {
                 proxyinfo[client].hacked_disconnect = 0;
-                //hackDetected(ent, client);
+                hackDetected(ent, client);
+                gi.dprintf("hackDetected() called near hacked_disconnect\n");
                 return qfalse;
             }
             proxyinfo[client].hacked_disconnect = 0;
@@ -2725,6 +2727,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
                 hackDetected(ent, client);
+                gi.dprintf("hackDetected() called near rate check\n");
                 return qfalse;
             }
         }
@@ -2733,7 +2736,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring1) == 0) {
-            //hackDetected(ent, client);
+            hackDetected(ent, client);
+            gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY2\n");
             return qfalse;
         }
         if (Q_stricmp(cmd, proxyinfo[client].hack_teststring2) == 0) {
