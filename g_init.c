@@ -627,7 +627,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     profile_start(1);
 
     for (i = -1; i < maxclients->value; i++) {
-
         if (i < 0 || proxyinfo[i].inuse == 0) {
             proxyinfo[i].speedfreeze = 0;
             proxyinfo[i].enteredgame = 0;
@@ -647,7 +646,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         } else {
             proxyinfo[i].clientcommand &= (LEVELCHANGE_KEEP);
         }
-
         proxyinfo[i].userinfo_changed_count = 0;
         proxyinfo[i].userinfo_changed_start = ltime;
         proxyinfo[i].pcmd_noreply_count = 0;
@@ -685,23 +683,18 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     motd[0] = 0;
     if (zbotmotd[0]) {
         motdptr = fopen(zbotmotd, "rt");
-
         if (!motdptr) {
             zbotmotd[0] = 0;
         } else {
-
             len = 0;
             while (fgets(buffer, 256, motdptr)) {
                 currentlen = q2a_strlen(buffer);
-
                 if (len + currentlen > sizeof (motd)) {
                     break;
                 }
-
                 len += currentlen;
                 q2a_strcat(motd, buffer);
             }
-
             fclose(motdptr);
         }
     }
