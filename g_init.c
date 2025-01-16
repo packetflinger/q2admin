@@ -252,15 +252,25 @@ char lockoutmsg[256];
 
 char com_token[MAX_TOKEN_CHARS];
 
-/*
-==============
-COM_Parse
- 
-Parse a token out of a string
-==============
+/**
+ * Com_Parse will parse a token out of a string.
+ *
+ * It will provide you with the next word in the string. Whitespace is ignored
+ * (multiple spaces, tabs, newlines). A quoted string containing spaces is
+ * considered a single token and will be returned minus the quotes. C-style
+ * comments (//) are ignored until a newline is reached. The input pointer is
+ * modified every time this function is run.
+ *
+ * data_p
+ *   The input string (will be modified)
+ *
+ * command_p
+ *   Will be written with a pointer to where in the input the token
+ *   was found
+ *
+ * Return value is just the word parsed
  */
-char *COM_Parse(char **data_p, char **command_p)
-{
+char *COM_Parse(char **data_p, char **command_p) {
     int c;
     int len;
     char *data;
@@ -271,7 +281,7 @@ char *COM_Parse(char **data_p, char **command_p)
 
     if (!data) {
         *data_p = NULL;
-        return"";
+        return "";
     }
 
     // skip whitespace
