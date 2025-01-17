@@ -2560,7 +2560,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         } else if (Q_stricmp(cmd, zbot_teststring_test3) == 0) {
             return qfalse;
         } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) {
-            if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED) || checkForOverflows(ent, client)) {
+            if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
                 return qfalse;
             }
 

@@ -47,7 +47,6 @@ extern int speedbot_check_type;
 extern int max_pmod_noreply;
 extern int msec_int;
 
-int checkForOverflows(edict_t *ent, int client);
 void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);

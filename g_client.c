@@ -68,43 +68,6 @@ qboolean checkImpulse(byte impulse) {
     return qfalse;
 }
 
-int checkForOverflows(edict_t *ent, int client) {
-    FILE *q2logfile;
-    char checkmask1[100], checkmask2[100];
-    unsigned int ret = 0;
-
-    Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
-    q2logfile = fopen(buffer, "rt");
-    if (!q2logfile) {
-        return 0; // assume ok
-    }
-
-    fseek(q2logfile, proxyinfo[client].logfilecheckpos, SEEK_SET);
-
-    Q_snprintf(checkmask1, sizeof(checkmask1), "WARNING: msg overflowed for %s", proxyinfo[client].name);
-    Q_snprintf(checkmask2, sizeof(checkmask2), "%s overflowed", proxyinfo[client].name);
-
-    while (fgets(buffer, 256, q2logfile)) {
-        if (startContains(buffer, checkmask1) || startContains(buffer, checkmask2)) { // we have a problem...
-            ret = 1;
-            proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
-            removeClientCommand(client, QCMD_ZPROXYCHECK1);
-            removeClientCommand(client, QCMD_ZPROXYCHECK2);
-            addCmdQueue(client, QCMD_RESTART, 2 + (5 * random()), 0, 0);
-
-            Q_snprintf(checkmask1, sizeof(checkmask1), "I(%d) Exp(%s) (%s) (overflow detected)", proxyinfo[client].charindex, proxyinfo[client].teststr, buffer);
-            logEvent(LT_INTERNALWARN, client, ent, checkmask1, IW_OVERFLOWDETECT, 0.0);
-            break;
-        }
-    }
-
-    fseek(q2logfile, 0, SEEK_END);
-    proxyinfo[client].logfilecheckpos = ftell(q2logfile);
-    fclose(q2logfile);
-
-    return ret;
-}
-
 void serverLogZBot(edict_t *ent, int client) {
     addCmdQueue(client, QCMD_LOGTOFILE1, 0, 0, 0);
 

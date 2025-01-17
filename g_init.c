@@ -1756,7 +1756,6 @@ void ClientDisconnect(edict_t *ent) {
  */
 void ClientBegin(edict_t *ent) {
     int client;
-    FILE *q2logfile;
     profile_init(1);
     profile_init(2);
 
@@ -1895,14 +1894,6 @@ void ClientBegin(edict_t *ent) {
         }
 
         addCmdQueue(client, QCMD_CHECKVARTESTS, (float) checkvar_poll_time, 0, 0);
-
-        Q_snprintf(buffer, sizeof(buffer), "%s/qconsole.log", moddir);
-        q2logfile = fopen(buffer, "rt");
-        if (q2logfile) {
-            fseek(q2logfile, 0, SEEK_END);
-            proxyinfo[client].logfilecheckpos = ftell(q2logfile);
-            fclose(q2logfile);
-        }
     }
 
     logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);

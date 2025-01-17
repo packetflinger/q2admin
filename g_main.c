@@ -394,10 +394,6 @@ void G_RunFrame(void) {
 
                 // yes...  detected by long timeout or the normal timeout on detect
                 if (!(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
-                    if (checkForOverflows(ent, client)) {
-                        break;
-                    }
-
                     if (proxyinfo[client].retries < MAXDETECTRETRIES) {
                         // try and get "unknown command" off the screen as fast as possible
                         proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
@@ -476,11 +472,6 @@ void G_RunFrame(void) {
 
                 // yes...  detected by long timeout or the normal timeout on detect
                 if (!(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
-                    if (checkForOverflows(ent, client)) {
-                        addCmdQueue(client, QCMD_TESTRATBOT3, 2, 0, 0);
-                        break;
-                    }
-
                     if (proxyinfo[client].rbotretries < MAXDETECTRETRIES) {
                         //            proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECTNAME;
                         addCmdQueue(client, QCMD_TESTRATBOT3, 2 + (3 * random()), 0, 0);

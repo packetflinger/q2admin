@@ -114,7 +114,6 @@ typedef struct {
     char teststr[9];
     int charindex;
     int logfilenum;
-    long logfilecheckpos;
     char buffer[256]; // log buffer
     byte impulse;
     byte inuse;
