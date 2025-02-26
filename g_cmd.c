@@ -2700,7 +2700,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     }
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
-        if (Q_stricmp(cmd, "alias") == 0) {
+        if (Q_stricmp(cmd, "alias") == 0) { // client doesn't support "alias" command, it just printed
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
             hackDetected(ent, client);
             gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY1\n");
@@ -2709,6 +2709,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
         if (proxyinfo[client].hacked_disconnect == 1) {
             sameip = 1;
+            gi.dprintf("hacked_disconnect_addr: \"%s\"\n", net_addressToString(&proxyinfo[client].hacked_disconnect_addr, false, false, false));
+            gi.dprintf("hacked_disconnect_addr: \"%s\"\n", net_addressToString(&proxyinfo[client].address, false, false, false));
             if (!net_addressesMatch(&proxyinfo[client].hacked_disconnect_addr, &proxyinfo[client].address)) {
                 sameip = 0;
             }
