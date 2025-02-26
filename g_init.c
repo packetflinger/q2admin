@@ -993,59 +993,10 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
 
     client = getEntOffset(ent) - 1;
 
-    if (proxyinfo[client].baninfo) {
-        if (proxyinfo[client].baninfo->numberofconnects) {
-            proxyinfo[client].baninfo->numberofconnects--;
-        }
-
-        proxyinfo[client].baninfo = NULL;
-    }
-
-    proxyinfo[client].private_command = 0;
-    proxyinfo[client].pmod = 0;
-    proxyinfo[client].userinfo_changed_count = 0;
-    proxyinfo[client].userinfo_changed_start = ltime;
-    proxyinfo[client].pcmd_noreply_count = 0;
-    proxyinfo[client].pmod_noreply_count = 0;
-    proxyinfo[client].pver = 0;
-    proxyinfo[client].done_server_and_blocklist = 0;
-    proxyinfo[client].cmdlist = 0;
-    proxyinfo[client].newcmd_timeout = 0;
-    proxyinfo[client].cmdlist_timeout = 0;
-    proxyinfo[client].pmodver = 0;
-    proxyinfo[client].gl_driver_changes = 0;
-    proxyinfo[client].gl_driver[0] = 0;
-    proxyinfo[client].speedfreeze = 0;
-    proxyinfo[client].enteredgame = ltime;
-    proxyinfo[client].msec_bad = 0;
-    proxyinfo[client].msec_start = 0;
-    proxyinfo[client].show_fps = qfalse;
-    proxyinfo[client].msec_last = 0;
-    proxyinfo[client].msec_count = 0;
-    proxyinfo[client].timescale = 0;
-    proxyinfo[client].frames_count = 0;
-    proxyinfo[client].q2a_admin = 0;
-    proxyinfo[client].q2a_bypass = 0;
-    proxyinfo[client].userid = -1;
-    proxyinfo[client].vid_restart = qfalse;
-    proxyinfo[client].inuse = 0;
-    proxyinfo[client].admin = 0;
-    proxyinfo[client].clientcommand = 0;
-    proxyinfo[client].retries = 0;
-    proxyinfo[client].rbotretries = 0;
-    proxyinfo[client].charindex = 0;
-    proxyinfo[client].name[0] = 0;
-    proxyinfo[client].skin[0] = 0;
-    proxyinfo[client].stuffFile = 0;
-    proxyinfo[client].impulsesgenerated = 0;
-    proxyinfo[client].floodinfo.chatFloodProtect = qfalse;
-    proxyinfo[client].cl_pitchspeed = 0;
-    proxyinfo[client].cl_anglespeedkey = 0.0;
-    proxyinfo[client].votescast = 0;
-    proxyinfo[client].votetimeout = 0;
-    proxyinfo[client].checked_hacked_exe = 0;
+    q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
-    removeClientCommands(client);
+    proxyinfo[client].enteredgame = ltime;
+    proxyinfo[client].userinfo_changed_start = ltime;
 
     ret = 1;
 
