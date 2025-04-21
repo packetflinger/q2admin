@@ -287,7 +287,7 @@ void loadLogList(void) {
         ret = qtrue;
     }
     if (!ret) {
-        gi.cprintf(NULL, "WARNING: %s could not be found\n", configfile_log->string);
+       gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_log->string);
     }
 }
 
