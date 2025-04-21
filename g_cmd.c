@@ -3468,7 +3468,7 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
     int impulses = 0;
     char *cp = gi.argv(startarg);
 
-    impulses = q2a_atoi(maxImpulses);
+    impulses = q2a_atoi(&maxImpulses);
     if (Q_stricmp(cp, "ADD") == 0) {
         startarg++;
     } else if (Q_stricmp(cp, "RESET") == 0) {
