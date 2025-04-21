@@ -908,6 +908,7 @@ void CA_PlayerList(void)
         if (proxyinfo[i].inuse) {
             CA_WriteByte(i);
             CA_WriteString("%s", proxyinfo[i].userinfo);
+            CA_WriteString("%s", proxyinfo[i].client_version);
         }
     }
 }
@@ -1158,6 +1159,7 @@ void CA_PlayerConnect(edict_t *ent)
     CA_WriteByte(CMD_CONNECT);
     CA_WriteByte(cl);
     CA_WriteString("%s", proxyinfo[cl].userinfo);
+    CA_WriteString("%s", proxyinfo[cl].client_version);
 }
 
 /**
@@ -1238,6 +1240,7 @@ void CA_PlayerUpdate(uint8_t cl, const char *ui)
     CA_WriteByte(CMD_PLAYERUPDATE);
     CA_WriteByte(cl);
     CA_WriteString("%s", proxyinfo[cl].userinfo);
+    CA_WriteString("%s", proxyinfo[cl].client_version);
 }
 
 /**
