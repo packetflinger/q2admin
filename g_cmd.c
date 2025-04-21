@@ -2529,6 +2529,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                     gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                 }
+                CA_PlayerConnect(ent);
                 return qfalse;
             }
         }

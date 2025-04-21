@@ -1168,7 +1168,6 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             profile_stop(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
-            CA_PlayerConnect(ent);
         }
     }
 
