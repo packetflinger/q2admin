@@ -80,50 +80,6 @@ void ReadCloudConfigFile()
 }
 
 /**
- * Build a new info string containing just want we need:
- *  name, ip, skin, fov
- */
-static char *ca_userinfo(uint8_t player_index)
-{
-    static char newuserinfo[MAX_INFO_STRING];
-    char *value;
-
-    memset(newuserinfo, 0, MAX_INFO_STRING);
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "name");
-    if (*value) {
-        q2a_strcpy(newuserinfo, va("\\name\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "ip");
-    if (*value) {
-        q2a_strcat(newuserinfo, va("\\ip\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "skin");
-    if (*value) {
-        q2a_strcat(newuserinfo, va("\\skin\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "fov");
-    if (*value) {
-        q2a_strcat(newuserinfo, va("\\fov\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "hand");
-    if (*value) {
-        q2a_strcat(newuserinfo, va("\\hand\\%s", value));
-    }
-
-    value = Info_ValueForKey(proxyinfo[player_index].userinfo, "cl_cookie");
-    if (*value) {
-        q2a_strcat(newuserinfo, va("\\cl_cookie\\%s", value));
-    }
-
-    return newuserinfo;
-}
-
-
-/**
  * getaddrinfo result is a linked-list of struct addrinfo.
  * Figure out which result is the one we want (ipv6/ipv4)
  */
@@ -926,7 +882,9 @@ void CA_DisconnectedPeer(void)
 }
 
 /**
- * Send info about all the players connected
+ * Send info about all the players connected. First send the number of players
+ * to follow, then for each: the player id followed by the userinfo and finally
+ * the version string for the client the player is using.
  */
 void CA_PlayerList(void)
 {
@@ -949,7 +907,7 @@ void CA_PlayerList(void)
     for (i=0; i<cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             CA_WriteByte(i);
-            CA_WriteString("%s", ca_userinfo(i));
+            CA_WriteString("%s", proxyinfo[i].userinfo);
         }
     }
 }
@@ -1180,7 +1138,13 @@ void CA_ReadData(void *out, size_t len)
 
 
 /**
- * Called when a player connects
+ * Report when a player connects. The Cloud Admin server will make decisions
+ * based on information like VPN status and client version string, so this
+ * data needs to be available before sending this message.
+ *
+ * Called from doClientCommand() upon receiving the client version string. This
+ * can be delayed slightly, so we can't call this from ClientConnect() or even
+ * ClientBegin().
  */
 void CA_PlayerConnect(edict_t *ent)
 {
@@ -1193,7 +1157,7 @@ void CA_PlayerConnect(edict_t *ent)
 
     CA_WriteByte(CMD_CONNECT);
     CA_WriteByte(cl);
-    CA_WriteString("%s", ca_userinfo(cl));
+    CA_WriteString("%s", proxyinfo[cl].userinfo);
 }
 
 /**
@@ -1273,7 +1237,7 @@ void CA_PlayerUpdate(uint8_t cl, const char *ui)
 
     CA_WriteByte(CMD_PLAYERUPDATE);
     CA_WriteByte(cl);
-    CA_WriteString("%s", ca_userinfo(cl));
+    CA_WriteString("%s", proxyinfo[cl].userinfo);
 }
 
 /**
