@@ -270,11 +270,3 @@ netadr_t net_parseIPAddressMask(const char *ip)
     return address;
 }
 
-/**
- * Very simple check for whether a client's IP starts with a valid number
- */
-qboolean net_validIPAddress(netadr_t *addr)
-{
-    int first = q2a_atoi(addr->ip.u8[0]);
-    return first > 0;
-}
