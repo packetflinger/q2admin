@@ -508,11 +508,13 @@ void CA_SendMessages(void)
         // socket write buffer is ready, send
         if (ret) {
             if (c->encrypted && c->have_keys && cloud.state == CA_STATE_TRUSTED) {
+                hexDump("sending", q->data, q->length);
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
                 memcpy(q->data, e.data, e.length);
                 q->length = e.length;
+                hexDump("sending (encrypted)", q->data, q->length);
             }
 
             ret = send(c->socket, q->data, q->length, 0);
