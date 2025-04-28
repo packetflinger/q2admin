@@ -607,6 +607,7 @@ void CA_ReadMessages(void)
                 memset(in->data, 0, in->length);
                 memcpy(in->data, dec.data, dec.length);
                 in->length = dec.length;
+                hexDump("decrypted:", in->data, in->length);
             }
         } else {
             // no data has been sent to read
