@@ -502,18 +502,15 @@ void CA_SendMessages(void)
             perror("send select");
             errno = 0;
         }
-        hexDump("sending plain:", q->data, q->length);
 
         // socket write buffer is ready, send
         if (ret) {
             if (c->encrypted && c->have_keys && cloud.state == CA_STATE_TRUSTED) {
-                hexDump("sending", q->data, q->length);
                 memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
                 memset(q, 0, sizeof(message_queue_t));
                 memcpy(q->data, e.data, e.length);
                 q->length = e.length;
-                hexDump("sending (encrypted)", q->data, q->length);
             }
 
             ret = send(c->socket, q->data, q->length, 0);
@@ -598,7 +595,6 @@ void CA_ReadMessages(void)
 
                 errno = 0;
             }
-            hexDump("received:", in->data, in->length);
             in->length += ret;
 
             // decrypt if necessary
@@ -607,9 +603,7 @@ void CA_ReadMessages(void)
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
                 memcpy(in->data, dec.data, dec.length);
-                gi.dprintf("original len: %d, decrypted len: %d\n", in->length, dec.length);
                 in->length = dec.length;
-                hexDump("decrypted:", in->data, in->length);
             }
         } else {
             // no data has been sent to read
