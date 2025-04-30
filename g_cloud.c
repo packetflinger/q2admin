@@ -941,7 +941,6 @@ void CA_SayHello(void)
     CA_WriteByte(cloud.maxclients);
     CA_WriteByte(cloud_encryption ? 1 : 0);
     CA_WriteData(challenge, RSA_LEN);
-    hexDump("hello", cloud.queue.data, cloud.queue.length);
 }
 
 /**
