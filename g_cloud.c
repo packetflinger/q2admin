@@ -499,11 +499,10 @@ void CA_SendMessages(void)
         // see if the socket is ready to send data
         ret = select((int) c->socket + 1, NULL, &c->set_w, NULL, &tv);
         if (ret == -1) {
-            //if (errno != EINTR) {
-                perror("send select");
-            //}
+            perror("send select");
             errno = 0;
         }
+        hexDump("sending plain:", q->data, q->length);
 
         // socket write buffer is ready, send
         if (ret) {
@@ -599,7 +598,7 @@ void CA_ReadMessages(void)
 
                 errno = 0;
             }
-
+            hexDump("received:", in->data, in->length);
             in->length += ret;
 
             // decrypt if necessary
@@ -608,6 +607,7 @@ void CA_ReadMessages(void)
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 memset(in->data, 0, in->length);
                 memcpy(in->data, dec.data, dec.length);
+                gi.dprintf("original len: %d, decrypted len: %d\n", in->length, dec.length);
                 in->length = dec.length;
                 hexDump("decrypted:", in->data, in->length);
             }
@@ -947,6 +947,7 @@ void CA_SayHello(void)
     CA_WriteByte(cloud.maxclients);
     CA_WriteByte(cloud_encryption ? 1 : 0);
     CA_WriteData(challenge, RSA_LEN);
+    hexDump("hello", cloud.queue.data, cloud.queue.length);
 }
 
 /**
