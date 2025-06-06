@@ -260,13 +260,14 @@ void CA_RunFrame(void)
 
     // everything we need to do while RA is connected
     if (cloud.state >= CA_STATE_CONNECTED) {
-
         // send any buffered messages to the server
         CA_SendMessages();
 
         // receive any pending messages from server
         CA_ReadMessages();
+    }
 
+    if (cloud.state == CA_STATE_TRUSTED) {
         // periodically make sure connection is alive
         CA_Ping();
     }
