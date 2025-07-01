@@ -478,7 +478,6 @@ void CA_SendMessages(void)
         return;
     }
 
-    // nothing to send
     if (!cloud.queue.length) {
         return;
     }
@@ -507,10 +506,10 @@ void CA_SendMessages(void)
         // socket write buffer is ready, send
         if (ret) {
             if (c->encrypted && c->have_keys && cloud.state == CA_STATE_TRUSTED) {
-                memset(&e, 0, sizeof(message_queue_t));
+                q2a_memset(&e, 0, sizeof(message_queue_t));
                 e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
-                memset(q, 0, sizeof(message_queue_t));
-                memcpy(q->data, e.data, e.length);
+                q2a_memset(q, 0, sizeof(message_queue_t));
+                q2a_memcpy(q->data, e.data, e.length);
                 q->length = e.length;
             }
 
@@ -527,7 +526,7 @@ void CA_SendMessages(void)
                 errno = 0;
             } else {
                 // shift off the data we just sent
-                memmove(q->data, q->data + ret, q->length - ret);
+                q2a_memmove(q->data, q->data + ret, q->length - ret);
                 q->length -= ret;
             }
         } else {
@@ -600,10 +599,10 @@ void CA_ReadMessages(void)
 
             // decrypt if necessary
             if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CA_STATE_TRUSTED) {
-                memset(&dec, 0, sizeof(message_queue_t));
+                q2a_memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
-                memset(in->data, 0, in->length);
-                memcpy(in->data, dec.data, dec.length);
+                q2a_memset(in->data, 0, in->length);
+                q2a_memcpy(in->data, dec.data, dec.length);
                 in->length = dec.length;
             }
         } else {
@@ -1084,11 +1083,11 @@ char *CA_ReadString(void)
         len++;
     } while (cloud.queue_in.data[(cloud.queue_in.index + len)] != 0);
 
-    memset(&str, 0, MAX_STRING_CHARS);
+    q2a_memset(&str, 0, MAX_STRING_CHARS);
 
     for (i=0; i<=len; i++) {
         character = CA_ReadByte() & 0x7f;
-        strcat(str,  &character);
+        q2a_strcat(str,  &character);
     }
 
     return str;
@@ -1131,7 +1130,7 @@ void CA_WriteString(const char *fmt, ...) {
  */
 void CA_ReadData(void *out, size_t len)
 {
-    memcpy(out, &(cloud.queue_in.data[cloud.queue_in.index]), len);
+    q2a_memcpy(out, &(cloud.queue_in.data[cloud.queue_in.index]), len);
     cloud.queue_in.index += len;
 }
 
