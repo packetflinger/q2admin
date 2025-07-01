@@ -540,13 +540,15 @@ void CA_SendMessages(void)
     }
 }
 
-
 /**
  * Accept any incoming messages from the server
  */
 void CA_ReadMessages(void)
 {
     uint32_t ret;
+    uint32_t packet_count;
+    byte iv[AES_IV_LEN];
+    byte temp_iv[DIGEST_LEN];
     struct timeval tv;
     message_queue_t *in;
     message_queue_t dec;
@@ -599,11 +601,15 @@ void CA_ReadMessages(void)
 
             // decrypt if necessary
             if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CA_STATE_TRUSTED) {
-                q2a_memset(&dec, 0, sizeof(message_queue_t));
+                memcpy(temp_iv, in->data, AES_IV_LEN);
+                memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 q2a_memset(in->data, 0, in->length);
                 q2a_memcpy(in->data, dec.data, dec.length);
                 in->length = dec.length;
+                memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
+                // index = temp_iv[0] & 0xf;
+                // cloud.connection.initial_value[index] = cloud.connection.session_key[index];
             }
         } else {
             // no data has been sent to read

@@ -308,7 +308,6 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     if (!(c || c->d_ctx)) {
         return 0;
     }
-
     EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
     EVP_DecryptUpdate(c->d_ctx, dest + dest_len, &dest_len, src, src_len);
     written += dest_len;
