@@ -1,19 +1,18 @@
 /**
- * The cloud admin client maintains a separate TCP connection
- * to a remote management server. The client (q2 server) and
- * the cloud admin server mutually authenticate via asymmetrically
- * encrypted challenges. Once trusted, the client feeds the server
- * game information (player data, chats, frags, etc) and will do
- * as the cloud admin server instructs (enforcing bans/mutes,
+ * The cloud admin client maintains a separate TCP connection to a remote
+ * management server. The client (q2 server) and the cloud admin server
+ * mutually authenticate via asymmetrically encrypted challenges. Once trusted,
+ * the client feeds the server game information (player data, chats, frags,
+ * etc) and will do as the cloud admin server instructs (enforcing bans/mutes,
  * telling players about other servers, etc).
  *
- * Server operators can connect to a cloud admin server by
- * registering using it's web interface, exchanging public keys,
- * and obtaining a unique identifier used in the connection
- * handshake.
+ * Server operators can connect to a cloud admin server by registering using
+ * it's web interface, exchanging public keys, and obtaining a unique
+ * identifier used in the connection handshake.
  *
- * The tcp connection is encrypted using AES-CBC with keys rotating
- * about once an hour.
+ * The tcp connection is encrypted using AES-CBC with keys rotating about once
+ * an hour. AES-GCM would normally be a better mode as it's more modern and has
+ * authentication built-in, but it's too vulnerable in the event of IV reuse.
  */
 
 #include "g_local.h"
@@ -22,7 +21,6 @@ cloud_t cloud;
 
 /**
  * Sets up the cloud admin connection.
- *
  */
 void CA_Init() {
     if (cloud.connection.socket) {
@@ -67,21 +65,18 @@ void CA_Init() {
 }
 
 /**
- * Load config from disk. First load from q2 folder,
- * then the mod folder.
+ * Load config from disk. First load from q2 folder, then the mod folder.
  */
 void ReadCloudConfigFile()
 {
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cloud->string);
-
-    // read config from mod dir first, then global
     readCfgFile(buffer);
     readCfgFile(configfile_cloud->string);
 }
 
 /**
- * getaddrinfo result is a linked-list of struct addrinfo.
- * Figure out which result is the one we want (ipv6/ipv4)
+ * getaddrinfo's returns a linked-list of struct addrinfo. Figure out which
+ * result is the one we want (IPv6/IPv4)
  */
 static struct addrinfo *select_addrinfo(struct addrinfo *a)
 {
@@ -91,18 +86,17 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
         return NULL;
     }
 
-    // just in case it's set blank in the config
+    // Just in case it's set blank in the config
     if (!cloud_dns[0]) {
         q2a_strcpy(cloud_dns, "64");
     }
 
-    // save the first one of each address family, if more than 1, they're
-    // almost certainly in a random order anyway
-    for (;a != NULL; a = a->ai_next) {
+    // Save the first one of each address family if more than 1. They'll be in
+    // random order.
+    for (; a != NULL; a = a->ai_next) {
         if (!v4 && a->ai_family == AF_INET) {
             v4 = a;
         }
-
         if (!v6 && a->ai_family == AF_INET6) {
             v6 = a;
         }
@@ -124,36 +118,34 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
 
 
 /**
- * Do a DNS lookup for remote server.
- * This is done in a dedicated thread to prevent blocking
+ * Do a DNS lookup for remote server. This is done in a dedicated thread to
+ * prevent blocking. Otherwise the server (and all current players) will
+ * freeze in place when new players connect until their PTR record is resolved.
  */
 void CA_LookupAddress(void)
 {
     char str_address[40];
     struct addrinfo hints, *res = 0;
 
-    memset(&hints, 0, sizeof(hints));
-    memset(&res, 0, sizeof(res));
+    q2a_memset(&hints, 0, sizeof(hints));
+    q2a_memset(&res, 0, sizeof(res));
 
     hints.ai_family         = AF_UNSPEC;     // either v6 or v4
     hints.ai_socktype       = SOCK_STREAM;   // TCP
     hints.ai_protocol       = 0;
-    hints.ai_flags          = AI_ADDRCONFIG; // only return v6 addresses if interface is v6 capable
+    hints.ai_flags          = AI_ADDRCONFIG; // only for v6 addresses
 
-    // set to catch any specific errors
     errno = 0;
 
-    // do the actual DNS lookup
     int err = getaddrinfo(cloud_address, va("%d",cloud_port), &hints, &res);
-
     if (err != 0) {
         CA_dprintf("DNS error\n");
         cloud.state = CA_STATE_DISABLED;
         return;
     } else {
-        memset(&cloud.addr, 0, sizeof(struct addrinfo));
+        q2a_memset(&cloud.addr, 0, sizeof(struct addrinfo));
 
-        // getaddrinfo can return multiple mixed v4/v6 results, select an appropriate one
+        // getaddrinfo can return multiple mixed v4/v6 results
         cloud.addr = select_addrinfo(res);
 
         if (!cloud.addr) {
@@ -162,7 +154,6 @@ void CA_LookupAddress(void)
             return;
         }
 
-        // for convenience
         if (res->ai_family == AF_INET6) {
             cloud.connection.ipv6 = qtrue;
         }
@@ -190,6 +181,9 @@ void CA_LookupAddress(void)
     cloud.state = CA_STATE_DISCONNECTED;
 }
 
+/**
+ * Only DNS lookups use this
+ */
 void G_StartThread(void *func, void *arg) {
 #if _WIN32
     DWORD tid;
@@ -201,19 +195,20 @@ void G_StartThread(void *func, void *arg) {
 }
 
 /**
- *
+ * Output to the q2 server console (if flags agree)
  */
 void debug_print(char *str)
 {
     if (!RFL(DEBUG)) {
         return;
     }
-
     gi.cprintf(NULL, PRINT_HIGH, "%s\n", str);
 }
 
 /**
- * Periodically ping the server to know if the connection is still open
+ * Periodically ping the server to know if the connection is still open. I'm
+ * not 100% sure this is necessary. TCP has built-in mechanisms for maintaining
+ * a connection if when no data is flowing.
  */
 void CA_Ping(void)
 {
@@ -245,30 +240,23 @@ void CA_Ping(void)
 }
 
 /**
- * Run once per server frame
- *
+ * Run once per server frame. The default tick rate is 10hz or once every 0.1
+ * seconds, but servers like q2pro support variable framerates (divisible by 10
+ * up to 60), so this could run much more frequently.
  */
 void CA_RunFrame(void)
 {
-    // keep some time
     cloud.frame_number++;
-
-    // remote admin is disabled, don't do anything
     if (cloud.state == CA_STATE_DISABLED) {
         return;
     }
 
-    // everything we need to do while RA is connected
     if (cloud.state >= CA_STATE_CONNECTED) {
-        // send any buffered messages to the server
         CA_SendMessages();
-
-        // receive any pending messages from server
         CA_ReadMessages();
     }
 
     if (cloud.state == CA_STATE_TRUSTED) {
-        // periodically make sure connection is alive
         CA_Ping();
     }
 
@@ -277,22 +265,22 @@ void CA_RunFrame(void)
         CA_CheckConnection();
     }
 
-    // we're not connected, try again
     if (cloud.state == CA_STATE_DISCONNECTED) {
         CA_Connect();
     }
 }
 
+/**
+ * Local q2 server is shutting down, inform the backend too
+ */
 void CA_Shutdown(void)
 {
     if (cloud.state == CA_STATE_DISABLED) {
         return;
     }
 
-    /**
-     * We have to call RA_SendMessages() specifically here because there won't be another
-     * frame to send the buffered CMD_QUIT
-     */
+    // We have to call CA_SendMessages() specifically here because there won't
+    // be another frame to send the buffered CMD_QUIT
     CA_WriteByte(CMD_QUIT);
     CA_SendMessages();
     CA_Disconnect();
@@ -301,7 +289,7 @@ void CA_Shutdown(void)
 }
 
 /**
- *
+ * TCP connection was broken, reset local state in preparation for reconnecting
  */
 void CA_Disconnect(void)
 {
@@ -314,8 +302,9 @@ void CA_Disconnect(void)
 }
 
 /**
- * Get the frame number at which we should try another connection.
- * Increase the interval as attempts increase without a connection.
+ * Get the frame number at which we should try another connection. Increase the
+ * interval as attempts increase without a connection. The longer the
+ * connection is inactive, the more infrequently it tries to reconnect.
  */
 static uint32_t next_connect_frame(void)
 {
@@ -331,25 +320,21 @@ static uint32_t next_connect_frame(void)
 }
 
 /**
- * Make the connection to the cloud admin server
+ * Make the connection to the backend
  */
 void CA_Connect(void)
 {
     int flags, ret;
 
-    // only if we've waited long enough
     if (cloud.frame_number < cloud.connect_retry_frame) {
         return;
     }
 
-    // clear the in and out buffers
     q2a_memset(&cloud.queue, 0, sizeof(message_queue_t));
     q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 
     cloud.state = CA_STATE_CONNECTING;
     cloud.connection_attempts++;
-
-    // create the socket
     cloud.connection.socket = socket(
             cloud.addr->ai_family,
             cloud.addr->ai_socktype,
@@ -360,7 +345,6 @@ void CA_Connect(void)
         perror("connect");
         errno = 0;
         cloud.connect_retry_frame = next_connect_frame();
-
         return;
     }
 
@@ -382,7 +366,6 @@ void CA_Connect(void)
 
     errno = 0;
 
-    // make the actual connection
     ret = connect(cloud.connection.socket, cloud.addr->ai_addr, cloud.addr->ai_addrlen);
 
     if (ret == -1) {
@@ -394,10 +377,9 @@ void CA_Connect(void)
         }
     }
 
-    /**
-     * since we're non-blocking, the connection won't complete in this single server frame.
-     * We have to select() for it on a later runframe. See CA_CheckConnection()
-     */
+    // Since we're non-blocking, the connection won't complete in this single
+    // server frame. We have to select() for it on a later runframe. See
+    // CA_CheckConnection()
 }
 
 /**
@@ -422,7 +404,6 @@ void CA_CheckConnection(void)
 
     // check if connection is fully established
     ret = select((int)c->socket + 1, NULL, &c->set_w, &c->set_e, &tv);
-
     if (ret) {
 
 #ifdef LINUX
@@ -486,8 +467,7 @@ void CA_SendMessages(void)
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
     ca_connection_t *c;
-    message_queue_t *q;
-    message_queue_t e;
+    message_queue_t *q, e;
 
     c = &cloud.connection;
     q = &cloud.queue;
@@ -545,13 +525,10 @@ void CA_SendMessages(void)
  */
 void CA_ReadMessages(void)
 {
-    uint32_t ret;
-    uint32_t packet_count;
-    byte iv[AES_IV_LEN];
-    byte temp_iv[DIGEST_LEN];
+    uint32_t ret, packet_count;
+    byte iv[AES_IV_LEN], temp_iv[DIGEST_LEN];
     struct timeval tv;
-    message_queue_t *in;
-    message_queue_t dec;
+    message_queue_t *in, dec;
 
     if (cloud.state < CA_STATE_CONNECTING) {
         return;
@@ -594,22 +571,19 @@ void CA_ReadMessages(void)
                     CA_DisconnectedPeer();
                     return;
                 }
-
                 errno = 0;
             }
             in->length += ret;
 
             // decrypt if necessary
             if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CA_STATE_TRUSTED) {
-                memcpy(temp_iv, in->data, AES_IV_LEN);
-                memset(&dec, 0, sizeof(message_queue_t));
+                q2a_memcpy(temp_iv, in->data, AES_IV_LEN);
+                q2a_memset(&dec, 0, sizeof(message_queue_t));
                 dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
                 q2a_memset(in->data, 0, in->length);
                 q2a_memcpy(in->data, dec.data, dec.length);
                 in->length = dec.length;
-                memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
-                // index = temp_iv[0] & 0xf;
-                // cloud.connection.initial_value[index] = cloud.connection.session_key[index];
+                q2a_memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
             }
         } else {
             // no data has been sent to read
@@ -617,7 +591,6 @@ void CA_ReadMessages(void)
         }
     }
 
-    // if we made it here, we have the whole message, parse it
     CA_ParseMessage();
 }
 
@@ -642,16 +615,12 @@ void CA_ParseMessage(void)
         return;
     }
 
-    // no data
     if (!cloud.queue_in.length) {
         return;
     }
 
-    //hexDump("New Message", remote.queue_in.data, remote.queue_in.length);
-
     while (msg->index < msg->length) {
         cmd = CA_ReadByte();
-
         switch (cmd) {
         case SCMD_PONG:
             CA_ParsePong();
@@ -662,7 +631,7 @@ void CA_ParseMessage(void)
         case SCMD_HELLOACK:
             CA_VerifyServerAuth();
             break;
-        case SCMD_TRUSTED:  // we just connected and authed successfully, tell server about us
+        case SCMD_TRUSTED:  // we just connected and authed successfully
             CA_Trusted();
             CA_Map(cloud.mapname);
             CA_PlayerList();
@@ -689,6 +658,9 @@ void CA_ParseMessage(void)
     q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 }
 
+/**
+ * Is a a digital signature valid?
+ */
 qboolean RSAVerifySignature( RSA* rsa,
                          unsigned char* MsgHash,
                          size_t MsgHashLen,
@@ -725,6 +697,8 @@ qboolean RSAVerifySignature( RSA* rsa,
 }
 
 /**
+ * Authenticate the backend
+ *
  * 1. Decrypt the nonce sent back from the server and check if it matches
  * 2. If the encryption is requested, parse the AES 128 key and IV
  * 3. Read the plaintext nonce from the server, encrypt and send back
@@ -763,13 +737,12 @@ qboolean CA_VerifyServerAuth(void)
     q2a_memcpy(sv_challenge, response_plain + offset, sizeof(sv_challenge));
     offset += sizeof(sv_challenge);
 
+    // transit will be encrypted so the keys will be next in the buffer
     if (cloud_encryption) {
-        // the symmetric key
         q2a_memset(c->session_key, 0, sizeof(c->session_key));
         q2a_memcpy(c->session_key, response_plain + offset, sizeof(c->session_key));
         offset += sizeof(c->session_key);
 
-        // the initial value for symmetric encryption
         q2a_memset(c->initial_value, 0, sizeof(c->initial_value));
         q2a_memcpy(c->initial_value, response_plain + offset, sizeof(c->initial_value));
 
@@ -815,25 +788,24 @@ qboolean CA_VerifyServerAuth(void)
 }
 
 /**
- * Server sent over a command.
+ * Server sent over a command. It unconditionally executes any command the
+ * backend sends over. Generally this is a bad, but since we can't get here
+ * unless the connection is authenticated, it's probably safe enough. Maybe
+ * add some sanity checks later.
  */
 void CA_ParseCommand(void)
 {
     char *cmd;
 
-    // we should never get here if we're not trusted, but just in case
     if (cloud.state < CA_STATE_TRUSTED) {
         return;
     }
-
     cmd = CA_ReadString();
-
-    // cram it into the command buffer
     gi.AddCommandString(cmd);
 }
 
 /**
- * Not really much to parse...
+ * Backend responded to our PING
  */
 void CA_ParsePong(void)
 {
@@ -855,8 +827,8 @@ void CA_RotateKeys(void)
 }
 
 /**
- * There was a sudden disconnection mid-stream. Reconnect after an
- * appropriate pause
+ * There was a sudden disconnection mid-stream. Reconnect after an appropriate
+ * delay.
  */
 void CA_DisconnectedPeer(void)
 {
@@ -906,7 +878,6 @@ void CA_PlayerList(void)
 
     CA_WriteByte(CMD_PLAYERLIST);
     CA_WriteByte(count);
-
     for (i=0; i<cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             CA_WriteByte(i);
@@ -926,12 +897,11 @@ void CA_PlayerList(void)
  */
 void CA_SayHello(void)
 {
-    // don't bother if we're fully connected
     if (cloud.state == CA_STATE_TRUSTED) {
         return;
     }
 
-    // random data to check server auth
+    // random data to challenge backend with
     RAND_bytes(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 
     byte challenge[RSA_LEN];
@@ -967,7 +937,6 @@ void CA_ParseError(void)
     if (client_id == -1) {
         gi.cprintf(NULL, PRINT_HIGH, "%s\n", reason);
     } else {
-        //gi.cprintf(proxyinfo[client_id].ent, PRINT_HIGH, "%s\n", reason);
         gi.cprintf(NULL, PRINT_HIGH, "error msg here\n");
     }
 
