@@ -1668,7 +1668,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
     }
 
     // scrap obituaries for frags to send to remote admin server
-    if (printlevel == PRINT_MEDIUM) {
+    if (printlevel == PRINT_MEDIUM ||printlevel == PRINT_HIGH) {
         /**
          * There doesn't seem to be a way of getting the means-of-death
          * for a frag. I've hijacked all player entities' *die() function
