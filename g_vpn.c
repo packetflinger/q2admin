@@ -18,7 +18,8 @@
 char vpn_host[50] = VPNAPIHOST;
 
 /**
- *
+ * Initiates a lookup for the VPN status of a player edict using CURL. This is
+ * a non-blocking call that will finish on a later framerun.
  */
 void LookupVPNStatus(edict_t *ent)
 {
@@ -54,9 +55,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
 {
     vpn_t *v;
     json_t mem[32];
-    const json_t *root;
-    const json_t *security;
-    const json_t *net;
+    const json_t *root, *security, *net;
     const char *vpn, *proxy, *tor, *relay;
     int i = getEntOffset(download->initiator) - 1;
 
@@ -87,22 +86,25 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {
-            Q_snprintf(buffer, sizeof(buffer), "VPN connections not allowed, please reconnect without it\n", maxMsgLevel + 1);
+            Q_snprintf(buffer, sizeof(buffer), "VPN connections not allowed, please reconnect without it\n");
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
-            //gi.cprintf(NULL, PRINT_HIGH, "%s disconnected for using a VPN [%s - %s]\n",
-            //        download->initiator->client->pers.netname, IP(i), v->asn
-            //);
         }
     }
 }
 
 /**
- * Returns yes or no if the client is coming from a VPN connection
+ * Whether the client is coming from a VPN connection or not.
  */
 qboolean isVPN(int clientnum)
 {
-    return qfalse;
+    if (!VALIDCLIENT(clientnum)) {
+        return qfalse;
+    }
+    if (!vpn_enable) {
+        return qfalse;
+    }
+    return proxyinfo[clientnum].vpn.state == VPN_POSITIVE;
 }
 
 /**
