@@ -1623,12 +1623,21 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
             logEvent(LT_CHAT, 0, 0, cbuffer, 0, 0.0);
         } else {
             logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0);
+
+            chatpest_t *pest = &proxyinfo[clienti].pest;
+            pest->printchars += strlen(cbuffer) - 1; // don't count the trailing \n
+            pest->chatrate = pest->printchars / (ltime - proxyinfo[clienti].enteredgame);
+            q2a_strncpy(pest->last[pest->last_index], cbuffer, MAX_CHAT_CHARS);
+            if (pest->last_index == (MSG_SAVE_COUNT - 1)) {
+                pest->last_index = -1;
+            }
+            pest->last_index++;
         }
     }
 
     // only works if we're a dedicated server
     if (ent == NULL) {
-    	CA_Print(printlevel, cbuffer);	// send the one for the server console
+        CA_Print(printlevel, cbuffer);	// send the one for the server console
     }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);

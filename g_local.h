@@ -201,6 +201,7 @@ typedef struct {
     char address_str[135]; // string rep, ipv4/ipv6:port
     char version_test[6];
     char client_version[MAX_VERSION_CHARS];   // build string
+    chatpest_t pest;
 } proxyinfo_t;
 
 typedef struct {

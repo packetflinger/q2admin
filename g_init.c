@@ -482,6 +482,7 @@ void InitGame(void) {
         proxyinfo[i].checked_hacked_exe = 0;
         proxyinfo[i].ent = 0;
 
+        q2a_memset(&proxyinfo[i].pest, 0, sizeof(chatpest_t));
         removeClientCommands(i);
     }
 
@@ -1777,6 +1778,8 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
+
+    q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
     
     // positive value is normal client limit
     // negative value is vpn client limit (abs)

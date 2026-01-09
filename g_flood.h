@@ -19,11 +19,28 @@
 #define FLOOD_EX  1
 #define FLOOD_RE  2
 
+// how many chats for each player to save for analysis.
+#define MSG_SAVE_COUNT 4
+
 typedef struct {
     char *floodcmd;
     byte type;
     re_t r;
 } floodcmd_t;
+
+// Keep track of chat patterns beyond simple flooding. There has been an uptick
+// in "chatbots" that connect and just spam random probably AI-generated
+// content just to be annoying. They're below the normal flood limits so they
+// rarely get kicked. This tracks their print-chars per second and can be used
+// in conjunction with other metrics to determine if it's a bot or just a
+// client talking in spec.
+typedef struct {
+    float chatrate;             // print characters per second, running average
+    int printchars;             // cumulative # of characters said
+    float stutterrate;          //
+    char last[MSG_SAVE_COUNT][MAX_CHAT_CHARS]; // circular arr of last x chats
+    int last_index;             // where we are in the array
+} chatpest_t;
 
 extern qboolean fpsFloodExempt;
 extern qboolean nameChangeFloodProtect;

@@ -81,6 +81,7 @@ do { \
 #define MAX_TOKEN_CHARS     128     // max length of an individual token
 #define MAX_QPATH           64  // max length of a quake game pathname
 #define MAX_OSPATH          128 // max length of a filesystem pathname
+#define MAX_CHAT_CHARS      160 // max length of a player chat print
 
 // per-level limits
 #define MAX_CLIENTS     256  // absolute limit
