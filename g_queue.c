@@ -21,7 +21,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 
 /**
+ * Add an operation (command) to the queue for a particular client. The queue
+ * is processed one item per frame run. The only exception is the QCMD_DISCONNECT
+ * command, that is handled immediately, not waiting for the next runframe()
+ * and regardless of how many items are in the queue ahead of it.
  *
+ * Args:
+ *   client -  The proxyinfo index of the client this applies to
+ *   command - What operation should be done. These are the QCMD_* values
+ *   timeout - The time this operation is considered expired. This is a float
+ *             in seconds in the future relative to the q2admin's `ltime` var
+ *   data -    A long usually an array index for something.
+ *   str -     A string relevant to the operations. For example when kicking
+ *             a client, this would be the message displayed regarding the kick
  */
 void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str) {
     char tmptext[128];
@@ -46,15 +58,14 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
 }
 
 /**
- *
+ * Pop the next command off the client's queue. If the timeout is past the
+ * current time, the command is skipped (but not removed).
  */
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
     unsigned int i;
 
     for (i = 0; i < proxyinfo[client].maxCmds; i++) {
         if (proxyinfo[client].cmdQueue[i].timeout < ltime) {
-            // found good command..
-            // get info to return
             *command = proxyinfo[client].cmdQueue[i].command;
             *data = proxyinfo[client].cmdQueue[i].data;
 
@@ -65,6 +76,7 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
             // remove command
             proxyinfo[client].maxCmds--;
 
+            // the queue has multiple commands, shift them over
             if (i < proxyinfo[client].maxCmds) {
                 q2a_memmove(
                     proxyinfo[client].cmdQueue + i,
@@ -79,7 +91,7 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
 }
 
 /**
- *
+ * Delete a command from the client's queue
  */
 void removeClientCommand(int client, byte command) {
     unsigned int i = 0;
@@ -98,7 +110,7 @@ void removeClientCommand(int client, byte command) {
 }
 
 /**
- *
+ * Delete all commands from the queue.
  */
 void removeClientCommands(int client) {
     proxyinfo[client].maxCmds = 0;
