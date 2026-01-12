@@ -294,18 +294,20 @@ qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd) {
             abs(ucmd->angles[0] - proxyinfo[client].zbc_angles[tog0][0]) +
             abs(ucmd->angles[1] - proxyinfo[client].zbc_angles[tog0][1]) >= zbc_jittermove) {
         if (ltime <= proxyinfo[client].zbc_jitter_last + 0.1) {
-            if (!proxyinfo[client].zbc_jitter)
+            if (!proxyinfo[client].zbc_jitter) {
                 proxyinfo[client].zbc_jitter_time = ltime;
-            if (proxyinfo[client].zbc_jitter++ >= zbc_jittermax)
+            }
+            if (proxyinfo[client].zbc_jitter++ >= zbc_jittermax) {
                 return qtrue;
+            }
         }
         proxyinfo[client].zbc_jitter_last = ltime;
     }
     proxyinfo[client].zbc_angles[tog1][0] = ucmd->angles[0];
     proxyinfo[client].zbc_angles[tog1][1] = ucmd->angles[1];
 
-    if (ltime > (proxyinfo[client].zbc_jitter_time + zbc_jittertime))
+    if (ltime > (proxyinfo[client].zbc_jitter_time + zbc_jittertime)) {
         proxyinfo[client].zbc_jitter = 0;
-
+    }
     return qfalse;
 }
