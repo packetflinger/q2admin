@@ -2467,7 +2467,6 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     char response[MAX_STRING_CHARS * 2];
     int alevel, slen;
     int q2a_admin_command = 0;
-    qboolean dont_print;
     char *cmd;
     char text[2048];
 
@@ -2887,42 +2886,26 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         if (proxyinfo[client].pmodver > ltime) {
             if (gl_driver_check & 1) {
                 if (q2a_strstr(gi.args(), "Q2ADMIN_GL_DRIVER_CHECK")) {
-                    dont_print = qtrue;
-                    //got gl_driver response
                     if (strlen(proxyinfo[client].gl_driver)) {
-                        //we have a response
                         if (strcmp(proxyinfo[client].gl_driver, gi.args()) == 0) {
-                            //if they match ignore
+                            // they match, ignore
                         } else {
-                            //if they dont
                             q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                             proxyinfo[client].gl_driver_changes++;
-                            dont_print = qfalse;
-                            if (gl_driver_check & 4)
-                                gi.dprintf("%s %s.\n", proxyinfo[client].name, gi.args());
+                            gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", proxyinfo[client].name, gi.args());
                         }
                     } else {
                         q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver));
                         proxyinfo[client].gl_driver_changes++;
-                        dont_print = qfalse;
-                        if (gl_driver_check & 4)
-                            gi.dprintf("%s %s.\n", proxyinfo[client].name, gi.args());
+                        gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", proxyinfo[client].name, gi.args());
                     }
 
                     if (gl_driver_max_changes) {
                         if (proxyinfo[client].gl_driver_changes > gl_driver_max_changes) {
-                            //sprintf(abuffer,client_msg,version_check);
-                            //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Too many gl_driver changes.");
                         }
                     }
-                    if (gl_driver_check & 2) {
-                        if (dont_print)
-                            return qfalse; //dont spam
-                    } else {
-                        //dont print ever
-                        return qfalse;
-                    }
+                    return qfalse;
                 }
             }
         }
