@@ -106,34 +106,34 @@ extern char *finalentities;
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
 typedef struct {
-    qboolean admin;
+    qboolean admin;                 // player authed with !admin command
     unsigned char retries;
     unsigned char rbotretries;
-    cmd_queue_t cmdQueue[ALLOWED_MAXCMDS]; // command queue
-    int maxCmds;
-    unsigned long clientcommand; // internal proxy commands
+    cmd_queue_t cmdQueue[ALLOWED_MAXCMDS];
+    int maxCmds;                    // current command count
+    unsigned long clientcommand;    // internal proxy commands
     char teststr[9];
     int charindex;
     int logfilenum;
     char buffer[256]; // log buffer
     byte impulse;
-    byte inuse;
-    char name[16];
-    char skin[40]; // skin/model information.
-    int rate;
+    byte inuse;                     // used by active player
+    char name[16];                  // player name
+    char skin[40];                  // player skin/model
+    int rate;                       // from userinfo
     int maxfps;
     int cl_pitchspeed;
     float cl_anglespeedkey;
     baninfo_t *baninfo;
-    long namechangetimeout;
+    long namechangetimeout;         // can't change name until after this
     int namechangecount;
-    long skinchangetimeout;
+    long skinchangetimeout;         // can't change skin until after this
     int skinchangecount;
     long chattimeout;
     int chatcount;
     char userinfo[MAX_INFO_STRING + 45];
-    FILE *stuffFile;
-    int impulsesgenerated;
+    FILE *stuffFile;                // fp for if "!stuff FILE" is used
+    int impulsesgenerated;          // cumulative total
     char lastcmd[8192];
     struct chatflood_s floodinfo;
     short zbc_angles[2][2];
@@ -141,8 +141,8 @@ typedef struct {
     int zbc_jitter;
     float zbc_jitter_time;
     float zbc_jitter_last;
-    int votescast;
-    int votetimeout;
+    int votescast;                  // cumulative total votes proposed
+    int votetimeout;                // can't propose until ltime is greater
     int msg;
 
     // used to test the alias (and connect) command with random strings
@@ -150,21 +150,21 @@ typedef struct {
     char hack_teststring2[RANDOM_STRING_LENGTH + 1];
     char hack_teststring3[RANDOM_STRING_LENGTH + 1];
     char hack_timescale[RANDOM_STRING_LENGTH + 1];
-    int hacked_disconnect;
+    int hacked_disconnect;          // hack detected, disconnect the client
     netadr_t hacked_disconnect_addr;
-    int checked_hacked_exe;
+    int checked_hacked_exe;         // used in `rate` check
 
     // used to test the variables check list
     char hack_checkvar[RANDOM_STRING_LENGTH + 1];
     int checkvar_idx;
 
-    char gl_driver[256];
-    int gl_driver_changes;
-    int pmodver;
-    int pmod;
+    char gl_driver[256];            // original GL drive reported
+    int gl_driver_changes;          // cumulative total
+    int pmodver;                    // p_modified check (ltime related)
+    int pmod;                       // seemingly unused, checked but not set
     int pmod_noreply_count;
     int pcmd_noreply_count;
-    int pver;
+    int pver;                       // seemingly unused, set but never checked
     int q2a_admin;
     int q2a_bypass;
     int msec_count;
