@@ -232,7 +232,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     profile_stop_2(1, "q2admin->ClientThink", 0, NULL);
 }
 
-
+// unused
 void PMOD_TimerCheck(int client) {
     edict_t *ent;
     ent = getEnt((client + 1));
