@@ -317,6 +317,7 @@ enum _commands {
     QCMD_CLIENTVERSION
 };
 
+// Internal Warnings for logging
 #define IW_UNEXCEPTEDCMD        1
 #define IW_UNKNOWNCMD           2
 #define IW_ZBOTDETECT           3
