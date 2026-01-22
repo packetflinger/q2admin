@@ -2437,7 +2437,7 @@ void timescaleDetected(edict_t *ent, int client) {
 }
 
 /**
- *
+ * A client has been determined to be illegitimate.
  */
 void hackDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -8;
