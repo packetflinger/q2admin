@@ -1643,6 +1643,7 @@ void ClientDisconnect(edict_t *ent) {
 
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
+            // this seems stupid, remove?
             proxyinfo[client].baninfo->numberofconnects--;
         }
         proxyinfo[client].baninfo = NULL;
