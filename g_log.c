@@ -292,7 +292,40 @@ void loadLogList(void) {
 }
 
 /**
+ * Substitute any macro characters for their value and write the final log line
+ * to the `dest` pointer.
  *
+ * Macros:
+ *   #n = client name
+ *   #p = client ping
+ *   #i = client IP address
+ *   #r = client rate
+ *   #s = client skin
+ *   #t = current date/time (long format)
+ *   #T = current date/time (short format (YYYYMMDDhhmmss))
+ *   #e = impulse number, hack detected type, internal warning
+ *   #f = function complete time (performance monitoring only)
+ *   #m = message
+ *
+ * Context->value for #m:
+ *   impulses: the impulse message
+ *   name change: the old name
+ *   skin change: the old skin
+ *   kick: the kick msg
+ *   chat: the banned chat msg
+ *   performance: the function name being performance tested
+ *   disabled command: the command attempted
+ *   entity creation/deletion: the classname of the edict_t
+ *   clientuserinfo change: the new userinfo string
+ *
+ * Hack detection types for #e
+ *   50 to -2 = zbot detected
+ *   -3 to -4 = ratbot detected
+ *   -5       = timescale (speed)cheat detected
+ *   -6       = Nitro2 / BW-proxy / Xania proxy detected
+ *   -7       = cl_pitchspeed change detected
+ *   -8       = generic hack detected
+ *   -9       = cl_anglespeedkey change detected
  */
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2) {
     char *cp;
