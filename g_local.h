@@ -100,7 +100,7 @@ extern edict_t *g_edicts;
 // size than the original entities string due to cvar-based substitutions.
 extern char *finalentities;
 
-#define random()        ((rand () & 0x7fff) / ((float)0x7fff))
+#define random()        ((rand() & 0x7fff) / ((float)0x7fff)) // between 0 and 1
 #define RANDCHAR()      (random() < 0.3) ? '0' + (int)(9.9 * random()) : 'A' + (int)(26.9 * random())
 
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
@@ -113,18 +113,18 @@ typedef struct {
     int maxCmds;                    // current command count
     unsigned long clientcommand;    // internal proxy commands
     char teststr[9];
-    int charindex;
-    int logfilenum;
-    char buffer[256]; // log buffer
-    byte impulse;
+    int charindex;                  // teststr index AND cheat type for logging
+    int logfilenum;                 // for displaying log files
+    char buffer[256];               // log buffer
+    byte impulse;                   // player's ucmd->impulse
     byte inuse;                     // used by active player
     char name[16];                  // player name
     char skin[40];                  // player skin/model
     int rate;                       // from userinfo
-    int maxfps;
-    int cl_pitchspeed;
-    float cl_anglespeedkey;
-    baninfo_t *baninfo;
+    int maxfps;                     // from userinfo
+    int cl_pitchspeed;              // value from userinfo
+    float cl_anglespeedkey;         // value from userinfo
+    baninfo_t *baninfo;             // the ban entry that matched this player
     long namechangetimeout;         // can't change name until after this
     int namechangecount;
     long skinchangetimeout;         // can't change skin until after this
@@ -134,7 +134,7 @@ typedef struct {
     char userinfo[MAX_INFO_STRING + 45];
     FILE *stuffFile;                // fp for if "!stuff FILE" is used
     int impulsesgenerated;          // cumulative total
-    char lastcmd[8192];
+    char lastcmd[8192];             // the latest command sent including args
     struct chatflood_s floodinfo;
     short zbc_angles[2][2];
     int zbc_tog;
@@ -143,7 +143,7 @@ typedef struct {
     float zbc_jitter_last;
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater
-    int msg;
+    int msg;                        // player's msg level from userinfo
 
     // used to test the alias (and connect) command with random strings
     char hack_teststring1[RANDOM_STRING_LENGTH + 1];
@@ -165,43 +165,43 @@ typedef struct {
     int pmod_noreply_count;
     int pcmd_noreply_count;
     int pver;                       // seemingly unused, set but never checked
-    int q2a_admin;
-    int q2a_bypass;
-    int msec_count;
-    int msec_last;
-    int frames_count;
-    int msec_bad;
-    float msec_start;
+    int q2a_admin;                  // admin level granted
+    int q2a_bypass;                 // bypass level granted
+    int msec_count;                 // the player's current ucmd->msec value
+    int msec_last;                  // the player's previous ucmd->msec value
+    int frames_count;               // used in ClientThink for FPS display
+    int msec_bad;                   // how many times msec exceeded max
+    float msec_start;               // frame number for checking msec value
     int done_server_and_blocklist;
     int userinfo_changed_count;
     int userinfo_changed_start;
-    int private_command;
-    int timescale;
-    qboolean show_fps;
-    qboolean vid_restart;
-    qboolean private_command_got[PRIVATE_COMMANDS];
-    char serverip[16];
+    int private_command;            // ltime while waiting for responses
+    int timescale;                  // player's current timescale (from userinfo)
+    qboolean show_fps;              // display fps to client every 0.5 sec
+    qboolean vid_restart;           // if client already forced to vid_restart
+    qboolean private_command_got[PRIVATE_COMMANDS]; // if we received a response
+    char serverip[16];              // have player reconnect here instead of proxy
     char cmdlist_stored[256];
     int cmdlist;
     int cmdlist_timeout;
-    int userid;
+    int userid;                     // unique ID for whois stuff
     int newcmd_timeout;
     timers_t timers[TIMERS_MAX];
     int blocklist;
-    int speedfreeze;
-    int enteredgame;
-    edict_t *ent;	// the actual entity
-    int remote_reported;
-    int next_report;
-    int stifle_frame;   // frames
-    int stifle_length;  // frames
+    int speedfreeze;                // level time, hold until ltime is greater
+    int enteredgame;                // level time entered (seconds)
+    edict_t *ent;                   // the associated player entity
+    int remote_reported;            // unused, remove later
+    int next_report;                // unused, remove later
+    int stifle_frame;               // frames
+    int stifle_length;              // frames
     download_t dl;
-    vpn_t vpn;
-    netadr_t address;
-    char address_str[135]; // string rep, ipv4/ipv6:port
-    char version_test[6];
+    vpn_t vpn;                      // vpn status for player
+    netadr_t address;               // the actual IP address of the player
+    char address_str[135];          // unused, remove later
+    char version_test[6];           // random chars to force sending version
     char client_version[MAX_VERSION_CHARS];   // build string
-    chatpest_t pest;
+    chatpest_t pest;                // tracking annoying chat behavior
 } proxyinfo_t;
 
 typedef struct {
