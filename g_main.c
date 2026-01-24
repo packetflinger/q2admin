@@ -713,7 +713,7 @@ void G_RunFrame(void) {
                 proxyinfo[client].cmdlist_timeout = ltime;
                 proxyinfo[client].cmdlist_timeout += 5;
                 proxyinfo[client].cmdlist = 1;
-                //1.20
+
                 if (!proxyinfo[client].done_server_and_blocklist) {
                     proxyinfo[client].blocklist = random()*(MAX_BLOCK_MODELS - 1);
                     Q_snprintf(buffer, sizeof(buffer), "p_blocklist %i\n", proxyinfo[client].blocklist);
@@ -724,27 +724,22 @@ void G_RunFrame(void) {
                     //q2ace responds with blahblah %i %s
                 }
             } else if (command == QCMD_TESTCMDQUEUE) {
-                if (proxyinfo[client].done_server_and_blocklist)
+                if (proxyinfo[client].done_server_and_blocklist) {
                     required_cmdlist = 1;
-                else
+                } else {
                     required_cmdlist = 7;
+                }
 
                 if (!proxyinfo[client].cmdlist) {
                     proxyinfo[client].pcmd_noreply_count++;
                     if (proxyinfo[client].pcmd_noreply_count > max_pmod_noreply) {
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 16);
-                        //sprintf(buffer,client_msg,version_check);
-                        //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else if (proxyinfo[client].cmdlist == required_cmdlist) {
                     //all 3 checks came thru fine
                     proxyinfo[client].done_server_and_blocklist = 1;
                 } else {
-                    //just kick anyway
-                    //gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].cmdlist);
-                    //sprintf(buffer,client_msg,version_check);
-                    //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
             } else if (command == QCMD_EXECMAPCFG) {
