@@ -254,6 +254,9 @@ void PMOD_TimerCheck(int client) {
 priv_t private_commands[PRIVATE_COMMANDS];
 int private_command_count;
 
+/**
+ * Send private_command[1-4] and inverted_command[1-4] to a players
+ */
 void stuff_private_commands(int client, edict_t *ent) {
     unsigned int i;
     char temp[256];
@@ -262,8 +265,7 @@ void stuff_private_commands(int client, edict_t *ent) {
 
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         if (private_commands[i].command[0]) {
-            //stuff this
-            Q_snprintf(temp, sizeof(temp), "%s\r\n", private_commands[i].command);
+            Q_snprintf(temp, sizeof(temp), "%s\n", private_commands[i].command);
             stuffcmd(ent, temp);
         }
         proxyinfo[client].private_command_got[i] = qfalse;
