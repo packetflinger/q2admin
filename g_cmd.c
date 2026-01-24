@@ -2818,65 +2818,42 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             return qfalse;
         }
 
-        //this check is for non standard p_Ver/p_mod replies
-        //pooy, check return string to match q2ace response
-        //if they normal, dont spam
+        // this check is for non standard p_Ver/p_mod replies. check return
+        // string to match q2ace response
         if (proxyinfo[client].cmdlist_timeout > ltime) {
             if (q2a_strstr(gi.args(), "BLOCKED_MODEL")) {
-                //1.20
                 i = atoi(gi.argv(5));
                 if (i != proxyinfo[client].blocklist) {
-                    //KICK
                     gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, i);
-                    //sprintf(abuffer,client_msg,version_check);
-                    //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 } else {
-                    //gi.dprintf("%s %s\n",block_models[i].model_name,gi.argv(6));
                     if (i < 0 || i >= MAX_BLOCK_MODELS) {
-                        //KICK
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, i);
-                        //sprintf(abuffer,client_msg,version_check);
-                        //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     } else {
-                        //it matched so compare the string now
                         if (q2a_strcmp(block_models[i].model_name, gi.argv(6))) {
-                            //didnt match, kick
                             gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 256);
-                            //sprintf(abuffer,client_msg,version_check);
-                            //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                         } else {
-                            //all ok so mark
                             proxyinfo[client].cmdlist |= 2;
                         }
                     }
                 }
-                return qfalse; //dont spam
+                return qfalse;
             } else if (q2a_strstr(gi.args(), "SERVERIP")) {
-                //gi.dprintf("pooy test : %s , %s\n",proxyinfo[client].serverip,gi.args());
-                //1.20
                 if (!*serverip) {
                     proxyinfo[client].cmdlist |= 4;
                     return qfalse;
                 }
-                //compare random char with what we gave them
                 if (strcmp(gi.argv(5), proxyinfo[client].serverip) == 0) {
-                    //k its not been tampered with, now check the ip
                     if (strcmp(gi.argv(6), serverip) == 0) {
-                        //ip correct
                         proxyinfo[client].cmdlist |= 4;
                     } else {
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 1);
-                        //sprintf(abuffer,client_msg,version_check);
-                        //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else {
                     gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, proxyinfo[client].pmod);
-                    //sprintf(abuffer,client_msg,version_check);
-                    //gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",abuffer);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
                 return qfalse;
