@@ -25,6 +25,15 @@
 #define BOTDETECT_CHAR1             'F'
 #define BOTDETECT_CHAR2             'U'
 
+// What we need to figure out if a player is using some kind of aim assist
+typedef struct {
+    short angles[2][2]; // pitch and yaw for current and last frame
+    int toggle;         // for alternating angles between frames
+    int jitter;         // jitter violation count. bot confirmed over threshold
+    float jitter_time;  // ltime of first violation
+    float jitter_last;  // ltime of most recent violation
+} aimbot_t;
+
 extern char zbot_teststring1[];
 extern char zbot_teststring_test1[];
 extern char zbot_teststring_test2[];
@@ -51,4 +60,4 @@ void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
-qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd);
+qboolean AimbotCheck(int client, usercmd_t *ucmd);

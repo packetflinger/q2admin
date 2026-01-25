@@ -136,11 +136,7 @@ typedef struct {
     int impulsesgenerated;          // cumulative total
     char lastcmd[8192];             // the latest command sent including args
     struct chatflood_s floodinfo;
-    short zbc_angles[2][2];
-    int zbc_tog;
-    int zbc_jitter;
-    float zbc_jitter_time;
-    float zbc_jitter_last;
+    aimbot_t aim_assist;            // for checking if player has an aimbot
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater
     int msg;                        // player's msg level from userinfo

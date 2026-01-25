@@ -214,7 +214,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         if (zbc_enable && !(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
-            if (zbc_ZbotCheck(client, ucmd)) {
+            if (AimbotCheck(client, ucmd)) {
                 proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                 removeClientCommand(client, QCMD_ZPROXYCHECK1);
                 addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_ZBCHECK, 0);
@@ -273,43 +273,42 @@ void stuff_private_commands(int client, edict_t *ent) {
 }
 
 /**
- * ZbotCheck v1.01 for Quake 2 by Matt "WhiteFang" Ayres (matt@lithium.com)
+ * Check if a player is using some kind of aim assist. Checks client angles
+ * for a large jump between ClientThinks.
  *
- * This is provided for mod authors to implement Zbot detection, nothing more.
- * The code has so far proven to be reliable at detecting Zbot auto-aim clients
- * (cheaters).  However, no guarantees of any kind are made.  This is provided
- * as-is.  You must be familiar with Quake 2 mod coding to make use of this.
+ * Originally ZbotCheck v1.01 by Matt "WhiteFang" Ayres (matt@lithium.com)
  *
  * Called from ClientThink()
  */
-qboolean zbc_ZbotCheck(int client, usercmd_t *ucmd) {
-    int tog0, tog1;
+qboolean AimbotCheck(int client, usercmd_t *ucmd) {
+    int prev, cur;
+    aimbot_t *a = &proxyinfo[client].aim_assist;
 
-    tog0 = proxyinfo[client].zbc_tog;
-    proxyinfo[client].zbc_tog ^= 1;
-    tog1 = proxyinfo[client].zbc_tog;
+    prev = a->toggle;
+    a->toggle ^= 1;     // was 0 now 1, was 1 now 0
+    cur = a->toggle;
 
-    if (ucmd->angles[0] == proxyinfo[client].zbc_angles[tog1][0] &&
-            ucmd->angles[1] == proxyinfo[client].zbc_angles[tog1][1] &&
-            ucmd->angles[0] != proxyinfo[client].zbc_angles[tog0][0] &&
-            ucmd->angles[1] != proxyinfo[client].zbc_angles[tog0][1] &&
-            abs(ucmd->angles[0] - proxyinfo[client].zbc_angles[tog0][0]) +
-            abs(ucmd->angles[1] - proxyinfo[client].zbc_angles[tog0][1]) >= zbc_jittermove) {
-        if (ltime <= proxyinfo[client].zbc_jitter_last + 0.1) {
-            if (!proxyinfo[client].zbc_jitter) {
-                proxyinfo[client].zbc_jitter_time = ltime;
+    if (ucmd->angles[PITCH] == a->angles[cur][PITCH] &&
+            ucmd->angles[YAW] == a->angles[cur][YAW] &&
+            ucmd->angles[PITCH] != a->angles[prev][PITCH] &&
+            ucmd->angles[YAW] != a->angles[prev][YAW] &&
+            abs(ucmd->angles[PITCH] - a->angles[prev][PITCH]) +
+            abs(ucmd->angles[YAW] - a->angles[prev][YAW]) >= zbc_jittermove) {
+        if (ltime <= a->jitter_last + FRAMETIME) {
+            if (!a->jitter) {
+                a->jitter_time = ltime;
             }
-            if (proxyinfo[client].zbc_jitter++ >= zbc_jittermax) {
+            if (a->jitter++ >= zbc_jittermax) {
                 return qtrue;
             }
         }
-        proxyinfo[client].zbc_jitter_last = ltime;
+        a->jitter_last = ltime;
     }
-    proxyinfo[client].zbc_angles[tog1][0] = ucmd->angles[0];
-    proxyinfo[client].zbc_angles[tog1][1] = ucmd->angles[1];
+    a->angles[cur][PITCH] = ucmd->angles[PITCH];
+    a->angles[cur][YAW] = ucmd->angles[YAW];
 
-    if (ltime > (proxyinfo[client].zbc_jitter_time + zbc_jittertime)) {
-        proxyinfo[client].zbc_jitter = 0;
+    if (ltime > (a->jitter_time + zbc_jittertime)) {
+        a->jitter = 0;
     }
     return qfalse;
 }
