@@ -23,10 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
 
-qboolean ChatBanning_Enable = qfalse;
-qboolean IPBanning_Enable = qfalse;
-qboolean NickBanning_Enable = qfalse;
-qboolean VersionBanning_Enable = qfalse;
+qboolean ChatBanning_Enable = qtrue;
+qboolean IPBanning_Enable = qtrue;
+qboolean NickBanning_Enable = qtrue;
+qboolean VersionBanning_Enable = qtrue;
 
 qboolean kickOnNameChange = qfalse;
 
@@ -527,6 +527,30 @@ void banRun(int startarg, edict_t *ent, int client) {
             }
         }
 
+        if (startContains(cp, "VPN")) {
+            if (gi.argc() <= startarg) {
+                gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                gi.TagFree(newentry);
+                return;
+            }
+            cp = gi.argv(startarg);
+            startarg++;
+
+            q2a_strcat(savecmd, "VPN ");
+            q2a_memset(newentry->asnumber, 0, sizeof(newentry->asnumber));
+            processstring(newentry->asnumber, cp, sizeof(newentry->asnumber)-1, '\"');
+            q2a_strcat(savecmd, "\"");
+            q2a_strcat(savecmd, cp);
+            q2a_strcat(savecmd, "\" ");
+            if (gi.argc() <= startarg) {
+                cp = "";
+            } else {
+                cp = gi.argv(startarg);
+                startarg++;
+            }
+        }
+
         if (startContains(cp, "VERSION")) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -904,9 +928,9 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- * Check if a particular client is banned
+ * Check if a particular client is banned. Return 1 to ban, 0 to allow
  *
- * Called from ClientConnect()
+ * Called from checkCheckIfBanned()
  */
 int checkBanList(edict_t *ent, int client) {
     baninfo_t *checkentry = banhead;
@@ -992,7 +1016,7 @@ int checkBanList(edict_t *ent, int client) {
                 }
             }
 
-            // check IP
+            // check IP/VPN
             if (IPBanning_Enable) {
                 if (checkentry->addr.mask_bits > 0) {
                     if (!net_contains(&checkentry->addr, &proxyinfo[client].address)) {
@@ -1005,6 +1029,17 @@ int checkBanList(edict_t *ent, int client) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
                     continue;
+                }
+                if (checkentry->asnumber[0] != 0) {
+                    if (!proxyinfo[client].vpn.is_vpn) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    } else if (Q_stricmp(checkentry->asnumber, proxyinfo[client].vpn.asn) != 0) {
+                        prevcheckentry = checkentry;
+                        checkentry = checkentry->next;
+                        continue;
+                    }
                 }
             }
 
@@ -1043,7 +1078,6 @@ int checkBanList(edict_t *ent, int client) {
 
             if (checkentry->password[0]) {
                 char *s = Info_ValueForKey(proxyinfo[client].userinfo, "pw");
-
                 Q_snprintf(
                         strbuffer,
                         sizeof(strbuffer),
@@ -1080,16 +1114,21 @@ int checkBanList(edict_t *ent, int client) {
                 proxyinfo[client].floodinfo = checkentry->floodinfo;
             }
 
-            return 0;
+            return 0; // rule matched but is an allow
         }
 
         prevcheckentry = checkentry;
         checkentry = checkentry->next;
     }
 
-    return 0;
+    return 0; // no entries matched, allow player in
 }
 
+/**
+ * Return 1 if client should be banned, 0 if not
+ *
+ * Called from ClientConnect() and checkForNameChange()
+ */
 int checkCheckIfBanned(edict_t *ent, int client) {
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
@@ -1176,6 +1215,14 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                         buffer + q2a_strlen(buffer),
                         sizeof(buffer) - q2a_strlen(buffer),
                         " IP VPN"
+                );
+            }
+
+            if (findentry->asnumber[0] != 0) {
+                Q_snprintf(
+                        buffer + q2a_strlen(buffer),
+                        sizeof(buffer) - q2a_strlen(buffer),
+                        " VPN %s", findentry->asnumber
                 );
             }
         }
@@ -1783,6 +1830,23 @@ char *ban_parseBan(char *cp) {
             SKIPBLANK(cp);
         }
 
+        if (startContains(cp, "VPN")) {
+            cp += 3;
+            SKIPBLANK(cp);
+            if (startContains(cp, "AS")) {
+                tempcp = cp;
+                // find the end of the ASN string
+                while (!isspace(*tempcp)) {
+                    tempcp++;
+                }
+                q2a_memset(newentry->asnumber, 0, sizeof(newentry->asnumber));
+                q2a_memcpy(newentry->asnumber, cp, (tempcp-cp));
+                cp = tempcp;
+                SKIPBLANK(cp);
+            } else {
+                gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near VPN: not an ASN\n");
+            }
+        }
         if (startContains(cp, "VERSION")) {
             cp += 7;
             SKIPBLANK(cp);

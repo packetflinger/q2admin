@@ -4,7 +4,7 @@
  */
 #pragma once
 
-#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
+#define BANCMD_LAYOUT       "[sv] !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [VPN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n"
 #define CHATBANCMD_LAYOUT   "[sv] !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]\n"
 #define CHATBANFILE_LAYOUT  "CHATBAN: [LIKE/RE(LIKE)] \"xxx\" [MSG  \"xxx\"]"
 
@@ -67,6 +67,7 @@ typedef struct banstruct {
     long bannum;
     float timeout;
     qboolean vpn;
+    char asnumber[10];
     struct chatflood_s floodinfo;
     struct banstruct *next;
 } baninfo_t;

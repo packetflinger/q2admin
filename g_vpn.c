@@ -83,6 +83,9 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
                 }
 
             }
+            if (v->state == VPN_POSITIVE) {
+                gi.cprintf(NULL, PRINT_HIGH, "%s is using a VPN (%s)\n", NAME(i), v->asn);
+            }
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {
