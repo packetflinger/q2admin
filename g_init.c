@@ -720,7 +720,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
         // parse out all the turned off entities...
         while (1) {
-            //gi.cprintf(NULL, PRINT_HIGH, "%s\n", entstr);
             char *com_tok = 0;
             char *classnamepos = 0;
             char *teampos = 0;
@@ -731,8 +730,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             if (!entities) {
                 break;
             }
-
-            //q2a_strcat(entstr, va("%s\n", com_tok));
 
             if (com_tok[0] != '{') {
                 break;
@@ -771,14 +768,17 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
                 }
 
                 if (!Q_stricmp("classname", keyname) && checkDisabledEntities(com_tok)) {
-                    // change the 'classname' entry to '_lassname', this makes the q2 code ingore it.
+                    // Change the 'classname' entry to '_lassname', this makes
+                    // the q2 code ignore it.
                     classnamepos[0] = '_';
-                    // side-effect: it may cause error messages on the console screen depending on the mod...
+                    // Side-effect: it may cause error messages on the console
+                    // screen depending on the mod...
                     entremoved = qtrue;
                 }
             }
 
-            // if teamed and removed, change 'team' entry to '_eam' to unlink it from the rest
+            // If teamed and removed, change 'team' entry to '_eam' to unlink
+            // it from the rest
             if (teampos && replaceteam && entremoved) {
                 teampos[0] = '_';
                 teampos = 0;
