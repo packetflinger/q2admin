@@ -101,9 +101,18 @@ void Pmove_internal(pmove_t *pmove) {
     gi.Pmove(pmove);
 }
 
+/**
+ * Called for each client frame. This will called once per cl_maxfps value per
+ * second. The msec value in the usercmd_t arg should be approximately
+ * 1000/cl_maxfps. For an fps of 120, that equals roughly 8-9ms.
+ *
+ * The ucmd arg is movement/state data sent from the player's client.
+ */
 void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     int client;
     char *msg = 0;
+    proxyinfo_t *cl;
+
     profile_init_2(1);
     profile_init_2(2);
 
@@ -115,53 +124,50 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         return;
     }
 
-    client = getEntOffset(ent);
-    client -= 1;
+    client = getEntOffset(ent) - 1;
+    cl = &proxyinfo[client];
 
     profile_start(1);
 
-    proxyinfo[client].frames_count++;
+    cl->frames_count++;
 
-    if (lframenum > proxyinfo[client].msec_start) {
-        if (proxyinfo[client].show_fps) {
-            if (proxyinfo[client].msec_count == 500) {
-                gi.cprintf(ent, PRINT_HIGH, "%3.2f fps\n", (float) proxyinfo[client].frames_count * 2);
+    if (lframenum > cl->msec_start) {
+        if (cl->show_fps) {
+            if (cl->msec_count == 500) {
+                gi.cprintf(ent, PRINT_HIGH, "%3.2f fps\n", (float) cl->frames_count * 2);
             }
         }
 
-        if (proxyinfo[client].msec_count > msec_max) {
+        if (cl->msec_count > msec_max) {
             if (msec_kick_on_bad) {
-                proxyinfo[client].msec_bad++;
-                if (proxyinfo[client].msec_bad >= msec_kick_on_bad) {
-                    //kick
-                    gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+                cl->msec_bad++;
+                if (cl->msec_bad >= msec_kick_on_bad) {
+                    gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, cl->name);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Speed hack.");
                 }
             } else {
-                if (proxyinfo[client].enteredgame + 5 < ltime) {
-                    proxyinfo[client].speedfreeze = ltime;
-                    proxyinfo[client].speedfreeze += 3;
+                if (cl->enteredgame + 5 < ltime) {
+                    cl->speedfreeze = ltime + 3;
                 }
             }
         }
 
-        proxyinfo[client].msec_start = lframenum;
-        proxyinfo[client].msec_start += msec_int * 10;
-        proxyinfo[client].msec_last = proxyinfo[client].msec_count;
-        proxyinfo[client].msec_count = 0;
-        proxyinfo[client].frames_count = 0;
+        cl->msec_start = lframenum + (msec_int * HZ);
+        cl->msec_last = cl->msec_count;
+        cl->msec_count = 0;
+        cl->frames_count = 0;
     }
 
-    proxyinfo[client].msec_count += ucmd->msec;
+    cl->msec_count += ucmd->msec;
 
-    if (proxyinfo[client].speedfreeze) {
-        if (proxyinfo[client].speedfreeze > ltime) {
+    if (cl->speedfreeze) {
+        if (cl->speedfreeze > ltime) {
             ucmd->msec = 0;
         } else {
             if (speedbot_check_type & 2) {
-                gi.bprintf(PRINT_HIGH, "%s has been frozen for exceeding the speed limit.\n", proxyinfo[client].name);
+                gi.bprintf(PRINT_HIGH, "%s has been frozen for exceeding the speed limit.\n", cl->name);
             }
-            proxyinfo[client].speedfreeze = 0;
+            cl->speedfreeze = 0;
         }
 
     }
@@ -172,25 +178,25 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         if (displayimpulses) {
             if (ucmd->impulse >= 169 && ucmd->impulse <= 175) {
                 msg = impulsemessages[ucmd->impulse - 169];
-                gi.bprintf(PRINT_HIGH, "%s generated an impulse %s\n", proxyinfo[client].name, msg);
+                gi.bprintf(PRINT_HIGH, "%s generated an impulse %s\n", cl->name, msg);
             } else {
                 msg = "generated an impulse";
-                gi.bprintf(PRINT_HIGH, "%s generated an impulse %d\n", proxyinfo[client].name, ucmd->impulse);
+                gi.bprintf(PRINT_HIGH, "%s generated an impulse %d\n", cl->name, ucmd->impulse);
             }
         }
 
         if (ucmd->impulse >= 169 && ucmd->impulse <= 175) {
-            proxyinfo[client].impulse = ucmd->impulse;
+            cl->impulse = ucmd->impulse;
             addCmdQueue(client, QCMD_LOGTOFILE2, 0, 0, 0);
         } else {
-            proxyinfo[client].impulse = ucmd->impulse;
+            cl->impulse = ucmd->impulse;
             addCmdQueue(client, QCMD_LOGTOFILE3, 0, 0, 0);
         }
 
         if (disconnectuserimpulse && checkImpulse(ucmd->impulse)) {
-            proxyinfo[client].impulsesgenerated++;
+            cl->impulsesgenerated++;
 
-            if (proxyinfo[client].impulsesgenerated >= maximpulses) {
+            if (cl->impulsesgenerated >= maximpulses) {
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, msg);
             }
         }
@@ -212,10 +218,10 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
     }
 
-    if (!(proxyinfo[client].clientcommand & BANCHECK)) {
-        if (zbc_enable && !(proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
+    if (!(cl->clientcommand & BANCHECK)) {
+        if (zbc_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
             if (AimbotCheck(client, ucmd)) {
-                proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
+                cl->clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                 removeClientCommand(client, QCMD_ZPROXYCHECK1);
                 addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_ZBCHECK, 0);
                 addCmdQueue(client, QCMD_RESTART, 1, IW_ZBCHECK, 0);
