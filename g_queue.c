@@ -29,8 +29,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * Args:
  *   client -  The proxyinfo index of the client this applies to
  *   command - What operation should be done. These are the QCMD_* values
- *   timeout - The time this operation is considered expired. This is a float
- *             in seconds in the future relative to the q2admin's `ltime` var
+ *   timeout - Seconds from now when this operation is considered expired. This
+ *             is a float in seconds in the future relative to the q2admin's
+ *             `ltime` var. The timeout decides whether the command will be
+ *             run, not how long it takes for the result.
  *   data -    A long usually an array index for something.
  *   str -     A string relevant to the operations. For example when kicking
  *             a client, this would be the message displayed regarding the kick
@@ -45,21 +47,21 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
     proxyinfo[client].maxCmds++;
 
     if (command == QCMD_DISCONNECT) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s is being disconnected for %s.\n", proxyinfo[client].name, str);
+        gi.cprintf(NULL, PRINT_HIGH, "%s is being disconnected: %s.\n", NAME(client), str);
     }
 
     if (proxyinfo[client].maxCmds >= ALLOWED_MAXCMDS_SAFETY) {
         proxyinfo[client].clientcommand |= CCMD_KICKED;
-        gi.bprintf(PRINT_HIGH, "%s tried to flood the server.\n", proxyinfo[client].name);
+        gi.bprintf(PRINT_HIGH, "%s tried to flood the server.\n", NAME(client));
         Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
-        //need to log
         gi.AddCommandString(tmptext);
     }
 }
 
 /**
  * Pop the next command off the client's queue. If the timeout is past the
- * current time, the command is skipped (but not removed).
+ * current time, the command is skipped. Expired commands eventually get
+ * shifted out of the array.
  */
 qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
     unsigned int i;
@@ -81,7 +83,7 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
                 q2a_memmove(
                     proxyinfo[client].cmdQueue + i,
                     proxyinfo[client].cmdQueue + i + 1,
-                    (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t)
+                    (proxyinfo[client].maxCmds - i) * sizeof(cmd_queue_t)
                 );
             }
             return qtrue;
@@ -98,10 +100,13 @@ void removeClientCommand(int client, byte command) {
 
     while (i < proxyinfo[client].maxCmds) {
         if (proxyinfo[client].cmdQueue[i].command == command) {
-            // remove command
             proxyinfo[client].maxCmds--;
             if (i < proxyinfo[client].maxCmds) {
-                q2a_memmove(proxyinfo[client].cmdQueue + i, proxyinfo[client].cmdQueue + i + 1, (proxyinfo[client].maxCmds - i) * sizeof (cmd_queue_t));
+                q2a_memmove(
+                    proxyinfo[client].cmdQueue + i,
+                    proxyinfo[client].cmdQueue + i + 1,
+                    (proxyinfo[client].maxCmds - i) * sizeof(cmd_queue_t)
+                );
             }
         } else {
             i++;
