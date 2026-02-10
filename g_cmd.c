@@ -541,6 +541,13 @@ q2acmd_t q2aCommands[] = {
         &framesperprocess
     },
     {
+        "freeze",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        freezeRun
+    },
+    {
         "gamemaptomap",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -1066,6 +1073,13 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_NONE,
         NULL,
         stifleRun
+    },
+    {
+        "unfreeze",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        unfreezeRun
     },
     {
         "unstifle",
@@ -3742,5 +3756,71 @@ void lockDownServerRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "lock = %s\n", lockDownServer ? "Yes" : "No");
     // clear all the reconnect user info...
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof (proxyreconnectinfo_t));
+}
+
+/**
+ * Lock a player in place. They'll still be able to change their angles, shoot,
+ * talk shit, etc. They will not be able to move though.
+ *
+ * If an expiration is set, the player will automatically thaw at that time.
+ */
+void freezeRun(int startarg, edict_t *ent, int client) {
+    int targeti, secs = 0;
+    char *text;
+    edict_t *target;
+
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+    SKIPBLANK(text);
+    target = getClientFromArg(client, ent, &targeti, text, &text);
+    if (isdigit(*text)) {
+        secs = q2a_atoi(text);
+    }
+
+    if (Q_stricmp(text, "help") == 0) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !freeze [CL <id>]|name [seconds]\n");
+        return;
+    }
+    if (target == NULL) {
+        return;
+    }
+    if (proxyinfo[targeti].freeze.frozen) {
+        gi.cprintf(NULL, PRINT_HIGH, "%s is already frozen\n", NAME(targeti));
+        return;
+    }
+    addCmdQueue(targeti, QCMD_FREEZEPLAYER, 0.0, secs, "You're frozen\n");
+}
+
+/**
+ * Unlock a frozen player.
+ *
+ * If an expiration is set when freezing a player they will automatically thaw
+ * without needing to call this function.
+ */
+void unfreezeRun(int startarg, edict_t *ent, int client) {
+    int targeti;
+    char *text;
+    edict_t *target;
+
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+    SKIPBLANK(text);
+    target = getClientFromArg(client, ent, &targeti, text, &text);
+    if (target == NULL) {
+        return;
+    }
+    if (!proxyinfo[targeti].freeze.frozen) {
+        gi.cprintf(NULL, PRINT_HIGH, "%s is not frozen\n", NAME(targeti));
+        return;
+    }
+    addCmdQueue(targeti, QCMD_UNFREEZEPLAYER, 0.0, 0, "You thawed\n");
 }
 

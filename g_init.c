@@ -483,6 +483,7 @@ void InitGame(void) {
         proxyinfo[i].ent = 0;
 
         q2a_memset(&proxyinfo[i].pest, 0, sizeof(chatpest_t));
+        q2a_memset(&proxyinfo[i].freeze, 0, sizeof(freeze_t));
         removeClientCommands(i);
     }
 

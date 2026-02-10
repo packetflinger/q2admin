@@ -198,6 +198,7 @@ typedef struct {
     char version_test[6];           // random chars to force sending version
     char client_version[MAX_VERSION_CHARS];   // build string
     chatpest_t pest;                // tracking annoying chat behavior
+    freeze_t freeze;                // used to freeze a player in place
 } proxyinfo_t;
 
 typedef struct {
@@ -310,7 +311,9 @@ enum _commands {
     QCMD_SPAMBYPASS,
     QCMD_GETCMDQUEUE,
     QCMD_TESTCMDQUEUE,
-    QCMD_CLIENTVERSION
+    QCMD_CLIENTVERSION,
+    QCMD_FREEZEPLAYER,
+    QCMD_UNFREEZEPLAYER
 };
 
 // Internal Warnings for logging

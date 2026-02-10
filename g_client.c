@@ -131,6 +131,14 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     cl->frames_count++;
 
+    if (cl->freeze.frozen) {
+        if (cl->freeze.thaw > 0 && cl->freeze.thaw < ltime) {
+            q2a_memset(&cl->freeze, 0, sizeof(freeze_t));
+        } else {
+            ucmd->msec = 0;
+        }
+    }
+
     if (lframenum > cl->msec_start) {
         if (cl->show_fps) {
             if (cl->msec_count == 500) {

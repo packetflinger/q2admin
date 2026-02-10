@@ -34,6 +34,14 @@ typedef struct {
     float jitter_last;  // ltime of most recent violation
 } aimbot_t;
 
+// Needed for tracking player freezing. When a player is frozen their msec
+// value is set to 0.
+typedef struct {
+    qboolean frozen;
+    float started;    // ltime
+    float thaw;       // future ltime to automatically unfreeze
+} freeze_t;
+
 extern char zbot_teststring1[];
 extern char zbot_teststring_test1[];
 extern char zbot_teststring_test2[];

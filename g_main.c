@@ -791,6 +791,17 @@ void G_RunFrame(void) {
                 Q_snprintf(buffer, sizeof(buffer), "%s $version\n", proxyinfo[client].version_test);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORVERSION;
                 stuffcmd(ent, buffer);
+            } else if (command == QCMD_FREEZEPLAYER) {
+                q2a_memset(&proxyinfo[client].freeze, 0, sizeof(freeze_t));
+                proxyinfo[client].freeze.frozen = qtrue;
+                proxyinfo[client].freeze.started = ltime;
+                if (data > 0) {
+                    proxyinfo[client].freeze.thaw = ltime + data;
+                }
+                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, str);
+            } else if (command == QCMD_UNFREEZEPLAYER) {
+                q2a_memset(&proxyinfo[client].freeze, 0, sizeof(freeze_t));
+                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, str);
             }
         } else {
             if (maxdoclients < maxclients->value) {
