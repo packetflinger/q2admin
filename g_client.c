@@ -116,7 +116,9 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     profile_init_2(1);
     profile_init_2(2);
 
-    if (!dllloaded) return;
+    if (!dllloaded) {
+        return;
+    }
 
     if (runmode == 0) {
         ge_mod->ClientThink(ent, ucmd);
