@@ -1322,22 +1322,34 @@ q2acmd_t q2aCommands[] = {
         &max_pmod_noreply
     },
     {
-        "msec_int",
+        "msec_timespan",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &msec_int
+        &(msec.timespan)
     },
     {
-        "msec_kick_on_bad",
+        "msec_max_violations",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &msec_kick_on_bad
+        &(msec.max_violations)
     },
     {
-        "msec_max",
+        "msec_min_required",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &msec_max
+        &(msec.min_required)
+    },
+    {
+        "msec_action",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &(msec.action)
+    },
+    {
+        "msec_max_allowed",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &(msec.max_allowed)
     },
     {
         "private_command1",

@@ -141,34 +141,48 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
     }
 
-    if (lframenum > cl->msec_start) {
+    if (lframenum > cl->msec.end_frame) {
         if (cl->show_fps) {
-            if (cl->msec_count == 500) {
+            if (cl->msec.total == 500) {
                 gi.cprintf(ent, PRINT_HIGH, "%3.2f fps\n", (float) cl->frames_count * 2);
             }
         }
 
-        if (cl->msec_count > msec_max) {
-            if (msec_kick_on_bad) {
-                cl->msec_bad++;
-                if (cl->msec_bad >= msec_kick_on_bad) {
-                    gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, cl->name);
-                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Speed hack.");
+        if (cl->msec.total > msec.max_allowed) {
+            if (msec.max_violations) {
+                cl->msec.violations++;
+                if (cl->msec.violations >= msec.max_violations) {
+                    if (msec.action != MVA_NOTHING) {
+                        gi.bprintf(PRINT_HIGH, "Excessive msec consumption from %s\n", cl->name);
+                        Q_snprintf(buffer, sizeof(buffer), "exceeded msec limit %d/%d in %d secs", cl->msec.total, msec.max_allowed, msec.timespan);
+                        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+                    }
                 }
             } else {
+                // let things stabilize after joining for a few seconds
                 if (cl->enteredgame + 5 < ltime) {
                     cl->speedfreeze = ltime + 3;
                 }
             }
         }
+        if (cl->msec.total < msec.min_required) {
+            cl->msec.violations++;
+            if (cl->msec.violations >= msec.max_violations) {
+                if (msec.action != MVA_NOTHING) {
+                    gi.bprintf(PRINT_HIGH, "msec underflow from %s\n", cl->name);
+                    Q_snprintf(buffer, sizeof(buffer), "something is fishy, didn't meet msec requirement - %d/%d in %d secs", cl->msec.total, msec.min_required, msec.timespan);
+                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+                }
+            }
+        }
 
-        cl->msec_start = lframenum + (msec_int * HZ);
-        cl->msec_last = cl->msec_count;
-        cl->msec_count = 0;
+        cl->msec.end_frame = lframenum + (msec.timespan * HZ);
+        cl->msec.previous = cl->msec.total;
+        cl->msec.total = 0;
         cl->frames_count = 0;
     }
 
-    cl->msec_count += ucmd->msec;
+    cl->msec.total += ucmd->msec;
 
     if (cl->speedfreeze) {
         if (cl->speedfreeze > ltime) {

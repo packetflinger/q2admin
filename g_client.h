@@ -25,6 +25,12 @@
 #define BOTDETECT_CHAR1             'F'
 #define BOTDETECT_CHAR2             'U'
 
+// In a perfect world the msec available vs used would be 1:1, but small delays
+// are introduced here and there. This value is a multiplier for an acceptable
+// amount of msec usage over. Q2Pro servers will allocate each client 1800ms of
+// time for their moves over a period of 16 server frames (at the default HZ).
+#define MSEC_SLOP                   1.125
+
 // What we need to figure out if a player is using some kind of aim assist
 typedef struct {
     short angles[2][2]; // pitch and yaw for current and last frame
@@ -42,6 +48,32 @@ typedef struct {
     float thaw;       // future ltime to automatically unfreeze
 } freeze_t;
 
+// What actions can be taken if msec violations are detected?
+typedef enum {
+    MVA_LEGACY,             // backwards compat, kick if over max_violations
+    MVA_NOTHING,            // Don't do anything
+    MVA_KICK,               // Remove the offender
+} msec_action_t;
+
+// Limits and such for ensuring msec values sent from clients are not abused.
+// Instead of checking each second (1000ms) for a violation, extended over a
+// larger period of time (a few seconds)
+typedef struct {
+    int max_allowed;        // Total consumption allowed per timespan
+    int min_required;       // To prevent banking time to use in a burst later
+    int timespan;           // Seconds
+    int max_violations;     // Times max_used excseeded before taking action
+    msec_action_t action;   // What do we do when violation happen?
+} msec_limits_t;
+
+// A collection of msec-related properties associated with each player.
+typedef struct {
+    int total;              // The msec sum from frames over a period of time
+    int previous;           // The value in the previous usercmd_t
+    int violations;         // How many times player exceeded global msec limits
+    float end_frame;        // lframenum marking the end of the timespan
+} player_msec_t;
+
 extern char zbot_teststring1[];
 extern char zbot_teststring_test1[];
 extern char zbot_teststring_test2[];
@@ -58,11 +90,9 @@ extern int zbc_jittertime;
 extern int zbc_jittermove;
 extern char client_msg[256];
 extern qboolean private_command_kick;
-extern int msec_kick_on_bad;
-extern int msec_max;
 extern int speedbot_check_type;
 extern int max_pmod_noreply;
-extern int msec_int;
+extern msec_limits_t msec;
 
 void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);

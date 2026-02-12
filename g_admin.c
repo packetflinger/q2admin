@@ -167,7 +167,7 @@ void ADMIN_dumpmsec(edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "MSEC\n");
     for (i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
-            gi.cprintf(ent, PRINT_HIGH, "  %2i : %-16s %d\n", i, proxyinfo[i].name, proxyinfo[i].msec_last);
+            gi.cprintf(ent, PRINT_HIGH, "  %2i : %-16s %d\n", i, proxyinfo[i].name, proxyinfo[i].msec.previous);
         }
     }
     gi.cprintf(ent, PRINT_HIGH, "*******************************\n");

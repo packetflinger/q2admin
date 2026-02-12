@@ -113,10 +113,15 @@ int client_map_cfg = 6;
 int gl_driver_max_changes = 3;
 int gl_driver_check = 0;
 int max_pmod_noreply = 2;
-int msec_int = 5;
-int msec_kick_on_bad = 2;
-int msec_max = 6000;
 int speedbot_check_type = 3;
+
+msec_limits_t msec = {
+        .max_allowed = 5600,
+        .min_required = 4400,
+        .timespan = 5,
+        .max_violations = 2,
+        .action = MVA_KICK
+};
 
 char client_msg[256];
 char serverip[256] = {""};
@@ -438,11 +443,7 @@ void InitGame(void) {
 
     for (i = -1; i < maxclients->value; i++) {
         proxyinfo[i].speedfreeze = 0;
-        proxyinfo[i].msec_bad = 0;
         proxyinfo[i].enteredgame = 0;
-        proxyinfo[i].msec_start = 0;
-        proxyinfo[i].msec_count = 0;
-        proxyinfo[i].msec_last = 0;
         proxyinfo[i].show_fps = qfalse;
         proxyinfo[i].frames_count = 0;
         proxyinfo[i].timescale = 0;
@@ -484,6 +485,8 @@ void InitGame(void) {
 
         q2a_memset(&proxyinfo[i].pest, 0, sizeof(chatpest_t));
         q2a_memset(&proxyinfo[i].freeze, 0, sizeof(freeze_t));
+        q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
+
         removeClientCommands(i);
     }
 
@@ -632,19 +635,16 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         if (i < 0 || proxyinfo[i].inuse == 0) {
             proxyinfo[i].speedfreeze = 0;
             proxyinfo[i].enteredgame = 0;
-            proxyinfo[i].msec_bad = 0;
-            proxyinfo[i].msec_start = 0;
             proxyinfo[i].timescale = 0;
             proxyinfo[i].frames_count = 0;
             proxyinfo[i].show_fps = qfalse;
-            proxyinfo[i].msec_last = 0;
-            proxyinfo[i].msec_count = 0;
             proxyinfo[i].q2a_admin = 0;
             proxyinfo[i].q2a_bypass = 0;
             proxyinfo[i].admin = 0;
             proxyinfo[i].clientcommand = 0;
             proxyinfo[i].floodinfo.chatFloodProtect = qfalse;
             proxyinfo[i].stuffFile = 0;
+            q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
         } else {
             proxyinfo[i].clientcommand &= (LEVELCHANGE_KEEP);
         }
@@ -1686,20 +1686,17 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].gl_driver[0] = 0;
     proxyinfo[client].speedfreeze = 0;
     proxyinfo[client].enteredgame = 0;
-    proxyinfo[client].msec_bad = 0;
-    proxyinfo[client].msec_start = 0;
     proxyinfo[client].timescale = 0;
     proxyinfo[client].frames_count = 0;
     proxyinfo[client].show_fps = qfalse;
-    proxyinfo[client].msec_last = 0;
-    proxyinfo[client].msec_count = 0;
     proxyinfo[client].q2a_admin = 0;
     proxyinfo[client].q2a_bypass = 0;
     proxyinfo[client].vid_restart = qfalse;
     proxyinfo[client].userid = -1;
-    
+
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
     q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
+    q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
 
     profile_stop(1, "q2admin->ClientDisconnect", 0, NULL);
 }
@@ -1746,13 +1743,9 @@ void ClientBegin(edict_t *ent) {
         proxyinfo[client].admin = 0;
         proxyinfo[client].speedfreeze = 0;
         proxyinfo[client].enteredgame = ltime;
-        proxyinfo[client].msec_bad = 0;
-        proxyinfo[client].msec_start = 0;
         proxyinfo[client].timescale = 0;
         proxyinfo[client].frames_count = 0;
         proxyinfo[client].show_fps = qfalse;
-        proxyinfo[client].msec_last = 0;
-        proxyinfo[client].msec_count = 0;
         proxyinfo[client].q2a_admin = 0;
         proxyinfo[client].q2a_bypass = 0;
     }
@@ -1782,7 +1775,8 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].checked_hacked_exe = 0;
 
     q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
-    
+    q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
+
     // positive value is normal client limit
     // negative value is vpn client limit (abs)
     // 0 is no limit

@@ -163,11 +163,8 @@ typedef struct {
     int pver;                       // seemingly unused, set but never checked
     int q2a_admin;                  // admin level granted
     int q2a_bypass;                 // bypass level granted
-    int msec_count;                 // the player's current ucmd->msec value
-    int msec_last;                  // the player's previous ucmd->msec value
     int frames_count;               // used in ClientThink for FPS display
-    int msec_bad;                   // how many times msec exceeded max
-    float msec_start;               // frame number for checking msec value
+    player_msec_t msec;
     int done_server_and_blocklist;
     int userinfo_changed_count;
     int userinfo_changed_start;
