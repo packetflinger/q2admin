@@ -214,7 +214,7 @@ typedef struct {
 #define CCMD_BANNED                 BIT(3)
 #define CCMD_NCSILENCE              BIT(4)  // name change silence
 #define CCMD_KICKED                 BIT(5)
-#define CCMD_SELECTED               BIT(6)
+#define CCMD_SELECTED               BIT(6)  // player targeted in cmd
 #define CCMD_CSILENCE               BIT(7)  // temporarily muted
 #define CCMD_PCSILENCE              BIT(8)  // permanently muted
 #define CCMD_VOTED                  BIT(9)
