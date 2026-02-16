@@ -166,8 +166,8 @@ void readLRconLists(void) {
         ret = qtrue;
     }
     if (!ret) {
-        gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_rcon->string), IW_LRCONSETUPLOAD, 0.0);
+        // gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_rcon->string), IW_LRCONSETUPLOAD, 0.0, true);
     }
 }
 
@@ -277,7 +277,7 @@ void run_lrcon(edict_t *ent, int client) {
                 }
                 //r1ch 2005-01-27 insecure lrcon fix END
 
-                logEvent(LT_CLIENTLRCON, client, ent, orgcp, 0, 0.0);
+                logEvent(LT_CLIENTLRCON, client, ent, orgcp, 0, 0.0, true);
                 return;
             }
         }

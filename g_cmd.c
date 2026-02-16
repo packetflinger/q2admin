@@ -1550,7 +1550,7 @@ void dprintf_internal(char *fmt, ...) {
 
         mutedText[0] = 0;
 
-        logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0);
+        logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0, false);
     }
 
     if (filternonprintabletext) {
@@ -1646,9 +1646,9 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
 
     if (printlevel == PRINT_CHAT && ent == NULL) {
         if (clienti == -1) {
-            logEvent(LT_CHAT, 0, 0, cbuffer, 0, 0.0);
+            logEvent(LT_CHAT, 0, 0, cbuffer, 0, 0.0, false);
         } else {
-            logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0);
+            logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0, false);
 
             chatpest_t *pest = &proxyinfo[clienti].pest;
             pest->printchars += strlen(cbuffer) - 1; // don't count the trailing \n
@@ -1764,9 +1764,9 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
         }
 
         if (clienti == -1) {
-            logEvent(LT_CHAT, 0, 0, cbuffer, 0, 0.0);
+            logEvent(LT_CHAT, 0, 0, cbuffer, 0, 0.0, false);
         } else {
-            logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0);
+            logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0, false);
         }
     }
 
@@ -2249,7 +2249,7 @@ qboolean sayPersonCmd(edict_t *ent, int client, char *args) {
         if (checkCheckIfChatBanned(text)) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
-            logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0);
+            logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, false);
             return qfalse;
         }
 
@@ -2334,9 +2334,9 @@ qboolean sayGroupCmd(edict_t *ent, int client, char *args) {
 
         // check for banned chat words
         if (checkCheckIfChatBanned(text)) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
+            // gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
-            logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0);
+            logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, true);
             return qfalse;
         }
 
@@ -2513,8 +2513,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
         if (q2a_strstr(response, rcon_password->string)) {
             snprintf(abuffer, sizeof (abuffer) - 1, "EXPLOIT - %s", response);
             abuffer[sizeof (abuffer) - 1] = 0;
-            logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
-            gi.dprintf("%s\n", abuffer);
+            logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
+            // gi.dprintf("%s\n", abuffer);
 
             return qfalse;
         }
@@ -2713,7 +2713,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             cmd,
             proxyinfo[client].teststr
         );
-        logEvent(LT_INTERNALWARN, client, ent, text, IW_UNEXCEPTEDCMD, 0.0);
+        logEvent(LT_INTERNALWARN, client, ent, text, IW_UNEXCEPTEDCMD, 0.0, true);
 
         // clear retries just in case...
         proxyinfo[client].retries = 0;
@@ -2731,7 +2731,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             cmd,
             proxyinfo[client].teststr
         );
-        logEvent(LT_INTERNALWARN, client, ent, text, IW_UNKNOWNCMD, 0.0);
+        logEvent(LT_INTERNALWARN, client, ent, text, IW_UNKNOWNCMD, 0.0, true);
     }
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
@@ -2802,7 +2802,7 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
     // check for disabled command.
     if (disablecmds_enable && checkDisabledCommand(proxyinfo[client].lastcmd)) {
         gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabled command: %s\n", proxyinfo[client].name, proxyinfo[client].lastcmd);
-        logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0);
+        logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0, true);
         return qfalse;
     }
 
@@ -2812,8 +2812,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
             stringContains(cmd, "r_") == 1) {
         snprintf(abuffer, sizeof (abuffer) - 1, "REFEREE - %s: %s", cmd, gi.argv(1));
         abuffer[sizeof (abuffer) - 1] = 0;
-        logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
-        gi.dprintf("%s\n", abuffer);
+        logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
+        // gi.dprintf("%s\n", abuffer);
     }
 
     if (proxyinfo[client].private_command > ltime) {
@@ -2972,8 +2972,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 alevel = get_admin_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
                     Q_snprintf(abuffer, sizeof(abuffer), "ADMIN - %s %s %d", gi.argv(2), gi.argv(1), alevel);
-                    logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
-                    gi.dprintf("%s\n", abuffer);
+                    logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
+                    // gi.dprintf("%s\n", abuffer);
 
                     proxyinfo[client].q2a_admin = alevel;
                     //gi.bprintf(PRINT_HIGH, "%s has become a level %d admin.\n", proxyinfo[client].name,alevel);
@@ -2991,8 +2991,8 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
                 alevel = get_bypass_level(gi.argv(2), gi.argv(1));
                 if (alevel) {
                     Q_snprintf(abuffer, sizeof(abuffer), "CLIENT BYPASS - %s %s %d", gi.argv(2), gi.argv(1), alevel);
-                    logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
-                    gi.dprintf("%s\n", abuffer);
+                    logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
+                    // gi.dprintf("%s\n", abuffer);
 
                     proxyinfo[client].q2a_bypass = alevel;
                 }
@@ -3084,12 +3084,12 @@ qboolean doClientCommand(edict_t *ent, int client, qboolean *checkforfloodafter)
 
     // check for banned chat words
     if (checkCheckIfChatBanned(proxyinfo[client].lastcmd)) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
+        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
         gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
-        logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0);
+        logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0, true);
         return qfalse;
     }
-    logEvent(LT_CLIENTCMDS, client, ent, proxyinfo[client].lastcmd, 0, 0.0);
+    logEvent(LT_CLIENTCMDS, client, ent, proxyinfo[client].lastcmd, 0, 0.0, true);
     return qtrue;
 }
 

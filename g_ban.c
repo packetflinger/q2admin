@@ -149,8 +149,8 @@ void readBanLists(void) {
     }
 
     if (!ret) {
-        gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_ban->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0);
+        // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_ban->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0, true);
     }
 
     q2a_strncpy(cfgRemoteFileEnabled, q2adminbanremotetxt_enable->string, sizeof(cfgRemoteFileEnabled));
@@ -172,8 +172,8 @@ void readBanLists(void) {
         }
 
         if (!ret) {
-            gi.dprintf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
-            logEvent(LT_INTERNALWARN, 0, NULL, BANLISTREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0);
+            // gi.dprintf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
+            logEvent(LT_INTERNALWARN, 0, NULL, BANLISTREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0, true);
         }
     }
 }
@@ -911,8 +911,8 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (proxyinfo[clienti].inuse) {
                     edict_t *enti = getEnt((clienti + 1));
                     if (checkCheckIfBanned(enti, clienti)) {
-                        logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0);
-                        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
+                        logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0, true);
+                        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
@@ -1084,7 +1084,7 @@ int checkBanList(edict_t *ent, int client) {
                         "%s allowed using password (ban id:%d)",
                         NAME(client), checkentry->bannum
                 );
-                logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0);
+                logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0, true);
 
                 if (q2a_strcmp(checkentry->password, s)) {
                     if (checkentry->msg) {

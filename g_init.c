@@ -436,7 +436,7 @@ void InitGame(void) {
     retrylist = (retrylist_info *) G_Malloc(maxclients->value * sizeof (retrylist_info));
     maxretryList = 0;
 
-    logEvent(LT_SERVERINIT, 0, NULL, NULL, 0, 0.0);
+    logEvent(LT_SERVERINIT, 0, NULL, NULL, 0, 0.0, false);
 
     banhead = NULL;
     motd[0] = 0;
@@ -1006,7 +1006,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
         if (UpdateInternalClientInfo(client, ent, userinfo, &userInfoOverflow)) {
             Q_snprintf(buffer, sizeof(buffer), zbotuserdisplay, proxyinfo[client].name);
             currentBanMsg = buffer;
-            logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
+            logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
 
             if (!banOnConnect) {
                 ret = 0;
@@ -1051,8 +1051,8 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;
 
-        logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
+        logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
+        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
 
         if (banOnConnect) {
             ret = 0;
@@ -1063,8 +1063,8 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     } else if (checkClientIpAddress && !HASIP(client)) // check for invlaid IP's and don't let them in :)
     {
         char *ip = FindIpAddressInUserInfo(userinfo, 0);
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "Client doesn't have a valid IP address", ip);
-        logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0);
+        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "Client doesn't have a valid IP address", ip);
+        logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
 
         if (banOnConnect) {
             ret = 0;
@@ -1073,8 +1073,8 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
             q2a_strcpy(proxyinfo[client].buffer, "Client doesn't have a valid IP address");
         }
     } else if (checkCheckIfBanned(ent, client)) {
-        logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
-        gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
+        logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
+        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
 
         if (banOnConnect) {
             ret = 0;
@@ -1183,7 +1183,7 @@ qboolean ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     if (ret) {
-        logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0);
+        logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
 
         if (userInfoOverflow) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "WARNING: Client's userinfo space looks to have overflowed!", IP(client));
@@ -1248,7 +1248,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
         }
 
         if (checkCheckIfBanned(ent, client)) {
-            logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0);
+            logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
             q2a_strcpy(proxyinfo[client].name, oldname);
 
             // display ban msg to user..
@@ -1262,7 +1262,7 @@ qboolean checkForNameChange(int client, edict_t *ent, char *userinfo) {
                 addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
             }
         } else {
-            logEvent(LT_NAMECHANGE, client, ent, oldname, 0, 0.0);
+            logEvent(LT_NAMECHANGE, client, ent, oldname, 0, 0.0, false);
 
             if (displaynamechange) {
                 gi.bprintf(PRINT_HIGH, "%s changed name to %s\n", oldname, proxyinfo[client].name);
@@ -1331,7 +1331,7 @@ qboolean checkForSkinChange(int client, edict_t *ent, char *userinfo) {
         q2a_strcpy(oldskin, proxyinfo[client].skin);
         q2a_strcpy(proxyinfo[client].skin, newskin);
 
-        logEvent(LT_SKINCHANGE, client, ent, oldskin, 0, 0.0);
+        logEvent(LT_SKINCHANGE, client, ent, oldskin, 0, 0.0, false);
 
         if (skinChangeFloodProtect) {
             if (proxyinfo[client].skinchangetimeout < ltime) {
@@ -1398,14 +1398,14 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     client = getEntOffset(ent) - 1;
 
-    logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0);
+    logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0, false);
 
     //zgh_frk check
     if (stringContains(userinfo, "\\skon\\")) {
         gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
         Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
         gi.AddCommandString(tmptext);
-        logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0);
+        logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0, true);
     }
 
     // Don't count excessive cl_maxfps changes as flooding if fpsfloodexempt is true.
@@ -1532,7 +1532,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // ingore changes to 150 because action quake2 generates them itself...
 
             if (proxyinfo[client].cl_pitchspeed != 150) {
-                logEvent(LT_ZBOT, client, ent, NULL, -7, 0.0);
+                logEvent(LT_ZBOT, client, ent, NULL, -7, 0.0, true);
 
                 if (cl_pitchspeed_display) {
                     gi.bprintf(PRINT_HIGH, "%s changed cl_pitchspeed to %d\n", proxyinfo[client].name, newps);
@@ -1560,7 +1560,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // ingore changes to 1.5 because action quake2 generates them itself...
 
             if (proxyinfo[client].cl_anglespeedkey != 1.5) {
-                logEvent(LT_ZBOT, client, ent, NULL, -9, 0.0);
+                logEvent(LT_ZBOT, client, ent, NULL, -9, 0.0, true);
 
                 if (cl_anglespeedkey_display) {
                     gi.bprintf(PRINT_HIGH, "%s changed cl_anglespeedkey to %g\n", proxyinfo[client].name, newas);
@@ -1640,7 +1640,7 @@ void ClientDisconnect(edict_t *ent) {
         }
     }
 
-    logEvent(LT_CLIENTDISCONNECT, client, ent, NULL, 0, 0.0);
+    logEvent(LT_CLIENTDISCONNECT, client, ent, NULL, 0, 0.0, false);
 
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
@@ -1845,7 +1845,7 @@ void ClientBegin(edict_t *ent) {
         addCmdQueue(client, QCMD_CHECKVARTESTS, (float) checkvar_poll_time, 0, 0);
     }
 
-    logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0);
+    logEvent(LT_CLIENTBEGIN, client, ent, NULL, 0, 0.0, false);
     profile_stop(1, "q2admin->ClientBegin", client, ent);
 }
 

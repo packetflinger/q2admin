@@ -308,7 +308,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
 
     if (strlen(gi.args())) {
         Q_snprintf(abuffer, sizeof(abuffer), "COMMAND - %s %s", gi.argv(0), gi.args());
-        logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0);
+        logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
         gi.dprintf("%s\n", abuffer);
     }
 

@@ -164,8 +164,8 @@ void readCheckVarLists(void) {
         ret = qtrue;
     }
     if (!ret) {
-        gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_cvar->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_cvar), IW_CHECKVARSETUPLOAD, 0.0);
+        // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_cvar->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_cvar), IW_CHECKVARSETUPLOAD, 0.0, true);
     }
 }
 

@@ -436,6 +436,9 @@ extern int proxy_bwproxy;
 extern int proxy_nitro2;
 extern int maxMsgLevel;
 
+extern qboolean consolelog_enable;
+extern char consolelog_pattern;
+
 extern char zbotmotd[256];
 extern char motd[4096];
 extern char clientVoteCommand[256];

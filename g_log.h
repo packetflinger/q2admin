@@ -1,6 +1,16 @@
 /**
- * Q2Admin
- * Logging stuff
+ * Q2Admin Logging
+ * 
+ * Both log file definitions and the mapping of which events go to which log
+ * are defined in the same config file. 
+ * 
+ * For log files, each one is defined with a unique index (1-LOGMAX). 
+ *   LOGFILE: <1-32> [MOD] "filename"
+ * 
+ * For log events, each type is defined as whether to actually log the event,
+ * the index of the log file that should receive it, and the format each event
+ * should take.
+ *   <TYPE>: <YES/NO> <1-32> "format"
  */
 
 #pragma once
@@ -9,11 +19,13 @@
 #define LOGFILECMD      "[sv] !logfile [view <logfilenum> / edit [filenum(1-32)] [mod] [filename] / del [filenum(1-32)]]\n"
 #define LOGEVENTCMD     "[sv] !logevent [view <logtype> / edit [logtype] <log [yes/no]> <logfiles [logfile[+logfile...]]> <format \"format\">]\n"
 #define LOGTYPES_MAX    (sizeof(logtypes) / sizeof(logtypes[0]))
+#define MAXLOGS         32
 
 typedef struct {
     qboolean inuse;
     qboolean mod;
     char filename[256];
+    FILE *fp;
 } logfile_t;
 
 typedef struct {
@@ -65,6 +77,9 @@ void expandOutPortNum(char *srcdest, int max);
 qboolean isLogEvent(enum zb_logtypesenum ltype);
 void loadLogList(void);
 qboolean loadLogListFile(char *filename);
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2);
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2, qboolean echo);
 void logeventRun(int startarg, edict_t *ent, int client);
 void logfileRun(int startarg, edict_t *ent, int client);
+void openLogFiles(void);
+void closeLogFiles(void);
+qboolean isLogWritable(int index);

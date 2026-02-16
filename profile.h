@@ -23,7 +23,7 @@
                 performancetimer##instance = clock() - performancetimer##instance; \
                 if(performancetimer##instance) \
                 { \
-                    logEvent(LT_PERFORMANCEMONITOR, client, ent, function, 0, (double)performancetimer##instance / CLOCKS_PER_SEC); \
+                    logEvent(LT_PERFORMANCEMONITOR, client, ent, function, 0, (double)performancetimer##instance / CLOCKS_PER_SEC, false); \
                 } \
             }
 
@@ -36,7 +36,7 @@
                 { \
                     if(totalperformancetimer##instance) \
                     { \
-                        logEvent(LT_PERFORMANCEMONITOR, client, ent, function, 0, (double)totalperformancetimer##instance / (100.0 * CLOCKS_PER_SEC)); \
+                        logEvent(LT_PERFORMANCEMONITOR, client, ent, function, 0, (double)totalperformancetimer##instance / (100.0 * CLOCKS_PER_SEC), false); \
                     } \
                     totalperformancetimer##instance = 0; \
                     countperformancetimer##instance = 0; \

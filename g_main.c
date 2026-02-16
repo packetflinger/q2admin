@@ -55,7 +55,7 @@ void ShutdownGame(void) {
     }
     if (runmode) {
         profile_start(1);
-        logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0);
+        logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0, true);
         profile_start(2);
     }
     G_Free(finalentities);
@@ -210,7 +210,7 @@ void G_RunFrame(void) {
                             proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                             addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUP, 0);
                             proxyinfo[client].charindex = -1;
-                            logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail", IW_STARTUPFAIL, 0.0);
+                            logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail", IW_STARTUPFAIL, 0.0, true);
                         }
                         break;
                     }
@@ -221,7 +221,7 @@ void G_RunFrame(void) {
                 } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
                     //stuffcmd(ent, "disconnect\n");
                     proxyinfo[client].clientcommand |= CCMD_KICKED;
-                    logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
+                    logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0, true);
                     gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
                     Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                     gi.AddCommandString(buffer);
@@ -333,7 +333,7 @@ void G_RunFrame(void) {
                         proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                         addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUPTEST, 0);
                         proxyinfo[client].charindex = -2;
-                        logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail 2", IW_STARTUPFAIL, 0.0);
+                        logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail 2", IW_STARTUPFAIL, 0.0, true);
                         break;
                     }
                 }
@@ -382,13 +382,13 @@ void G_RunFrame(void) {
 
                 if (!(proxyinfo[client].clientcommand & CCMD_ZPROXYCHECK2)) {
                     Q_snprintf(text, sizeof(text), "I(%d) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
-                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
+                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0, true);
                     break;
                 }
 
                 if (proxyinfo[client].charindex >= testcharslength) {
                     Q_snprintf(text, sizeof(text), "I(%d >= end) Exp(%s)", proxyinfo[client].charindex, proxyinfo[client].teststr);
-                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0);
+                    logEvent(LT_INTERNALWARN, client, ent, text, data, 0.0, true);
                     break;
                 }
 
@@ -450,7 +450,7 @@ void G_RunFrame(void) {
                 addCmdQueue(client, QCMD_TESTRATBOT3, 2, 0, 0);
             } else if (command == QCMD_TESTRATBOT2) {
                 if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECT)) {
-                    logEvent(LT_INTERNALWARN, client, ent, "RatBot detect problem", 0, 0.0);
+                    logEvent(LT_INTERNALWARN, client, ent, "RatBot detect problem", 0, 0.0, true);
                     break;
                 }
                 //proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECT;
@@ -466,7 +466,7 @@ void G_RunFrame(void) {
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_TESTRATBOT4) {
                 if (!(proxyinfo[client].clientcommand & CCMD_RATBOTDETECTNAME)) {
-                    logEvent(LT_INTERNALWARN, client, ent, "RatBot Detect 2 problem", 0, 0.0);
+                    logEvent(LT_INTERNALWARN, client, ent, "RatBot Detect 2 problem", 0, 0.0, true);
                     break;
                 }
 
@@ -521,11 +521,11 @@ void G_RunFrame(void) {
             } else if (command == QCMD_DISPLOGEVENTLIST) {
                 displayLogEventListCont(ent, client, data, qfalse);
             } else if (command == QCMD_LOGTOFILE1) {
-                logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0);
+                logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0, false);
             } else if (command == QCMD_LOGTOFILE2) {
-                logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[proxyinfo[client].impulse - 169], proxyinfo[client].impulse, 0.0);
+                logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[proxyinfo[client].impulse - 169], proxyinfo[client].impulse, 0.0, false);
             } else if (command == QCMD_LOGTOFILE3) {
-                logEvent(LT_IMPULSES, client, ent, NULL, proxyinfo[client].impulse, 0.0);
+                logEvent(LT_IMPULSES, client, ent, NULL, proxyinfo[client].impulse, 0.0, false);
             } else if (command == QCMD_CONNECTCMD) {
                 if (customClientCmdConnect[0]) {
                     Q_snprintf(buffer, sizeof(buffer), "%s\n", customClientCmdConnect);
@@ -561,7 +561,7 @@ void G_RunFrame(void) {
             } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
                 //stuffcmd(ent, "disconnect\n");
                 proxyinfo[client].clientcommand |= CCMD_KICKED;
-                logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0);
+                logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0, true);
                 gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
                 Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                 gi.AddCommandString(buffer);
@@ -652,7 +652,7 @@ void G_RunFrame(void) {
                     if (private_commands[j].command[0]) {
                         if (((!proxyinfo[client].private_command_got[j]) && (j < 4)) || ((proxyinfo[client].private_command_got[j]) && (j > 3))) {
                             //log
-                            logEvent(LT_PRIVATELOG, client, ent, private_commands[j].command, 0, 0.0);
+                            logEvent(LT_PRIVATELOG, client, ent, private_commands[j].command, 0, 0.0, true);
 
                             //kick on private_command
                             if (private_command_kick) {
@@ -996,7 +996,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     G_MergeEdicts();
 
     if (runmode) {
-        logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0);
+        logEvent(LT_SERVERSTART, 0, NULL, NULL, 0, 0.0, true);
     }
 
     return &ge;

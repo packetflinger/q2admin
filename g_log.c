@@ -22,34 +22,66 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 logfile_t logFiles[32];
 
-logtypes_t logtypes[] ={
-    { "ZBOT", qfalse, 0, ""},
-    { "ZBOTIMPULSES", qfalse, 0, ""},
-    { "IMPULSES", qfalse, 0, ""},
-    { "NAMECHANGE", qfalse, 0, ""},
-    { "SKINCHANGE", qfalse, 0, ""},
-    { "CHATBAN", qfalse, 0, ""},
-    { "CLIENTCONNECT", qfalse, 0, ""},
-    { "CLIENTBEGIN", qfalse, 0, ""},
-    { "CLIENTDISCONNECT", qfalse, 0, ""},
-    { "CLIENTKICK", qfalse, 0, ""},
-    { "CLIENTCMDS", qfalse, 0, ""},
-    { "CLIENTLRCON", qfalse, 0, ""},
-    { "BAN", qfalse, 0, ""},
-    { "CHAT", qfalse, 0, ""},
-    { "SERVERSTART", qfalse, 0, ""},
-    { "SERVERINIT", qfalse, 0, ""},
-    { "SERVEREND", qfalse, 0, ""},
-    { "INTERNALWARN", qfalse, 0, ""},
-    { "PERFORMANCEMONITOR", qfalse, 0, ""},
-    { "DISABLECMD", qfalse, 0, ""},
-    { "ENTITYCREATE", qfalse, 0, ""},
-    { "ENTITYDELETE", qfalse, 0, ""},
-    { "INVALIDIP", qfalse, 0, ""},
-    { "ADMINLOG", qfalse, 0, ""},
-    { "CLIENTUSERINFO", qfalse, 0, ""},
-    { "PRIVATELOG", qfalse, 0, ""},
+logtypes_t logtypes[] = {
+    {"ZBOT", qfalse, 0, "", NULL},
+    {"ZBOTIMPULSES", qfalse, 0, "", NULL},
+    {"IMPULSES", qfalse, 0, "", NULL},
+    {"NAMECHANGE", qfalse, 0, "", NULL},
+    {"SKINCHANGE", qfalse, 0, "", NULL},
+    {"CHATBAN", qfalse, 0, "", NULL},
+    {"CLIENTCONNECT", qfalse, 0, "", NULL},
+    {"CLIENTBEGIN", qfalse, 0, "", NULL},
+    {"CLIENTDISCONNECT", qfalse, 0, "", NULL},
+    {"CLIENTKICK", qfalse, 0, "", NULL},
+    {"CLIENTCMDS", qfalse, 0, "", NULL},
+    {"CLIENTLRCON", qfalse, 0, "", NULL},
+    {"BAN", qfalse, 0, "", NULL},
+    {"CHAT", qfalse, 0, "", NULL},
+    {"SERVERSTART", qfalse, 0, "", NULL},
+    {"SERVERINIT", qfalse, 0, "", NULL},
+    {"SERVEREND", qfalse, 0, "", NULL},
+    {"INTERNALWARN", qfalse, 0, "", NULL},
+    {"PERFORMANCEMONITOR", qfalse, 0, "", NULL},
+    {"DISABLECMD", qfalse, 0, "", NULL},
+    {"ENTITYCREATE", qfalse, 0, "", NULL},
+    {"ENTITYDELETE", qfalse, 0, "", NULL},
+    {"INVALIDIP", qfalse, 0, "", NULL},
+    {"ADMINLOG", qfalse, 0, "", NULL},
+    {"CLIENTUSERINFO", qfalse, 0, "", NULL},
+    {"PRIVATELOG", qfalse, 0, "", NULL},
 };
+
+/**
+ * Open all log files that are intended to be used and keep the pointer. Data
+ * will be buffered and written as needed. The files will be closed on
+ * shutdown.
+ */
+void openLogFiles(void) {
+    char name[256];
+    for (int i = 0; i < LOGTYPES_MAX; i++) {
+        if (logFiles[i].inuse && logFiles[i].fp == NULL) {
+            if (logFiles[i].mod) {
+                Q_snprintf(name, sizeof(name), "%s/%s", moddir, logFiles[i].filename);
+            } else {
+                q2a_strncpy(name, logFiles[i].filename, sizeof(name));
+            }
+            logFiles[i].fp = fopen(name, "at");
+            if (logFiles[i].fp == NULL) {
+                gi.dprintf("Error opening %s\n", logFiles[i].filename);
+            }
+        }
+    }
+}
+
+// Flush the pending buffer and close the file for any log in use.
+void closeLogFiles(void) {
+    for (int i = 0; i < LOGTYPES_MAX; i++) {
+        if (logFiles[i].inuse && logFiles[i].fp != NULL) {
+            fflush(logFiles[i].fp); // unsure if this is necessary
+            fclose(logFiles[i].fp);
+        }
+    }
+}
 
 /**
  *
@@ -119,7 +151,8 @@ void expandOutPortNum(char *srcdest, int max) {
 }
 
 /**
- *
+ * loadLogListFile parses the contents of the logs config file (q2a_log.cfg)
+ * and builds the appropriate structures to hold the intent.
  */
 qboolean loadLogListFile(char *filename) {
     FILE *loglist;
@@ -277,7 +310,7 @@ void loadLogList(void) {
     unsigned int i;
     qboolean ret;
 
-    q2a_memset(logFiles, 0x0, sizeof (logFiles));
+    q2a_memset(logFiles, 0, sizeof(logFiles));
     for (i = 0; i < LOGTYPES_MAX; i++) {
         logtypes[i].log = qfalse;
     }
@@ -433,10 +466,24 @@ qboolean isLogEvent(enum zb_logtypesenum ltype) {
     return logtypes[(int) ltype].log;
 }
 
+qboolean isLogWritable(int index) {
+    return logFiles[index].inuse && logFiles[index].fp != NULL;
+}
+
 /**
- *
+ * Write an event to the specific log files it belongs to and the server
+ * console if appropriate.
+ * 
+ * Flags:
+ *   ltype = the type of log event (zb_logtypesenum)
+ *   client = the proxyinfo index of the player the event relates to
+ *   ent = the edict_t of the player the event relates to
+ *   message = any text related to the event
+ *   number1 = impulse-log specific, the impulse number seen
+ *   number2 = permformance-log specific, the time elapsed for func to complete
+ *   echo = whether to output the final log line to the server console
  */
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2) {
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2, qboolean echo) {
     if (logtypes[(int) ltype].log) {
         char logline[4096];
         char logname[356];
@@ -444,24 +491,14 @@ void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *messag
         unsigned int i;
         FILE *logfilePtr;
 
-        // prepare log line.
         convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, number, number2);
-
-        for (i = 0, logfile = 0x1; i < 32; i++, logfile <<= 1) {
+        for (i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
             if ((logtypes[(int) ltype].logfiles & logfile) && logFiles[i].inuse) {
-                if (logFiles[i].mod) {
-                    Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[i].filename);
-                } else {
-                    q2a_strncpy(logname, logFiles[i].filename, sizeof(logname));
-                }
-
-                logfilePtr = fopen(logname, "at");
-
-                if (logfilePtr) {
-                    fprintf(logfilePtr, "%s\n", logline);
-                    fclose(logfilePtr);
-                }
+               fprintf(logFiles[i].fp, "%s\n", logline);
             }
+        }
+        if (echo) {
+            gi.cprintf(NULL, PRINT_HIGH, "%s\n", logline);
         }
     }
 }
@@ -657,12 +694,12 @@ void logfileRun(int startarg, edict_t *ent, int client) {
  */
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum) {
     gi.cprintf(ent, PRINT_HIGH, "  %3d    %s  %s\n", logfilenum + 1, logFiles[logfilenum].mod ? "Yes" : " No", logFiles[logfilenum].filename);
-    for (logfilenum++; logfilenum < 32; logfilenum++) {
+    for (logfilenum++; logfilenum < MAXLOGS; logfilenum++) {
         if (logFiles[logfilenum].inuse) {
             break;
         }
     }
-    if (logfilenum < 32) {
+    if (logfilenum < MAXLOGS) {
         addCmdQueue(client, QCMD_DISPLOGFILELIST, 0, logfilenum, 0);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "\nEnd Logfile List\n");
@@ -754,7 +791,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
 
                     lognum = q2a_atoi(cmd);
 
-                    if (lognum >= 1 || lognum <= 32) {
+                    if (lognum >= 1 || lognum <= MAXLOGS) {
                         lognum--;
 
                         while (isdigit(*cmd)) {
@@ -775,7 +812,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
 
                             lognum = q2a_atoi(cmd);
 
-                            if (lognum >= 1 || lognum <= 32) {
+                            if (lognum >= 1 || lognum <= MAXLOGS) {
                                 lognum--;
 
                                 while (isdigit(*cmd)) {
@@ -837,7 +874,7 @@ void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean o
 
     q2a_strcpy(buffer, "  ");
 
-    for (i = 0, logfile = 0x1; i < 32; i++, logfile <<= 1) {
+    for (i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
         if ((logtypes[logevent].logfiles & logfile)) {
             if (!logFiles[i].inuse) {
                 q2a_strcat(buffer, "(");

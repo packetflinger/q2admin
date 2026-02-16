@@ -141,8 +141,8 @@ void readVoteLists(void) {
         ret = qtrue;
     }
     if (!ret) {
-        gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_vote->string), IW_VOTESETUPLOAD, 0.0);
+        // gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_vote->string), IW_VOTESETUPLOAD, 0.0, true);
     }
 }
 

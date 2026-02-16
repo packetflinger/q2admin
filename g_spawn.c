@@ -169,8 +169,8 @@ void readSpawnLists(void) {
         ret = qtrue;
     }
     if (!ret) {
-        gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_spawn->string), IW_SPAWNSETUPLOAD, 0.0);
+        // gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_spawn->string), IW_SPAWNSETUPLOAD, 0.0, true);
     }
 }
 
@@ -363,7 +363,7 @@ void linkentity_internal(edict_t *ent) {
             return;
         }
     }
-    logEvent(LT_ENTITYCREATE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0);
+    logEvent(LT_ENTITYCREATE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0, false);
     gi.linkentity(ent);
 }
 
@@ -371,6 +371,6 @@ void linkentity_internal(edict_t *ent) {
  *
  */
 void unlinkentity_internal(edict_t *ent) {
-    logEvent(LT_ENTITYDELETE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0);
+    logEvent(LT_ENTITYDELETE, 0, NULL, *((char **) ((unsigned long) ent + entity_classname_offset)), 0, 0.0, false);
     gi.unlinkentity(ent);
 }

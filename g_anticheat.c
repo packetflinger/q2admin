@@ -59,8 +59,8 @@ void AC_UpdateList(void) {
         }
         ret = AC_GetRemoteFile(cfgAnticheatRemoteList);
         if (!ret) {
-            gi.dprintf("WARNING: " ANTICHEATEXCEPTIONREMOTEFILE " could not be found\n");
-            logEvent(LT_INTERNALWARN, 0, NULL, ANTICHEATEXCEPTIONREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0);
+            //gi.dprintf("WARNING: " ANTICHEATEXCEPTIONREMOTEFILE " could not be found\n");
+            logEvent(LT_INTERNALWARN, 0, NULL, ANTICHEATEXCEPTIONREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0, true);
             return;
         }
         gi.dprintf("Remote anticheat config downloaded\n");
@@ -139,8 +139,8 @@ void getR1chHashList(char *hashname) {
         ret = ReadRemoteHashListFile(cfgHashRemoteList, hashname);
 
         if (!ret) {
-            gi.dprintf("WARNING: " HASHLISTREMOTEDIR " could not be found\n");
-            logEvent(LT_INTERNALWARN, 0, NULL, HASHLISTREMOTEDIR " could not be found", IW_BANSETUPLOAD, 0.0);
+            // gi.dprintf("WARNING: " HASHLISTREMOTEDIR " could not be found\n");
+            logEvent(LT_INTERNALWARN, 0, NULL, HASHLISTREMOTEDIR " could not be found", IW_BANSETUPLOAD, 0.0, true);
         }
     }
 }

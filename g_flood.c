@@ -128,8 +128,8 @@ void readFloodLists(void) {
     }
 
     if (!ret) {
-        gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_flood->string);
-        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_flood->string), IW_FLOODSETUPLOAD, 0.0);
+        // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_flood->string);
+        logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_flood->string), IW_FLOODSETUPLOAD, 0.0, true);
     }
 }
 
