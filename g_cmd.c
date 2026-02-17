@@ -371,6 +371,18 @@ q2acmd_t q2aCommands[] = {
         &consolechat_disable
     },
     {
+        "consolelog_enable",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &consolelog_enable
+    },
+    {
+        "consolelog_pattern",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &consolelog_pattern
+    },
+    {
         "customclientcmd",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,

@@ -123,6 +123,9 @@ msec_limits_t msec = {
         .action = MVA_KICK
 };
 
+qboolean consolelog_enable = false;
+char consolelog_pattern[256] = "[q2a] %s\n";
+
 char client_msg[256];
 char serverip[256] = {""};
 char lanip[256] = {""};

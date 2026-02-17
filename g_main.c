@@ -77,6 +77,7 @@ void ShutdownGame(void) {
         profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
     }
     curl_global_cleanup();
+    closeLogFiles();
 }
 
 /**
