@@ -22,43 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+// server, mod, proxy connectivity
 game_import_t gi;       // server access from q2admin
 game_export_t ge;       // q2admin access from server
 game_export_t *ge_mod;  // game access from q2admin
 
-cvar_t *rcon_password;
-cvar_t *gamedir;
-cvar_t *maxclients;
-cvar_t *logfile;
-cvar_t *rconpassword;
-cvar_t *port;
-cvar_t *serverbindip;
-cvar_t *q2aconfig;
-cvar_t *q2adminbantxt;
-cvar_t *q2adminbanremotetxt;
-cvar_t *q2adminbanremotetxt_enable;
-cvar_t *q2adminanticheat_enable;
-cvar_t *q2adminanticheat_file;
-cvar_t *q2adminhashlist_enable;
-cvar_t *q2adminhashlist_dir;
-
-// for per-map entity substitutions
-cvar_t *tune_spawn_railgun;
-cvar_t *tune_spawn_bfg;
-cvar_t *tune_spawn_quad;
-cvar_t *tune_spawn_invulnerability;
-cvar_t *tune_spawn_powershield;
-cvar_t *tune_spawn_megahealth;
-cvar_t *tune_spawn_rocketlauncher;
-cvar_t *tune_spawn_hyperblaster;
-cvar_t *tune_spawn_grenadelauncher;
-cvar_t *tune_spawn_chaingun;
-cvar_t *tune_spawn_machinegun;
-cvar_t *tune_spawn_supershotgun;
-cvar_t *tune_spawn_shotgun;
-cvar_t *tune_spawn_machinegun;
-cvar_t *tune_spawn_grenades;
-
+// console variables
 cvar_t *configfile_ban;
 cvar_t *configfile_bypass;
 cvar_t *configfile_cloud;
@@ -70,195 +39,182 @@ cvar_t *configfile_log;
 cvar_t *configfile_rcon;
 cvar_t *configfile_spawn;
 cvar_t *configfile_vote;
+cvar_t *gamedir;
+cvar_t *logfile;
+cvar_t *maxclients;
+cvar_t *port;
+cvar_t *q2aconfig;
+cvar_t *q2adminbantxt;
+cvar_t *q2adminbanremotetxt;
+cvar_t *q2adminbanremotetxt_enable;
+cvar_t *q2adminanticheat_enable;
+cvar_t *q2adminanticheat_file;
+cvar_t *q2adminhashlist_enable;
+cvar_t *q2adminhashlist_dir;
+cvar_t *rcon_password;
+cvar_t *rconpassword;   // why?
+cvar_t *serverbindip;
+cvar_t *tune_spawn_bfg;
+cvar_t *tune_spawn_chaingun;
+cvar_t *tune_spawn_grenadelauncher;
+cvar_t *tune_spawn_grenades;
+cvar_t *tune_spawn_hyperblaster;
+cvar_t *tune_spawn_invulnerability;
+cvar_t *tune_spawn_machinegun;
+cvar_t *tune_spawn_megahealth;
+cvar_t *tune_spawn_powershield;
+cvar_t *tune_spawn_quad;
+cvar_t *tune_spawn_railgun;
+cvar_t *tune_spawn_rocketlauncher;
+cvar_t *tune_spawn_shotgun;
+cvar_t *tune_spawn_supershotgun;
 
-bool quake2dirsupport = true;
-bool fpsFloodExempt = false;
-
-char dllname[256];
-char gamelibrary[MAX_QPATH] = {""}; // forward library name from config file
-char gmapname[MAX_QPATH];
-char version[256];
-
-char *finalentities;
-
-bool cloud_enabled           = false;
-char     cloud_address[256]      = "127.0.0.1";
-int      cloud_port              = 9988;
-bool cloud_encryption        = true;
-char     cloud_privatekey[256]   = "private.pem";
-char     cloud_publickey[256]    = "public.pem";
-char     cloud_serverkey[256]    = "server.pem";
-char     cloud_uuid[37]          = "00000000-0000-0000-0000-000000000000";
-int      cloud_flags             = 4095; // 12 bits worth
-char     cloud_dns[3]            = "64"; // ipv6 first then ipv4
-char     cloud_cmd_teleport[25]  = "!teleport";
-char     cloud_cmd_invite[25]    = "!invite";
-char     cloud_cmd_seen[25]      = "!seen";
-char     cloud_cmd_whois[25]     = "!whois";
-
-bool vpn_enable              = false;
-bool vpn_kick                = true;
-char     vpn_api_key[33]         = "";
-
-int      ip_limit                = 0;
-
-char     http_cacert_path[256]   = "/etc/ssl/certs";
-bool http_debug              = false;
-bool http_enable             = true;
-bool http_verifyssl          = true;
-
-int USERINFOCHANGE_TIME = 60;
-int USERINFOCHANGE_COUNT = 40;
-int client_map_cfg = 6;
-int gl_driver_max_changes = 3;
-int gl_driver_check = 0;
-int max_pmod_noreply = 2;
-int speedbot_check_type = 3;
-
-msec_limits_t msec = {
-        .max_allowed = 5600,
-        .min_required = 4400,
-        .timespan = 5,
-        .max_violations = 2,
-        .action = MVA_KICK
-};
-
-bool consolelog_enable = false;
-char consolelog_pattern[256] = "[q2a] %s\n";
-
+// default settings, overridden by q2admin.cfg and friends
+char adminpassword[256];
+bool banOnConnect                       = true;
+char buffer[0x10000];
+char buffer2[256];
+char chatFloodProtectMsg[256];
+bool checkClientIpAddress               = true;
+char clientVoteCommand[256];
+int client_map_cfg                      = 6;
 char client_msg[256];
-char serverip[256] = {""};
-char lanip[256] = {""};
-
-bool do_franck_check = true;
-bool q2a_command_check = false;
-bool do_vid_restart = false;
-bool private_command_kick = false;
-
-bool dllloaded = false;
-
-bool zbotdetect = true;
-bool mapcfgexec = false;
-bool checkClientIpAddress = true;
-
-bool nameChangeFloodProtect = false;
-int nameChangeFloodProtectNum = 5;
-int nameChangeFloodProtectSec = 2;
-int nameChangeFloodProtectSilence = 10;
-char nameChangeFloodProtectMsg[256];
-
-bool skinChangeFloodProtect = false;
-int skinChangeFloodProtectNum = 5;
-int skinChangeFloodProtectSec = 2;
-int skinChangeFloodProtectSilence = 10;
-char skinChangeFloodProtectMsg[256];
-
+char cloud_address[256]                 = "127.0.0.1";
+char cloud_cmd_invite[25]               = "!invite";
+char cloud_cmd_seen[25]                 = "!seen";
+char cloud_cmd_teleport[25]             = "!teleport";
+char cloud_cmd_whois[25]                = "!whois";
+char cloud_dns[3]                       = "64"; // ipv6 first then ipv4
+bool cloud_enabled                      = false;
+bool cloud_encryption                   = true;
+int  cloud_flags                        = 4095; // 12 bits worth
+int  cloud_port                         = 9988;
+char cloud_privatekey[256]              = "private.pem";
+char cloud_publickey[256]               = "public.pem";
+char cloud_serverkey[256]               = "server.pem";
+char cloud_uuid[37]                     = "00000000-0000-0000-0000-000000000000";
+bool cl_anglespeedkey_display           = true;
+bool cl_anglespeedkey_enable            = false;
+bool cl_anglespeedkey_kick              = false;
+char cl_anglespeedkey_kickmsg[256];
+bool cl_pitchspeed_display              = true;
+bool cl_pitchspeed_enable               = false;
+bool cl_pitchspeed_kick                 = false;
+char cl_pitchspeed_kickmsg[256];
+char com_token[MAX_TOKEN_CHARS];
+bool consolechat_disable                = false;
+bool consolelog_enable                  = false;
+char consolelog_pattern[256]            = "[q2a] %s\n";
+char customClientCmd[256];
+char customClientCmdConnect[256];
+char customServerCmd[256];
+char customServerCmdConnect[256];
+char defaultreconnectmessage[256];
+bool disconnectuser                     = true;
+bool disconnectuserimpulse              = false;
+bool displayimpulses                    = false;
+bool displaynamechange                  = true;
+bool displayzbotuser                    = true;
+bool dllloaded                          = false;
+char dllname[256];
+bool do_franck_check                    = true;
+bool do_vid_restart                     = false;
+bool extendedsay_enable                 = false;
+bool filternonprintabletext             = false;
+char *finalentities;
 struct chatflood_s floodinfo = {
     false, 5, 2, 10
 };
-
-char chatFloodProtectMsg[256];
-
-
-bool disconnectuser = true;
-bool displayzbotuser = true;
-int numofdisplays = 4;
-char zbotuserdisplay[256];
-char timescaleuserdisplay[256];
+bool fpsFloodExempt                     = false;
+int framesperprocess                    = 0;
+char gamelibrary[MAX_QPATH]             = ""; // game library from config file
+bool gamemaptomap                       = false;
+int gl_driver_check                     = 0;
+int gl_driver_max_changes               = 3;
+char gmapname[MAX_QPATH];
 char hackuserdisplay[256];
+char http_cacert_path[256]              = "/etc/ssl/certs";
+bool http_debug                         = false;
+bool http_enable                        = true;
+bool http_verifyssl                     = true;
+int  ip_limit                           = 0;
+char lanip[256]                         = "";
+int lframenum;
+bool lockDownServer                     = false;
+char lockoutmsg[256];
+int logfilecheckcount;
+float ltime;
+bool mapcfgexec                         = false;
+int maxclientsperframe                  = 100;
+int maxfpsallowed                       = 0;
+int maximpulses                         = 1;
+int maxMsgLevel                         = 3;
+int maxrateallowed                      = 0;
+int maxReconnectList                    = 0;
+int maxretryList                        = 0;
+int max_pmod_noreply                    = 2;
+int minfpsallowed                       = 0;
+int minrateallowed                      = 0;
+char motd[4096];
+msec_limits_t msec = {
+        .max_allowed    = 5600,
+        .min_required   = 4400,
+        .timespan       = 5,
+        .max_violations = 2,
+        .action         = MVA_KICK
+};
+bool nameChangeFloodProtect             = false;
+char nameChangeFloodProtectMsg[256];
+int nameChangeFloodProtectNum           = 5;
+int nameChangeFloodProtectSec           = 2;
+int nameChangeFloodProtectSilence       = 10;
+int numofdisplays                       = 4;
+bool printmessageonplaycmds             = true;
+bool private_command_kick               = false;
+proxyinfo_t *proxyinfo;
+proxyinfo_t *proxyinfoBase;
+int proxy_bwproxy                       = 1;
+int proxy_nitro2                        = 1;
+bool q2a_command_check                  = false;
+bool quake2dirsupport                   = true;
+int randomwaitreporttime                = 55;
+reconnect_info *reconnectlist;
+proxyreconnectinfo_t *reconnectproxyinfo;
+char reconnect_address[256]             = {0};
+int reconnect_checklevel                = 0;
+int reconnect_time                      = 60;
+retrylist_info *retrylist;
+int runmode                             = 100; // don't change this
+bool say_group_enable                   = false;
+bool say_person_enable                  = false;
+bool serverinfoenable                   = true;
+char serverip[256]                      = "";
+bool skinChangeFloodProtect             = false;
+char skinChangeFloodProtectMsg[256];
+int skinChangeFloodProtectNum           = 5;
+int skinChangeFloodProtectSec           = 2;
+int skinChangeFloodProtectSilence       = 10;
 char skincrashmsg[256];
-char defaultreconnectmessage[256];
-bool displaynamechange = true;
-bool disconnectuserimpulse = false;
-int maximpulses = 1;
-
-
-bool displayimpulses = false;
+bool spawnentities_enable               = false;
+bool spawnentities_internal_enable      = false;
+int speedbot_check_type                 = 3;
+char timescaleuserdisplay[256];
+int USERINFOCHANGE_TIME                 = 60;
+int USERINFOCHANGE_COUNT                = 40;
+char version[256];
+bool vote_enable                        = false;
+char vpn_api_key[33]                    = "";
+bool vpn_enable                         = false;
+bool vpn_kick                           = true;
+bool zbotdetect                         = true;
+char zbotmotd[256];
+char zbotuserdisplay[256];
 
 //r1ch 2005-01-26 disable hugely buggy commands BEGIN
 /*bool play_team_enable = false;
 bool play_all_enable = false;
 bool play_person_enable = false;*/
 //r1ch 2005-01-26 disable hugely buggy commands END
-
-bool say_person_enable = false;
-bool say_group_enable = false;
-bool extendedsay_enable = false;
-bool spawnentities_enable = false;
-bool spawnentities_internal_enable = false;
-bool vote_enable = false;
-bool consolechat_disable = false;
-bool gamemaptomap = false;
-bool banOnConnect = true;
-bool lockDownServer = false;
-bool printmessageonplaycmds = true;
-
-int randomwaitreporttime = 55;
-
-int maxMsgLevel = 3;
-
-bool serverinfoenable = true;
-
-char zbotmotd[256];
-char motd[4096];
-
-int maxrateallowed = 0;
-int minrateallowed = 0;
-int maxfpsallowed = 0;
-int minfpsallowed = 0;
-
-char buffer[0x10000];
-char buffer2[256];
-
-char adminpassword[256];
-
-char customServerCmd[256];
-char customClientCmd[256];
-char customClientCmdConnect[256];
-char customServerCmdConnect[256];
-
-char clientVoteCommand[256];
-
-char reconnect_address[256] = {0};
-int reconnect_time = 60;
-int reconnect_checklevel = 0;
-
-int logfilecheckcount;
-
-proxyinfo_t *proxyinfo;
-proxyinfo_t *proxyinfoBase;
-proxyreconnectinfo_t *reconnectproxyinfo;
-
-reconnect_info *reconnectlist;
-retrylist_info *retrylist;
-int maxReconnectList = 0;
-int maxretryList = 0;
-
-int lframenum;
-float ltime;
-
-int proxy_bwproxy = 1;
-int proxy_nitro2 = 1;
-
-int runmode = 100;
-int maxclientsperframe = 100;
-int framesperprocess = 0;
-
-bool cl_pitchspeed_display = true;
-bool cl_pitchspeed_enable = false;
-bool cl_pitchspeed_kick = false;
-char cl_pitchspeed_kickmsg[256];
-
-bool cl_anglespeedkey_display = true;
-bool cl_anglespeedkey_enable = false;
-bool cl_anglespeedkey_kick = false;
-char cl_anglespeedkey_kickmsg[256];
-
-bool filternonprintabletext = false;
-
-char lockoutmsg[256];
-
-char com_token[MAX_TOKEN_CHARS];
 
 /**
  * Com_Parse will parse a token out of a string.
@@ -416,7 +372,7 @@ void InitGame(void) {
     /* Be carefull with all functions called from this one (like dprintf_internal) 
     to not use proxyinfo pointer because it's not initialized yet. -Harven */
     ge_mod->Init(); 
-    
+
     profile_stop(2, "mod->InitGame", 0, NULL);
 
     G_MergeEdicts();
@@ -546,7 +502,7 @@ void SubstituteEntities(char *newents, char *oldents) {
     tune_spawn_machinegun = gi.cvar("tune_spawn_machinegun", "", CVAR_GENERAL);
     tune_spawn_grenades = gi.cvar("tune_spawn_grenades ", "", CVAR_GENERAL);
 
-    while (1) {
+    while (true) {
         char *com_tok = 0;
         char *classnamepos = 0;
 
