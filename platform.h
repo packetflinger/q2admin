@@ -43,7 +43,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
   #include <winsock.h>
   #include <windows.h>
   #include <ws2tcpip.h>
-  #define boolean        qboolean
+  #define boolean        bool
   #define in_addr_t uint32_t
   #define EVP_DigestInit_ex2    EVP_DigestInit_ex
 #else

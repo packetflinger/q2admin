@@ -22,22 +22,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 disablecmd_t disablecmds[DISABLE_MAXCMDS];
 int maxdisable_cmds = 0;
-qboolean disablecmds_enable = qfalse;
+bool disablecmds_enable = false;
 
 /**
  *
  */
-qboolean ReadDisableFile(char *disablename) {
+bool ReadDisableFile(char *disablename) {
     FILE *disablefile;
     unsigned int uptoLine = 0;
 
     if (maxdisable_cmds >= DISABLE_MAXCMDS) {
-        return qfalse;
+        return false;
     }
 
     disablefile = fopen(disablename, "rt");
     if (!disablefile) {
-        return qfalse;
+        return false;
     }
 
     while (fgets(buffer, 256, disablefile)) {
@@ -106,7 +106,7 @@ qboolean ReadDisableFile(char *disablename) {
         }
     }
     fclose(disablefile);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -123,13 +123,13 @@ void freeDisableLists(void) {
  *
  */
 void readDisableLists(void) {
-    qboolean ret;
+    bool ret;
 
     freeDisableLists();
     ret = ReadDisableFile(configfile_disable->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_disable->string);
     if (ReadDisableFile(buffer)) {
-        ret = qtrue;
+        ret = true;
     }
     if (!ret) {
         // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_disable->string);
@@ -148,7 +148,7 @@ void reloadDisableFileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean checkfordisablecmd(char *cp, int disablecmd) {
+bool checkfordisablecmd(char *cp, int disablecmd) {
     int len;
     switch (disablecmds[disablecmd].type) {
         case DISABLE_SW:
@@ -158,23 +158,23 @@ qboolean checkfordisablecmd(char *cp, int disablecmd) {
         case DISABLE_RE:
             return (re_matchp(disablecmds[disablecmd].r, cp, &len) == 0);
     }
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkDisabledCommand(char *cmd) {
+bool checkDisabledCommand(char *cmd) {
     unsigned int i;
 
     q2a_strncpy(buffer, cmd, sizeof(buffer));
     q_strupr(buffer);
     for (i = 0; i < maxdisable_cmds; i++) {
         if (checkfordisablecmd(buffer, i)) {
-            return qtrue;
+            return true;
         }
     }
-    return qfalse;
+    return false;
 }
 
 /**

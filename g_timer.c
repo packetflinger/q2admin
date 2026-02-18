@@ -4,7 +4,7 @@
 
 #include "g_local.h"
 
-qboolean timers_active = qfalse;
+bool timers_active = false;
 int timers_min_seconds = 10;
 int timers_max_seconds = 180;
 

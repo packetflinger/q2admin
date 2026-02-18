@@ -43,7 +43,7 @@ typedef struct {
 // Needed for tracking player freezing. When a player is frozen their msec
 // value is set to 0.
 typedef struct {
-    qboolean frozen;
+    bool frozen;
     float started;    // ltime
     float thaw;       // future ltime to automatically unfreeze
 } freeze_t;
@@ -89,7 +89,7 @@ extern int zbc_jittermax;
 extern int zbc_jittertime;
 extern int zbc_jittermove;
 extern char client_msg[256];
-extern qboolean private_command_kick;
+extern bool private_command_kick;
 extern int speedbot_check_type;
 extern int max_pmod_noreply;
 extern msec_limits_t msec;
@@ -98,4 +98,4 @@ void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
-qboolean AimbotCheck(int client, usercmd_t *ucmd);
+bool AimbotCheck(int client, usercmd_t *ucmd);

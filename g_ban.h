@@ -40,7 +40,7 @@ typedef enum {
  * Flood tracking
  */
 struct chatflood_s {
-    qboolean chatFloodProtect;
+    bool chatFloodProtect;
     int chatFloodProtectNum;
     int chatFloodProtectSec;
     int chatFloodProtectSilence;
@@ -52,7 +52,7 @@ struct chatflood_s {
  */
 typedef struct banstruct {
     re_t r;
-    qboolean exclude;
+    bool exclude;
     byte type;
     byte loadType;
     netadr_t addr;
@@ -66,7 +66,7 @@ typedef struct banstruct {
     long numberofconnects;
     long bannum;
     float timeout;
-    qboolean vpn;
+    bool vpn;
     char asnumber[10];
     struct chatflood_s floodinfo;
     struct banstruct *next;
@@ -91,10 +91,10 @@ typedef struct chatbanstruct {
 
 extern baninfo_t *banhead;
 extern chatbaninfo_t *cbanhead;
-extern qboolean ChatBanning_Enable;
-extern qboolean IPBanning_Enable;
-extern qboolean NickBanning_Enable;
-extern qboolean VersionBanning_Enable;
+extern bool ChatBanning_Enable;
+extern bool IPBanning_Enable;
+extern bool NickBanning_Enable;
+extern bool VersionBanning_Enable;
 extern char defaultBanMsg[256];
 extern char defaultChatBanMsg[256];
 
@@ -113,8 +113,8 @@ void displayNextChatBan(edict_t *ent, int client, long chatbannum);
 void freeBanLists(void);
 void listbansRun(int startarg, edict_t *ent, int client);
 void listchatbansRun(int startarg, edict_t *ent, int client);
-qboolean parseBanFileContents(char *data);
-qboolean ReadBanFile(char *bfname);
+bool parseBanFileContents(char *data);
+bool ReadBanFile(char *bfname);
 void readBanLists(void);
-qboolean ReadRemoteBanFile(char *bfname);
+bool ReadRemoteBanFile(char *bfname);
 void reloadbanfileRun(int startarg, edict_t *ent, int client);

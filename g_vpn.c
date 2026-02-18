@@ -38,7 +38,7 @@ void LookupVPNStatus(edict_t *ent)
         return;
     }
 
-    addr = net_addressToString(&pi->address, qfalse, qfalse, qfalse);
+    addr = net_addressToString(&pi->address, false, false, false);
     request = va("/api/%s?key=%s", addr, vpn_api_key);
     proxyinfo[i].vpn.state = VPN_CHECKING;
     proxyinfo[i].dl.initiator = ent;
@@ -99,13 +99,13 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
 /**
  * Whether the client is coming from a VPN connection or not.
  */
-qboolean isVPN(int clientnum)
+bool isVPN(int clientnum)
 {
     if (!VALIDCLIENT(clientnum)) {
-        return qfalse;
+        return false;
     }
     if (!vpn_enable) {
-        return qfalse;
+        return false;
     }
     return proxyinfo[clientnum].vpn.state == VPN_POSITIVE;
 }

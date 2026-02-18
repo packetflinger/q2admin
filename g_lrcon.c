@@ -22,8 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 lrconcmd_t lrconcmds[LRCON_MAXCMDS];
 int maxlrcon_cmds = 0;
-qboolean rcon_random_password = qtrue;
-qboolean rcon_insecure = qtrue;
+bool rcon_random_password = true;
+bool rcon_insecure = true;
 int lrcon_timeout = 2;
 char orginal_rcon_password[50];
 float password_timeout = 0;
@@ -31,17 +31,17 @@ float password_timeout = 0;
 /**
  *
  */
-qboolean ReadLRconFile(char *lrcname) {
+bool ReadLRconFile(char *lrcname) {
     FILE *lrconfile;
     unsigned int uptoLine = 0;
 
     if (maxlrcon_cmds >= LRCON_MAXCMDS) {
-        return qfalse;
+        return false;
     }
 
     lrconfile = fopen(lrcname, "rt");
     if (!lrconfile) {
-        return qfalse;
+        return false;
     }
 
     while (fgets(buffer, 256, lrconfile)) {
@@ -139,7 +139,7 @@ qboolean ReadLRconFile(char *lrcname) {
         }
     }
     fclose(lrconfile);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -157,13 +157,13 @@ void freeLRconLists(void) {
  *
  */
 void readLRconLists(void) {
-    qboolean ret;
+    bool ret;
 
     freeLRconLists();
     ret = ReadLRconFile(configfile_rcon->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_rcon->string);
     if (ReadLRconFile(buffer)) {
-        ret = qtrue;
+        ret = true;
     }
     if (!ret) {
         // gi.dprintf("WARNING: %s could not be found\n", configfile_rcon->string);
@@ -182,7 +182,7 @@ void reloadlrconfileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean checklrcon(char *cp, int lrcon) {
+bool checklrcon(char *cp, int lrcon) {
     char strbuffer[256];
 
     switch (lrconcmds[lrcon].type) {
@@ -200,7 +200,7 @@ qboolean checklrcon(char *cp, int lrcon) {
             return (re_matchp(lrconcmds[lrcon].r, strbuffer, &len) == 0);
     }
 
-    return qfalse;
+    return false;
 }
 
 /**

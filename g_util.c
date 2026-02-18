@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 void stuffcmd(edict_t *e, char *s) {
     gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
-    gi.unicast(e, qtrue);
+    gi.unicast(e, true);
 }
 
 /**
@@ -68,13 +68,13 @@ char *va(const char *format, ...) {
 /**
  * Recursively compare strings with wildcards.
  */
-qboolean wildcard_match(char *pattern, char *haystack) {
+bool wildcard_match(char *pattern, char *haystack) {
     if (*pattern == '\0' && *haystack == '\0') {
-        return qtrue;
+        return true;
     }
 
     if (*pattern == '*' && *(pattern+1) != '\0' && *haystack == '\0') {
-        return qfalse;
+        return false;
     }
 
     if (*pattern == '?' || *pattern == *haystack) {
@@ -84,13 +84,13 @@ qboolean wildcard_match(char *pattern, char *haystack) {
     if (*pattern == '*') {
         return wildcard_match(pattern+1, haystack) || wildcard_match(pattern, haystack+1);
     }
-    return qfalse;
+    return false;
 }
 
 /**
  * Maybe not needed? Use startContains instead?
  */
-qboolean startswith(char *needle, char *haystack) {
+bool startswith(char *needle, char *haystack) {
     return (strncmp(needle, haystack, strlen(needle)) == 0);
 }
 
@@ -207,14 +207,14 @@ char *Info_ValueForKey(char *s, char *key) {
  * Some characters are illegal in info strings because they can mess up the
  * server's parsing.
  */
-qboolean Info_Validate(char *s) {
+bool Info_Validate(char *s) {
     if (q2a_strstr(s, "\"")) {
-        return qfalse;
+        return false;
     }
     if (q2a_strstr(s, ";")) {
-        return qfalse;
+        return false;
     }
-    return qtrue;
+    return true;
 }
 
 /**
@@ -260,7 +260,7 @@ int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
 /**
  * Is cmp at the beginning of src?
  *
- * Why does this not return a qboolean?
+ * Why does this not return a bool?
  */
 int startContains(char *src, char *cmp) {
     while (*cmp) {
@@ -375,13 +375,13 @@ char *processstring(char *output, char *input, int max, char end) {
  *
  * Case insensitive
  */
-qboolean getLogicalValue(char *arg) {
+bool getLogicalValue(char *arg) {
     if (Q_stricmp(arg, "Yes") == 0 ||
             Q_stricmp(arg, "1") == 0 ||
             Q_stricmp(arg, "Y") == 0) {
-        return qtrue;
+        return true;
     }
-    return qfalse;
+    return false;
 }
 
 /**
@@ -645,12 +645,12 @@ int q2a_floor(float x) {
 /**
  * Throttle command usage
  */
-qboolean can_do_new_cmds(int client) {
+bool can_do_new_cmds(int client) {
     if (proxyinfo[client].newcmd_timeout <= ltime) {
         proxyinfo[client].newcmd_timeout = ltime + 3;
-        return qtrue;
+        return true;
     } else {
-        return qfalse;
+        return false;
     }
 }
 

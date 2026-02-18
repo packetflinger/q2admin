@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /**
  * Fetch an Anticheat exception file from an HTTP server
  */
-qboolean AC_GetRemoteFile(char *bfname) {
+bool AC_GetRemoteFile(char *bfname) {
     FILE *outf;
     char localfilename[MAX_QPATH];
 
@@ -31,17 +31,17 @@ qboolean AC_GetRemoteFile(char *bfname) {
     outf = fopen(localfilename, "r");
     if (!outf) {
         gi.cprintf(NULL, PRINT_HIGH, "Error opening local anticheat exception file.\n");
-        return qfalse;
+        return false;
     }
     /*
     if (!GetURLContents(bfname)) {
         gi.cprintf(NULL, PRINT_HIGH, "Error fetching remote anticheat file: %s\n", bfname);
         fclose(outf);
-        return qfalse;
+        return false;
     }
     */
     fclose(outf);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -49,7 +49,7 @@ qboolean AC_GetRemoteFile(char *bfname) {
  */
 void AC_UpdateList(void) {
     if ((int) q2adminanticheat_enable->value) {
-        qboolean ret;
+        bool ret;
         char cfgAnticheatRemoteList[100];
 
         if (!q2adminanticheat_file || isBlank(q2adminanticheat_file->string)) {
@@ -92,7 +92,7 @@ void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
+bool ReadRemoteHashListFile(char *bfname, char *blname) {
     FILE *outf;
     generic_file_t file;
     size_t len;
@@ -101,7 +101,7 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
     outf = fopen(buffer, "w");
     if (!outf) {
         gi.dprintf("Error opening local hash list file.\n");
-        return qfalse;
+        return false;
     }
 
     file.size = 0xffff;
@@ -113,9 +113,9 @@ qboolean ReadRemoteHashListFile(char *bfname, char *blname) {
     fclose(outf);
     G_Free(file.data);
     if (!(len == 1 || len == file.index)) {
-        return qfalse;
+        return false;
     }
-    return qtrue;
+    return true;
 }
 
 /**
@@ -128,7 +128,7 @@ void getR1chHashList(char *hashname) {
     q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
 
     if (cfgHashList_enabled[0] == '1') {
-        qboolean ret;
+        bool ret;
         char cfgHashRemoteList[100];
 
         if (!q2adminhashlist_dir || isBlank(q2adminhashlist_dir->string)) {

@@ -6,7 +6,7 @@
 #pragma once
 
 void G_GenerateKeyPair(int bits);
-qboolean G_LoadKeys(void);
+bool G_LoadKeys(void);
 void G_MessageDigest(byte *dest, byte *src, size_t src_len);
 size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len);
 size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen);

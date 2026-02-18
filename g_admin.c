@@ -176,7 +176,7 @@ void ADMIN_dumpmsec(edict_t *ent, int client) {
 /**
  *
  */
-void ADMIN_dumpuser(edict_t *ent, int client, int user, qboolean check) {
+void ADMIN_dumpuser(edict_t *ent, int client, int user, bool check) {
     char *cp1;
 
     if (gi.argc() < 2) {
@@ -337,10 +337,10 @@ int ADMIN_process_command(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
         //Level 4 commands
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), qtrue);
+            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), true);
             done = 1;
         } else if (strcmp(gi.argv(0), "!dumpuser_any") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), qfalse);
+            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), false);
             done = 1;
         }
     }

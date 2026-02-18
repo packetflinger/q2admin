@@ -22,14 +22,14 @@ typedef struct {
     re_t r;
 } votecmd_t;
 
-qboolean checkforvotecmd(char *cp, int votecmd);
+bool checkforvotecmd(char *cp, int votecmd);
 void checkOnVoting(void);
-qboolean checkVoteCommand(char *votecmd);
+bool checkVoteCommand(char *votecmd);
 void displayNextVote(edict_t *ent, int client, long floodcmd);
 void displayVote(void);
 void freeVoteLists(void);
 void listvotesRun(int startarg, edict_t *ent, int client);
-qboolean ReadVoteFile(char *votename);
+bool ReadVoteFile(char *votename);
 void readVoteLists(void);
 void reloadVoteFileRun(int startarg, edict_t *ent, int client);
 void run_vote(edict_t *ent, int client);

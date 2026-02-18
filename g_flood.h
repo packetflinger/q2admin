@@ -42,9 +42,9 @@ typedef struct {
     int last_index;             // where we are in the array
 } chatpest_t;
 
-extern qboolean fpsFloodExempt;
-extern qboolean nameChangeFloodProtect;
-extern qboolean skinChangeFloodProtect;
+extern bool fpsFloodExempt;
+extern bool nameChangeFloodProtect;
+extern bool skinChangeFloodProtect;
 extern char nameChangeFloodProtectMsg[256];
 extern char skinChangeFloodProtectMsg[256];
 extern char chatFloodProtectMsg[256];
@@ -58,10 +58,10 @@ extern struct chatflood_s floodinfo;
 
 void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
-qboolean checkForFlood(int client);
-qboolean checkforfloodcmd(char *cp, int floodcmd);
-qboolean checkforfloodcmds(char *cp);
-qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg);
+bool checkForFlood(int client);
+bool checkforfloodcmd(char *cp, int floodcmd);
+bool checkforfloodcmds(char *cp);
+bool checkForMute(int client, edict_t *ent, bool displayMsg);
 void clientchatfloodprotectRun(int startarg, edict_t *ent, int client);
 void displayNextFlood(edict_t *ent, int client, long floodcmd);
 void floodcmdRun(int startarg, edict_t *ent, int client);
@@ -71,7 +71,7 @@ void listfloodsRun(int startarg, edict_t *ent, int client);
 void muteRun(int startarg, edict_t *ent, int client);
 void nameChangeFloodProtectInit(char *arg);
 void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client);
-qboolean ReadFloodFile(char *floodname);
+bool ReadFloodFile(char *floodname);
 void readFloodLists(void);
 void reloadFloodFileRun(int startarg, edict_t *ent, int client);
 void skinChangeFloodProtectInit(char *arg);

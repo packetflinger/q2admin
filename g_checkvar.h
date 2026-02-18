@@ -28,6 +28,6 @@ void checkVariableTest(edict_t *ent, int client, int idx);
 void checkVariableValid(edict_t *ent, int client, char *value);
 void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd);
 void listcheckvarsRun(int startarg, edict_t *ent, int client);
-qboolean ReadCheckVarFile(char *checkvarname);
+bool ReadCheckVarFile(char *checkvarname);
 void readCheckVarLists(void);
 void reloadCheckVarFileRun(int startarg, edict_t *ent, int client);

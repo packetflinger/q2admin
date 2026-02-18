@@ -155,7 +155,7 @@ void CA_LookupAddress(void)
         }
 
         if (res->ai_family == AF_INET6) {
-            cloud.connection.ipv6 = qtrue;
+            cloud.connection.ipv6 = true;
         }
 
         if (cloud.addr->ai_family == AF_INET6) {
@@ -232,7 +232,7 @@ void CA_Ping(void)
 
     // state stuff
     cloud.ping.frame_sent = CA_FRAME;
-    cloud.ping.waiting = qtrue;
+    cloud.ping.waiting = true;
     cloud.ping.frame_next = CA_FRAME + SECS_TO_FRAMES(PING_FREQ_SECS);
 
     // send it
@@ -389,7 +389,7 @@ void CA_CheckConnection(void)
 {
     ca_connection_t *c;
     uint32_t ret;
-    qboolean connected = qfalse;
+    bool connected = false;
     struct sockaddr_storage addr;
     socklen_t len;
     struct timeval tv;
@@ -413,11 +413,11 @@ void CA_CheckConnection(void)
         len = sizeof(number);
         getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &len);
         if (number == 0) {
-            connected = qtrue;
+            connected = true;
         }
 #else
         if (FD_ISSET(c->socket, &c->set_w)) {
-            connected = qtrue;
+            connected = true;
         }
 #endif
     }
@@ -472,7 +472,7 @@ void CA_SendMessages(void)
     c = &cloud.connection;
     q = &cloud.queue;
 
-    while (qtrue) {
+    while (true) {
         FD_ZERO(&c->set_w);
         FD_SET(c->socket, &c->set_w);
 
@@ -539,7 +539,7 @@ void CA_ReadMessages(void)
     // save some typing
     in = &cloud.queue_in;
 
-    while (qtrue) {
+    while (true) {
         FD_ZERO(&cloud.connection.set_r);
         FD_SET(cloud.connection.socket, &cloud.connection.set_r);
 
@@ -661,38 +661,38 @@ void CA_ParseMessage(void)
 /**
  * Is a a digital signature valid?
  */
-qboolean RSAVerifySignature( RSA* rsa,
+bool RSAVerifySignature( RSA* rsa,
                          unsigned char* MsgHash,
                          size_t MsgHashLen,
                          const char* Msg,
                          size_t MsgLen,
-                         qboolean* Authentic) {
-    *Authentic = qfalse;
+                         bool* Authentic) {
+    *Authentic = false;
     EVP_PKEY* pubKey  = EVP_PKEY_new();
     EVP_PKEY_assign_RSA(pubKey, rsa);
     EVP_MD_CTX* m_RSAVerifyCtx = EVP_MD_CTX_new();
 
     if (EVP_DigestVerifyInit(m_RSAVerifyCtx,NULL, EVP_sha256(),NULL,pubKey)<=0) {
-        return qfalse;
+        return false;
     }
 
     if (EVP_DigestVerifyUpdate(m_RSAVerifyCtx, Msg, MsgLen) <= 0) {
-      return qfalse;
+      return false;
     }
 
     int AuthStatus = EVP_DigestVerifyFinal(m_RSAVerifyCtx, MsgHash, MsgHashLen);
     if (AuthStatus == 1) {
-        *Authentic = qtrue;
+        *Authentic = true;
         EVP_MD_CTX_free(m_RSAVerifyCtx);
-        return qtrue;
+        return true;
     } else if (AuthStatus == 0) {
-        *Authentic = qfalse;
+        *Authentic = false;
         EVP_MD_CTX_free(m_RSAVerifyCtx);
-        return qtrue;
+        return true;
     } else {
-        *Authentic = qfalse;
+        *Authentic = false;
         EVP_MD_CTX_free(m_RSAVerifyCtx);
-        return qfalse;
+        return false;
     }
 }
 
@@ -704,7 +704,7 @@ qboolean RSAVerifySignature( RSA* rsa,
  * 3. Read the plaintext nonce from the server, encrypt and send back
  *    to auth the client
  */
-qboolean CA_VerifyServerAuth(void)
+bool CA_VerifyServerAuth(void)
 {
     ca_connection_t *c = &cloud.connection;
     size_t dec_len;                     // Length of decrypted cleartext
@@ -724,7 +724,7 @@ qboolean CA_VerifyServerAuth(void)
     dec_len = G_PrivateDecrypt(response_plain, response, sizeof(response));
     if (dec_len == 0) {
         CA_dprintf("zero bytes decrypted for server authentication\n");
-        return qfalse;
+        return false;
     }
 
     // this is our original nonce hashed by the server and sent back to us
@@ -746,7 +746,7 @@ qboolean CA_VerifyServerAuth(void)
         q2a_memset(c->initial_value, 0, sizeof(c->initial_value));
         q2a_memcpy(c->initial_value, response_plain + offset, sizeof(c->initial_value));
 
-        c->have_keys = qtrue;
+        c->have_keys = true;
 
         // reuse encrypt/decrypt contexts
         c->e_ctx = EVP_CIPHER_CTX_new();
@@ -774,7 +774,7 @@ qboolean CA_VerifyServerAuth(void)
 
         cloud.connection_attempts = 0;
         cloud.connection.auth_fail_count = 0;
-        return qtrue;
+        return true;
     } else {
         CA_dprintf("server auth error: %s\n", ERR_error_string(ERR_get_error(), NULL));
         cloud.connection.auth_fail_count++;
@@ -783,7 +783,7 @@ qboolean CA_VerifyServerAuth(void)
             CA_dprintf("too many auth failures, giving up\n");
             cloud.state = CA_STATE_DISABLED;
         }
-        return qfalse;
+        return false;
     }
 }
 
@@ -809,7 +809,7 @@ void CA_ParseCommand(void)
  */
 void CA_ParsePong(void)
 {
-    cloud.ping.waiting = qfalse;
+    cloud.ping.waiting = false;
     cloud.ping.miss_count = 0;
 }
 
@@ -841,8 +841,8 @@ void CA_DisconnectedPeer(void)
     CA_printf("connection lost\n");
 
     cloud.state = CA_STATE_DISCONNECTED;
-    cloud.connection.trusted = qfalse;
-    cloud.connection.have_keys = qfalse;
+    cloud.connection.trusted = false;
+    cloud.connection.have_keys = false;
     cloud.disconnect_count++;
     memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
     memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
@@ -1417,7 +1417,7 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport)
  */
 void cloudRun(int startarg, edict_t *ent, int client) {
     char *command;
-    qboolean connected;
+    bool connected;
     char connected_time[25];
     char connected_ip[INET6_ADDRSTRLEN];
     int local_port;

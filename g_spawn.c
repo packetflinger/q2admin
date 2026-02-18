@@ -27,17 +27,17 @@ int entity_classname_offset = (sizeof (struct edict_s)) + 20; // default byte of
 /**
  *
  */
-qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
+bool ReadSpawnFile(char *spawnname, bool onelevelflag) {
     FILE *spawnfile;
     unsigned int uptoLine = 0;
 
     if (maxspawn_cmds >= SPAWN_MAXCMDS) {
-        return qfalse;
+        return false;
     }
 
     spawnfile = fopen(spawnname, "rt");
     if (!spawnfile) {
-        return qfalse;
+        return false;
     }
 
     while (fgets(buffer, 256, spawnfile)) {
@@ -122,7 +122,7 @@ qboolean ReadSpawnFile(char *spawnname, qboolean onelevelflag) {
         }
     }
     fclose(spawnfile);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -160,13 +160,13 @@ void freeOneLevelSpawnLists(void) {
  *
  */
 void readSpawnLists(void) {
-    qboolean ret;
+    bool ret;
 
     freeSpawnLists();
-    ret = ReadSpawnFile(configfile_spawn->string, qfalse);
+    ret = ReadSpawnFile(configfile_spawn->string, false);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_spawn->string);
-    if (ReadSpawnFile(buffer, qfalse)) {
-        ret = qtrue;
+    if (ReadSpawnFile(buffer, false)) {
+        ret = true;
     }
     if (!ret) {
         // gi.dprintf("WARNING: %s could not be found\n", configfile_spawn->string);
@@ -185,7 +185,7 @@ void reloadSpawnFileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean checkforspawncmd(char *cp, int spawncmd) {
+bool checkforspawncmd(char *cp, int spawncmd) {
     int len;
     switch (spawncmds[spawncmd].type) {
         case SPAWN_SW:
@@ -195,23 +195,23 @@ qboolean checkforspawncmd(char *cp, int spawncmd) {
         case SPAWN_RE:
             return (re_matchp(spawncmds[spawncmd].r, cp, &len) == 0);
     }
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkDisabledEntities(char *cp) {
+bool checkDisabledEntities(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
     for (i = 0; i < maxspawn_cmds; i++) {
         if (checkforspawncmd(buffer, i)) {
-            return qtrue;
+            return true;
         }
     }
-    return qfalse;
+    return false;
 }
 
 /**
@@ -275,7 +275,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
         return;
     }
 
-    spawncmds[maxspawn_cmds].onelevelflag = qfalse;
+    spawncmds[maxspawn_cmds].onelevelflag = false;
 
     cmd = gi.argv(startarg + 1);
 
@@ -359,7 +359,7 @@ void linkentity_internal(edict_t *ent) {
         if (checkDisabledEntities(*((char **) ((unsigned long) ent + entity_classname_offset)))) {
             char **classnameptr = ((char **) ((unsigned long) ent + entity_classname_offset));
             *classnameptr = NULL;
-            ent->inuse = qfalse;
+            ent->inuse = false;
             return;
         }
     }

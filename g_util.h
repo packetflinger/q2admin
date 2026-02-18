@@ -20,12 +20,12 @@ typedef enum {
 } pathtype_t;
 
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
-qboolean can_do_new_cmds(int client);
+bool can_do_new_cmds(int client);
 void G_MergeEdicts(void);
 void generateRandomString(char *buffer, int length);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
-qboolean getLogicalValue(char *arg);
-qboolean Info_Validate(char *s);
+bool getLogicalValue(char *arg);
+bool Info_Validate(char *s);
 char *Info_ValueForKey(char *s, char *key);
 int isBlank(char *buff1);
 char *processstring(char *output, char *input, int max, char end);
@@ -46,10 +46,10 @@ void q2admin_free();
 char *q2admin_malloc(int size);
 char *q2admin_realloc();
 int startContains(char *src, char *cmp);
-qboolean startswith(char *needle, char *haystack);
+bool startswith(char *needle, char *haystack);
 int stringContains(char *buff1, char *buff2);
 void stuffcmd(edict_t *e, char *s);
 char *trim(char *s);
 char *va(const char *format, ...);
 pathtype_t validatePath(const char *s);
-qboolean wildcard_match(char *pattern, char *haystack);
+bool wildcard_match(char *pattern, char *haystack);

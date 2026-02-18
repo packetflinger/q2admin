@@ -26,17 +26,17 @@ int maxflood_cmds = 0;
 /**
  *
  */
-qboolean ReadFloodFile(char *floodname) {
+bool ReadFloodFile(char *floodname) {
     FILE *floodfile;
     unsigned int uptoLine = 0;
 
     if (maxflood_cmds >= FLOOD_MAXCMDS) {
-        return qfalse;
+        return false;
     }
 
     floodfile = fopen(floodname, "rt");
     if (!floodfile) {
-        return qfalse;
+        return false;
     }
 
     while (fgets(buffer, 256, floodfile)) {
@@ -101,7 +101,7 @@ qboolean ReadFloodFile(char *floodname) {
         }
     }
     fclose(floodfile);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -118,13 +118,13 @@ void freeFloodLists(void) {
  *
  */
 void readFloodLists(void) {
-    qboolean ret;
+    bool ret;
 
     freeFloodLists();
     ret = ReadFloodFile(configfile_flood->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_flood->string);
     if (ReadFloodFile(buffer)) {
-        ret = qtrue;
+        ret = true;
     }
 
     if (!ret) {
@@ -144,7 +144,7 @@ void reloadFloodFileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean checkforfloodcmd(char *cp, int floodcmd) {
+bool checkforfloodcmd(char *cp, int floodcmd) {
     int len;
     switch (floodcmds[floodcmd].type) {
         case FLOOD_SW:
@@ -156,32 +156,32 @@ qboolean checkforfloodcmd(char *cp, int floodcmd) {
         case FLOOD_RE:
             return (re_matchp(floodcmds[floodcmd].r, cp, &len) == 0);
     }
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkforfloodcmds(char *cp) {
+bool checkforfloodcmds(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
     for (i = 0; i < maxflood_cmds; i++) {
         if (checkforfloodcmd(buffer, i)) {
-            return qtrue;
+            return true;
         }
     }
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
+bool checkForMute(int client, edict_t *ent, bool displayMsg) {
     // permanently muted
     if (proxyinfo[client].clientcommand & CCMD_PCSILENCE) {
-        return qtrue;
+        return true;
     }
 
     // temp mute
@@ -195,7 +195,7 @@ qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
                 gi.cprintf(ent, PRINT_HIGH, "%d seconds of chat silence left.\n", secleft);
             }
 
-            return qtrue;
+            return true;
         }
     }
 
@@ -214,25 +214,25 @@ qboolean checkForMute(int client, edict_t *ent, qboolean displayMsg) {
                 int secleft = FRAMES_TO_SECS(proxyinfo[client].stifle_frame - lframenum);
                 gi.cprintf(ent, PRINT_HIGH, "You're stifled for %d more seconds\n", secleft);
             }
-            return qtrue;
+            return true;
         } else {
             proxyinfo[client].stifle_frame = lframenum + proxyinfo[client].stifle_length;
-            return qfalse;
+            return false;
         }
     }
 
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkForFlood(int client) {
+bool checkForFlood(int client) {
     struct chatflood_s *fi;
 
     if (!proxyinfo[client].floodinfo.chatFloodProtect) {
         if (!floodinfo.chatFloodProtect) {
-            return qfalse;
+            return false;
         }
 
         fi = &floodinfo;
@@ -256,20 +256,20 @@ qboolean checkForFlood(int client) {
                 proxyinfo[client].chattimeout = ltime + fi->chatFloodProtectSilence;
                 proxyinfo[client].clientcommand |= CCMD_CSILENCE;
             }
-            return qtrue;
+            return true;
         }
 
         proxyinfo[client].chatcount++;
     }
 
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
 void nameChangeFloodProtectInit(char *arg) {
-    nameChangeFloodProtect = qfalse;
+    nameChangeFloodProtect = false;
 
     if (*arg) {
         nameChangeFloodProtectNum = q2a_atoi(arg);
@@ -285,7 +285,7 @@ void nameChangeFloodProtectInit(char *arg) {
             SKIPBLANK(arg);
             if (*arg) {
                 nameChangeFloodProtectSilence = q2a_atoi(arg);
-                nameChangeFloodProtect = qtrue;
+                nameChangeFloodProtect = true;
             }
         }
     }
@@ -299,9 +299,9 @@ void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
         nameChangeFloodProtectNum = q2a_atoi(gi.argv(startarg));
         nameChangeFloodProtectSec = q2a_atoi(gi.argv(startarg + 1));
         nameChangeFloodProtectSilence = q2a_atoi(gi.argv(startarg + 2));
-        nameChangeFloodProtect = qtrue;
+        nameChangeFloodProtect = true;
     } else if (gi.argc() > startarg) {
-        nameChangeFloodProtect = qfalse;
+        nameChangeFloodProtect = false;
     }
 
     if (nameChangeFloodProtect) {
@@ -315,7 +315,7 @@ void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
  *
  */
 void skinChangeFloodProtectInit(char *arg) {
-    skinChangeFloodProtect = qfalse;
+    skinChangeFloodProtect = false;
 
     if (*arg) {
         skinChangeFloodProtectNum = q2a_atoi(arg);
@@ -331,7 +331,7 @@ void skinChangeFloodProtectInit(char *arg) {
             SKIPBLANK(arg);
             if (*arg) {
                 skinChangeFloodProtectSilence = q2a_atoi(arg);
-                skinChangeFloodProtect = qtrue;
+                skinChangeFloodProtect = true;
             }
         }
     }
@@ -345,9 +345,9 @@ void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
         skinChangeFloodProtectNum = q2a_atoi(gi.argv(startarg));
         skinChangeFloodProtectSec = q2a_atoi(gi.argv(startarg + 1));
         skinChangeFloodProtectSilence = q2a_atoi(gi.argv(startarg + 2));
-        skinChangeFloodProtect = qtrue;
+        skinChangeFloodProtect = true;
     } else if (gi.argc() > startarg) {
-        skinChangeFloodProtect = qfalse;
+        skinChangeFloodProtect = false;
     }
 
     if (skinChangeFloodProtect) {
@@ -361,7 +361,7 @@ void skinChangeFloodProtectRun(int startarg, edict_t *ent, int client) {
  *
  */
 void chatFloodProtectInit(char *arg) {
-    floodinfo.chatFloodProtect = qfalse;
+    floodinfo.chatFloodProtect = false;
 
     if (*arg) {
         floodinfo.chatFloodProtectNum = q2a_atoi(arg);
@@ -378,7 +378,7 @@ void chatFloodProtectInit(char *arg) {
             if (*arg) {
                 floodinfo.chatFloodProtectSilence = q2a_atoi(arg);
                 if (floodinfo.chatFloodProtectNum && floodinfo.chatFloodProtectSec) {
-                    floodinfo.chatFloodProtect = qtrue;
+                    floodinfo.chatFloodProtect = true;
                 }
             }
         }
@@ -394,12 +394,12 @@ void chatFloodProtectRun(int startarg, edict_t *ent, int client) {
         floodinfo.chatFloodProtectSec = q2a_atoi(gi.argv(startarg + 1));
         floodinfo.chatFloodProtectSilence = q2a_atoi(gi.argv(startarg + 2));
         if (floodinfo.chatFloodProtectNum && floodinfo.chatFloodProtectSec) {
-            floodinfo.chatFloodProtect = qtrue;
+            floodinfo.chatFloodProtect = true;
         } else {
-            floodinfo.chatFloodProtect = qfalse;
+            floodinfo.chatFloodProtect = false;
         }
     } else if (gi.argc() > startarg) {
-        floodinfo.chatFloodProtect = qfalse;
+        floodinfo.chatFloodProtect = false;
     }
     if (floodinfo.chatFloodProtect) {
         gi.cprintf(ent, PRINT_HIGH, "chatfloodprotect %d %d %d\n", floodinfo.chatFloodProtectNum, floodinfo.chatFloodProtectSec, floodinfo.chatFloodProtectSilence);
@@ -597,7 +597,7 @@ void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
         SKIPBLANK(text);
 
         if (chatFloodProtectNum && chatFloodProtectSec) {
-            proxyinfo[clienti].floodinfo.chatFloodProtect = qtrue;
+            proxyinfo[clienti].floodinfo.chatFloodProtect = true;
             proxyinfo[clienti].floodinfo.chatFloodProtectNum = chatFloodProtectNum;
             proxyinfo[clienti].floodinfo.chatFloodProtectSec = chatFloodProtectSec;
             proxyinfo[clienti].floodinfo.chatFloodProtectSilence = chatFloodProtectSilence;
@@ -606,7 +606,7 @@ void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
             return;
         }
     } else if (enti && *text) {
-        proxyinfo[clienti].floodinfo.chatFloodProtect = qfalse;
+        proxyinfo[clienti].floodinfo.chatFloodProtect = false;
         gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect disabled\n", proxyinfo[clienti].name);
         return;
     } else if (enti) {

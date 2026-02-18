@@ -307,7 +307,7 @@ static void HTTP_FinishDownload(void) {
                     //FinishVPNLookup(dl->handle, NULL, 0, responseCode, )
                     gi.dprintf ("HTTP: %s: 404 File Not Found\n", dl->URL);
                     curl_multi_remove_handle (multi, dl->curl);
-                    dl->inuse = qfalse;
+                    dl->inuse = false;
                     continue;
                 } else if (responseCode == 200) {
                     HandleDownload(dl->handle, dl->tempBuffer, dl->position, responseCode);
@@ -325,7 +325,7 @@ static void HTTP_FinishDownload(void) {
                 HandleDownload(dl->handle, NULL, 0, 0);
                 gi.dprintf("HTTP Error: %s: %s\n", dl->URL, curl_easy_strerror (result));
                 curl_multi_remove_handle(multi, dl->curl);
-                dl->inuse = qfalse;
+                dl->inuse = false;
                 continue;
         }
 
@@ -339,7 +339,7 @@ static void HTTP_FinishDownload(void) {
         //all weird when reusing a download slot in this way. if you can figure
         //out why, please let me know.
         curl_multi_remove_handle(multi, dl->curl);
-        dl->inuse = qfalse;
+        dl->inuse = false;
         gi.dprintf("HTTP: Finished %s: %.f bytes, %.2fkB/sec\n", dl->URL, fileSize, (fileSize / 1024.0) / timeTaken);
     } while (msgs_in_queue > 0);
 }
@@ -347,17 +347,17 @@ static void HTTP_FinishDownload(void) {
 /**
  *
  */
-qboolean HTTP_QueueDownload(download_t *d) {
+bool HTTP_QueueDownload(download_t *d) {
     unsigned    i;
 
     if (handleCount == MAX_DOWNLOADS) {
         gi.dprintf("Another download is already pending, please try again later.\n");
-        return qfalse;
+        return false;
     }
 
     if (!http_enable) {
         gi.dprintf("HTTP functions are disabled on this server.\n");
-        return qfalse;
+        return false;
     }
 
     for (i = 0; i < MAX_DOWNLOADS; i++) {
@@ -368,18 +368,18 @@ qboolean HTTP_QueueDownload(download_t *d) {
 
     if (i == MAX_DOWNLOADS) {
         gi.dprintf("The server is too busy to download configs right now.\n");
-        return qfalse;
+        return false;
     }
 
     downloads[i].handle = d;
-    downloads[i].inuse = qtrue;
+    downloads[i].inuse = true;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
     Q_strncpy(downloads[i].filePath, d->path, sizeof(downloads[i].filePath)-1);
 #pragma GCC diagnostic pop
     HTTP_StartDownload(&downloads[i]);
 
-    return qtrue;
+    return true;
 }
 
 /**

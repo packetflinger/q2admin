@@ -22,15 +22,15 @@
 #define MAXLOGS         32
 
 typedef struct {
-    qboolean inuse;
-    qboolean mod;
+    bool inuse;
+    bool mod;
     char filename[256];
     FILE *fp;
 } logfile_t;
 
 typedef struct {
     char *logtype;
-    qboolean log;
+    bool log;
     unsigned long logfiles;
     char format[4096];
 } logtypes_t;
@@ -69,17 +69,17 @@ enum zb_logtypesenum {
 
 void clearlogfileRun(int startarg, edict_t *ent, int client);
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2);
-void displayLogEventListCont(edict_t *ent, int client, long logevent, qboolean onetimeonly);
+void displayLogEventListCont(edict_t *ent, int client, long logevent, bool onetimeonly);
 void displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum);
 void displaylogfileRun(int startarg, edict_t *ent, int client);
 void expandOutPortNum(char *srcdest, int max);
-qboolean isLogEvent(enum zb_logtypesenum ltype);
+bool isLogEvent(enum zb_logtypesenum ltype);
 void loadLogList(void);
-qboolean loadLogListFile(char *filename);
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2, qboolean echo);
+bool loadLogListFile(char *filename);
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2, bool echo);
 void logeventRun(int startarg, edict_t *ent, int client);
 void logfileRun(int startarg, edict_t *ent, int client);
 void openLogFiles(void);
 void closeLogFiles(void);
-qboolean isLogWritable(int index);
+bool isLogWritable(int index);

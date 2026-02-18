@@ -22,10 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 votecmd_t votecmds[VOTE_MAXCMDS];
 int maxvote_cmds = 0;
-qboolean votecountnovotes = 1;
+bool votecountnovotes = 1;
 int votepasspercent = 50;
 int voteminclients = 0;
-static qboolean voteinprogress = 0;
+static bool voteinprogress = 0;
 static unsigned long votetimeout, voteremindtimeout;
 char cmdvote[2048];
 char cmdpassedvote[2048];
@@ -38,17 +38,17 @@ int clientMaxVotes = 0;
 /**
  *
  */
-qboolean ReadVoteFile(char *votename) {
+bool ReadVoteFile(char *votename) {
     FILE *votefile;
     unsigned int uptoLine = 0;
 
     if (maxvote_cmds >= VOTE_MAXCMDS) {
-        return qfalse;
+        return false;
     }
 
     votefile = fopen(votename, "rt");
     if (!votefile) {
-        return qfalse;
+        return false;
     }
 
     while (fgets(buffer, 256, votefile)) {
@@ -115,7 +115,7 @@ qboolean ReadVoteFile(char *votename) {
         }
     }
     fclose(votefile);
-    return qtrue;
+    return true;
 }
 
 /**
@@ -132,13 +132,13 @@ void freeVoteLists(void) {
  *
  */
 void readVoteLists(void) {
-    qboolean ret;
+    bool ret;
 
     freeVoteLists();
     ret = ReadVoteFile(configfile_vote->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_vote->string);
     if (ReadVoteFile(buffer)) {
-        ret = qtrue;
+        ret = true;
     }
     if (!ret) {
         // gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
@@ -157,7 +157,7 @@ void reloadVoteFileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-qboolean checkforvotecmd(char *cp, int votecmd) {
+bool checkforvotecmd(char *cp, int votecmd) {
     int len;
     switch (votecmds[votecmd].type) {
         case VOTE_SW:
@@ -167,23 +167,23 @@ qboolean checkforvotecmd(char *cp, int votecmd) {
         case VOTE_RE:
             return re_matchp(votecmds[votecmd].r, cp, &len) == 0;
     }
-    return qfalse;
+    return false;
 }
 
 /**
  *
  */
-qboolean checkVoteCommand(char *cp) {
+bool checkVoteCommand(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer));
     q_strupr(buffer);
     for (i = 0; i < maxvote_cmds; i++) {
         if (checkforvotecmd(buffer, i)) {
-            return qtrue;
+            return true;
         }
     }
-    return qfalse;
+    return false;
 }
 
 /**

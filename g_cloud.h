@@ -82,7 +82,7 @@ typedef struct {
  * connection is broken and reconnect.
  */
 typedef struct {
-    qboolean  waiting;      // we sent a ping, waiting for a pong
+    bool  waiting;      // we sent a ping, waiting for a pong
     uint32_t  frame_sent;   // when it was sent
     uint32_t  frame_next;   // when to send the next one
     uint8_t   miss_count;   // how many sent without a reply
@@ -105,10 +105,10 @@ typedef enum {
  */
 typedef struct {
     uint32_t    socket;
-    qboolean    ipv6;
-    qboolean    trusted;    // is the server trusted?
-    qboolean    encrypted;  // should we encrypt?
-    qboolean    have_keys;  // do we have the shared keys?
+    bool    ipv6;
+    bool    trusted;    // is the server trusted?
+    bool    encrypted;  // should we encrypt?
+    bool    have_keys;  // do we have the shared keys?
     ca_auth_t   authstage;
     uint8_t     auth_fail_count;
 
@@ -198,10 +198,10 @@ typedef enum {
     CMD_COMMAND_WHOIS
 } remote_cmd_command_t;
 
-extern qboolean cloud_enabled;
+extern bool cloud_enabled;
 extern char cloud_address[256];
 extern int cloud_port;
-extern qboolean cloud_encryption;
+extern bool cloud_encryption;
 extern char cloud_privatekey[256];
 extern char cloud_publickey[256];
 extern char cloud_serverkey[256];
@@ -264,8 +264,8 @@ void        CA_ParsePong(void);
 void        CA_ParseError(void);
 void        CA_SayClient(void);
 void        CA_SayAll(void);
-qboolean    G_LoadKeys(void);
-qboolean    CA_VerifyServerAuth(void);
+bool    G_LoadKeys(void);
+bool    CA_VerifyServerAuth(void);
 void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
 void        CA_RotateKeys(void);

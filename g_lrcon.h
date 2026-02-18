@@ -25,14 +25,14 @@ typedef struct {
 } lrconcmd_t;
 
 void check_lrcon_password(void);
-qboolean checklrcon(char *cp, int lrcon);
+bool checklrcon(char *cp, int lrcon);
 void displayNextLRCon(edict_t *ent, int client, long lrconnum);
 void freeLRconLists(void);
 void listlrconsRun(int startarg, edict_t *ent, int client);
 void lrcon_reset_rcon_password(int, edict_t *, int);
 void lrconDelRun(int startarg, edict_t *ent, int client);
 void lrconRun(int startarg, edict_t *ent, int client);
-qboolean ReadLRconFile(char *lrcname);
+bool ReadLRconFile(char *lrcname);
 void readLRconLists(void);
 void reloadlrconfileRun(int startarg, edict_t *ent, int client);
 void run_lrcon(edict_t *ent, int client);

@@ -63,7 +63,7 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data, ch
  * current time, the command is skipped. Expired commands eventually get
  * shifted out of the array.
  */
-qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
+bool getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
     unsigned int i;
 
     for (i = 0; i < proxyinfo[client].maxCmds; i++) {
@@ -86,10 +86,10 @@ qboolean getCommandFromQueue(int client, byte *command, unsigned long *data, cha
                     (proxyinfo[client].maxCmds - i) * sizeof(cmd_queue_t)
                 );
             }
-            return qtrue;
+            return true;
         }
     }
-    return qfalse;
+    return false;
 }
 
 /**

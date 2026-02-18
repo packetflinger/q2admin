@@ -4,10 +4,10 @@
 #define IP4_LEN  4
 #define IP6_LEN 16
 
-#define IP(x)     (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qfalse))
-#define IPMASK(x) (net_addressToString(&proxyinfo[x].address, qfalse, qfalse, qtrue))
-#define IPSTR(a)  (net_addressToString(a->address, qfalse, qfalse))
-#define IPSTRMASK(a) (net_addressToString(a, qfalse, qfalse, qtrue))
+#define IP(x)     (net_addressToString(&proxyinfo[x].address, false, false, false))
+#define IPMASK(x) (net_addressToString(&proxyinfo[x].address, false, false, true))
+#define IPSTR(a)  (net_addressToString(a->address, false, false))
+#define IPSTRMASK(a) (net_addressToString(a, false, false, true))
 #define HASIP(x)  (proxyinfo[x].address.ip.u8[0] != 0)
 
 typedef enum {
@@ -33,10 +33,10 @@ typedef struct netadr_s {
     uint8_t mask_bits;
 } netadr_t;
 
-qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2);
-char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport, qboolean incmask);
+bool net_addressesMatch(netadr_t *a1, netadr_t *a2);
+char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask);
 netadr_t net_cidrToMask(int cidr, netadrtype_t t);
-qboolean net_contains(netadr_t *network, netadr_t *host);
+bool net_contains(netadr_t *network, netadr_t *host);
 void net_parseIP(netadr_t *addr, const char *ip);
 netadr_t net_parseIPAddressBase(const char *ip);
 netadr_t net_parseIPAddressMask(const char *ip);

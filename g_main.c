@@ -35,7 +35,7 @@ char zbot_teststring_test3[] = ZBOT_TESTSTRING_TEST3;
 char zbot_testchar1;
 char zbot_testchar2;
 
-qboolean soloadlazy;
+bool soloadlazy;
 
 char moddir[256];
 
@@ -72,7 +72,7 @@ void ShutdownGame(void) {
 #else
     dlclose(hdll);
 #endif
-    dllloaded = qfalse;
+    dllloaded = false;
     if (runmode) {
         profile_stop(1, "q2admin->ShutdownGame", 0, NULL);
     }
@@ -191,7 +191,7 @@ void G_RunFrame(void) {
 
                     if (do_vid_restart) {
                         if (!proxyinfo[client].vid_restart) {
-                            proxyinfo[client].vid_restart = qtrue;
+                            proxyinfo[client].vid_restart = true;
                             stuffcmd(ent, "vid_restart\n");
                         }
                     }
@@ -520,7 +520,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_DISPLOGFILELIST) {
                 displayLogFileListCont(ent, client, data);
             } else if (command == QCMD_DISPLOGEVENTLIST) {
-                displayLogEventListCont(ent, client, data, qfalse);
+                displayLogEventListCont(ent, client, data, false);
             } else if (command == QCMD_LOGTOFILE1) {
                 logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0, false);
             } else if (command == QCMD_LOGTOFILE2) {
@@ -660,7 +660,7 @@ void G_RunFrame(void) {
                                 gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
                                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_PRV_KICK_MSG);
                                 //dont want this printed
-                                //return qfalse;
+                                //return false;
                             }
                         }
                     }
@@ -794,7 +794,7 @@ void G_RunFrame(void) {
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_FREEZEPLAYER) {
                 q2a_memset(&proxyinfo[client].freeze, 0, sizeof(freeze_t));
-                proxyinfo[client].freeze.frozen = qtrue;
+                proxyinfo[client].freeze.frozen = true;
                 proxyinfo[client].freeze.started = ltime;
                 if (data > 0) {
                     proxyinfo[client].freeze.thaw = ltime + data;
@@ -836,7 +836,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     cvar_t *gamelib;
     unsigned int i;
 
-    dllloaded = qfalse;
+    dllloaded = false;
     gi = *import;
 
     q2a_strcpy(version, "r");
@@ -993,7 +993,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     gi.cprintf(NULL, PRINT_HIGH, "Q2Admin %s -> %s\n", version, dllname);
 
     ge_mod = (*getapi)(import);
-    dllloaded = qtrue;
+    dllloaded = true;
     G_MergeEdicts();
 
     if (runmode) {

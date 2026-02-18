@@ -12,7 +12,7 @@ typedef struct {
     int start;
 } timers_t;
 
-extern qboolean timers_active;
+extern bool timers_active;
 extern int timers_min_seconds;
 extern int timers_max_seconds;
 

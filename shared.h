@@ -49,10 +49,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BIT(n)  (1U << (n))
 typedef char byte;
-typedef enum {
-    qfalse,
-    qtrue
-} qboolean;
 
 #ifndef min
   #define min(x,y) ((x) < (y)) ? (x) : (y)
@@ -247,7 +243,7 @@ static inline int Q_charascii(int c) {
       char *string;
       char *latched_string;
       int flags;
-      qboolean modified; // set each time the cvar is changed
+      bool modified; // set each time the cvar is changed
       float value;
       struct cvar_s *next;
   } cvar_t;
@@ -323,8 +319,8 @@ typedef struct csurface_s {
 
 // a trace is returned when a box is swept through the world
 typedef struct {
-    qboolean allsolid;      // if true, plane is not valid
-    qboolean startsolid;    // if true, the initial point was in a solid area
+    bool allsolid;      // if true, plane is not valid
+    bool startsolid;    // if true, the initial point was in a solid area
     float fraction;         // time completed, 1.0 = didn't hit anything
     vec3_t endpos;          // final position
     cplane_t plane;         // surface normal at impact
@@ -382,7 +378,7 @@ typedef struct usercmd_s {
 typedef struct {
     pmove_state_t s;
     usercmd_t cmd;          // in
-    qboolean snapinitial;   // if s has been changed outside pmove
+    bool snapinitial;   // if s has been changed outside pmove
     int numtouch;
     struct edict_s *touchents[MAXTOUCH];
     vec3_t viewangles;      // clamped

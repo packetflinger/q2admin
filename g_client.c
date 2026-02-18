@@ -33,10 +33,10 @@ int zbc_jittermax = 4;
 int zbc_jittertime = 10;
 int zbc_jittermove = 500;
 
-qboolean zbc_enable = qtrue;
-qboolean timescaledetect = qtrue;
-qboolean swap_attack_use = qfalse;
-qboolean dopversion = qtrue;
+bool zbc_enable = true;
+bool timescaledetect = true;
+bool swap_attack_use = false;
+bool dopversion = true;
 
 
 byte impulsesToKickOn[MAXIMPULSESTOTEST];
@@ -52,20 +52,20 @@ char *impulsemessages[] ={
     "175 (zbot toggles scanner display command)"
 };
 
-qboolean checkImpulse(byte impulse) {
+bool checkImpulse(byte impulse) {
     unsigned int i;
 
     if (!maxImpulses) {
-        return qtrue;
+        return true;
     }
 
     for (i = 0; i < maxImpulses; i++) {
         if (impulsesToKickOn[i] == impulse) {
-            return qtrue;
+            return true;
         }
     }
 
-    return qfalse;
+    return false;
 }
 
 void serverLogZBot(edict_t *ent, int client) {
@@ -298,7 +298,7 @@ void stuff_private_commands(int client, edict_t *ent) {
             Q_snprintf(temp, sizeof(temp), "%s\n", private_commands[i].command);
             stuffcmd(ent, temp);
         }
-        proxyinfo[client].private_command_got[i] = qfalse;
+        proxyinfo[client].private_command_got[i] = false;
     }
 }
 
@@ -310,7 +310,7 @@ void stuff_private_commands(int client, edict_t *ent) {
  *
  * Called from ClientThink()
  */
-qboolean AimbotCheck(int client, usercmd_t *ucmd) {
+bool AimbotCheck(int client, usercmd_t *ucmd) {
     int prev, cur;
     aimbot_t *a = &proxyinfo[client].aim_assist;
 
@@ -329,7 +329,7 @@ qboolean AimbotCheck(int client, usercmd_t *ucmd) {
                 a->jitter_time = ltime;
             }
             if (a->jitter++ >= zbc_jittermax) {
-                return qtrue;
+                return true;
             }
         }
         a->jitter_last = ltime;
@@ -340,5 +340,5 @@ qboolean AimbotCheck(int client, usercmd_t *ucmd) {
     if (ltime > (a->jitter_time + zbc_jittertime)) {
         a->jitter = 0;
     }
-    return qfalse;
+    return false;
 }

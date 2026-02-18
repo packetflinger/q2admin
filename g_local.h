@@ -18,6 +18,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
+#include <stdbool.h>
 #include "platform.h"
 #include "shared.h"
 #include "game.h"
@@ -106,7 +107,7 @@ extern char *finalentities;
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
 typedef struct {
-    qboolean admin;                 // player authed with !admin command
+    bool admin;                 // player authed with !admin command
     unsigned char retries;
     unsigned char rbotretries;
     cmd_queue_t cmdQueue[ALLOWED_MAXCMDS];
@@ -170,9 +171,9 @@ typedef struct {
     int userinfo_changed_start;
     int private_command;            // ltime while waiting for responses
     int timescale;                  // player's current timescale (from userinfo)
-    qboolean show_fps;              // display fps to client every 0.5 sec
-    qboolean vid_restart;           // if client already forced to vid_restart
-    qboolean private_command_got[PRIVATE_COMMANDS]; // if we received a response
+    bool show_fps;              // display fps to client every 0.5 sec
+    bool vid_restart;           // if client already forced to vid_restart
+    bool private_command_got[PRIVATE_COMMANDS]; // if we received a response
     char serverip[16];              // have player reconnect here instead of proxy
     char cmdlist_stored[256];
     int cmdlist;
@@ -389,18 +390,18 @@ extern char defaultreconnectmessage[256];
 extern char moddir[256];
 extern char version[256];
 
-extern qboolean soloadlazy;
-extern qboolean dllloaded;
-extern qboolean quake2dirsupport;
-extern qboolean zbotdetect;
-extern qboolean displayzbotuser;
-extern qboolean displaynamechange;
-extern qboolean dopversion;
-extern qboolean disconnectuserimpulse;
-extern qboolean disconnectuser;
-extern qboolean mapcfgexec;
-extern qboolean checkClientIpAddress;
-extern qboolean votecountnovotes;
+extern bool soloadlazy;
+extern bool dllloaded;
+extern bool quake2dirsupport;
+extern bool zbotdetect;
+extern bool displayzbotuser;
+extern bool displaynamechange;
+extern bool dopversion;
+extern bool disconnectuserimpulse;
+extern bool disconnectuser;
+extern bool mapcfgexec;
+extern bool checkClientIpAddress;
+extern bool votecountnovotes;
 
 extern int votepasspercent;
 extern int voteminclients;
@@ -415,19 +416,19 @@ extern int      ip_limit;
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
 
-extern qboolean displayimpulses;
-extern qboolean printmessageonplaycmds;
-extern qboolean say_person_enable;
-extern qboolean say_group_enable;
-extern qboolean extendedsay_enable;
-extern qboolean spawnentities_enable;
-extern qboolean spawnentities_internal_enable;
-extern qboolean vote_enable;
-extern qboolean consolechat_disable;
-extern qboolean gamemaptomap;
-extern qboolean banOnConnect;
-extern qboolean lockDownServer;
-extern qboolean serverinfoenable;
+extern bool displayimpulses;
+extern bool printmessageonplaycmds;
+extern bool say_person_enable;
+extern bool say_group_enable;
+extern bool extendedsay_enable;
+extern bool spawnentities_enable;
+extern bool spawnentities_internal_enable;
+extern bool vote_enable;
+extern bool consolechat_disable;
+extern bool gamemaptomap;
+extern bool banOnConnect;
+extern bool lockDownServer;
+extern bool serverinfoenable;
 
 extern int clientVoteTimeout;
 extern int clientRemindTimeout;
@@ -436,7 +437,7 @@ extern int proxy_bwproxy;
 extern int proxy_nitro2;
 extern int maxMsgLevel;
 
-extern qboolean consolelog_enable;
+extern bool consolelog_enable;
 extern char consolelog_pattern[256];
 
 extern char zbotmotd[256];
@@ -456,19 +457,19 @@ extern char customClientCmd[256];
 extern char customClientCmdConnect[256];
 extern char customServerCmdConnect[256];
 
-extern qboolean rcon_insecure;
-extern qboolean rcon_random_password;
-extern qboolean zbc_enable;
+extern bool rcon_insecure;
+extern bool rcon_random_password;
+extern bool zbc_enable;
 
 extern int maxlrcon_cmds;
 extern int lrcon_timeout;
 extern int logfilecheckcount;
 
-extern qboolean kickOnNameChange;
-extern qboolean disablecmds_enable;
-extern qboolean checkvarcmds_enable;
-extern qboolean swap_attack_use;
-extern qboolean timescaledetect;
+extern bool kickOnNameChange;
+extern bool disablecmds_enable;
+extern bool checkvarcmds_enable;
+extern bool swap_attack_use;
+extern bool timescaledetect;
 
 extern char *currentBanMsg;
 
@@ -487,13 +488,13 @@ extern char cmdpassedvote[2048];
 extern char cl_pitchspeed_kickmsg[256];
 extern char cl_anglespeedkey_kickmsg[256];
 
-extern qboolean cl_pitchspeed_enable;
-extern qboolean cl_pitchspeed_kick;
-extern qboolean cl_pitchspeed_display;
-extern qboolean cl_anglespeedkey_enable;
-extern qboolean cl_anglespeedkey_kick;
-extern qboolean cl_anglespeedkey_display;
-extern qboolean filternonprintabletext;
+extern bool cl_pitchspeed_enable;
+extern bool cl_pitchspeed_kick;
+extern bool cl_pitchspeed_display;
+extern bool cl_anglespeedkey_enable;
+extern bool cl_anglespeedkey_kick;
+extern bool cl_anglespeedkey_display;
+extern bool filternonprintabletext;
 
 extern char lockoutmsg[256];
 extern char gmapname[MAX_QPATH];
@@ -570,9 +571,9 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 #define FRKQ2_KICK_MSG      "Failed the client authentication.\n"
 
 extern int client_map_cfg;
-extern qboolean do_franck_check;
-extern qboolean q2a_command_check;
-extern qboolean do_vid_restart;
+extern bool do_franck_check;
+extern bool q2a_command_check;
+extern bool do_vid_restart;
 
 extern int gl_driver_check;
 extern int USERINFOCHANGE_TIME;

@@ -36,7 +36,7 @@ void G_GenerateKeyPair(int bits)
 /**
  * Read public and private keys from filesystem into RSA structures
  */
-qboolean G_LoadKeys(void)
+bool G_LoadKeys(void)
 {
     FILE *fp;
     ca_connection_t *c = &cloud.connection;
@@ -49,7 +49,7 @@ qboolean G_LoadKeys(void)
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
-        return qfalse;
+        return false;
     }
 
     c->private_key = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
@@ -57,7 +57,7 @@ qboolean G_LoadKeys(void)
 
     if (!c->private_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your private key: %s\n", path);
-        return qfalse;
+        return false;
     }
 
     // then our public key
@@ -66,7 +66,7 @@ qboolean G_LoadKeys(void)
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
         EVP_PKEY_free(c->private_key);
-        return qfalse;
+        return false;
     }
 
     c->public_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
@@ -76,7 +76,7 @@ qboolean G_LoadKeys(void)
     if (!c->public_key) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with your public key: %s\n", path);
         EVP_PKEY_free(c->private_key);
-        return qfalse;
+        return false;
     }
 
     // last the cloud admin server's public key
@@ -86,7 +86,7 @@ qboolean G_LoadKeys(void)
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
         EVP_PKEY_free(c->private_key);
         EVP_PKEY_free(c->public_key);
-        return qfalse;
+        return false;
     }
 
     c->server_key = PEM_read_PUBKEY(fp, NULL, NULL, NULL);
@@ -96,12 +96,12 @@ qboolean G_LoadKeys(void)
         gi.cprintf(NULL, PRINT_HIGH, "failed, problems with the q2admin server's public key\n");
         EVP_PKEY_free(c->private_key);
         EVP_PKEY_free(c->public_key);
-        return qfalse;
+        return false;
     }
 
     gi.cprintf(NULL, PRINT_HIGH, "OK\n");
 
-    return qtrue;
+    return true;
 }
 
 /**

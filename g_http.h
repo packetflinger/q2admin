@@ -44,7 +44,7 @@ typedef struct dlhandle_s {
     char            filePath[1024];
     char            URL[2048];
     char            *tempBuffer;
-    qboolean        inuse;
+    bool        inuse;
     download_t      *handle;
 } dlhandle_t;
 
@@ -53,15 +53,15 @@ typedef struct dlhandle_s {
 #define MIN_DLSIZE      0x8000      // 32 KiB
 
 extern char http_cacert_path[256];
-extern qboolean http_debug;
-extern qboolean http_enable;
-extern qboolean http_verifyssl;
+extern bool http_debug;
+extern bool http_enable;
+extern bool http_verifyssl;
 
 int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
 void HandleDownload(download_t *download, char *buff, int len, int code);
 size_t HTTP_GetFile(generic_file_t *output, const char *url);
 void HTTP_Init(void);
-qboolean HTTP_QueueDownload(download_t *d);
+bool HTTP_QueueDownload(download_t *d);
 void HTTP_ResolveVPNServer(void);
 void HTTP_RunDownloads(void);
 void HTTP_Shutdown(void);

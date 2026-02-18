@@ -6,11 +6,11 @@
 /**
  * Check whether 2 IPs are the same
  */
-qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
+bool net_addressesMatch(netadr_t *a1, netadr_t *a2)
 {
     int len;
     if (a1->type != a2->type) {
-        return qfalse;
+        return false;
     }
     len = (a1->type == NA_IP6) ? IP6_LEN : IP4_LEN;
     return q2a_memcmp(a1->ip.u8, a2->ip.u8, len);
@@ -23,7 +23,7 @@ qboolean net_addressesMatch(netadr_t *a1, netadr_t *a2)
  * incport arg controls whether ":portnum" will be appended.
  * incmask arg controls whether "/xx" cidr mask will be appended.
  */
-char *net_addressToString(netadr_t *address, qboolean wrapv6, qboolean incport, qboolean incmask)
+char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask)
 {
     char temp[INET6_ADDRSTRLEN];
     static char dest[INET6_ADDRSTRLEN];
@@ -112,18 +112,18 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t)
 /**
  * Tests if a network address is in a particular subnet
  */
-qboolean net_contains(netadr_t *network, netadr_t *host)
+bool net_contains(netadr_t *network, netadr_t *host)
 {
     if (network->type != host->type) {
-        return qfalse;
+        return false;
     }
     netadr_t mask = net_cidrToMask(network->mask_bits, network->type);
     for (int i=0; i<IP6_LEN; i++) {
         if ((network->ip.u8[i] & mask.ip.u8[i]) != (host->ip.u8[i] & mask.ip.u8[i])) {
-            return qfalse;
+            return false;
         }
     }
-    return qtrue;
+    return true;
 }
 
 /**
