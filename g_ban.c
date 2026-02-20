@@ -527,7 +527,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             }
         }
 
-        if (startContains(cp, "VPN")) {
+        if (startContains(cp, "ASN")) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -537,7 +537,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             cp = gi.argv(startarg);
             startarg++;
 
-            q2a_strcat(savecmd, "VPN ");
+            q2a_strcat(savecmd, "ASN ");
             q2a_memset(newentry->asnumber, 0, sizeof(newentry->asnumber));
             processstring(newentry->asnumber, cp, sizeof(newentry->asnumber)-1, '\"');
             q2a_strcat(savecmd, "\"");
@@ -922,15 +922,29 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 }
 
+/**
+ * Reread the bans written to disk and replace the banlist in memory.
+ */
 void reloadbanfileRun(int startarg, edict_t *ent, int client) {
     readBanLists();
     gi.cprintf(ent, PRINT_HIGH, "Bans reloaded.\n");
 }
 
 /**
- * Check if a particular client is banned. Return 1 to ban, 0 to allow
+ * Check if a particular player is banned. Return 1 to ban, 0 to allow. If a
+ * rule matches, processing stops and the client is either allowed or not
+ * based on the exclusion field (+/-).
+ *
+ * Bans are loaded from disk top down, however the most recently read ban (at
+ * the bottom of the file) is the head of the linked-list of bans. This means
+ * when checking a player against the banlist, effectively the rules will be
+ * checked from bottom-up. This also means exceptions or exemptions need to be
+ * lower down in the config file than the broader rule that would otherwise
+ * ban the player.
  *
  * Called from checkCheckIfBanned()
+ *
+ * (Why is this not returning a bool?)
  */
 int checkBanList(edict_t *ent, int client) {
     baninfo_t *checkentry = banhead;
@@ -1222,7 +1236,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                 Q_snprintf(
                         buffer + q2a_strlen(buffer),
                         sizeof(buffer) - q2a_strlen(buffer),
-                        " VPN %s", findentry->asnumber
+                        " ASN %s", findentry->asnumber
                 );
             }
         }
@@ -1830,7 +1844,7 @@ char *ban_parseBan(char *cp) {
             SKIPBLANK(cp);
         }
 
-        if (startContains(cp, "VPN")) {
+        if (startContains(cp, "ASN")) {
             cp += 3;
             SKIPBLANK(cp);
             if (startContains(cp, "AS")) {
@@ -1844,7 +1858,7 @@ char *ban_parseBan(char *cp) {
                 cp = tempcp;
                 SKIPBLANK(cp);
             } else {
-                gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near VPN: not an ASN\n");
+                gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near ASN: not an ASN\n");
             }
         }
         if (startContains(cp, "VERSION")) {
@@ -1865,7 +1879,7 @@ char *ban_parseBan(char *cp) {
             q2a_memset(newentry->version, 0, sizeof(newentry->version));
             cp++; // eat the opening quote
             processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
-            cp += strlen(newentry->version);
+            cp += strlen(newentry->version) + 1;
             allver = false;
             if (newentry->vtype == VERSION_REGEX) {
                 q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer));
@@ -1875,6 +1889,7 @@ char *ban_parseBan(char *cp) {
                     gi.TagFree(newentry);
                 }
             }
+            SKIPBLANK(cp);
         } else {
             allver = true;
         }
