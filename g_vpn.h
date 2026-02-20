@@ -17,13 +17,13 @@ typedef enum {
 
 // Properties will be non-null if state == VPN_POSITIVE
 typedef struct {
-    vpn_state_t     state;
+    vpn_state_t state;
     bool        is_vpn;
     bool        is_proxy;
     bool        is_tor;
     bool        is_relay;
-    char            network[50];
-    char            asn[10];
+    char        network[50];
+    char        asn[10];
 } vpn_t;
 
 extern bool vpn_kick;

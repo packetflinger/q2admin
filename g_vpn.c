@@ -21,8 +21,7 @@ char vpn_host[50] = VPNAPIHOST;
  * Initiates a lookup for the VPN status of a player edict using CURL. This is
  * a non-blocking call that will finish on a later framerun.
  */
-void LookupVPNStatus(edict_t *ent)
-{
+void LookupVPNStatus(edict_t *ent) {
     char *request;
     proxyinfo_t *pi;
     char *addr;
@@ -51,8 +50,7 @@ void LookupVPNStatus(edict_t *ent)
 /**
  * Callback when CURL finishes download. Parse resulting JSON
  */
-void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
-{
+void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
     vpn_t *v;
     json_t mem[32];
     const json_t *root, *security, *net;
@@ -73,19 +71,14 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
             v->is_proxy = Q_stricmp(json_getPropertyValue(security, "proxy"), "true") == 0;
             v->is_tor = Q_stricmp(json_getPropertyValue(security, "tor"), "true") == 0;
             v->is_relay = Q_stricmp(json_getPropertyValue(security, "relay"), "true") == 0;
-
             if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
                 v->state = VPN_POSITIVE;
-                net = json_getProperty(root, "network");
-                if (net) {
-                    q2a_strncpy(v->network, json_getPropertyValue(net, "network"), sizeof(v->network));
-                    q2a_strncpy(v->asn, json_getPropertyValue(net, "autonomous_system_number"), sizeof(v->asn));
-                }
-
             }
-            if (v->state == VPN_POSITIVE) {
-                gi.cprintf(NULL, PRINT_HIGH, "%s is using a VPN (%s)\n", NAME(i), v->asn);
-            }
+        }
+        net = json_getProperty(root, "network");
+        if (net) {
+            q2a_strncpy(v->network, json_getPropertyValue(net, "network"), sizeof(v->network));
+            q2a_strncpy(v->asn, json_getPropertyValue(net, "autonomous_system_number"), sizeof(v->asn));
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {
@@ -93,14 +86,14 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len)
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
         }
+        gi.cprintf(NULL, PRINT_HIGH, "%s %s %s%s\n", NAME(i), v->network, v->asn, (isVPN(i) ? " (VPN)" : ""));
     }
 }
 
 /**
  * Whether the client is coming from a VPN connection or not.
  */
-bool isVPN(int clientnum)
-{
+bool isVPN(int clientnum) {
     if (!VALIDCLIENT(clientnum)) {
         return false;
     }
@@ -113,15 +106,12 @@ bool isVPN(int clientnum)
 /**
  * Display any players currently connected via a VPN
  */
-void vpnUsersRun(int startarg, edict_t *ent, int client)
-{
-    int i;
+void vpnUsersRun(int startarg, edict_t *ent, int client) {
     if (!vpn_enable) {
         gi.cprintf(NULL, PRINT_HIGH, "VPN tracking is currently disabled\n");
         return;
     }
-
-    for (i=0; i<(int)maxclients->value; i++) {
+    for (int i = 0; i < (int)maxclients->value; i++) {
         if (!proxyinfo[i].inuse) {
             continue;
         }
