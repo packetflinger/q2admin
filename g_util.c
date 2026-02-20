@@ -305,12 +305,12 @@ int isBlank(char *buff1) {
 /**
  * Resolve special tokens in input string and render output
  *
- *  n = newline
- *  d = dollar sign $
- *  q = double quote "
- *  s = single quote '
- *  m = mod directory name
- *  t = current timestamp
+ *  \n = newline
+ *  \d = dollar sign $
+ *  \q = double quote "
+ *  \s = single quote '
+ *  \m = mod directory name
+ *  \t = current timestamp
  *
  *  (case insensitive)
  */
@@ -332,7 +332,7 @@ char *processstring(char *output, char *input, int max, char end) {
                 *output++ = ' ';
                 input++;
             } else if ((*input == 'm') || (*input == 'M')) {
-                int modlen = strlen(moddir);
+                int modlen = q2a_strlen(moddir);
                 if (max >= modlen && modlen) {
                     q2a_strcpy(output, moddir);
                     output += modlen;
@@ -340,17 +340,15 @@ char *processstring(char *output, char *input, int max, char end) {
                 }
                 input++;
             } else if ((*input == 't') || (*input == 'T')) {
-                struct tm*timestamptm;
+                struct tm *timestamptm;
                 time_t timestampsec;
                 char *timestampcp;
                 int timestamplen;
 
-                time(&timestampsec); /* Get time in seconds */
-                timestamptm = localtime(&timestampsec); /* Convert time to struct */
-                /* tm form */
-
-                timestampcp = asctime(timestamptm); /* get string version of date / time */
-                timestamplen = strlen(timestampcp) - 1; /* length minus the '\n' */
+                time(&timestampsec);
+                timestamptm = localtime(&timestampsec);
+                timestampcp = asctime(timestamptm);
+                timestamplen = q2a_strlen(timestampcp) - 1; // minus the \n
 
                 if (timestamplen && max >= timestamplen) {
                     q2a_strncpy(output, timestampcp, timestamplen);
