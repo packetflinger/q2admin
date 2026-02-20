@@ -91,7 +91,7 @@ bool wildcard_match(char *pattern, char *haystack) {
  * Maybe not needed? Use startContains instead?
  */
 bool startswith(char *needle, char *haystack) {
-    return (strncmp(needle, haystack, strlen(needle)) == 0);
+    return (strncmp(needle, haystack, q2a_strlen(needle)) == 0);
 }
 
 /**
