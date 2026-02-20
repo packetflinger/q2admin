@@ -606,11 +606,11 @@ int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
 char *Q_strcasestr(const char *s1, const char *s2) {
     size_t l1, l2;
 
-    l2 = strlen(s2);
+    l2 = q2a_strlen(s2);
     if (!l2) {
         return (char *)s1;
     }
-    l1 = strlen(s1);
+    l1 = q2a_strlen(s1);
     while (l1 >= l2) {
         l1--;
         if (!Q_strncasecmp(s1, s2, l2)) {
