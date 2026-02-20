@@ -292,7 +292,7 @@ int stringContains(char *buff1, char *buff2) {
 }
 
 /**
- *
+ * Check if a buffer is made up of only space characters
  */
 int isBlank(char *buff1) {
     while (*buff1 == ' ') {
