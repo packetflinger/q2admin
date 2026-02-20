@@ -42,7 +42,7 @@ char *trim(char *s) {
     if (!*s) {
         return s;      // handle empty string
     }
-    for (ptr = s + strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+    for (ptr = s + q2a_strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
     ptr[1] = '\0';
     return s;
 }
