@@ -560,7 +560,7 @@ size_t Q_strlcpy(char *dst, const char *src, size_t size) {
 
     if (size) {
         size_t len = min(ret, size - 1);
-        memcpy(dst, src, len);
+        q2a_memcpy(dst, src, len);
         dst[len] = 0;
     }
 
