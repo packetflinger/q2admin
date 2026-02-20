@@ -132,20 +132,22 @@ char *q2admin_malloc(int size) {
 }
 
 /**
- *
+ * Reallocate the size of an existing memory allocation. The space will be
+ * automatically free'd when the game unloads, but should be free'd manually
+ * when no longer needed.
  */
 char *q2admin_realloc(char *oldmem, int newsize) {
     int oldsize;
-    int *start = (int *) (oldmem - sizeof (int));
+    int *start = (int *)(oldmem - sizeof(int));
     char *newmem;
 
     oldsize = *start;
     if (oldsize >= newsize) {
         return oldmem;
     }
-    newmem = gi.TagMalloc(newsize + sizeof (int), TAG_GAME);
-    *(int *) newmem = newsize;
-    newmem += sizeof (int);
+    newmem = gi.TagMalloc(newsize + sizeof(int), TAG_GAME);
+    *(int *)newmem = newsize;
+    newmem += sizeof(int);
     q2a_memcpy(newmem, oldmem, newsize - oldsize);
     gi.TagFree(start);
     return newmem;
