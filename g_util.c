@@ -545,18 +545,20 @@ size_t Q_concat(char *dest, size_t size, ...) {
 }
 
 /**
- * Returns length of the source and destinations strings combined.
+ * Concatenate a string onto the end of another string up to a certain size.
+ * Returns the new length of the destination string.
  */
 size_t Q_strlcat(char *dst, const char *src, size_t size) {
-    size_t len = strlen(dst);
+    size_t len = q2a_strlen(dst);
     return len + Q_strlcpy(dst + len, src, size - len);
 }
 
 /**
- * Returns length of the source string
+ * Copy a string up to a specific size. Returns length copied, which can be
+ * smaller than the specifid size due to src string length.
  */
 size_t Q_strlcpy(char *dst, const char *src, size_t size) {
-    size_t ret = strlen(src);
+    size_t ret = q2a_strlen(src);
 
     if (size) {
         size_t len = min(ret, size - 1);
