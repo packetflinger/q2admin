@@ -599,7 +599,9 @@ int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
 
 
 /**
- *
+ * Case insensitive version of strstr. If s2 is a substring of s1,
+ * return a pointer to it in s1. Empty s2 will just return the
+ * beginning of s1. No match will return NULL
  */
 char *Q_strcasestr(const char *s1, const char *s2) {
     size_t l1, l2;
@@ -608,7 +610,6 @@ char *Q_strcasestr(const char *s1, const char *s2) {
     if (!l2) {
         return (char *)s1;
     }
-
     l1 = strlen(s1);
     while (l1 >= l2) {
         l1--;
@@ -617,7 +618,6 @@ char *Q_strcasestr(const char *s1, const char *s2) {
         }
         s1++;
     }
-
     return NULL;
 }
 
