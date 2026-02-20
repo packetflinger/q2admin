@@ -154,10 +154,10 @@ char *q2admin_realloc(char *oldmem, int newsize) {
 }
 
 /**
- *
+ * Free tag-allocated memory.
  */
 void q2admin_free(char *mem) {
-    gi.TagFree(mem - sizeof (int));
+    gi.TagFree(mem - sizeof(int));
 }
 
 /**
