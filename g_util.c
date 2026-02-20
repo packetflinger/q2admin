@@ -271,11 +271,9 @@ int startContains(char *src, char *cmp) {
         if (!(*src) || toupper(*src) != toupper(*cmp)) {
             return 0;
         }
-
         src++;
         cmp++;
     }
-
     return 1;
 }
 
