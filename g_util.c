@@ -278,7 +278,7 @@ int startContains(char *src, char *cmp) {
 }
 
 /**
- *
+ * Is buff2 inside buff1?
  */
 int stringContains(char *buff1, char *buff2) {
     char strbuffer1[4096];
