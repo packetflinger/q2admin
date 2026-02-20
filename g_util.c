@@ -121,12 +121,14 @@ int Q_stricmp(char *string1, char *string2) {
 }
 
 /**
- *
+ * Allocate some memory of a particular size, returning a pointer to the start
+ * of this addressable space. This memory will automatically be free'd when the
+ * game unloads, however it's good to free it when no longer needed before.
  */
 char *q2admin_malloc(int size) {
-    char *mem = gi.TagMalloc(size + sizeof (int), TAG_GAME);
+    char *mem = gi.TagMalloc(size + sizeof(int), TAG_GAME);
     *(int *) mem = size;
-    return mem + sizeof (int);
+    return mem + sizeof(int);
 }
 
 /**
