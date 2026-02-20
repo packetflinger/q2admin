@@ -1045,11 +1045,7 @@ int checkBanList(edict_t *ent, int client) {
                     continue;
                 }
                 if (checkentry->asnumber[0] != 0) {
-                    if (!proxyinfo[client].vpn.is_vpn) {
-                        prevcheckentry = checkentry;
-                        checkentry = checkentry->next;
-                        continue;
-                    } else if (Q_stricmp(checkentry->asnumber, proxyinfo[client].vpn.asn) != 0) {
+                    if (Q_stricmp(checkentry->asnumber, proxyinfo[client].vpn.asn) != 0) {
                         prevcheckentry = checkentry;
                         checkentry = checkentry->next;
                         continue;
