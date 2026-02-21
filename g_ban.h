@@ -67,7 +67,7 @@ typedef struct banstruct {
     long bannum;
     float timeout;
     bool vpn;
-    char asnumber[10];
+    char asn[10];
     struct chatflood_s floodinfo;
     struct banstruct *next;
 } baninfo_t;

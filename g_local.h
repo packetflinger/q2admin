@@ -192,6 +192,8 @@ typedef struct {
     download_t dl;
     vpn_t vpn;                      // vpn status for player
     netadr_t address;               // the actual IP address of the player
+    netadr_t network;               // address' parent CIDR range
+    char auton_sys_num[10];         // the ASN announcing this network
     char address_str[135];          // unused, remove later
     char version_test[6];           // random chars to force sending version
     char client_version[MAX_VERSION_CHARS];   // build string

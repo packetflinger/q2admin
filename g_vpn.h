@@ -22,8 +22,6 @@ typedef struct {
     bool        is_proxy;
     bool        is_tor;
     bool        is_relay;
-    char        network[50];
-    char        asn[10];
 } vpn_t;
 
 extern bool vpn_kick;

@@ -77,8 +77,8 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
         }
         net = json_getProperty(root, "network");
         if (net) {
-            q2a_strncpy(v->network, json_getPropertyValue(net, "network"), sizeof(v->network));
-            q2a_strncpy(v->asn, json_getPropertyValue(net, "autonomous_system_number"), sizeof(v->asn));
+            proxyinfo[i].network = net_parseIPAddressMask(json_getPropertyValue(net, "network"));
+            q2a_strncpy(proxyinfo[i].auton_sys_num, json_getPropertyValue(net, "autonomous_system_number"), sizeof(proxyinfo[i].auton_sys_num));
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {
@@ -86,7 +86,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
         }
-        gi.cprintf(NULL, PRINT_HIGH, "%s %s %s%s\n", NAME(i), v->network, v->asn, (isVPN(i) ? " (VPN)" : ""));
+        gi.cprintf(NULL, PRINT_HIGH, "%s %s %s%s\n", NAME(i), net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num, (isVPN(i) ? " (VPN)" : ""));
     }
 }
 
@@ -117,7 +117,7 @@ void vpnUsersRun(int startarg, edict_t *ent, int client) {
         }
 
         if (proxyinfo[i].vpn.state == VPN_POSITIVE) {
-            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", proxyinfo[i].name, proxyinfo[i].vpn.network, proxyinfo[i].vpn.asn);
+            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", proxyinfo[i].name, net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num);
         }
     }
 }

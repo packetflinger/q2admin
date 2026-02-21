@@ -538,8 +538,8 @@ void banRun(int startarg, edict_t *ent, int client) {
             startarg++;
 
             q2a_strcat(savecmd, "ASN ");
-            q2a_memset(newentry->asnumber, 0, sizeof(newentry->asnumber));
-            processstring(newentry->asnumber, cp, sizeof(newentry->asnumber)-1, '\"');
+            q2a_memset(newentry->asn, 0, sizeof(newentry->asn));
+            processstring(newentry->asn, cp, sizeof(newentry->asn)-1, '\"');
             q2a_strcat(savecmd, "\"");
             q2a_strcat(savecmd, cp);
             q2a_strcat(savecmd, "\" ");
@@ -1044,8 +1044,8 @@ int checkBanList(edict_t *ent, int client) {
                     checkentry = checkentry->next;
                     continue;
                 }
-                if (checkentry->asnumber[0] != 0) {
-                    if (Q_stricmp(checkentry->asnumber, proxyinfo[client].vpn.asn) != 0) {
+                if (checkentry->asn[0] != 0) {
+                    if (Q_stricmp(checkentry->asn, proxyinfo[client].auton_sys_num) != 0) {
                         prevcheckentry = checkentry;
                         checkentry = checkentry->next;
                         continue;
@@ -1094,9 +1094,8 @@ int checkBanList(edict_t *ent, int client) {
                         "%s allowed using password (ban id:%d)",
                         NAME(client), checkentry->bannum
                 );
-                logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0, true);
-
                 if (q2a_strcmp(checkentry->password, s)) {
+                    logEvent(LT_ADMINLOG, client, ent, strbuffer, 0, 0.0, true);
                     if (checkentry->msg) {
                         currentBanMsg = checkentry->msg;
                     }
@@ -1228,11 +1227,11 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                 );
             }
 
-            if (findentry->asnumber[0] != 0) {
+            if (findentry->asn[0] != 0) {
                 Q_snprintf(
                         buffer + q2a_strlen(buffer),
                         sizeof(buffer) - q2a_strlen(buffer),
-                        " ASN %s", findentry->asnumber
+                        " ASN %s", findentry->asn
                 );
             }
         }
@@ -1849,8 +1848,8 @@ char *ban_parseBan(char *cp) {
                 while (!isspace(*tempcp)) {
                     tempcp++;
                 }
-                q2a_memset(newentry->asnumber, 0, sizeof(newentry->asnumber));
-                q2a_memcpy(newentry->asnumber, cp, (tempcp-cp));
+                q2a_memset(newentry->asn, 0, sizeof(newentry->asn));
+                q2a_memcpy(newentry->asn, cp, (tempcp-cp));
                 cp = tempcp;
                 SKIPBLANK(cp);
             } else {
