@@ -1109,20 +1109,15 @@ int checkBanList(edict_t *ent, int client) {
                     if (checkentry->msg) {
                         currentBanMsg = checkentry->msg;
                     }
-
                     return 1;
                 }
-
                 proxyinfo[client].baninfo = checkentry;
                 checkentry->numberofconnects++;
             }
 
-            // user included...  set user settings for this include ban
-
             if (checkentry->floodinfo.chatFloodProtect) {
                 proxyinfo[client].floodinfo = checkentry->floodinfo;
             }
-
             return 0; // rule matched but is an allow
         }
 
