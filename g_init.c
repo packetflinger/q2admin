@@ -410,8 +410,6 @@ void InitGame(void) {
         proxyinfo[i].admin_level = 0;
         proxyinfo[i].bypass_level = 0;
         proxyinfo[i].clientcommand = 0;
-        proxyinfo[i].userinfo_changed_count = 0;
-        proxyinfo[i].userinfo_changed_start = ltime;
         proxyinfo[i].pmod_noreply_count = 0;
         proxyinfo[i].pcmd_noreply_count = 0;
         proxyinfo[i].private_command = 0;
@@ -436,8 +434,6 @@ void InitGame(void) {
         proxyinfo[i].rbotretries = 0;
         proxyinfo[i].charindex = 0;
         proxyinfo[i].teststr[0] = 0;
-        proxyinfo[i].cl_pitchspeed = 0;
-        proxyinfo[i].cl_anglespeedkey = 0.0;
         proxyinfo[i].votescast = 0;
         proxyinfo[i].votetimeout = 0;
         proxyinfo[i].checked_hacked_exe = 0;
@@ -446,6 +442,9 @@ void InitGame(void) {
         q2a_memset(&proxyinfo[i].pest, 0, sizeof(chatpest_t));
         q2a_memset(&proxyinfo[i].freeze, 0, sizeof(freeze_t));
         q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
+        q2a_memset(&proxyinfo[i].userinfo, 0, sizeof(userinfo_t));
+
+        proxyinfo[i].userinfo.changed_start = ltime;
 
         removeClientCommands(i);
     }
@@ -605,11 +604,12 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             proxyinfo[i].floodinfo.chatFloodProtect = false;
             proxyinfo[i].stuffFile = 0;
             q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
+            q2a_memset(&proxyinfo[i].userinfo, 0, sizeof(userinfo_t));
         } else {
             proxyinfo[i].clientcommand &= (LEVELCHANGE_KEEP);
         }
-        proxyinfo[i].userinfo_changed_count = 0;
-        proxyinfo[i].userinfo_changed_start = ltime;
+        proxyinfo[i].userinfo.changed_count = 0;
+        proxyinfo[i].userinfo.changed_start = ltime;
         proxyinfo[i].pcmd_noreply_count = 0;
         proxyinfo[i].pmod_noreply_count = 0;
         proxyinfo[i].private_command = 0;
@@ -627,8 +627,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         proxyinfo[i].retries = 0;
         proxyinfo[i].charindex = 0;
         proxyinfo[i].teststr[0] = 0;
-        proxyinfo[i].cl_pitchspeed = 0;
-        proxyinfo[i].cl_anglespeedkey = 0.0;
+        proxyinfo[i].userinfo.cl_pitchspeed = 0;
+        proxyinfo[i].userinfo.cl_anglespeedkey = 0.0;
         proxyinfo[i].votescast = 0;
         proxyinfo[i].votetimeout = 0;
         proxyinfo[i].checked_hacked_exe = 0;
@@ -958,7 +958,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
     proxyinfo[client].enteredgame = ltime;
-    proxyinfo[client].userinfo_changed_start = ltime;
+    proxyinfo[client].userinfo.changed_start = ltime;
 
     ret = 1;
 
@@ -982,7 +982,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         q2a_strcpy(userinfo, "\\name\\badinfo\\skin\\male/grunt");
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo, userinfo, sizeof(proxyinfo[client].userinfo));
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
 
     // set name
     s = Info_ValueForKey(userinfo, "name");
@@ -1003,10 +1003,10 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         return false;
     }
 
-    q2a_strncpy(proxyinfo[client].skin, skinname, sizeof (proxyinfo[client].skin) - 1);
+    q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof (proxyinfo[client].userinfo.skin) - 1);
 
     //   q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
-    q2a_strncpy(proxyinfo[client].userinfo, userinfo, sizeof (proxyinfo[client].userinfo) - 1);
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof (proxyinfo[client].userinfo.raw) - 1);
 
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;
@@ -1183,10 +1183,10 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
         // check for flooding..
         if (nameChangeFloodProtect) {
             if (proxyinfo[client].clientcommand & CCMD_NCSILENCE) {
-                if (proxyinfo[client].namechangetimeout < ltime) {
+                if (proxyinfo[client].userinfo.namechangetimeout < ltime) {
                     proxyinfo[client].clientcommand &= ~CCMD_NCSILENCE;
                 } else {
-                    int secleft = (int) (proxyinfo[client].namechangetimeout - ltime) + 1;
+                    int secleft = (int) (proxyinfo[client].userinfo.namechangetimeout - ltime) + 1;
 
                     //          q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
                     addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
@@ -1229,11 +1229,11 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             }
 
             if (nameChangeFloodProtect) {
-                if (proxyinfo[client].namechangetimeout < ltime) {
-                    proxyinfo[client].namechangetimeout = ltime + nameChangeFloodProtectSec;
-                    proxyinfo[client].namechangecount = 0;
+                if (proxyinfo[client].userinfo.namechangetimeout < ltime) {
+                    proxyinfo[client].userinfo.namechangetimeout = ltime + nameChangeFloodProtectSec;
+                    proxyinfo[client].userinfo.namechangecount = 0;
                 } else {
-                    if (proxyinfo[client].namechangecount >= nameChangeFloodProtectNum) {
+                    if (proxyinfo[client].userinfo.namechangecount >= nameChangeFloodProtectNum) {
                         //            q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
                         Q_snprintf(buffer, sizeof(buffer), nameChangeFloodProtectMsg, proxyinfo[client].name);
                         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
@@ -1241,13 +1241,13 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                         if (nameChangeFloodProtectSilence == 0) {
                             addCmdQueue(client, QCMD_DISCONNECT, 0, 0, nameChangeFloodProtectMsg);
                         } else {
-                            proxyinfo[client].namechangetimeout = ltime + nameChangeFloodProtectSilence;
+                            proxyinfo[client].userinfo.namechangetimeout = ltime + nameChangeFloodProtectSilence;
                             proxyinfo[client].clientcommand |= CCMD_NCSILENCE;
                         }
                         return false;
                     }
 
-                    proxyinfo[client].namechangecount++;
+                    proxyinfo[client].userinfo.namechangecount++;
                 }
             }
         }
@@ -1261,23 +1261,23 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
  */
 bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "skin");
-    char oldskin[sizeof (proxyinfo[client].skin)];
-    char newskin[sizeof (proxyinfo[client].skin)];
+    char oldskin[sizeof (proxyinfo[client].userinfo.skin)];
+    char newskin[sizeof (proxyinfo[client].userinfo.skin)];
     char *skinname;
 
     q2a_strncpy(newskin, s, sizeof (newskin) - 1);
     newskin[sizeof (newskin) - 1] = 0;
 
-    if (proxyinfo[client].skin[0] == 0) {
-        q2a_strcpy(proxyinfo[client].skin, newskin);
-    } else if (q2a_strcmp(proxyinfo[client].skin, newskin) != 0) {
+    if (proxyinfo[client].userinfo.skin[0] == 0) {
+        q2a_strcpy(proxyinfo[client].userinfo.skin, newskin);
+    } else if (q2a_strcmp(proxyinfo[client].userinfo.skin, newskin) != 0) {
         // check for flooding..
         if (skinChangeFloodProtect) {
             if (proxyinfo[client].clientcommand & CCMD_SCSILENCE) {
-                if (proxyinfo[client].skinchangetimeout < ltime) {
+                if (proxyinfo[client].userinfo.skinchangetimeout < ltime) {
                     proxyinfo[client].clientcommand &= ~CCMD_SCSILENCE;
                 } else {
-                    int secleft = (int) (proxyinfo[client].skinchangetimeout - ltime) + 1;
+                    int secleft = (int) (proxyinfo[client].userinfo.skinchangetimeout - ltime) + 1;
 
                     // q2a_strcpy(ent->client->pers.netskin, proxyinfo[client].skin);
                     addCmdQueue(client, QCMD_CHANGESKIN, 0, 0, 0);
@@ -1288,30 +1288,30 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
             }
         }
 
-        q2a_strcpy(oldskin, proxyinfo[client].skin);
-        q2a_strcpy(proxyinfo[client].skin, newskin);
+        q2a_strcpy(oldskin, proxyinfo[client].userinfo.skin);
+        q2a_strcpy(proxyinfo[client].userinfo.skin, newskin);
 
         logEvent(LT_SKINCHANGE, client, ent, oldskin, 0, 0.0, false);
 
         if (skinChangeFloodProtect) {
-            if (proxyinfo[client].skinchangetimeout < ltime) {
-                proxyinfo[client].skinchangetimeout = ltime + skinChangeFloodProtectSec;
-                proxyinfo[client].skinchangecount = 0;
+            if (proxyinfo[client].userinfo.skinchangetimeout < ltime) {
+                proxyinfo[client].userinfo.skinchangetimeout = ltime + skinChangeFloodProtectSec;
+                proxyinfo[client].userinfo.skinchangecount = 0;
             } else {
-                if (proxyinfo[client].skinchangecount >= skinChangeFloodProtectNum) {
+                if (proxyinfo[client].userinfo.skinchangecount >= skinChangeFloodProtectNum) {
                     Q_snprintf(buffer, sizeof(buffer), skinChangeFloodProtectMsg, proxyinfo[client].name);
                     gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                     if (skinChangeFloodProtectSilence == 0) {
                         addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skinChangeFloodProtectMsg);
                     } else {
-                        proxyinfo[client].skinchangetimeout = ltime + skinChangeFloodProtectSilence;
+                        proxyinfo[client].userinfo.skinchangetimeout = ltime + skinChangeFloodProtectSilence;
                         proxyinfo[client].clientcommand |= CCMD_SCSILENCE;
                     }
                     return false;
                 }
 
-                proxyinfo[client].skinchangecount++;
+                proxyinfo[client].userinfo.skinchangecount++;
             }
         }
     }
@@ -1371,21 +1371,21 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     // Don't count excessive cl_maxfps changes as flooding if fpsfloodexempt is true.
     // Changing FPS frequently is normal behavior for jumpmod
     cl_max_temp = Info_ValueForKey(userinfo, "cl_maxfps");
-    cl_max_curr = Info_ValueForKey(proxyinfo[client].userinfo, "cl_maxfps");
+    cl_max_curr = Info_ValueForKey(proxyinfo[client].userinfo.raw, "cl_maxfps");
     if (!fpsFloodExempt && Q_stricmp(cl_max_temp, cl_max_curr) != 0) {
-        proxyinfo[client].userinfo_changed_count++;
+        proxyinfo[client].userinfo.changed_count++;
     }
 
-    if (proxyinfo[client].userinfo_changed_count > USERINFOCHANGE_COUNT) {
-        temp = ltime - proxyinfo[client].userinfo_changed_start;
+    if (proxyinfo[client].userinfo.changed_count > USERINFOCHANGE_COUNT) {
+        temp = ltime - proxyinfo[client].userinfo.changed_start;
         if (temp < USERINFOCHANGE_TIME) {
             gi.bprintf(PRINT_HIGH, "%s tried to flood the server (2)\n", proxyinfo[client].name);
             Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
             gi.AddCommandString(tmptext);
         } else {
             //enuf time passed, reset count
-            proxyinfo[client].userinfo_changed_count = 0;
-            proxyinfo[client].userinfo_changed_start = ltime;
+            proxyinfo[client].userinfo.changed_count = 0;
+            proxyinfo[client].userinfo.changed_start = ltime;
         }
     }
 
@@ -1402,13 +1402,13 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         G_MergeEdicts();
     }
 
-    proxyinfo[client].rate = q2a_atoi(Info_ValueForKey(userinfo, "rate"));
+    proxyinfo[client].userinfo.rate = q2a_atoi(Info_ValueForKey(userinfo, "rate"));
 
-    if (maxrateallowed && proxyinfo[client].rate > maxrateallowed) {
+    if (maxrateallowed && proxyinfo[client].userinfo.rate > maxrateallowed) {
         addCmdQueue(client, QCMD_CLIPTOMAXRATE, 0, 0, 0);
     }
 
-    if (minrateallowed && proxyinfo[client].rate < minrateallowed) {
+    if (minrateallowed && proxyinfo[client].userinfo.rate < minrateallowed) {
         addCmdQueue(client, QCMD_CLIPTOMINRATE, 0, 0, 0);
     }
 
@@ -1448,32 +1448,32 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     if (strlen(cl_max_temp)) {
         //if cl_maxfps has length, then its set
-        proxyinfo[client].maxfps = atoi(cl_max_temp);
+        proxyinfo[client].userinfo.maxfps = atoi(cl_max_temp);
 
         //my check here, if maxfps = 0 and it has length we will NOT allow
-        if (proxyinfo[client].maxfps == 0) {
+        if (proxyinfo[client].userinfo.maxfps == 0) {
             gi.bprintf(PRINT_HIGH, (PRV_KICK_MSG, proxyinfo[client].name));
             
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, (PRV_KICK_MSG, proxyinfo[client].name));
         } else {
             if (maxfpsallowed) {
-                if (proxyinfo[client].maxfps > maxfpsallowed) {
+                if (proxyinfo[client].userinfo.maxfps > maxfpsallowed) {
                     addCmdQueue(client, QCMD_SETMAXFPS, 0, 0, 0);
                 }
             }
         }
     } else {
         //if not, we need to do initial check
-        proxyinfo[client].maxfps = 0;
+        proxyinfo[client].userinfo.maxfps = 0;
         if (maxfpsallowed) {
             addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
         }
     }
 
     if (minfpsallowed) {
-        if (proxyinfo[client].maxfps == 0) {
+        if (proxyinfo[client].userinfo.maxfps == 0) {
             addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
-        } else if (proxyinfo[client].maxfps < minfpsallowed) {
+        } else if (proxyinfo[client].userinfo.maxfps < minfpsallowed) {
             addCmdQueue(client, QCMD_SETMINFPS, 0, 0, 0);
         }
     }
@@ -1484,14 +1484,14 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
         if (newps == 0) {
             addCmdQueue(client, QCMD_SETUPCL_PITCHSPEED, 0, 0, 0);
-        } else if (proxyinfo[client].cl_pitchspeed == 0) {
-            proxyinfo[client].cl_pitchspeed = newps;
+        } else if (proxyinfo[client].userinfo.cl_pitchspeed == 0) {
+            proxyinfo[client].userinfo.cl_pitchspeed = newps;
         } else {
-            proxyinfo[client].cl_pitchspeed = newps;
+            proxyinfo[client].userinfo.cl_pitchspeed = newps;
 
             // ingore changes to 150 because action quake2 generates them itself...
 
-            if (proxyinfo[client].cl_pitchspeed != 150) {
+            if (proxyinfo[client].userinfo.cl_pitchspeed != 150) {
                 logEvent(LT_ZBOT, client, ent, NULL, -7, 0.0, true);
 
                 if (cl_pitchspeed_display) {
@@ -1512,14 +1512,14 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
         if (newas == 0.0) {
             addCmdQueue(client, QCMD_SETUPCL_ANGLESPEEDKEY, 0, 0, 0);
-        } else if (proxyinfo[client].cl_anglespeedkey == 0.0) {
-            proxyinfo[client].cl_anglespeedkey = newas;
+        } else if (proxyinfo[client].userinfo.cl_anglespeedkey == 0.0) {
+            proxyinfo[client].userinfo.cl_anglespeedkey = newas;
         } else {
-            proxyinfo[client].cl_anglespeedkey = newas;
+            proxyinfo[client].userinfo.cl_anglespeedkey = newas;
 
             // ingore changes to 1.5 because action quake2 generates them itself...
 
-            if (proxyinfo[client].cl_anglespeedkey != 1.5) {
+            if (proxyinfo[client].userinfo.cl_anglespeedkey != 1.5) {
                 logEvent(LT_ZBOT, client, ent, NULL, -9, 0.0, true);
 
                 if (cl_anglespeedkey_display) {
@@ -1535,17 +1535,17 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         }
     }
 
-    proxyinfo[client].msg = q2a_atoi(Info_ValueForKey(userinfo, "msg"));
+    proxyinfo[client].userinfo.msg = q2a_atoi(Info_ValueForKey(userinfo, "msg"));
 
-    if (proxyinfo[client].msg > maxMsgLevel) {
+    if (proxyinfo[client].userinfo.msg > maxMsgLevel) {
         addCmdQueue(client, QCMD_MSGDISCONNECT, 2, 0, 0);
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo, userinfo, sizeof(proxyinfo[client].userinfo));
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
 
     proxyinfo[client].next_report = 0;
 
-    CA_PlayerUpdate(client, proxyinfo[client].userinfo);
+    CA_PlayerUpdate(client, proxyinfo[client].userinfo.raw);
     
     profile_stop(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1621,7 +1621,6 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].clientcommand = 0;
     proxyinfo[client].charindex = 0;
     proxyinfo[client].name[0] = 0;
-    proxyinfo[client].skin[0] = 0;
     proxyinfo[client].stuffFile = 0;
     proxyinfo[client].impulsesgenerated = 0;
     proxyinfo[client].floodinfo.chatFloodProtect = false;
@@ -1630,8 +1629,6 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].checked_hacked_exe = 0;
     removeClientCommands(client);
 
-    proxyinfo[client].userinfo_changed_count = 0;
-    proxyinfo[client].userinfo_changed_start = ltime;
     proxyinfo[client].pcmd_noreply_count = 0;
     proxyinfo[client].pmod_noreply_count = 0;
     proxyinfo[client].private_command = 0;
@@ -1657,6 +1654,9 @@ void ClientDisconnect(edict_t *ent) {
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
     q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
+    q2a_memset(&proxyinfo[client].userinfo, 0, sizeof(userinfo_t));
+
+    proxyinfo[client].userinfo.changed_start = ltime;
 
     profile_stop(1, "q2admin->ClientDisconnect", 0, NULL);
 }
@@ -1710,8 +1710,8 @@ void ClientBegin(edict_t *ent) {
         proxyinfo[client].bypass_level = 0;
     }
 
-    proxyinfo[client].userinfo_changed_count = 0;
-    proxyinfo[client].userinfo_changed_start = ltime;
+    proxyinfo[client].userinfo.changed_count = 0;
+    proxyinfo[client].userinfo.changed_start = ltime;
     proxyinfo[client].pcmd_noreply_count = 0;
     proxyinfo[client].pmod_noreply_count = 0;
     proxyinfo[client].private_command = 0;

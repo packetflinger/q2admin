@@ -396,14 +396,14 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'r') {
                 if (ent) {
-                    Q_snprintf(dest, sizeof(dest), "%d", proxyinfo[client].rate);
+                    Q_snprintf(dest, sizeof(dest), "%d", proxyinfo[client].userinfo.rate);
                     while (*dest) {
                         dest++;
                     }
                 }
             } else if (*format == 's') {
                 if (ent) {
-                    cp = proxyinfo[client].skin;
+                    cp = proxyinfo[client].userinfo.skin;
                     while (*cp) {
                         *dest++ = *cp++;
                     }

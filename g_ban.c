@@ -1087,7 +1087,7 @@ int checkBanList(edict_t *ent, int client) {
             }
 
             if (checkentry->password[0]) {
-                char *s = Info_ValueForKey(proxyinfo[client].userinfo, "pw");
+                char *s = Info_ValueForKey(proxyinfo[client].userinfo.raw, "pw");
                 Q_snprintf(
                         strbuffer,
                         sizeof(strbuffer),

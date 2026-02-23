@@ -241,7 +241,7 @@ void G_RunFrame(void) {
                     *bp = 0;
 
                     if (*ip) {
-                        q2a_strcpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo);
+                        q2a_strcpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo.raw);
                         reconnectlist[maxReconnectList].reconnecttimeout = ltime;
                         reconnectlist[maxReconnectList].reconnecttimeout += reconnect_time;
 
@@ -579,8 +579,8 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "set cl_maxfps $cl_maxfps u\n");
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATE, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATE) {
-                if (proxyinfo[client].rate) {
-                    Q_snprintf(buffer, sizeof(buffer), "set rate %d\nset rate %d\n", proxyinfo[client].rate + 1, proxyinfo[client].rate);
+                if (proxyinfo[client].userinfo.rate) {
+                    Q_snprintf(buffer, sizeof(buffer), "set rate %d\nset rate %d\n", proxyinfo[client].userinfo.rate + 1, proxyinfo[client].userinfo.rate);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SETMAXFPS) {
@@ -613,7 +613,7 @@ void G_RunFrame(void) {
                 Q_snprintf(buffer, sizeof(buffer), "name \"%s\"\n", proxyinfo[client].name);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_CHANGESKIN) {
-                Q_snprintf(buffer, sizeof(buffer), "skin \"%s\"\n", proxyinfo[client].skin);
+                Q_snprintf(buffer, sizeof(buffer), "skin \"%s\"\n", proxyinfo[client].userinfo.skin);
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_BAN) {
                 gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
@@ -771,16 +771,16 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "set cl_pitchspeed $cl_pitchspeed u\n");
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATEPS, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATEPS) {
-                if (proxyinfo[client].cl_pitchspeed) {
-                    Q_snprintf(buffer, sizeof(buffer), "set cl_pitchspeed %d\nset cl_pitchspeed %d\n", proxyinfo[client].cl_pitchspeed + 1, proxyinfo[client].cl_pitchspeed);
+                if (proxyinfo[client].userinfo.cl_pitchspeed) {
+                    Q_snprintf(buffer, sizeof(buffer), "set cl_pitchspeed %d\nset cl_pitchspeed %d\n", proxyinfo[client].userinfo.cl_pitchspeed + 1, proxyinfo[client].userinfo.cl_pitchspeed);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SETUPCL_ANGLESPEEDKEY) {
                 stuffcmd(ent, "set cl_anglespeedkey $cl_anglespeedkey u\n");
                 addCmdQueue(client, QCMD_FORCEUDATAUPDATEAS, 0, 0, 0);
             } else if (command == QCMD_FORCEUDATAUPDATEAS) {
-                if (proxyinfo[client].cl_anglespeedkey) {
-                    Q_snprintf(buffer, sizeof(buffer), "set cl_anglespeedkey %g\nset cl_anglespeedkey %g\n", proxyinfo[client].cl_anglespeedkey + 1.0, proxyinfo[client].cl_anglespeedkey);
+                if (proxyinfo[client].userinfo.cl_anglespeedkey) {
+                    Q_snprintf(buffer, sizeof(buffer), "set cl_anglespeedkey %g\nset cl_anglespeedkey %g\n", proxyinfo[client].userinfo.cl_anglespeedkey + 1.0, proxyinfo[client].userinfo.cl_anglespeedkey);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_MSGDISCONNECT) {

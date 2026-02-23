@@ -74,6 +74,23 @@ typedef struct {
     float end_frame;        // lframenum marking the end of the timespan
 } player_msec_t;
 
+// All the userinfo-related variables we need to track
+typedef struct {
+    int changed_count;
+    int changed_start;
+    float cl_anglespeedkey;
+    int cl_pitchspeed;
+    char skin[40];
+    int rate;
+    int maxfps;
+    int msg;
+    int namechangecount;
+    long namechangetimeout;
+    char raw[MAX_INFO_STRING + 45]; // the raw userinfo string
+    int skinchangecount;
+    long skinchangetimeout;
+} userinfo_t;
+
 extern char zbot_teststring1[];
 extern char zbot_teststring_test1[];
 extern char zbot_teststring_test2[];

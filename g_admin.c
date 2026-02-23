@@ -188,7 +188,7 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
     }
 
     proxyinfo_t *pi = &proxyinfo[user];
-    char *ui = pi->userinfo;
+    char *ui = pi->userinfo.raw;
 
     gi.cprintf(ent, PRINT_HIGH, "User Info for \"%s\" [%d]\n",NAME(user), user);
     gi.cprintf(ent, PRINT_HIGH, "  IP Address   %s\n", IP(user));

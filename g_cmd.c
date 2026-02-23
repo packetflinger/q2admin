@@ -2778,7 +2778,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
         // client doesn't send "rate" with userinfo
         if (proxyinfo[client].checked_hacked_exe == 0) {
-            char *ratte = Info_ValueForKey(proxyinfo[client].userinfo, "rate");
+            char *ratte = Info_ValueForKey(proxyinfo[client].userinfo.raw, "rate");
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
                 hackDetected(ent, client);
@@ -3123,7 +3123,7 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].rate > maxrateallowed) {
+                if (proxyinfo[clienti].userinfo.rate > maxrateallowed) {
                     addCmdQueue(client, QCMD_SETUPCL_PITCHSPEED, 0, 0, 0);
                 }
             }
@@ -3313,7 +3313,7 @@ void maxrateallowedRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].rate > maxrateallowed) {
+                if (proxyinfo[clienti].userinfo.rate > maxrateallowed) {
                     addCmdQueue(client, QCMD_CLIPTOMAXRATE, 0, 0, 0);
                 }
             }
@@ -3342,7 +3342,7 @@ void minrateallowedRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].rate < minrateallowed) {
+                if (proxyinfo[clienti].userinfo.rate < minrateallowed) {
                     addCmdQueue(client, QCMD_CLIPTOMINRATE, 0, 0, 0);
                 }
             }
@@ -3368,7 +3368,7 @@ void cl_anglespeedkey_enableRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].rate > maxrateallowed) {
+                if (proxyinfo[clienti].userinfo.rate > maxrateallowed) {
                     addCmdQueue(client, QCMD_SETUPCL_ANGLESPEEDKEY, 0, 0, 0);
                 }
             }
@@ -3400,9 +3400,9 @@ void maxfpsallowedRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].maxfps == 0) {
+                if (proxyinfo[clienti].userinfo.maxfps == 0) {
                     addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
-                } else if (proxyinfo[clienti].maxfps > maxfpsallowed) {
+                } else if (proxyinfo[clienti].userinfo.maxfps > maxfpsallowed) {
                     addCmdQueue(client, QCMD_SETMAXFPS, 0, 0, 0);
                 }
             }
@@ -3436,9 +3436,9 @@ void minfpsallowedRun(int startarg, edict_t *ent, int client) {
 
             // check and set each client...
             for (clienti = 0; clienti < maxclients->value; clienti++) {
-                if (proxyinfo[clienti].maxfps == 0) {
+                if (proxyinfo[clienti].userinfo.maxfps == 0) {
                     addCmdQueue(client, QCMD_SETUPMAXFPS, 0, 0, 0);
-                } else if (proxyinfo[clienti].maxfps < minfpsallowed) {
+                } else if (proxyinfo[clienti].userinfo.maxfps < minfpsallowed) {
                     addCmdQueue(client, QCMD_SETMINFPS, 0, 0, 0);
                 }
             }

@@ -120,19 +120,9 @@ typedef struct {
     byte impulse;                   // player's ucmd->impulse
     byte inuse;                     // used by active player
     char name[16];                  // player name
-    char skin[40];                  // player skin/model
-    int rate;                       // from userinfo
-    int maxfps;                     // from userinfo
-    int cl_pitchspeed;              // value from userinfo
-    float cl_anglespeedkey;         // value from userinfo
     baninfo_t *baninfo;             // the ban entry that matched this player
-    long namechangetimeout;         // can't change name until after this
-    int namechangecount;
-    long skinchangetimeout;         // can't change skin until after this
-    int skinchangecount;
     long chattimeout;
     int chatcount;
-    char userinfo[MAX_INFO_STRING + 45];
     FILE *stuffFile;                // fp for if "!stuff FILE" is used
     int impulsesgenerated;          // cumulative total
     char lastcmd[8192];             // the latest command sent including args
@@ -140,7 +130,6 @@ typedef struct {
     aimbot_t aim_assist;            // for checking if player has an aimbot
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater
-    int msg;                        // player's msg level from userinfo
 
     // used to test the alias (and connect) command with random strings
     char hack_teststring1[RANDOM_STRING_LENGTH + 1];
@@ -167,8 +156,6 @@ typedef struct {
     int frames_count;               // used in ClientThink for FPS display
     player_msec_t msec;
     int done_server_and_blocklist;
-    int userinfo_changed_count;
-    int userinfo_changed_start;
     int private_command;            // ltime while waiting for responses
     int timescale;                  // player's current timescale (from userinfo)
     bool show_fps;              // display fps to client every 0.5 sec
@@ -199,6 +186,7 @@ typedef struct {
     char client_version[MAX_VERSION_CHARS];   // build string
     chatpest_t pest;                // tracking annoying chat behavior
     freeze_t freeze;                // used to freeze a player in place
+    userinfo_t userinfo;
 } proxyinfo_t;
 
 typedef struct {
