@@ -107,7 +107,7 @@ extern char *finalentities;
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
 typedef struct {
-    bool admin;                 // player authed with !admin command
+    bool admin;                     // player authed with !admin command
     unsigned char retries;
     unsigned char rbotretries;
     cmd_queue_t cmdQueue[ALLOWED_MAXCMDS];
@@ -162,8 +162,8 @@ typedef struct {
     int pmod_noreply_count;
     int pcmd_noreply_count;
     int pver;                       // seemingly unused, set but never checked
-    int q2a_admin;                  // admin level granted
-    int q2a_bypass;                 // bypass level granted
+    int admin_level;                // admin level granted
+    int bypass_level;               // bypass level granted
     int frames_count;               // used in ClientThink for FPS display
     player_msec_t msec;
     int done_server_and_blocklist;
@@ -191,7 +191,7 @@ typedef struct {
     int stifle_length;              // frames
     download_t dl;
     vpn_t vpn;                      // vpn status for player
-    netadr_t address;               // the actual IP address of the player
+    netadr_t address;               // player's IP address (IPv4 or IPv6)
     netadr_t network;               // address' parent CIDR range
     char auton_sys_num[10];         // the ASN announcing this network
     char address_str[135];          // unused, remove later

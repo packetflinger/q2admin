@@ -407,8 +407,8 @@ void InitGame(void) {
         proxyinfo[i].show_fps = false;
         proxyinfo[i].frames_count = 0;
         proxyinfo[i].timescale = 0;
-        proxyinfo[i].q2a_admin = 0;
-        proxyinfo[i].q2a_bypass = 0;
+        proxyinfo[i].admin_level = 0;
+        proxyinfo[i].bypass_level = 0;
         proxyinfo[i].clientcommand = 0;
         proxyinfo[i].userinfo_changed_count = 0;
         proxyinfo[i].userinfo_changed_start = ltime;
@@ -598,8 +598,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             proxyinfo[i].timescale = 0;
             proxyinfo[i].frames_count = 0;
             proxyinfo[i].show_fps = false;
-            proxyinfo[i].q2a_admin = 0;
-            proxyinfo[i].q2a_bypass = 0;
+            proxyinfo[i].admin_level = 0;
+            proxyinfo[i].bypass_level = 0;
             proxyinfo[i].admin = 0;
             proxyinfo[i].clientcommand = 0;
             proxyinfo[i].floodinfo.chatFloodProtect = false;
@@ -1649,8 +1649,8 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].timescale = 0;
     proxyinfo[client].frames_count = 0;
     proxyinfo[client].show_fps = false;
-    proxyinfo[client].q2a_admin = 0;
-    proxyinfo[client].q2a_bypass = 0;
+    proxyinfo[client].admin_level = 0;
+    proxyinfo[client].bypass_level = 0;
     proxyinfo[client].vid_restart = false;
     proxyinfo[client].userid = -1;
 
@@ -1706,8 +1706,8 @@ void ClientBegin(edict_t *ent) {
         proxyinfo[client].timescale = 0;
         proxyinfo[client].frames_count = 0;
         proxyinfo[client].show_fps = false;
-        proxyinfo[client].q2a_admin = 0;
-        proxyinfo[client].q2a_bypass = 0;
+        proxyinfo[client].admin_level = 0;
+        proxyinfo[client].bypass_level = 0;
     }
 
     proxyinfo[client].userinfo_changed_count = 0;
@@ -1772,10 +1772,10 @@ void ClientBegin(edict_t *ent) {
         if (adminpassword[0] && !proxyinfo[client].admin) {
             addCmdQueue(client, QCMD_TESTADMIN, 0, 0, 0);
         }
-        if (num_admins && !proxyinfo[client].q2a_admin) {
+        if (num_admins && !proxyinfo[client].admin_level) {
             addCmdQueue(client, QCMD_TESTADMIN2, 0, 0, 0);
         }
-        if (num_q2a_admins && !proxyinfo[client].q2a_bypass) {
+        if (num_q2a_admins && !proxyinfo[client].bypass_level) {
             addCmdQueue(client, QCMD_TESTADMIN3, 0, 0, 0);
         }
         if (customClientCmdConnect[0] || customServerCmdConnect[0]) {

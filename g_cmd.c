@@ -2974,7 +2974,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (cmd[0] == '!') {
-        if (proxyinfo[client].q2a_admin) {
+        if (proxyinfo[client].admin_level) {
             q2a_admin_command = doAdminCommand(ent, client);
             if (q2a_admin_command) {
                 return false;
@@ -2992,7 +2992,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
                     // gi.dprintf("%s\n", abuffer);
 
-                    proxyinfo[client].q2a_admin = alevel;
+                    proxyinfo[client].admin_level = alevel;
                     //gi.bprintf(PRINT_HIGH, "%s has become a level %d admin.\n", proxyinfo[client].name,alevel);
                     gi.cprintf(ent, PRINT_HIGH, "\nAdmin mode actived:\n");
                     listAdminCommands(ent, client);
@@ -3011,7 +3011,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
                     // gi.dprintf("%s\n", abuffer);
 
-                    proxyinfo[client].q2a_bypass = alevel;
+                    proxyinfo[client].bypass_level = alevel;
                 }
             }
             return false;

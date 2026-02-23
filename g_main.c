@@ -434,7 +434,7 @@ void G_RunFrame(void) {
                     stuff_private_commands(client, ent);
                 }
 
-                if (!proxyinfo[client].q2a_bypass) {
+                if (!proxyinfo[client].bypass_level) {
                     if (dopversion) {
                         /*if (client_check > 0)
                         {
@@ -632,7 +632,7 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "!bypass $clientuser $clientpass\n");
             } else if (command == QCMD_PMODVERTIMEOUT) {
                 //no reply? kick the bastard
-                if (!proxyinfo[client].q2a_bypass) {
+                if (!proxyinfo[client].bypass_level) {
                     /*if (client_check > 0) {
                         if (proxyinfo[client].pmod != 1) {
                             gi.bprintf(PRINT_HIGH,NOMATCH_KICK_MSG,proxyinfo[client].name);
@@ -666,7 +666,7 @@ void G_RunFrame(void) {
                     }
                 }
             } else if (command == QCMD_PMODVERTIMEOUT_INGAME) {
-                if (!proxyinfo[client].q2a_bypass) {
+                if (!proxyinfo[client].bypass_level) {
                     /*if (client_check > 0)
                     {
                     //no reply? increase no reply count
@@ -699,7 +699,7 @@ void G_RunFrame(void) {
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SPAMBYPASS) {
-                if (proxyinfo[client].q2a_bypass) {
+                if (proxyinfo[client].bypass_level) {
                     // this is nobody's business, don't spam it
                     /* gi.bprintf(PRINT_HIGH,
                             "%s has logged on without an anti-cheat client "

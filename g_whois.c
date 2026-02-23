@@ -35,7 +35,7 @@ void whois(int client, edict_t *ent) {
     if ((temp < maxclients->value) && (temp >= 0)) {
         if ((proxyinfo[temp].inuse) && (proxyinfo[temp].userid >= 0)) {
             //got match, dump details except if admin has proper flag
-            if (proxyinfo[temp].q2a_admin & ADMIN_LEVEL7) {
+            if (proxyinfo[temp].admin_level & ADMIN_LEVEL7) {
                 gi.cprintf(ent, PRINT_HIGH, "  Unable to fetch info for %i\n", temp);
                 return;
             }
@@ -50,7 +50,7 @@ void whois(int client, edict_t *ent) {
         if ((proxyinfo[i].inuse) && (proxyinfo[i].userid >= 0)) {
             //only do partial match on these, dump all that apply
             if (q2a_strcmp(proxyinfo[i].name, a1) == 0) {
-                if (proxyinfo[i].q2a_admin & ADMIN_LEVEL7) {
+                if (proxyinfo[i].admin_level & ADMIN_LEVEL7) {
                     gi.cprintf(ent, PRINT_HIGH, "  Unable to fetch info for %s\n", a1);
                     return;
                 }
@@ -96,7 +96,7 @@ void whois_dumpdetails(int client, edict_t *ent, int userid) {
     unsigned int i;
     for (i = 0; i < 10; i++) {
         if (whois_details[userid].dyn[i].name[0]) {
-            if (!proxyinfo[client].q2a_admin) {
+            if (!proxyinfo[client].admin_level) {
                 gi.cprintf(ent, PRINT_HIGH, "    %02i. %s\n", i + 1, whois_details[userid].dyn[i].name);
             } else {
                 gi.cprintf(ent, PRINT_HIGH, "    %02i. %s %s\n", i + 1, whois_details[userid].dyn[i].name, whois_details[userid].ip);

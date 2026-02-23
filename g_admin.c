@@ -74,26 +74,26 @@ file2:
  * Show an admin what commands they are permitted to use
  */
 void listAdminCommands(edict_t *ent, int client) {
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL1) {
         gi.cprintf(ent, PRINT_HIGH, "    - !boot <number>\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL2) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dumpmsec\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL3) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL3) {
         gi.cprintf(ent, PRINT_HIGH, "    - !changemap <mapname>\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL4) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dumpuser <num>\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL5) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL5) {
         gi.cprintf(ent, PRINT_HIGH, "    - !auth\n");
         gi.cprintf(ent, PRINT_HIGH, "    - !gfx\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL6) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL6) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dostuff <num> <commands>\n");
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL8) {
         if (whois_active) {
             gi.cprintf(ent, PRINT_HIGH, "    - !writewhois\n");
         }
@@ -204,7 +204,7 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
     if (strlen(pi->gl_driver)) {
         gi.cprintf(ent, PRINT_HIGH, "  gl_driver    %s\n", pi->gl_driver);
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL8) {
         gi.cprintf(ent, PRINT_HIGH, "  Full Userinfo\n    \"%s\"\n", ui);
     }
 }
@@ -283,26 +283,26 @@ int doAdminCommand(edict_t *ent, int client) {
         gi.dprintf("%s\n", abuffer);
     }
 
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL1) {
         if (strcmp(gi.argv(0), "!boot") == 0) {
             adm_boot(ent, client, atoi(gi.argv(1)));
             done = 1;
         }
     }
 
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL2) {
         if (strcmp(gi.argv(0), "!dumpmsec") == 0) {
             adm_dumpmsec(ent, client);
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL3) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL3) {
         if (strcmp(gi.argv(0), "!changemap") == 0) {
             adm_changemap(ent, client, gi.argv(1));
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL4) {
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
             adm_dumpuser(ent, client, atoi(gi.argv(1)), true);
             done = 1;
@@ -311,7 +311,7 @@ int doAdminCommand(edict_t *ent, int client) {
             done = 1;
         }
     }
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL5) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL5) {
         if (strcmp(gi.argv(0), "!auth") == 0) {
             ADMIN_auth(ent);
             done = 1;
@@ -323,7 +323,7 @@ int doAdminCommand(edict_t *ent, int client) {
         }
     }
 
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL6) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL6) {
         if (strcmp(gi.argv(0), "!dostuff") == 0) {
             if (gi.argc() > 2) {
                 send_to_client = atoi(gi.argv(1));
@@ -357,7 +357,7 @@ int doAdminCommand(edict_t *ent, int client) {
         }
     }
 
-    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
+    if (proxyinfo[client].admin_level & ADMIN_LEVEL8) {
         if ((strcmp(gi.argv(0), "!writewhois") == 0) && (whois_active)) {
             whois_write_file();
             done = 1;
