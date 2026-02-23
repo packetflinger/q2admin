@@ -222,9 +222,9 @@ void adm_auth(edict_t *ent) {
 }
 
 /**
- *
+ * Force all players to display their GL driver and mode.
  */
-void ADMIN_gfx(edict_t *ent) {
+void adm_gfx(edict_t *ent) {
     unsigned int i;
     for (i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
@@ -326,7 +326,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
             done = 1;
             gi.cprintf(ent, PRINT_HIGH, "A new auth command has been issued.\n");
         } else if (strcmp(gi.argv(0), "!gfx") == 0) {
-            ADMIN_gfx(ent);
+            adm_gfx(ent);
             done = 1;
             gi.cprintf(ent, PRINT_HIGH, "Graphics command issued.\n");
         }

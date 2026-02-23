@@ -39,7 +39,7 @@ void ADMIN_boot(edict_t *ent, int client, int user);
 void ADMIN_changemap(edict_t *ent, int client, char *mname);
 void adm_dumpmsec(edict_t *ent, int client);
 void adm_dumpuser(edict_t *ent, int client, int user, bool check);
-void ADMIN_gfx(edict_t *ent);
+void adm_gfx(edict_t *ent);
 void adm_players(edict_t *ent, int client);
 int ADMIN_process_command(edict_t *ent, int client);
 int getAdminLevel(char *givenpass, char *givenname);
