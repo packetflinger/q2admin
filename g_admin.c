@@ -11,9 +11,9 @@ int num_admins = 0;
 int num_q2a_admins = 0;
 
 /**
- *
+ * Load admin and bypass users from the config files on disk.
  */
-void Read_Admin_cfg(void) {
+void readAdminConfig(void) {
     FILE *f;
     char name[256];
     int i, i2;

@@ -450,7 +450,7 @@ void InitGame(void) {
         removeClientCommands(i);
     }
 
-    Read_Admin_cfg();
+    readAdminConfig();
 
     if (whois_active) {
         whois_details = G_Malloc(whois_active * sizeof(user_details));
