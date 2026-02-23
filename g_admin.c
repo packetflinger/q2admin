@@ -110,9 +110,9 @@ void reloadLoginFileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- *
+ * Get the bypass level associated with a particular user entry
  */
-int get_bypass_level(char *givenpass, char *givenname) {
+int getBypassLevel(char *givenpass, char *givenname) {
     int got_level = 0;
     unsigned int i;
 
