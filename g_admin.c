@@ -71,29 +71,29 @@ file2:
 }
 
 /**
- *
+ * Show an admin what commands they are permitted to use
  */
 void List_Admin_Commands(edict_t *ent, int client) {
-    if (proxyinfo[client].q2a_admin & 1) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
         gi.cprintf(ent, PRINT_HIGH, "    - !boot <number>\n");
     }
-    if (proxyinfo[client].q2a_admin & 2) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dumpmsec\n");
     }
-    if (proxyinfo[client].q2a_admin & 4) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL3) {
         gi.cprintf(ent, PRINT_HIGH, "    - !changemap <mapname>\n");
     }
-    if (proxyinfo[client].q2a_admin & 8) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dumpuser <num>\n");
     }
-    if (proxyinfo[client].q2a_admin & 16) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL5) {
         gi.cprintf(ent, PRINT_HIGH, "    - !auth\n");
         gi.cprintf(ent, PRINT_HIGH, "    - !gfx\n");
     }
-    if (proxyinfo[client].q2a_admin & 32) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL6) {
         gi.cprintf(ent, PRINT_HIGH, "    - !dostuff <num> <commands>\n");
     }
-    if (proxyinfo[client].q2a_admin & 128) {
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
         if (whois_active) {
             gi.cprintf(ent, PRINT_HIGH, "    - !writewhois\n");
         }
