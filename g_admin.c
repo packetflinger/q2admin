@@ -73,7 +73,7 @@ file2:
 /**
  * Show an admin what commands they are permitted to use
  */
-void List_Admin_Commands(edict_t *ent, int client) {
+void listAdminCommands(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
         gi.cprintf(ent, PRINT_HIGH, "    - !boot <number>\n");
     }

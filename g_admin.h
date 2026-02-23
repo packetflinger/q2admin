@@ -44,6 +44,6 @@ void adm_players(edict_t *ent, int client);
 int ADMIN_process_command(edict_t *ent, int client);
 int get_admin_level(char *givenpass, char *givenname);
 int get_bypass_level(char *givenpass, char *givenname);
-void List_Admin_Commands(edict_t *ent, int client);
+void listAdminCommands(edict_t *ent, int client);
 void Read_Admin_cfg(void);
 void reloadLoginFileRun(int startarg, edict_t *ent, int client);
