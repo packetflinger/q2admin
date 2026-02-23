@@ -128,9 +128,9 @@ int getBypassLevel(char *givenpass, char *givenname) {
 }
 
 /**
- *
+ * Get the admin level associated with a particular user entry
  */
-int get_admin_level(char *givenpass, char *givenname) {
+int getAdminLevel(char *givenpass, char *givenname) {
     int got_level = 0;
     unsigned int i;
 
