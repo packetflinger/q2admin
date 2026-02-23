@@ -37,7 +37,7 @@ extern int num_q2a_admins;
 void ADMIN_auth(edict_t *ent);
 void ADMIN_boot(edict_t *ent, int client, int user);
 void ADMIN_changemap(edict_t *ent, int client, char *mname);
-void ADMIN_dumpmsec(edict_t *ent, int client);
+void adm_dumpmsec(edict_t *ent, int client);
 void ADMIN_dumpuser(edict_t *ent, int client, int user, bool check);
 void ADMIN_gfx(edict_t *ent);
 void ADMIN_players(edict_t *ent, int client);

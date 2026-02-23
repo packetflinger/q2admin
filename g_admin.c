@@ -160,17 +160,16 @@ void ADMIN_players(edict_t *ent, int client) {
 }
 
 /**
- *
+ * Admin command to display the current (from the previous ClientThink run)
+ * msec value for each player connected.
  */
-void ADMIN_dumpmsec(edict_t *ent, int client) {
-    unsigned int i;
-    gi.cprintf(ent, PRINT_HIGH, "MSEC\n");
-    for (i = 0; i < maxclients->value; i++) {
+void adm_dumpmsec(edict_t *ent, int client) {
+    gi.cprintf(ent, PRINT_HIGH, "Player MSEC Values:\n");
+    for (int i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
-            gi.cprintf(ent, PRINT_HIGH, "  %2i : %-16s %d\n", i, proxyinfo[i].name, proxyinfo[i].msec.previous);
+            gi.cprintf(ent, PRINT_HIGH, "  %2i : %-16s %d\n", i, NAME(i), proxyinfo[i].msec.previous);
         }
     }
-    gi.cprintf(ent, PRINT_HIGH, "*******************************\n");
 }
 
 /**
@@ -323,7 +322,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
         //Level 2 commands
         if (strcmp(gi.argv(0), "!dumpmsec") == 0) {
-            ADMIN_dumpmsec(ent, client);
+            adm_dumpmsec(ent, client);
             done = 1;
         }
     }
