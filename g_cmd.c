@@ -2975,19 +2975,18 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     if (cmd[0] == '!') {
         if (proxyinfo[client].q2a_admin) {
-            q2a_admin_command = ADMIN_process_command(ent, client);
+            q2a_admin_command = doAdminCommand(ent, client);
             if (q2a_admin_command) {
                 return false;
             }
         }
 
         if (Q_stricmp(cmd, "!admin") == 0) {
-            //pooy admin
             if (num_admins) {
                 if (gi.argc() != 3) {
                     return false;
                 }
-                alevel = get_admin_level(gi.argv(2), gi.argv(1));
+                alevel = getAdminLevel(gi.argv(2), gi.argv(1));
                 if (alevel) {
                     Q_snprintf(abuffer, sizeof(abuffer), "ADMIN - %s %s %d", gi.argv(2), gi.argv(1), alevel);
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
@@ -2996,7 +2995,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     proxyinfo[client].q2a_admin = alevel;
                     //gi.bprintf(PRINT_HIGH, "%s has become a level %d admin.\n", proxyinfo[client].name,alevel);
                     gi.cprintf(ent, PRINT_HIGH, "\nAdmin mode actived:\n");
-                    List_Admin_Commands(ent, client);
+                    listAdminCommands(ent, client);
                 }
             }
             return false;
@@ -3006,7 +3005,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                 if (gi.argc() != 3) {
                     return false;
                 }
-                alevel = get_bypass_level(gi.argv(2), gi.argv(1));
+                alevel = getBypassLevel(gi.argv(2), gi.argv(1));
                 if (alevel) {
                     Q_snprintf(abuffer, sizeof(abuffer), "CLIENT BYPASS - %s %s %d", gi.argv(2), gi.argv(1), alevel);
                     logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
