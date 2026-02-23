@@ -268,9 +268,9 @@ void adm_changemap(edict_t *ent, int client, char *mname) {
 }
 
 /**
- *
+ * Handles running of admin commands by admin players
  */
-int ADMIN_process_command(edict_t *ent, int client) {
+int doAdminCommand(edict_t *ent, int client) {
     unsigned int i, done = 0;
     int send_to_client;
     edict_t *send_to_ent;
@@ -284,7 +284,6 @@ int ADMIN_process_command(edict_t *ent, int client) {
     }
 
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
-        //Level 1 commands
         if (strcmp(gi.argv(0), "!boot") == 0) {
             adm_boot(ent, client, atoi(gi.argv(1)));
             done = 1;
@@ -292,21 +291,18 @@ int ADMIN_process_command(edict_t *ent, int client) {
     }
 
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL2) {
-        //Level 2 commands
         if (strcmp(gi.argv(0), "!dumpmsec") == 0) {
             adm_dumpmsec(ent, client);
             done = 1;
         }
     }
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL3) {
-        //Level 3 commands
         if (strcmp(gi.argv(0), "!changemap") == 0) {
             adm_changemap(ent, client, gi.argv(1));
             done = 1;
         }
     }
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
-        //Level 4 commands
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
             adm_dumpuser(ent, client, atoi(gi.argv(1)), true);
             done = 1;
@@ -316,7 +312,6 @@ int ADMIN_process_command(edict_t *ent, int client) {
         }
     }
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL5) {
-        //Level 5 commands
         if (strcmp(gi.argv(0), "!auth") == 0) {
             ADMIN_auth(ent);
             done = 1;
@@ -329,8 +324,6 @@ int ADMIN_process_command(edict_t *ent, int client) {
     }
 
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL6) {
-        //Level 7 commands
-
         if (strcmp(gi.argv(0), "!dostuff") == 0) {
             if (gi.argc() > 2) {
                 send_to_client = atoi(gi.argv(1));

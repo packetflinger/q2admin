@@ -41,7 +41,7 @@ void adm_dumpmsec(edict_t *ent, int client);
 void adm_dumpuser(edict_t *ent, int client, int user, bool check);
 void adm_gfx(edict_t *ent);
 void adm_players(edict_t *ent, int client);
-int ADMIN_process_command(edict_t *ent, int client);
+int doAdminCommand(edict_t *ent, int client);
 int getAdminLevel(char *givenpass, char *givenname);
 int getBypassLevel(char *givenpass, char *givenname);
 void listAdminCommands(edict_t *ent, int client);
