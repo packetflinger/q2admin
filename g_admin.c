@@ -234,9 +234,9 @@ void adm_gfx(edict_t *ent) {
 }
 
 /**
- *
+ * Kick a player
  */
-void ADMIN_boot(edict_t *ent, int client, int user) {
+void adm_boot(edict_t *ent, int client, int user) {
     char tmptext[100];
     if (gi.argc() < 2) {
         adm_players(ent, client);
@@ -290,7 +290,7 @@ int ADMIN_process_command(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL1) {
         //Level 1 commands
         if (strcmp(gi.argv(0), "!boot") == 0) {
-            ADMIN_boot(ent, client, atoi(gi.argv(1)));
+            adm_boot(ent, client, atoi(gi.argv(1)));
             done = 1;
         }
     }
