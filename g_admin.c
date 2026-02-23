@@ -146,17 +146,17 @@ int get_admin_level(char *givenpass, char *givenname) {
 }
 
 /**
- *
+ * List out the players and their index. This probably shouldn't be an admin
+ * command, most mods provide a command like this, it's not providing any
+ * privileged information.
  */
-void ADMIN_players(edict_t *ent, int client) {
-    unsigned int i;
-    gi.cprintf(ent, PRINT_HIGH, "Players\n");
-    for (i = 0; i < maxclients->value; i++) {
+void adm_players(edict_t *ent, int client) {
+    gi.cprintf(ent, PRINT_HIGH, "Player List\n");
+    for (int i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
-            gi.cprintf(ent, PRINT_HIGH, "  %2i : %s\n", i, proxyinfo[i].name);
+            gi.cprintf(ent, PRINT_HIGH, "  %2i : %s\n", i, NAME(i));
         }
     }
-    gi.cprintf(ent, PRINT_HIGH, "*******************************\n");
 }
 
 /**
@@ -179,7 +179,7 @@ void ADMIN_dumpuser(edict_t *ent, int client, int user, bool check) {
     char *cp1;
 
     if (gi.argc() < 2) {
-        ADMIN_players(ent, client);
+        adm_players(ent, client);
         return;
     }
 
@@ -263,7 +263,7 @@ void ADMIN_gfx(edict_t *ent) {
 void ADMIN_boot(edict_t *ent, int client, int user) {
     char tmptext[100];
     if (gi.argc() < 2) {
-        ADMIN_players(ent, client);
+        adm_players(ent, client);
         return;
     }
     if ((user >= 0) && (user < maxclients->value)) {
@@ -281,7 +281,7 @@ void ADMIN_boot(edict_t *ent, int client, int user) {
 void ADMIN_changemap(edict_t *ent, int client, char *mname) {
     char tmptext[100];
     if (gi.argc() < 2) {
-        ADMIN_players(ent, client);
+        adm_players(ent, client);
         return;
     }
     if (q2a_strstr(mname, "\"")) {

@@ -19,7 +19,7 @@ void whois(int client, edict_t *ent) {
 
     if (gi.argc() < 2) {
         gi.cprintf(ent, PRINT_HIGH, "\nIncorrect syntax, use: 'whois <name>' or 'whois <id>'\n");
-        ADMIN_players(ent, client);
+        adm_players(ent, client);
         return;
     }
 
