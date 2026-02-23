@@ -173,63 +173,39 @@ void adm_dumpmsec(edict_t *ent, int client) {
 }
 
 /**
- *
+ * Display detailed info about a particular player, mostly from their userinfo
+ * string.
  */
-void ADMIN_dumpuser(edict_t *ent, int client, int user, bool check) {
-    char *cp1;
-
+void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
     if (gi.argc() < 2) {
         adm_players(ent, client);
         return;
     }
-
     if (check) {
         if (!proxyinfo[user].inuse) {
             return;
         }
     }
-    //if (proxyinfo[user].inuse)
-    {
-        gi.cprintf(ent, PRINT_HIGH, "User Info for client %d\n", user);
 
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "msg");
-        gi.cprintf(ent, PRINT_HIGH, "msg          %s\n", cp1);
+    proxyinfo_t *pi = &proxyinfo[user];
+    char *ui = pi->userinfo;
 
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "spectator");
-        gi.cprintf(ent, PRINT_HIGH, "spectator    %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "cl_maxfps");
-        gi.cprintf(ent, PRINT_HIGH, "cl_maxfps    %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "gender");
-        gi.cprintf(ent, PRINT_HIGH, "gender       %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "fov");
-        gi.cprintf(ent, PRINT_HIGH, "fov          %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "rate");
-        gi.cprintf(ent, PRINT_HIGH, "rate         %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "skin");
-        gi.cprintf(ent, PRINT_HIGH, "skin         %s\n", cp1);
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "hand");
-        gi.cprintf(ent, PRINT_HIGH, "hand         %s\n", cp1);
-
-        if (strlen(proxyinfo[user].gl_driver)) {
-            gi.cprintf(ent, PRINT_HIGH, "gl_driver    %s\n", proxyinfo[user].gl_driver);
-        }
-        if (proxyinfo[client].q2a_admin & 16) {
-            gi.cprintf(ent, PRINT_HIGH, "ip           %s\n", IP(user));
-        }
-
-        cp1 = Info_ValueForKey(proxyinfo[user].userinfo, "name");
-        gi.cprintf(ent, PRINT_HIGH, "name         %s\n", cp1);
-
-        if (proxyinfo[client].q2a_admin & 128) {
-            gi.cprintf(ent, PRINT_HIGH, "full         %s\n", proxyinfo[user].userinfo);
-        }
-        gi.cprintf(ent, PRINT_HIGH, "client ver   %s\n", proxyinfo[user].client_version);
+    gi.cprintf(ent, PRINT_HIGH, "User Info for \"%s\" [%d]\n",NAME(user), user);
+    gi.cprintf(ent, PRINT_HIGH, "  IP Address   %s\n", IP(user));
+    gi.cprintf(ent, PRINT_HIGH, "  Client ver   %s\n", pi->client_version);
+    gi.cprintf(ent, PRINT_HIGH, "  MSG          %s\n", Info_ValueForKey(ui, "msg"));
+    gi.cprintf(ent, PRINT_HIGH, "  Spectator    %s\n", Info_ValueForKey(ui, "spectator"));
+    gi.cprintf(ent, PRINT_HIGH, "  cl_maxfps    %s\n", Info_ValueForKey(ui, "cl_maxfps"));
+    gi.cprintf(ent, PRINT_HIGH, "  Gender       %s\n", Info_ValueForKey(ui, "gender"));
+    gi.cprintf(ent, PRINT_HIGH, "  FOV          %s\n", Info_ValueForKey(ui, "fov"));
+    gi.cprintf(ent, PRINT_HIGH, "  Rate         %s\n", Info_ValueForKey(ui, "rate"));
+    gi.cprintf(ent, PRINT_HIGH, "  Skin         %s\n", Info_ValueForKey(ui, "skin"));
+    gi.cprintf(ent, PRINT_HIGH, "  Hand         %s\n", Info_ValueForKey(ui, "hand"));
+    if (strlen(pi->gl_driver)) {
+        gi.cprintf(ent, PRINT_HIGH, "  gl_driver    %s\n", pi->gl_driver);
+    }
+    if (proxyinfo[client].q2a_admin & ADMIN_LEVEL8) {
+        gi.cprintf(ent, PRINT_HIGH, "  Full Userinfo\n    \"%s\"\n", ui);
     }
 }
 
@@ -336,10 +312,10 @@ int ADMIN_process_command(edict_t *ent, int client) {
     if (proxyinfo[client].q2a_admin & ADMIN_LEVEL4) {
         //Level 4 commands
         if (strcmp(gi.argv(0), "!dumpuser") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), true);
+            adm_dumpuser(ent, client, atoi(gi.argv(1)), true);
             done = 1;
         } else if (strcmp(gi.argv(0), "!dumpuser_any") == 0) {
-            ADMIN_dumpuser(ent, client, atoi(gi.argv(1)), false);
+            adm_dumpuser(ent, client, atoi(gi.argv(1)), false);
             done = 1;
         }
     }
