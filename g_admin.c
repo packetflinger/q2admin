@@ -30,10 +30,9 @@ void Read_Admin_cfg(void) {
     i = 0;
     while ((!feof(f)) && (i < MAX_ADMINS)) {
         fscanf(f, "%s %s %d", admin_pass[i].name, admin_pass[i].password, &admin_pass[i].level);
-        i++;
-    }
-    if (!admin_pass[i].level) {
-        i--;
+        if (admin_pass[i].level > 0) {
+            i++;
+        }
     }
     num_admins = i;
     if (i < MAX_ADMINS) {
@@ -41,6 +40,7 @@ void Read_Admin_cfg(void) {
             admin_pass[i2].level = 0;
         }
     }
+    gi.cprintf(NULL, PRINT_HIGH, "%d admin users loaded\n", i);
     fclose(f);
 
 file2:
@@ -56,10 +56,9 @@ file2:
     i = 0;
     while ((!feof(f)) && (i < MAX_ADMINS)) {
         fscanf(f, "%s %s %d", q2a_bypass_pass[i].name, q2a_bypass_pass[i].password, &q2a_bypass_pass[i].level);
-        i++;
-    }
-    if (!q2a_bypass_pass[i].level) {
-        i--;
+        if (q2a_bypass_pass[i].level > 0) {
+            i++;
+        }
     }
     num_q2a_admins = i;
     if (i < MAX_ADMINS) {
@@ -67,6 +66,7 @@ file2:
             q2a_bypass_pass[i2].level = 0;
         }
     }
+    gi.cprintf(NULL, PRINT_HIGH, "%d bypass users loaded\n", i);
     fclose(f);
 }
 
@@ -210,11 +210,11 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
 }
 
 /**
- *
+ * Make each client say their version info. This is pointless given the
+ * !versions command built-in to modern clients.
  */
-void ADMIN_auth(edict_t *ent) {
-    unsigned int i;
-    for (i = 0; i < maxclients->value; i++) {
+void adm_auth(edict_t *ent) {
+    for (int i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
             stuffcmd(getEnt((i + 1)), "say I'm using $version\n");
         }

@@ -34,7 +34,7 @@ extern admin_type q2a_bypass_pass[MAX_ADMINS];
 extern int num_admins;
 extern int num_q2a_admins;
 
-void ADMIN_auth(edict_t *ent);
+void adm_auth(edict_t *ent);
 void ADMIN_boot(edict_t *ent, int client, int user);
 void ADMIN_changemap(edict_t *ent, int client, char *mname);
 void adm_dumpmsec(edict_t *ent, int client);
