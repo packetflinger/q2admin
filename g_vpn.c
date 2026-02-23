@@ -86,6 +86,22 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
             gi.cprintf(download->initiator, PRINT_HIGH, buffer);
             addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
         }
+        if (ip_limit_vpn > 0 && proxyinfo[i].vpn.state == VPN_POSITIVE) {
+            int sameasn = 1;
+            for (int j = 0; j < (int)maxclients->value; j++) {
+               if (!proxyinfo[j].inuse || i == j) {
+                   continue;
+               }
+               if (Q_stricmp(proxyinfo[j].auton_sys_num, proxyinfo[i].auton_sys_num) == 0) {
+                   sameasn++;
+               }
+           }
+           if (sameasn > ip_limit_vpn) {
+               Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same VPN provider\n");
+               gi.cprintf(proxyinfo[i].ent, PRINT_HIGH, buffer);
+               addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
+           }
+        }
         gi.cprintf(NULL, PRINT_HIGH, "%s %s %s%s\n", NAME(i), net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num, (isVPN(i) ? " (VPN)" : ""));
     }
 }

@@ -623,6 +623,12 @@ q2acmd_t q2aCommands[] = {
         &ip_limit
     },
     {
+        "ip_limit_vpn",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &ip_limit_vpn
+    },
+    {
         "ipbanning_enable",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,

@@ -138,6 +138,7 @@ bool http_debug                         = false;
 bool http_enable                        = true;
 bool http_verifyssl                     = true;
 int  ip_limit                           = 0;
+int  ip_limit_vpn                       = 0;
 char lanip[256]                         = "";
 int lframenum;
 bool lockDownServer                     = false;
@@ -1736,12 +1737,9 @@ void ClientBegin(edict_t *ent) {
     q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
 
-    // positive value is normal client limit
-    // negative value is vpn client limit (abs)
-    // 0 is no limit
-    if (ip_limit != 0) {
+    if (ip_limit > 0) {
         int sameaddr = 1;
-        for (int i=0; i<(int)maxclients->value; i++) {
+        for (int i = 0; i < (int)maxclients->value; i++) {
             if (!proxyinfo[i].inuse || i == client) {
                 continue;
             }
@@ -1749,13 +1747,8 @@ void ClientBegin(edict_t *ent) {
                 sameaddr++;
             }
         }
-        if (sameaddr > ip_limit && ip_limit > 0) {
-            Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same IP address (%d)\n", sameaddr);
-            gi.cprintf(ent, PRINT_HIGH, buffer);
-            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
-        }
-        if (sameaddr > (ip_limit * -1) && ip_limit < 0 && proxyinfo[client].vpn.state == VPN_POSITIVE) {
-            Q_snprintf(buffer, sizeof(buffer), "Too many VPN connections from the same IP address (%d)\n", sameaddr);
+        if (sameaddr > ip_limit) {
+            Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same IP address\n");
             gi.cprintf(ent, PRINT_HIGH, buffer);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
         }

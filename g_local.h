@@ -412,8 +412,8 @@ extern int clientMaxVotes;
 extern int numofdisplays;
 extern int maximpulses;
 
-// 0 no limit, positive normal limit, negative vpn limit
-extern int      ip_limit;
+extern int ip_limit;        // 0 for no limit
+extern int ip_limit_vpn;    // 0 for no limit, per ASN
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern byte maxImpulses;
