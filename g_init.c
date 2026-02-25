@@ -208,7 +208,7 @@ char vpn_api_key[33]                    = "";
 bool vpn_enable                         = false;
 bool vpn_kick                           = true;
 bool zbotdetect                         = true;
-char zbotmotd[256];
+char motdFilename[256];
 char zbotuserdisplay[256];
 
 //r1ch 2005-01-26 disable hugely buggy commands BEGIN
@@ -643,10 +643,10 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     freeDisableLists();
 
     motd[0] = 0;
-    if (zbotmotd[0]) {
-        motdptr = fopen(zbotmotd, "rt");
+    if (motdFilename[0]) {
+        motdptr = fopen(motdFilename, "rt");
         if (!motdptr) {
-            zbotmotd[0] = 0;
+            motdFilename[0] = 0;
         } else {
             len = 0;
             while (fgets(buffer, 256, motdptr)) {
@@ -1790,7 +1790,7 @@ void ClientBegin(edict_t *ent) {
             gi.cprintf(ent, PRINT_HIGH, "WARNING: Your userinfo looks to have overflowed. This may cause you problems during gameplay. Restart quake2 to clear your userinfo space.\n");
         }
 
-        if (zbotmotd[0]) {
+        if (motdFilename[0]) {
             gi.centerprintf(ent, motd);
         }
 

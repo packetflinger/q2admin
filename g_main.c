@@ -755,7 +755,7 @@ void G_RunFrame(void) {
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SHOWMOTD) {
-                if (zbotmotd[0]) {
+                if (motdFilename[0]) {
                     gi.centerprintf(ent, motd);
                 }
             } else if (command == QCMD_RUNVOTECMD) {
@@ -828,8 +828,19 @@ void G_RunFrame(void) {
 }
 
 /**
- * Returns a pointer to the structure with all entry points and global
- * variables
+ * This is the entry point for the library. It is called by the server when
+ * it's trying to load the game library. We will in turn load the actual game
+ * library creating the chain:
+ *
+ *   server <-> q2admin <-> q2mod
+ *
+ * Neither server nor q2mod will know (or care) we're MITM-ing. The server will
+ * call our functions via the function pointers in `game_export_t` and we will
+ * act on certain data and then pass the inputs along to the q2mod.
+ *
+ * The q2mod sees us as the server.
+ * The server sees us as the q2mod.
+ * We see both for what they are.
  */
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
@@ -851,6 +862,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     import->linkentity = linkentity_internal;
     import->unlinkentity = unlinkentity_internal;
 
+    // The server will call these functions directly
     ge.Init = InitGame;
     ge.Shutdown = ShutdownGame;
     ge.SpawnEntities = SpawnEntities;

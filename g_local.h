@@ -430,7 +430,7 @@ extern int maxMsgLevel;
 extern bool consolelog_enable;
 extern char consolelog_pattern[256];
 
-extern char zbotmotd[256];
+extern char motdFilename[256];
 extern char motd[4096];
 extern char clientVoteCommand[256];
 

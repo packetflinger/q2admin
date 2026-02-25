@@ -1030,8 +1030,8 @@ q2acmd_t q2aCommands[] = {
         "setmotd",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        zbotmotd,
-        zbotmotdRun,
+        motdFilename,
+        motdRun,
     },
     {
         "skinchangefloodprotect",
@@ -3094,7 +3094,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
     } 
 
-    else if (zbotmotd[0] && Q_stricmp(cmd, "motd") == 0) {
+    else if (motdFilename[0] && Q_stricmp(cmd, "motd") == 0) {
         gi.centerprintf(ent, motd);
         return false;
     }
@@ -3521,33 +3521,33 @@ void impulsesToKickOnInit(char *arg) {
 }
 
 /**
- *
+ * Load the MOTD content from disk
  */
-void zbotmotdRun(int startarg, edict_t *ent, int client) {
+void motdRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() > startarg) {
-        FILE *motdptr;
+        FILE *fp;
         int len, currentlen;
 
-        processstring(zbotmotd, gi.argv(startarg), sizeof (zbotmotd), 0);
-        motdptr = fopen(zbotmotd, "rt");
-        if (!motdptr) {
+        processstring(motdFilename, gi.argv(startarg), sizeof(motdFilename), 0);
+        fp = fopen(motdFilename, "rt");
+        if (!fp) {
             gi.cprintf(ent, PRINT_HIGH, "MOTD file could not be opened\n");
         } else {
             motd[0] = 0;
             len = 0;
-            while (fgets(buffer, 256, motdptr)) {
+            while (fgets(buffer, 256, fp)) {
                 currentlen = q2a_strlen(buffer);
-                if (len + currentlen > sizeof (motd)) {
+                if (len + currentlen > sizeof(motd)) {
                     break;
                 }
                 len += currentlen;
                 q2a_strcat(motd, buffer);
             }
-            fclose(motdptr);
+            fclose(fp);
             gi.cprintf(ent, PRINT_HIGH, "MOTD Loaded\n");
         }
     } else {
-        zbotmotd[0] = 0;
+        motdFilename[0] = 0;
         gi.cprintf(ent, PRINT_HIGH, "MOTD Cleared\n");
     }
 }
