@@ -77,7 +77,7 @@ char buffer2[256];
 char chatFloodProtectMsg[256];
 bool checkClientIpAddress               = true;
 char clientVoteCommand[256];
-int client_map_cfg                      = 6;
+int client_map_cfg                      = CLMAPCFG_EXACT | CLMAPCFG_ALL;
 char client_msg[256];
 char cloud_address[256]                 = "127.0.0.1";
 char cloud_cmd_invite[25]               = "!invite";

@@ -561,6 +561,10 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 #define FRKQ2_KICK_MSG      "Failed the client authentication.\n"
 
 extern int client_map_cfg;
+#define CLMAPCFG_SETMAP     BIT(0)  // set the map_name variable on client
+#define CLMAPCFG_EXACT      BIT(1)  // exec <mapname>.cfg
+#define CLMAPCFG_ALL        BIT(2)  // exec all.cfg
+
 extern bool do_franck_check;
 extern bool q2a_command_check;
 extern bool do_vid_restart;

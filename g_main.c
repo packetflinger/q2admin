@@ -744,13 +744,15 @@ void G_RunFrame(void) {
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
             } else if (command == QCMD_EXECMAPCFG) {
-                if (client_map_cfg & 1) {
+                if (client_map_cfg & CLMAPCFG_SETMAP) {
                     Q_snprintf(buffer, sizeof(buffer), "set map_name %s\n", gmapname);
                     stuffcmd(ent, buffer);
-                } else if (client_map_cfg & 2) {
+                }
+                if (client_map_cfg & CLMAPCFG_EXACT) {
                     Q_snprintf(buffer, sizeof(buffer), "exec cfg/%s.cfg\n", gmapname);
                     stuffcmd(ent, buffer);
-                } else if (client_map_cfg & 4) {
+                }
+                if (client_map_cfg & CLMAPCFG_ALL) {
                     Q_snprintf(buffer, sizeof(buffer), "exec cfg/all.cfg\n");
                     stuffcmd(ent, buffer);
                 }
