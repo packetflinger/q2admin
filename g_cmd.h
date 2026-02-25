@@ -82,4 +82,4 @@ void stuffNextLine(edict_t *ent, int client);
 void timescaleDetected(edict_t *ent, int client);
 void unfreezeRun(int startarg, edict_t *ent, int client);
 void motdRun(int startarg, edict_t *ent, int client);
-void zbotversionRun(int startarg, edict_t *ent, int client);
+void versionRun(int startarg, edict_t *ent, int client);

@@ -1136,7 +1136,7 @@ q2acmd_t q2aCommands[] = {
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
         NULL,
-        zbotversionRun
+        versionRun
     },
     {
         "versionbanning_enable",
@@ -3274,9 +3274,9 @@ void clientsidetimeoutInit(char *arg) {
 }
 
 /**
- *
+ * Display q2admin's version
  */
-void zbotversionRun(int startarg, edict_t *ent, int client) {
+void versionRun(int startarg, edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "Q2Admin version %s\n", version);
 }
 
