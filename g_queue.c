@@ -59,9 +59,8 @@ void addCmdQueue(int client, byte command, float delay, unsigned long data, char
 }
 
 /**
- * Pop the next command off the client's queue. If the timeout is past the
- * current time, the command is skipped. Expired commands eventually get
- * shifted out of the array.
+ * Pop the next command off the client's queue. If the timeout is still in the
+ * future, skip it.
  */
 bool getCommandFromQueue(int client, byte *command, unsigned long *data, char **str) {
     unsigned int i;
