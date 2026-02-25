@@ -748,12 +748,12 @@ void G_RunFrame(void) {
                     Q_snprintf(buffer, sizeof(buffer), "set map_name %s\n", gmapname);
                     stuffcmd(ent, buffer);
                 }
-                if (client_map_cfg & CLMAPCFG_EXACT) {
-                    Q_snprintf(buffer, sizeof(buffer), "exec cfg/%s.cfg\n", gmapname);
-                    stuffcmd(ent, buffer);
-                }
                 if (client_map_cfg & CLMAPCFG_ALL) {
                     Q_snprintf(buffer, sizeof(buffer), "exec cfg/all.cfg\n");
+                    stuffcmd(ent, buffer);
+                }
+                if (client_map_cfg & CLMAPCFG_EXACT) {
+                    Q_snprintf(buffer, sizeof(buffer), "exec cfg/%s.cfg\n", gmapname);
                     stuffcmd(ent, buffer);
                 }
             } else if (command == QCMD_SHOWMOTD) {
