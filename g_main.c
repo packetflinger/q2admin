@@ -506,8 +506,8 @@ void G_RunFrame(void) {
                 }
             } else if (command == QCMD_TESTALIASCMD1) {
                 generateRandomString(proxyinfo[client].alias_test_str1, RANDOM_STRING_LENGTH);
-                generateRandomString(proxyinfo[client].hack_teststring2, RANDOM_STRING_LENGTH);
-                Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].alias_test_str1, proxyinfo[client].hack_teststring2);
+                generateRandomString(proxyinfo[client].alias_test_str2, RANDOM_STRING_LENGTH);
+                Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].alias_test_str1, proxyinfo[client].alias_test_str2);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY1;
                 addCmdQueue(client, QCMD_TESTALIASCMD2, 1, 0, NULL);
