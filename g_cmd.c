@@ -2664,7 +2664,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     }
 
-    if (q2a_strcmp(cmd, proxyinfo[client].hack_timescale) == 0) {
+    if (q2a_strcmp(cmd, proxyinfo[client].timescale_test_str) == 0) {
         if (!proxyinfo[client].inuse) {
             return false;
         }

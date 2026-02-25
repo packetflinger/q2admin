@@ -764,8 +764,8 @@ void G_RunFrame(void) {
                 gi.AddCommandString(cmdpassedvote);
             } else if (command == QCMD_TESTTIMESCALE) {
                 if (timescaledetect) {
-                    generateRandomString(proxyinfo[client].hack_timescale, RANDOM_STRING_LENGTH);
-                    Q_snprintf(buffer, sizeof(buffer), "%s $timescale\n", proxyinfo[client].hack_timescale);
+                    generateRandomString(proxyinfo[client].timescale_test_str, RANDOM_STRING_LENGTH);
+                    Q_snprintf(buffer, sizeof(buffer), "%s $timescale\n", proxyinfo[client].timescale_test_str);
                     stuffcmd(ent, buffer);
                     addCmdQueue(client, QCMD_TESTTIMESCALE, 15, 0, 0);
                 }

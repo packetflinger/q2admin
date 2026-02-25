@@ -135,7 +135,7 @@ typedef struct {
     char hack_teststring1[RANDOM_STRING_LENGTH + 1];
     char hack_teststring2[RANDOM_STRING_LENGTH + 1];
     char hack_teststring3[RANDOM_STRING_LENGTH + 1];
-    char hack_timescale[RANDOM_STRING_LENGTH + 1];
+    char timescale_test_str[RANDOM_STRING_LENGTH + 1];
     int hacked_disconnect;          // hack detected, disconnect the client
     netadr_t hacked_disconnect_addr;
     int checked_hacked_exe;         // used in `rate` check
