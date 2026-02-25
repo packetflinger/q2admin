@@ -505,14 +505,14 @@ void G_RunFrame(void) {
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
                 }
             } else if (command == QCMD_TESTALIASCMD1) {
-                generateRandomString(proxyinfo[client].hack_teststring1, RANDOM_STRING_LENGTH);
+                generateRandomString(proxyinfo[client].alias_test_str1, RANDOM_STRING_LENGTH);
                 generateRandomString(proxyinfo[client].hack_teststring2, RANDOM_STRING_LENGTH);
-                Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].hack_teststring1, proxyinfo[client].hack_teststring2);
+                Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].alias_test_str1, proxyinfo[client].hack_teststring2);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY1;
                 addCmdQueue(client, QCMD_TESTALIASCMD2, 1, 0, NULL);
             } else if (command == QCMD_TESTALIASCMD2) {
-                Q_snprintf(buffer, sizeof(buffer), "\n%s\n", proxyinfo[client].hack_teststring1);
+                Q_snprintf(buffer, sizeof(buffer), "\n%s\n", proxyinfo[client].alias_test_str1);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY2;
             } else if (command == QCMD_DISPLOGFILE) {

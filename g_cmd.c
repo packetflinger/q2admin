@@ -2790,7 +2790,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
-        if (Q_stricmp(cmd, proxyinfo[client].hack_teststring1) == 0) {
+        if (Q_stricmp(cmd, proxyinfo[client].alias_test_str1) == 0) {
             hackDetected(ent, client);
             gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY2\n");
             return false;
