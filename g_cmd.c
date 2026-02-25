@@ -2802,7 +2802,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if ((proxyinfo[client].clientcommand & CCMD_WAITFORCONNECTREPLY) &&
-            Q_stricmp(cmd, proxyinfo[client].hack_teststring3) == 0) {
+            Q_stricmp(cmd, proxyinfo[client].connect_test_str) == 0) {
         proxyinfo[client].clientcommand &= ~CCMD_WAITFORCONNECTREPLY;
         proxyinfo[client].hacked_disconnect = 1;
         proxyinfo[client].hacked_disconnect_addr = proxyinfo[client].address;

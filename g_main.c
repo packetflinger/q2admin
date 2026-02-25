@@ -301,14 +301,14 @@ void G_RunFrame(void) {
                     );
                     stuffcmd(ent, buffer);
 
-                    generateRandomString(proxyinfo[client].hack_teststring3, RANDOM_STRING_LENGTH);
+                    generateRandomString(proxyinfo[client].connect_test_str, RANDOM_STRING_LENGTH);
                     generateRandomString(checkConnectProxy, RANDOM_STRING_LENGTH);
 
                     Q_snprintf(
                         buffer,
                         sizeof(buffer),
                         "\nalias connect %s\nalias %s $%s $%s\n%s\n",
-                        proxyinfo[client].hack_teststring3,
+                        proxyinfo[client].connect_test_str,
                         checkConnectProxy,
                         rndConnectString,
                         ReconnectString,
