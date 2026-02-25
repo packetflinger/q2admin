@@ -29,19 +29,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * Args:
  *   client -  The proxyinfo index of the client this applies to
  *   command - What operation should be done. These are the QCMD_* values
- *   timeout - Seconds from now when this operation is considered expired. This
+ *   delay -   Seconds from now when this operation should be handled. This
  *             is a float in seconds in the future relative to the q2admin's
- *             `ltime` var. The timeout decides whether the command will be
+ *             `ltime` var. The timeout decides when the command will be
  *             run, not how long it takes for the result.
  *   data -    A long usually an array index for something.
  *   str -     A string relevant to the operations. For example when kicking
  *             a client, this would be the message displayed regarding the kick
  */
-void addCmdQueue(int client, byte command, float timeout, unsigned long data, char *str) {
+void addCmdQueue(int client, byte command, float delay, unsigned long data, char *str) {
     char tmptext[128];
 
     proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].command = command;
-    proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].timeout = ltime + timeout;
+    proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].timeout = ltime + delay;
     proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].data = data;
     proxyinfo[client].cmdQueue[proxyinfo[client].maxCmds].str = str;
     proxyinfo[client].maxCmds++;

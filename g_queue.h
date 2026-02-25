@@ -7,7 +7,7 @@
 
 typedef struct {
     byte command;
-    float timeout;
+    float timeout;      // more of a "delay", time to wait before processing
     unsigned long data;
     char *str;
 } cmd_queue_t;
