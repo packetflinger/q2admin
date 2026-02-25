@@ -92,12 +92,26 @@ void serverLogZBot(edict_t *ent, int client) {
     }
 }
 
+/**
+ * Called for each update packet from client to server. The frequency of each
+ * run depends on the client's cl_maxfps CVAR; it will be called 1000/cl_maxfps
+ * times each second. Pmove is called from the forward game library's
+ * ClientThink() function.
+ *
+ * Currently q2admin will just pass the pmove call along to the forward game
+ * library to process.
+ *
+ * Flow:
+ *   server -> (q2a) ClientThink()
+ *   (q2a) ClientThink() -> (mod) ClientThink()
+ *   (mod) ClientThink() -> (q2a) Pmove_internal
+ *   (q2a) Pmove_internal -> (server) PF_Pmove
+ */
 void Pmove_internal(pmove_t *pmove) {
     if (runmode == 0) {
         gi.Pmove(pmove);
         return;
     }
-
     gi.Pmove(pmove);
 }
 
