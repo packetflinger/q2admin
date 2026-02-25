@@ -217,6 +217,68 @@ bool play_all_enable = false;
 bool play_person_enable = false;*/
 //r1ch 2005-01-26 disable hugely buggy commands END
 
+// Classnames allowed for entity swapping via the spawn_tune_* cvars. If you
+// change this list, don't forget to adjust MAX_ENTALLOWLIST
+const char *entAllowlist[MAX_ENTALLOWLIST] = {
+        "item_armor_body",      // RA
+        "item_armor_combat",    // YA
+        "item_armor_jacket",    // GA
+        "item_armor_shard",
+        "item_power_screen",    // only from front
+        "item_power_shield",    // total body
+        "item_health",
+        "item_health_small",    // stim pack
+        "item_health_large",
+        "item_health_mega",
+        "weapon_blaster",
+        "weapon_shotgun",
+        "weapon_supershotgun",
+        "weapon_machinegun",
+        "weapon_chaingun",
+        "ammo_grenades",        // hand grenades
+        "weapon_grenadelauncher",
+        "weapon_rocketlauncher",
+        "weapon_hyperblaster",
+        "weapon_railgun",
+        "weapon_bfg",
+        "ammo_shells",
+        "ammo_bullets",
+        "ammo_cells",
+        "ammo_rockets",
+        "ammo_slugs",
+        "item_quad",
+        "item_invulnerability",
+        "item_silencer",
+        "item_breather",
+        "item_enviro",
+        "item_ancient_head",
+        "item_adrenaline",
+        "item_bandolier",
+        "item_pack",            // backpack
+        "key_data_cd",
+        "key_power_cube",
+        "key_pyramid",
+        "key_data_spinner",
+        "key_pass",
+        "key_blue_key",
+        "key_red_key",
+        "key_commander_head",
+};
+
+/**
+ * Ensure the user-specified classname from CVAR for entity substitution is a
+ * valid classname and not something made up or misspelled that will cause a
+ * crash or weirdness.
+ */
+bool entSwapAllowed(char *cn) {
+    for (int i = 0; i < MAX_ENTALLOWLIST; i++) {
+        if (Q_stricmp(entAllowlist[i], cn) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Com_Parse will parse a token out of a string.
  *
@@ -458,7 +520,6 @@ void InitGame(void) {
         whois_read_file();
     }
 
-    finalentities = G_Malloc(0xffff);
     profile_stop(1, "q2admin->InitGame", 0, NULL);
     HTTP_Init();
     CA_Init();
@@ -475,16 +536,23 @@ void InitGame(void) {
  */
 void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, bool *found) {
     if (sub->string[0] && (!Q_stricmp(needle, token))) {
+        if (!entSwapAllowed(sub->string)) {
+            gi.cprintf(NULL, PRINT_HIGH, "Can't swap entities %s > %s (classname not allowlisted)\n", needle, sub->string);
+            return;
+        }
         q2a_strcat(newents, va("\"%s\"\n", sub->string));
         gi.cprintf(NULL, PRINT_HIGH, "Entity swap: %s > %s\n", needle, sub->string);
         *found = true;
     }
 }
+
 /**
- * Make a new entity string making any needed substitutions based on cvars
+ * Make a new entity string making any needed substitutions based on the
+ * tune_spawn_* CVARS.
  */
 void SubstituteEntities(char *newents, char *oldents) {
     bool replaced;
+    char *com_tok, *classnamepos;
 
     tune_spawn_railgun = gi.cvar("tune_spawn_railgun", "", CVAR_GENERAL);
     tune_spawn_bfg = gi.cvar("tune_spawn_bfg", "", CVAR_GENERAL);
@@ -503,8 +571,8 @@ void SubstituteEntities(char *newents, char *oldents) {
     tune_spawn_grenades = gi.cvar("tune_spawn_grenades ", "", CVAR_GENERAL);
 
     while (true) {
-        char *com_tok = 0;
-        char *classnamepos = 0;
+        com_tok = NULL;
+        classnamepos = NULL;
 
         // parse the opening brace
         com_tok = COM_Parse(&oldents, NULL);
@@ -519,7 +587,7 @@ void SubstituteEntities(char *newents, char *oldents) {
         }
 
         // go through all the dictionary pairs
-        while (1) {
+        while (true) {
             // parse key
             com_tok = COM_Parse(&oldents, &classnamepos);
             if (com_tok[0] == '}') {
@@ -641,6 +709,9 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     freeFloodLists();
     freeVoteLists();
     freeDisableLists();
+    if (finalentities) {
+        G_Free(finalentities);
+    }
 
     motd[0] = 0;
     if (motdFilename[0]) {
@@ -748,12 +819,13 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         }
     }
 
+    finalentities = G_Malloc(strlen(backupentities) * 2);
     q2a_memset(finalentities, 0, sizeof(finalentities));
-    //SubstituteEntities(finalentities, backupentities);
+    SubstituteEntities(finalentities, backupentities);
 
     profile_start(2);
-    //ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
-    ge_mod->SpawnEntities(mapname, backupentities, spawnpoint);
+
+    ge_mod->SpawnEntities(mapname, finalentities, spawnpoint);
     profile_stop(2, "mod->SpawnEntities", 0, NULL);
 
     G_MergeEdicts();

@@ -570,6 +570,9 @@ extern int USERINFOCHANGE_TIME;
 extern int USERINFOCHANGE_COUNT;
 extern int gl_driver_max_changes;
 
+#define MAX_ENTALLOWLIST    43
+extern const char *entAllowlist[MAX_ENTALLOWLIST];     // ents allowed for substitutions
+
 typedef struct {
     char command[256];
 } priv_t;
