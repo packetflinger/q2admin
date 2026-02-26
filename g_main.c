@@ -626,7 +626,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_AUTHADMINPASS) {
                 stuffcmd(ent, "!setadmin $q2adminpassword\n");
             }
-            else if (command == QCMD_TESTADMIN2) {
+            else if (command == QCMD_AUTHADMIN) {
                 stuffcmd(ent, "!admin $q2adminuser $q2adminpass\n");
             } else if (command == QCMD_AUTHBYPASS) {
                 stuffcmd(ent, "!bypass $clientuser $clientpass\n");

@@ -1846,7 +1846,7 @@ void ClientBegin(edict_t *ent) {
             addCmdQueue(client, QCMD_AUTHADMINPASS, 0, 0, 0);
         }
         if (num_admins && !proxyinfo[client].admin_level) {
-            addCmdQueue(client, QCMD_TESTADMIN2, 0, 0, 0);
+            addCmdQueue(client, QCMD_AUTHADMIN, 0, 0, 0);
         }
         if (num_bypasses && !proxyinfo[client].bypass_level) {
             addCmdQueue(client, QCMD_AUTHBYPASS, 0, 0, 0);
