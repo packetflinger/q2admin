@@ -3007,7 +3007,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             return false;
         } else if (Q_stricmp(cmd, "!bypass") == 0) {
             //pooy admin
-            if (num_q2a_admins) {
+            if (num_bypasses) {
                 if (gi.argc() != 3) {
                     return false;
                 }

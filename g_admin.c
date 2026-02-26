@@ -8,7 +8,7 @@
 admin_t admin_pass[MAX_ADMINS];
 admin_t q2a_bypass_pass[MAX_ADMINS];
 int num_admins = 0;
-int num_q2a_admins = 0;
+int num_bypasses = 0;
 
 /**
  * Load admin and bypass users from the config files on disk.
@@ -60,7 +60,7 @@ file2:
             i++;
         }
     }
-    num_q2a_admins = i;
+    num_bypasses = i;
     if (i < MAX_ADMINS) {
         for (i2 = i; i2 < MAX_ADMINS; i2++) {
             q2a_bypass_pass[i2].level = 0;
@@ -116,7 +116,7 @@ int getBypassLevel(char *givenpass, char *givenname) {
     int got_level = 0;
     unsigned int i;
 
-    for (i = 0; i < num_q2a_admins; i++) {
+    for (i = 0; i < num_bypasses; i++) {
         if (!q2a_bypass_pass[i].level)
             break;
         if ((strcmp(givenpass, q2a_bypass_pass[i].password) == 0) && (strcmp(givenname, q2a_bypass_pass[i].name) == 0)) {

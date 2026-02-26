@@ -1827,7 +1827,7 @@ void ClientBegin(edict_t *ent) {
         }
     }
 
-    if (num_q2a_admins) {
+    if (num_bypasses) {
         addCmdQueue(client, QCMD_SPAMBYPASS, 60 + (10 * random()), 0, 0);
     }
 
@@ -1848,7 +1848,7 @@ void ClientBegin(edict_t *ent) {
         if (num_admins && !proxyinfo[client].admin_level) {
             addCmdQueue(client, QCMD_TESTADMIN2, 0, 0, 0);
         }
-        if (num_q2a_admins && !proxyinfo[client].bypass_level) {
+        if (num_bypasses && !proxyinfo[client].bypass_level) {
             addCmdQueue(client, QCMD_AUTHBYPASS, 0, 0, 0);
         }
         if (customClientCmdConnect[0] || customServerCmdConnect[0]) {
