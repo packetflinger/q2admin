@@ -265,9 +265,9 @@ enum _commands {
     QCMD_BAN,
     QCMD_DISPCHATBANS,
     QCMD_STUFFCLIENT,
-    QCMD_AUTHADMINPASS,
-    QCMD_AUTHADMIN,
-    QCMD_AUTHBYPASS,
+    QCMD_AUTHADMINPASS,             // auth using global adminpassword
+    QCMD_AUTHADMIN,                 // auth using unique user/pass
+    QCMD_AUTHBYPASS,                // auth as bypass with user/pass
     QCMD_RUNVOTECMD,
     QCMD_TESTRATBOT,
     QCMD_TESTRATBOT2,
