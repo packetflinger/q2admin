@@ -5,8 +5,8 @@
 
 #include "g_local.h"
 
-admin_type admin_pass[MAX_ADMINS];
-admin_type q2a_bypass_pass[MAX_ADMINS];
+admin_t admin_pass[MAX_ADMINS];
+admin_t q2a_bypass_pass[MAX_ADMINS];
 int num_admins = 0;
 int num_q2a_admins = 0;
 

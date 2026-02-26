@@ -25,12 +25,12 @@
 typedef struct {
     char name[256];
     char password[256];
-    char ip[256];
+    char ip[256];       // unused?
     int level;
-} admin_type;
+} admin_t;
 
-extern admin_type admin_pass[MAX_ADMINS];
-extern admin_type q2a_bypass_pass[MAX_ADMINS];
+extern admin_t admin_pass[MAX_ADMINS];
+extern admin_t q2a_bypass_pass[MAX_ADMINS];
 extern int num_admins;
 extern int num_q2a_admins;
 
