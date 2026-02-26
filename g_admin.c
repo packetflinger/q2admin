@@ -102,10 +102,10 @@ void listAdminCommands(edict_t *ent, int client) {
 }
 
 /**
- *
+ * Reload the admin/bypass users from disk.
  */
 void reloadLoginFileRun(int startarg, edict_t *ent, int client) {
-    Read_Admin_cfg();
+    readAdminConfig();
     gi.cprintf(ent, PRINT_HIGH, "Login file reloaded.\n");
 }
 
