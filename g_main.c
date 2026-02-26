@@ -628,7 +628,7 @@ void G_RunFrame(void) {
             }
             else if (command == QCMD_TESTADMIN2) {
                 stuffcmd(ent, "!admin $q2adminuser $q2adminpass\n");
-            } else if (command == QCMD_TESTADMIN3) {
+            } else if (command == QCMD_AUTHBYPASS) {
                 stuffcmd(ent, "!bypass $clientuser $clientpass\n");
             } else if (command == QCMD_PMODVERTIMEOUT) {
                 //no reply? kick the bastard
