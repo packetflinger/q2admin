@@ -573,6 +573,7 @@ extern int gl_driver_check;
 extern int USERINFOCHANGE_TIME;
 extern int USERINFOCHANGE_COUNT;
 extern int gl_driver_max_changes;
+extern int q2a_developer;
 
 #define MAX_ENTALLOWLIST    43
 extern const char *entAllowlist[MAX_ENTALLOWLIST];     // ents allowed for substitutions

@@ -26,6 +26,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * Force entity to do a command
  */
 void stuffcmd(edict_t *e, char *s) {
+    if (q2a_developer) {
+        gi.dprintf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
+    }
     gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
     gi.unicast(e, true);

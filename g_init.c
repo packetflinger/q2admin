@@ -177,6 +177,7 @@ proxyinfo_t *proxyinfoBase;
 int proxy_bwproxy                       = 1;
 int proxy_nitro2                        = 1;
 bool q2a_command_check                  = false;
+int q2a_developer                       = 1;
 bool quake2dirsupport                   = true;
 int randomwaitreporttime                = 55;
 reconnect_info *reconnectlist;

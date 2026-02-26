@@ -446,6 +446,12 @@ q2acmd_t q2aCommands[] = {
         delchatbanRun
     },
     {
+        "developer",
+        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &q2a_developer
+    },
+    {
         "disablecmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NONE,
