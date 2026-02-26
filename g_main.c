@@ -445,7 +445,7 @@ void G_RunFrame(void) {
                 }
             }
             else if (command == QCMD_TESTRATBOT) {
-                gi.cprintf(ent, PRINT_HIGH, "ratbot Detect Test ( %s )\r\n", "rbkck &%trf .disconnect");
+                gi.cprintf(NULL, PRINT_HIGH, "[%s] ratbot Detect Test ( %s )\r\n", "rbkck &%trf .disconnect", NAME(client));
                 addCmdQueue(client, QCMD_TESTRATBOT2, clientsidetimeout, 0, 0);
                 proxyinfo[client].clientcommand |= CCMD_RATBOTDETECT;
                 addCmdQueue(client, QCMD_TESTRATBOT3, 2, 0, 0);
