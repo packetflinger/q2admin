@@ -25,6 +25,8 @@ void G_MergeEdicts(void);
 void generateRandomString(char *buffer, int length);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 bool getLogicalValue(char *arg);
+void Info_RemoveKey(char *s, const char *key);
+void Info_SetValueForKey(char *s, const char *key, const char *value);
 bool Info_Validate(char *s);
 char *Info_ValueForKey(char *s, char *key);
 int isBlank(char *buff1);

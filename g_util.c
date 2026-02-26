@@ -225,6 +225,90 @@ bool Info_Validate(char *s) {
 }
 
 /**
+ * Remove a key/value pair from a userinfo string
+ */
+void Info_RemoveKey(char *s, const char *key) {
+    char *start;
+    char pkey[512];
+    char value[512];
+    char *o;
+
+    if (strchr(key, '\\')) {
+        return;
+    }
+    for (;;) {
+        start = s;
+        if (*s == '\\') {
+            s++;
+        }
+        o = pkey;
+        while (*s != '\\') {
+            if (!*s) {
+                return;
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+        s++;
+        o = value;
+        while (*s != '\\' && *s) {
+            if (!*s) {
+                return;
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+        if (!q2a_strcmp(key, pkey)) {
+            size_t memlen = q2a_strlen(s);
+            q2a_memmove(start, s, memlen);
+            start[memlen] = 0;
+            return;
+        }
+        if (!*s) {
+            return;
+        }
+    }
+}
+
+/**
+ * Set a key/value pair in a userinfo string. This will remove an existing
+ * key/value and append the new pair at the end. Setting a non-existing
+ * key will just add it to the end.
+ */
+void Info_SetValueForKey(char *s, const char *key, const char *value) {
+    char newi[MAX_INFO_STRING], *v;
+    int c;
+
+    if (!key || !key[0] || !value || !value[0]) {
+        return;
+    }
+    char *nope = "\\;\""; // no slashes, semicolons or double quotes
+    while (*nope) {
+        if (strchr(key, *nope) || strchr(value, *nope++)) {
+            return;
+        }
+    }
+    if (q2a_strlen(key) > MAX_INFO_KEY - 1 || q2a_strlen(value) > MAX_INFO_KEY - 1) {
+        return;
+    }
+    Info_RemoveKey(s, key);
+    sprintf(newi, "\\%s\\%s", key, value);
+    if ((q2a_strlen(newi) + q2a_strlen(s)) > MAX_INFO_STRING) {
+        return;
+    }
+    s += q2a_strlen(s);
+    v = newi;
+    while (*v) {
+        c = *v++;
+        c &= 127;                   // strip high bits
+        if (c >= 32 && c < 127) {   // only ascii values
+            *s++ = c;
+        }
+    }
+    s[0] = 0;
+}
+
+/**
  * Copy all edicts and states from the forward game library. This is called
  * all over the place and is the heart of how q2admin works.
  */
