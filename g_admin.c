@@ -6,7 +6,7 @@
 #include "g_local.h"
 
 admin_t admin_pass[MAX_ADMINS];
-admin_t q2a_bypass_pass[MAX_ADMINS];
+admin_t bypass_pass[MAX_ADMINS];
 int num_admins = 0;
 int num_bypasses = 0;
 
@@ -55,15 +55,15 @@ file2:
 
     i = 0;
     while ((!feof(f)) && (i < MAX_ADMINS)) {
-        fscanf(f, "%s %s %d", q2a_bypass_pass[i].name, q2a_bypass_pass[i].password, &q2a_bypass_pass[i].level);
-        if (q2a_bypass_pass[i].level > 0) {
+        fscanf(f, "%s %s %d", bypass_pass[i].name, bypass_pass[i].password, &bypass_pass[i].level);
+        if (bypass_pass[i].level > 0) {
             i++;
         }
     }
     num_bypasses = i;
     if (i < MAX_ADMINS) {
         for (i2 = i; i2 < MAX_ADMINS; i2++) {
-            q2a_bypass_pass[i2].level = 0;
+            bypass_pass[i2].level = 0;
         }
     }
     gi.cprintf(NULL, PRINT_HIGH, "%d bypass users loaded\n", i);
@@ -117,10 +117,10 @@ int getBypassLevel(char *givenpass, char *givenname) {
     unsigned int i;
 
     for (i = 0; i < num_bypasses; i++) {
-        if (!q2a_bypass_pass[i].level)
+        if (!bypass_pass[i].level)
             break;
-        if ((strcmp(givenpass, q2a_bypass_pass[i].password) == 0) && (strcmp(givenname, q2a_bypass_pass[i].name) == 0)) {
-            got_level = q2a_bypass_pass[i].level;
+        if ((strcmp(givenpass, bypass_pass[i].password) == 0) && (strcmp(givenname, bypass_pass[i].name) == 0)) {
+            got_level = bypass_pass[i].level;
             break;
         }
     }

@@ -30,7 +30,7 @@ typedef struct {
 } admin_t;
 
 extern admin_t admin_pass[MAX_ADMINS];
-extern admin_t q2a_bypass_pass[MAX_ADMINS];
+extern admin_t bypass_pass[MAX_ADMINS];
 extern int num_admins;
 extern int num_bypasses;
 
