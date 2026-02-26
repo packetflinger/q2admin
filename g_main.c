@@ -623,7 +623,7 @@ void G_RunFrame(void) {
                 displayNextChatBan(ent, client, data);
             } else if (command == QCMD_STUFFCLIENT) {
                 stuffNextLine(ent, client);
-            } else if (command == QCMD_TESTADMIN) {
+            } else if (command == QCMD_AUTHADMINPASS) {
                 stuffcmd(ent, "!setadmin $q2adminpassword\n");
             }
             else if (command == QCMD_TESTADMIN2) {

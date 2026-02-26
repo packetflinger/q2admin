@@ -1843,7 +1843,7 @@ void ClientBegin(edict_t *ent) {
         addCmdQueue(client, QCMD_CLIENTVERSION, 0, 0, 0);
 
         if (adminpassword[0] && !proxyinfo[client].admin) {
-            addCmdQueue(client, QCMD_TESTADMIN, 0, 0, 0);
+            addCmdQueue(client, QCMD_AUTHADMINPASS, 0, 0, 0);
         }
         if (num_admins && !proxyinfo[client].admin_level) {
             addCmdQueue(client, QCMD_TESTADMIN2, 0, 0, 0);
