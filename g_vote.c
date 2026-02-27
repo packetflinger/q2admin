@@ -90,7 +90,7 @@ bool ReadVoteFile(char *votename) {
                 continue;
             }
 
-            votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_LEVEL);
+            votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_GAME);
             q2a_strcpy(votecmds[maxvote_cmds].votecmd, cp);
 
             if (votecmds[maxvote_cmds].type == VOTE_RE) {
@@ -256,7 +256,7 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
 
-    votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_LEVEL);
+    votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_GAME);
     processstring(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
 
     if (votecmds[maxvote_cmds].type == VOTE_RE) {

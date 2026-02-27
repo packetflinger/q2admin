@@ -79,7 +79,7 @@ bool ReadFloodFile(char *floodname) {
                 continue;
             }
 
-            floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_LEVEL);
+            floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_GAME);
             q2a_strcpy(floodcmds[maxflood_cmds].floodcmd, cp);
 
             if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
@@ -694,7 +694,7 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
 
-    floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_LEVEL);
+    floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_GAME);
     processstring(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {

@@ -212,7 +212,7 @@ void *q2a_memcpy(void *dest, const void *src, size_t count) {
 
 void *q2a_memmove(void *dest, const void *src, size_t count) {
     if ((unsigned char *) dest > (unsigned char *) src && (unsigned char *) dest < (unsigned char *) src + count) {/* overlap... */
-        char *buf = gi.TagMalloc(count, TAG_LEVEL);
+        char *buf = gi.TagMalloc(count, TAG_GAME);
         void *ret;
         q2a_memcpy(buf, src, count);
         ret = q2a_memcpy(dest, buf, count);
