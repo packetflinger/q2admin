@@ -1072,8 +1072,8 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         return false;
     }
 
-    if (strlen(skinname) > 38) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s: Skin name exceeds 38 characters (IP = %s)\n", proxyinfo[client].name, IP(client));
+    if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
+        gi.cprintf(NULL, PRINT_HIGH, "%s: skin name exceeds max length (IP = %s)\n", NAME(client), IP(client));
         return false;
     }
 
