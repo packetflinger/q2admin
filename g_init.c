@@ -1078,28 +1078,20 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof (proxyinfo[client].userinfo.skin) - 1);
-
-    //   q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof (proxyinfo[client].userinfo.raw) - 1);
 
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;
-
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
-        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
-
         if (banOnConnect) {
             ret = 0;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
-    } else if (checkClientIpAddress && !HASIP(client)) // check for invlaid IP's and don't let them in :)
-    {
+    } else if (checkClientIpAddress && !HASIP(client)) {
         char *ip = FindIpAddressInUserInfo(userinfo, 0);
-        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "Client doesn't have a valid IP address", ip);
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
-
         if (banOnConnect) {
             ret = 0;
             Info_SetValueForKey(userinfo, "rejmsg", "rejected: invalid IP address");
@@ -1109,8 +1101,6 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         }
     } else if (checkCheckIfBanned(ent, client)) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
-        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[client].name, currentBanMsg, IP(client));
-
         if (banOnConnect) {
             ret = 0;
             Info_SetValueForKey(userinfo, "rejmsg", va("banned: %s", currentBanMsg));
