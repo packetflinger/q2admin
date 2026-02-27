@@ -356,3 +356,48 @@ bool AimbotCheck(int client, usercmd_t *ucmd) {
     }
     return false;
 }
+
+/**
+ * Many checks require issuing commands to clients and checking for appropriate
+ * responses. These deadlines ensure the client actually does respond in a
+ * timely manner and assumes shenanigans if responses are delayed or never
+ * arrive.
+ *
+ * Networks are reliable enough in the mid 2020s to expect delivery in less
+ * than a second no matter where in the world you are.
+ */
+void checkClientDeadlines(int c) {
+    if (c < 0 || c > (int)maxclients->value) {
+        return;
+    }
+    if (proxyinfo[c].version_deadline > 0 && proxyinfo[c].version_deadline < ltime) {
+        gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
+        addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to version request");
+        proxyinfo[c].version_deadline = 0;
+        return;
+    }
+    if (proxyinfo[c].alias_deadline > 0 && proxyinfo[c].alias_deadline < ltime) {
+        gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
+        addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to alias request");
+        proxyinfo[c].alias_deadline = 0;
+        return;
+    }
+    if (timescaledetect) {
+        if (proxyinfo[c].timescale_deadline > 0 && proxyinfo[c].timescale_deadline < ltime) {
+            gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
+            addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to timescale request");
+            proxyinfo[c].timescale_deadline = 0;
+            return;
+        }
+    }
+    if (checkvarcmds_enable) {
+        for (int i = 0; i < CHECKVAR_MAX; i++) {
+            if (proxyinfo[c].checkvar_deadline[i] > 0 && proxyinfo[c].checkvar_deadline[i] < ltime) {
+                gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
+                addCmdQueue(c, QCMD_DISCONNECT, 1, 0, va("no response to checkvar request [%s]", checkvarList[i].variablename));
+                proxyinfo[c].checkvar_deadline[i] = 0;
+                return;
+            }
+        }
+    }
+}

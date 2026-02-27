@@ -119,6 +119,7 @@ bool dllloaded                          = false;
 char dllname[256];
 bool do_franck_check                    = true;
 bool do_vid_restart                     = false;
+bool enforce_deadlines                  = true;
 bool extendedsay_enable                 = false;
 bool filternonprintabletext             = false;
 char *finalentities;
@@ -1799,9 +1800,13 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].votescast = 0;
     proxyinfo[client].votetimeout = 0;
     proxyinfo[client].checked_hacked_exe = 0;
+    proxyinfo[client].alias_deadline = 0;
+    proxyinfo[client].version_deadline = 0;
+    proxyinfo[client].timescale_deadline = 0;
 
     q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
+    q2a_memset(&proxyinfo[client].checkvar_deadline, 0, sizeof(float) * CHECKVAR_MAX);
 
     if (ip_limit > 0) {
         int sameaddr = 1;

@@ -54,15 +54,11 @@ bool ReadCheckVarFile(char *checkvarname) {
 
         SKIPBLANK(cp);
         uptoLine++;
-
         if (startContains(cp, "CT:") || startContains(cp, "RG:")) {
-            // looks ok, add...
             if (*cp == 'C') {
                 checkvarList[maxcheckvars].type = CV_CONSTANT;
-                continue;
             } else if (*cp == 'R') {
                 checkvarList[maxcheckvars].type = CV_RANGE;
-                continue;
             }
 
             cp += 3;
@@ -137,7 +133,6 @@ bool ReadCheckVarFile(char *checkvarname) {
                 cp++;
                 cp = processstring(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
                 checkvarList[maxcheckvars].upper = q2a_atof(rangevalue);
-                continue;
             }
             maxcheckvars++;
             if (maxcheckvars >= CHECKVAR_MAX) {
@@ -187,6 +182,7 @@ void checkVariableTest(edict_t *ent, int client, int idx) {
         }
         if (maxcheckvars) {
             proxyinfo[client].checkvar_idx = idx;
+            proxyinfo[client].checkvar_deadline[idx] = ltime + 1.0f;
             generateRandomString(proxyinfo[client].hack_checkvar, RANDOM_STRING_LENGTH);
             Q_snprintf(
                     buffer,

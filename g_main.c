@@ -514,6 +514,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_TESTALIASCMD2) {
                 Q_snprintf(buffer, sizeof(buffer), "\n%s\n", proxyinfo[client].alias_test_str1);
                 stuffcmd(ent, buffer);
+                proxyinfo[client].alias_deadline = ltime + 1.0f;
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY2;
             } else if (command == QCMD_DISPLOGFILE) {
                 displayLogFileCont(ent, client, data);
@@ -767,6 +768,7 @@ void G_RunFrame(void) {
                     generateRandomString(proxyinfo[client].timescale_test_str, RANDOM_STRING_LENGTH);
                     Q_snprintf(buffer, sizeof(buffer), "%s $timescale\n", proxyinfo[client].timescale_test_str);
                     stuffcmd(ent, buffer);
+                    proxyinfo[client].timescale_deadline = ltime + 1.0f;
                     addCmdQueue(client, QCMD_TESTTIMESCALE, 15, 0, 0);
                 }
             } else if (command == QCMD_SETUPCL_PITCHSPEED) {
@@ -792,6 +794,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_CLIENTVERSION) {
                 generateRandomString(proxyinfo[client].version_test, sizeof(proxyinfo[client].version_test));
                 Q_snprintf(buffer, sizeof(buffer), "%s $version\n", proxyinfo[client].version_test);
+                proxyinfo[client].version_deadline = ltime + 1.0f;
                 proxyinfo[client].clientcommand |= CCMD_WAITFORVERSION;
                 stuffcmd(ent, buffer);
             } else if (command == QCMD_FREEZEPLAYER) {
@@ -805,6 +808,10 @@ void G_RunFrame(void) {
             } else if (command == QCMD_UNFREEZEPLAYER) {
                 q2a_memset(&proxyinfo[client].freeze, 0, sizeof(freeze_t));
                 gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, str);
+            }
+
+            if (enforce_deadlines) {
+                checkClientDeadlines(client);
             }
         } else {
             if (maxdoclients < maxclients->value) {

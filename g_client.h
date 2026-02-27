@@ -116,3 +116,4 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 bool AimbotCheck(int client, usercmd_t *ucmd);
+void checkClientDeadlines(int c);

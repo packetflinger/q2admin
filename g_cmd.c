@@ -515,6 +515,12 @@ q2acmd_t q2aCommands[] = {
         &displayzbotuser
     },
     {
+        "enforce_deadlines",
+        CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &enforce_deadlines
+    },
+    {
         "entity_classname_offset",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
@@ -2583,6 +2589,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         gi.args(),
                         sizeof(proxyinfo[client].client_version)
                 );
+                proxyinfo[client].version_deadline = 0;
                 if (checkBanList(ent, client)) {
                     gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
@@ -2674,7 +2681,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         if (!proxyinfo[client].inuse) {
             return false;
         }
-
+        proxyinfo[client].timescale_deadline = 0;
         if (atoi(gi.argv(1)) != 1) {
             timescaleDetected(ent, client);
         } else {
@@ -2690,7 +2697,8 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         if (!proxyinfo[client].inuse) {
             return false;
         }
-
+        int idx = proxyinfo[client].checkvar_idx;
+        proxyinfo[client].checkvar_deadline[idx] = 0;
         checkVariableValid(ent, client, gi.argv(1));
         return false;
     }
@@ -2796,13 +2804,16 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
+        // alias cmd unsupported, it just printed the alias
         if (Q_stricmp(cmd, proxyinfo[client].alias_test_str1) == 0) {
             hackDetected(ent, client);
             gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY2\n");
             return false;
         }
+        // client sent back the value of the alias, normal behavior.
         if (Q_stricmp(cmd, proxyinfo[client].alias_test_str2) == 0) {
             proxyinfo[client].clientcommand &= ~CCMD_WAITFORALIASREPLY2;
+            proxyinfo[client].alias_deadline = 0;
             return false;
         }
     }

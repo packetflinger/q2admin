@@ -136,6 +136,7 @@ typedef struct {
     char alias_test_str2[RANDOM_STRING_LENGTH + 1];
     char connect_test_str[RANDOM_STRING_LENGTH + 1];
     char timescale_test_str[RANDOM_STRING_LENGTH + 1];
+    float timescale_deadline;
     int hacked_disconnect;          // hack detected, disconnect the client
     netadr_t hacked_disconnect_addr;
     int checked_hacked_exe;         // used in `rate` check
@@ -143,6 +144,7 @@ typedef struct {
     // used to test the variables check list
     char hack_checkvar[RANDOM_STRING_LENGTH + 1];
     int checkvar_idx;
+    float checkvar_deadline[CHECKVAR_MAX];
 
     char gl_driver[256];            // original GL drive reported
     int gl_driver_changes;          // cumulative total
@@ -183,10 +185,12 @@ typedef struct {
     char auton_sys_num[10];         // the ASN announcing this network
     char address_str[135];          // unused, remove later
     char version_test[6];           // random chars to force sending version
+    float version_deadline;         // must respond by this ltime
     char client_version[MAX_VERSION_CHARS];   // build string
     chatpest_t pest;                // tracking annoying chat behavior
     freeze_t freeze;                // used to freeze a player in place
     userinfo_t userinfo;
+    float alias_deadline;           // how long to wait for alias reply
 } proxyinfo_t;
 
 typedef struct {
@@ -199,9 +203,9 @@ typedef struct {
 #define CCMD_STARTUPTEST            BIT(0)
 #define CCMD_ZPROXYCHECK2           BIT(1)
 #define CCMD_ZBOTDETECTED           BIT(2)
-#define CCMD_BANNED                 BIT(3)
+#define CCMD_BANNED                 BIT(3)  // delay kick, connect to begin
 #define CCMD_NCSILENCE              BIT(4)  // name change silence
-#define CCMD_KICKED                 BIT(5)
+#define CCMD_KICKED                 BIT(5)  // delay kick, connect to begin
 #define CCMD_SELECTED               BIT(6)  // player targeted in cmd
 #define CCMD_CSILENCE               BIT(7)  // temporarily muted
 #define CCMD_PCSILENCE              BIT(8)  // permanently muted
@@ -243,7 +247,7 @@ enum _commands {
     QCMD_DISPLOGFILE,
     QCMD_DISPLOGFILELIST,
     QCMD_DISPLOGEVENTLIST,
-    QCMD_CONNECTCMD,
+    QCMD_CONNECTCMD,                // do both client and server custom cmds
     QCMD_LOGTOFILE1,
     QCMD_LOGTOFILE2,
     QCMD_LOGTOFILE3,
@@ -276,8 +280,8 @@ enum _commands {
     QCMD_LETRATBOTQUIT,
     QCMD_TESTTIMESCALE,
     QCMD_TESTSTANDARDPROXY,
-    QCMD_TESTALIASCMD1,
-    QCMD_TESTALIASCMD2,
+    QCMD_TESTALIASCMD1,             // set a random alias
+    QCMD_TESTALIASCMD2,             // ask for the value
     QCMD_SETUPCL_PITCHSPEED,
     QCMD_FORCEUDATAUPDATEPS,
     QCMD_SETUPCL_ANGLESPEEDKEY,
@@ -496,6 +500,7 @@ extern int reconnect_time;
 extern int reconnect_checklevel;
 extern int entity_classname_offset;
 extern int checkvar_poll_time;
+extern checkvar_t checkvarList[CHECKVAR_MAX];
 
 typedef struct {
     long reconnecttimeout;
@@ -574,6 +579,7 @@ extern int USERINFOCHANGE_TIME;
 extern int USERINFOCHANGE_COUNT;
 extern int gl_driver_max_changes;
 extern int q2a_developer;
+extern bool enforce_deadlines;
 
 #define MAX_ENTALLOWLIST    43
 extern const char *entAllowlist[MAX_ENTALLOWLIST];     // ents allowed for substitutions
