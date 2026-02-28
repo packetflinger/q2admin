@@ -142,7 +142,7 @@ void readDisableLists(void) {
  */
 void reloadDisableFileRun(int startarg, edict_t *ent, int client) {
     readDisableLists();
-    gi.cprintf(ent, PRINT_HIGH, "Disbled commands reloaded.\n");
+    gi.cprintf(ent, PRINT_HIGH, "Disabled commands reloaded.\n");
 }
 
 /**
