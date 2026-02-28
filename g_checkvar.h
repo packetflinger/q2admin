@@ -12,9 +12,6 @@
 #define CV_CONSTANT     0
 #define CV_RANGE        1
 
-/**
- * Variable properties
- */
 typedef struct {
     char variablename[50];
     char value[50];

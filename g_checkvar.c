@@ -26,7 +26,7 @@ int checkvar_poll_time = 60;
 int maxcheckvars = 0;
 
 /**
- *
+ * Read in the checkvar config from disk.
  */
 bool ReadCheckVarFile(char *checkvarname) {
     FILE *checkvarfile;
@@ -147,7 +147,7 @@ bool ReadCheckVarFile(char *checkvarname) {
 }
 
 /**
- *
+ * Parse the lists from the q2 directory first then the mod directory.
  */
 void readCheckVarLists(void) {
     bool ret;
@@ -159,13 +159,12 @@ void readCheckVarLists(void) {
         ret = true;
     }
     if (!ret) {
-        // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_cvar->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_cvar), IW_CHECKVARSETUPLOAD, 0.0, true);
     }
 }
 
 /**
- *
+ * Manually reload lists from disk
  */
 void reloadCheckVarFileRun(int startarg, edict_t *ent, int client) {
     readCheckVarLists();
@@ -173,7 +172,7 @@ void reloadCheckVarFileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- *
+ * Ask the client for the value of one of the variables in the list.
  */
 void checkVariableTest(edict_t *ent, int client, int idx) {
     if (checkvarcmds_enable) {
@@ -201,7 +200,8 @@ void checkVariableTest(edict_t *ent, int client, int idx) {
 }
 
 /**
- *
+ * See if the value returned from the client matches the record and adjust it
+ * if necessary.
  */
 void checkVariableValid(edict_t *ent, int client, char *value) {
     switch (checkvarList[proxyinfo[client].checkvar_idx].type) {
@@ -246,7 +246,7 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
 }
 
 /**
- *
+ * Manually start displaying all the checkvar rules
  */
 void listcheckvarsRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPCHECKVAR, 0, 0, 0);
@@ -254,7 +254,7 @@ void listcheckvarsRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- *
+ * Shows one checkvar entry per frame
  */
 void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd) {
     if (checkvarcmd < maxcheckvars) {
@@ -275,7 +275,7 @@ void displayNextCheckvar(edict_t *ent, int client, long checkvarcmd) {
 }
 
 /**
- *
+ * Manually add a checkvar entry to the active list
  */
 void checkvarcmdRun(int startarg, edict_t *ent, int client) {
     char *cmd;
@@ -346,7 +346,7 @@ void checkvarcmdRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- *
+ * Manually delete a checkvar entry from the list.
  */
 void checkvarDelRun(int startarg, edict_t *ent, int client) {
     int checkvar;
@@ -355,18 +355,15 @@ void checkvarDelRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, CHECKVARDELCMD);
         return;
     }
-
     checkvar = q2a_atoi(gi.argv(startarg));
     if (checkvar < 1 || checkvar > maxcheckvars) {
         gi.cprintf(ent, PRINT_HIGH, CHECKVARDELCMD);
         return;
     }
-
     checkvar--;
     if (checkvar + 1 < maxcheckvars) {
         q2a_memmove((checkvarList + checkvar), (checkvarList + checkvar + 1), sizeof (checkvar_t) * (maxcheckvars - checkvar));
     }
-
     maxcheckvars--;
     gi.cprintf(ent, PRINT_HIGH, "Check-Variable command deleted\n");
 }
