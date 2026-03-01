@@ -587,7 +587,7 @@ q2acmd_t q2aCommands[] = {
         "hackuserdisplay",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        hackuserdisplay
+        modifiedclientmsg
     },
     {
         "http_cacert_path",
@@ -2502,14 +2502,14 @@ void hackDetected(edict_t *ent, int client) {
     removeClientCommand(client, QCMD_TESTALIASCMD2);
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
-    q2a_strncpy(buffer, hackuserdisplay, sizeof(buffer));
+    q2a_strncpy(buffer, modifiedclientmsg, sizeof(buffer));
     q2a_strcat(buffer, "\n");
     gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
     if (disconnectuser) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, hackuserdisplay);
+        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, modifiedclientmsg);
     }
 }
 

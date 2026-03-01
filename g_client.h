@@ -10,7 +10,7 @@
 #define DEFAULTRECONNECTMSG     "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."
 #define DEFAULTUSERDISPLAY      "%s is using a client side proxy."
 #define DEFAULTTSDISPLAY        "%s is using a speed cheat."
-#define DEFAULTHACKDISPLAY      "%s is using a modified client."
+#define DEFAULTMODIFIEDCLIENTMSG      "%s is using a modified client."
 #define DEFAULTSKINCRASHMSG     "%s tried to crash the server."
 #define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."

@@ -928,7 +928,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     q2a_strcpy(client_msg, DEFAULTQ2AMSG);
     q2a_strcpy(zbotuserdisplay, DEFAULTUSERDISPLAY);
     q2a_strcpy(timescaleuserdisplay, DEFAULTTSDISPLAY);
-    q2a_strcpy(hackuserdisplay, DEFAULTHACKDISPLAY);
+    q2a_strcpy(modifiedclientmsg, DEFAULTMODIFIEDCLIENTMSG);
     q2a_strcpy(skincrashmsg, DEFAULTSKINCRASHMSG);
     q2a_strcpy(defaultreconnectmessage, DEFAULTRECONNECTMSG);
     q2a_strcpy(defaultBanMsg, DEFAULTBANMSG);

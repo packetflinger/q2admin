@@ -378,7 +378,7 @@ extern char dllname[256];
 extern char gamelibrary[MAX_QPATH];
 extern char zbotuserdisplay[256];
 extern char timescaleuserdisplay[256];
-extern char hackuserdisplay[256];
+extern char modifiedclientmsg[256];
 extern char skincrashmsg[256];
 extern char defaultreconnectmessage[256];
 extern char moddir[256];

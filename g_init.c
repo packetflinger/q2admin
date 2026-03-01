@@ -133,7 +133,7 @@ bool gamemaptomap                       = false;
 int gl_driver_check                     = 0;
 int gl_driver_max_changes               = 3;
 char gmapname[MAX_QPATH];
-char hackuserdisplay[256];
+char modifiedclientmsg[256];
 char http_cacert_path[256]              = "/etc/ssl/certs";
 bool http_debug                         = false;
 bool http_enable                        = true;
