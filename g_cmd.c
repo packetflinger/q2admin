@@ -2719,11 +2719,9 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2 && isdigit(cmd[3]) && isdigit(cmd[4]) && (cmd[7] == 0 || cmd[8] == 0))) {
         // clear retries just in case...
         proxyinfo[client].retries = 0;
-        gi.dprintf("first one!\n");
         return false; //ignore because it's from a older level or something
     } else if (startContains(cmd, ZBOT_TESTSTRING_TEST1_OLD) || startContains(cmd, ZBOT_TESTSTRING_TEST2_OLD) ||
             (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2 && (cmd[7] == 0 || cmd[8] == 0))) {
-        gi.dprintf("second one!\n");
         if (!zbotdetect || !proxyinfo[client].inuse) {
             return false;
         }
@@ -2742,7 +2740,6 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         proxyinfo[client].retries = 0;
         return false;
     } else if (cmd[1] == BOTDETECT_CHAR1 && cmd[2] == BOTDETECT_CHAR2) {
-        gi.dprintf("third one!\n");
         if (!zbotdetect || !proxyinfo[client].inuse) {
             return false;
         }
