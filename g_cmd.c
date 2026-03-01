@@ -2625,7 +2625,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             return false;
         } else if (Q_stricmp(cmd, zbot_str_please_disconnect) == 0) {
             return false;
-        } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) {
+        } else if (Q_stricmp(cmd, zbot_str_q2e) == 0) {
             if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
                 return false;
             }
@@ -2656,7 +2656,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
     } else if (Q_stricmp(cmd, zbot_str_please_disconnect) == 0) {
         return false;
-    } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) { // check for end proxy string
+    } else if (Q_stricmp(cmd, zbot_str_q2e) == 0) { // check for end proxy string
         if (!proxyinfo[client].inuse) {
             return false;
         }

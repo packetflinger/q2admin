@@ -30,7 +30,7 @@ typedef game_export_t *GAMEAPI(game_import_t *import);
 
 char zbot_str_start_nl[] = ZBOT_START_NL;
 char zbot_str_q2start[] = ZBOT_Q2START;
-char zbot_teststring_test2[] = ZBOT_TESTSTRING_TEST2;
+char zbot_str_q2e[] = ZBOT_Q2E;
 char zbot_str_please_disconnect[] = ZBOT_PLEASE_DISCONNECT;
 char zbot_testchar1;
 char zbot_testchar2;
@@ -372,7 +372,7 @@ void G_RunFrame(void) {
                 proxyinfo[client].teststr[7] = 0;
                 proxyinfo[client].teststr[8] = 0;
 
-                Q_snprintf(buffer, sizeof(buffer), "\n%s\n%s\n", proxyinfo[client].teststr, zbot_teststring_test2);
+                Q_snprintf(buffer, sizeof(buffer), "\n%s\n%s\n", proxyinfo[client].teststr, zbot_str_q2e);
                 stuffcmd(ent, buffer);
 
                 proxyinfo[client].clientcommand |= CCMD_ZPROXYCHECK2;
@@ -957,8 +957,8 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
     zbot_str_start_nl[7] = zbot_str_q2start[7] = '0' + (int) (9.9 * random());
     zbot_str_start_nl[8] = zbot_str_q2start[8] = '0' + (int) (9.9 * random());
-    zbot_teststring_test2[3] = '0' + (int) (9.9 * random());
-    zbot_teststring_test2[4] = '0' + (int) (9.9 * random());
+    zbot_str_q2e[3] = '0' + (int) (9.9 * random());
+    zbot_str_q2e[4] = '0' + (int) (9.9 * random());
     zbot_testchar1 = '0' + (int) (9.9 * random());
     zbot_testchar2 = '0' + (int) (9.9 * random());
 

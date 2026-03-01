@@ -736,8 +736,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
     zbot_str_start_nl[7] = zbot_str_q2start[7] = '0' + (int) (9.9 * random());
     zbot_str_start_nl[8] = zbot_str_q2start[8] = '0' + (int) (9.9 * random());
-    zbot_teststring_test2[3] = '0' + (int) (9.9 * random());
-    zbot_teststring_test2[4] = '0' + (int) (9.9 * random());
+    zbot_str_q2e[3] = '0' + (int) (9.9 * random());
+    zbot_str_q2e[4] = '0' + (int) (9.9 * random());
     zbot_testchar1 = '0' + (int) (9.9 * random());
     zbot_testchar2 = '0' + (int) (9.9 * random());
 

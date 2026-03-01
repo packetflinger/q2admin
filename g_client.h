@@ -17,7 +17,7 @@
 
 #define ZBOT_START_NL            "q2startxx\n"
 #define ZBOT_Q2START       "q2startxx"
-#define ZBOT_TESTSTRING_TEST2       "q2exx"
+#define ZBOT_Q2E       "q2exx"
 #define ZBOT_PLEASE_DISCONNECT       ".please.disconnect.all.bots"
 #define ZBOT_TESTSTRING_TEST1_OLD   "q2start"
 #define ZBOT_TESTSTRING_TEST2_OLD   "q2e"
@@ -93,7 +93,7 @@ typedef struct {
 
 extern char zbot_str_start_nl[];
 extern char zbot_str_q2start[];
-extern char zbot_teststring_test2[];
+extern char zbot_str_q2e[];
 extern char zbot_str_please_disconnect[];
 extern char zbot_testchar1;
 extern char zbot_testchar2;
