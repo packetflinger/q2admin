@@ -2550,13 +2550,10 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         q2a_strncpy(response, cmd, sizeof(response));
     }
 
-    if (*(rcon_password->string)) {
-        if (q2a_strstr(response, rcon_password->string)) {
-            snprintf(abuffer, sizeof (abuffer) - 1, "EXPLOIT - %s", response);
-            abuffer[sizeof (abuffer) - 1] = 0;
-            logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
-            return false;
-        }
+    if (*(rcon_password->string) && q2a_strstr(response, rcon_password->string)) {
+        Q_vsnprintf(abuffer, sizeof(abuffer), "EXPLOIT - %s", response);
+        logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
+        return false;
     }
 
     if (Q_stricmp(cmd, zbot_str_q2start) == 0) {
