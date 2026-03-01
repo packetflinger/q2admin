@@ -28,10 +28,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef game_export_t *GAMEAPI(game_import_t *import);
 
-char zbot_teststring1[] = ZBOT_TESTSTRING1;
+char zbot_str_start_nl[] = ZBOT_START_NL;
 char zbot_teststring_test1[] = ZBOT_TESTSTRING_TEST1;
 char zbot_teststring_test2[] = ZBOT_TESTSTRING_TEST2;
-char zbot_teststring_test3[] = ZBOT_TESTSTRING_TEST3;
+char zbot_str_please_disconnect[] = ZBOT_PLEASE_DISCONNECT;
 char zbot_testchar1;
 char zbot_testchar2;
 
@@ -216,7 +216,7 @@ void G_RunFrame(void) {
                         break;
                     }
 
-                    stuffcmd(ent, zbot_teststring1);
+                    stuffcmd(ent, zbot_str_start_nl);
                     addCmdQueue(client, QCMD_STARTUPTEST, 5, 0, 0);
                     proxyinfo[client].retries++;
                 } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
@@ -339,12 +339,12 @@ void G_RunFrame(void) {
                     }
                 }
 
-                stuffcmd(ent, zbot_teststring1);
+                stuffcmd(ent, zbot_str_start_nl);
                 addCmdQueue(client, QCMD_STARTUPTEST, 5, 0, 0);
                 proxyinfo[client].retries++;
             } else if (command == QCMD_LETRATBOTQUIT) {
                 if (zbotdetect) {
-                    Q_snprintf(buffer, sizeof(buffer), "\n%s\n", zbot_teststring_test3);
+                    Q_snprintf(buffer, sizeof(buffer), "\n%s\n", zbot_str_please_disconnect);
                     stuffcmd(ent, buffer);
                     stuffcmd(ent, buffer);
                     stuffcmd(ent, buffer);
@@ -955,8 +955,8 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
 
     srand((unsigned) time(NULL));
 
-    zbot_teststring1[7] = zbot_teststring_test1[7] = '0' + (int) (9.9 * random());
-    zbot_teststring1[8] = zbot_teststring_test1[8] = '0' + (int) (9.9 * random());
+    zbot_str_start_nl[7] = zbot_teststring_test1[7] = '0' + (int) (9.9 * random());
+    zbot_str_start_nl[8] = zbot_teststring_test1[8] = '0' + (int) (9.9 * random());
     zbot_teststring_test2[3] = '0' + (int) (9.9 * random());
     zbot_teststring_test2[4] = '0' + (int) (9.9 * random());
     zbot_testchar1 = '0' + (int) (9.9 * random());

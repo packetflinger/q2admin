@@ -15,10 +15,10 @@
 #define DEFAULTCL_PITCHSPEED_KICKMSG    "cl_pitchspeed changes not allowed on this server."
 #define DEFAULTCL_ANGLESPEEDKEY_KICKMSG "cl_anglespeedkey changes not allowed on this server."
 
-#define ZBOT_TESTSTRING1            "q2startxx\n"
+#define ZBOT_START_NL            "q2startxx\n"
 #define ZBOT_TESTSTRING_TEST1       "q2startxx"
 #define ZBOT_TESTSTRING_TEST2       "q2exx"
-#define ZBOT_TESTSTRING_TEST3       ".please.disconnect.all.bots"
+#define ZBOT_PLEASE_DISCONNECT       ".please.disconnect.all.bots"
 #define ZBOT_TESTSTRING_TEST1_OLD   "q2start"
 #define ZBOT_TESTSTRING_TEST2_OLD   "q2e"
 #define RATBOT_CHANGENAMETEST       "pwsnskle"
@@ -91,10 +91,10 @@ typedef struct {
     long skinchangetimeout;
 } userinfo_t;
 
-extern char zbot_teststring1[];
+extern char zbot_str_start_nl[];
 extern char zbot_teststring_test1[];
 extern char zbot_teststring_test2[];
-extern char zbot_teststring_test3[];
+extern char zbot_str_please_disconnect[];
 extern char zbot_testchar1;
 extern char zbot_testchar2;
 extern char testchars[];

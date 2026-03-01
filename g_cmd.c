@@ -2623,7 +2623,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             proxyinfo[client].clientcommand &= ~CCMD_ZPROXYCHECK2;
             removeClientCommand(client, QCMD_ZPROXYCHECK2);
             return false;
-        } else if (Q_stricmp(cmd, zbot_teststring_test3) == 0) {
+        } else if (Q_stricmp(cmd, zbot_str_please_disconnect) == 0) {
             return false;
         } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) {
             if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
@@ -2654,7 +2654,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             gi.cprintf(ent, PRINT_HIGH, "\n\n\n\n\n\n");
             return false;
         }
-    } else if (Q_stricmp(cmd, zbot_teststring_test3) == 0) {
+    } else if (Q_stricmp(cmd, zbot_str_please_disconnect) == 0) {
         return false;
     } else if (Q_stricmp(cmd, zbot_teststring_test2) == 0) { // check for end proxy string
         if (!proxyinfo[client].inuse) {
