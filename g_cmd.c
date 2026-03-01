@@ -2559,7 +2559,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
     }
 
-    if (Q_stricmp(cmd, zbot_teststring_test1) == 0) {
+    if (Q_stricmp(cmd, zbot_str_q2start) == 0) {
         if (proxyinfo[client].inuse && (proxyinfo[client].clientcommand & CCMD_STARTUPTEST)) {
             proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
             removeClientCommand(client, QCMD_STARTUPTEST);
