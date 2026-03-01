@@ -2595,6 +2595,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                 if (checkBanList(ent, client)) {
                     gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
+                    return false;
                 }
                 CA_PlayerConnect(ent);
                 return false;
