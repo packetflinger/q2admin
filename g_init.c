@@ -1059,7 +1059,6 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         }
     }
 
-    Info_RemoveKey(userinfo, "name");
     if (!Info_Validate(userinfo)) {
         Info_SetValueForKey(userinfo, "rejmsg", "admission denied: invalid client detected");
         return false;
