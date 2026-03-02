@@ -1075,7 +1075,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
-    q2a_strncpy(proxyinfo[client].name, s, sizeof (proxyinfo[client].name) - 1);
+    q2a_strncpy(proxyinfo[client].name, Info_ValueForKey(userinfo, "name"), sizeof(proxyinfo[client].name) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
