@@ -248,7 +248,7 @@ enum _commands {
     QCMD_DISPLOGEVENTLIST,
     QCMD_CONNECTCMD,                // do both client and server custom cmds
     QCMD_LOGZBOT,                   // a zbot was detected, log it
-    QCMD_LOGTOFILE2,
+    QCMD_LOGZBOTIMPULSES,           // log the control keys sent by a zbot
     QCMD_LOGTOFILE3,
     QCMD_RESTART,
     QCMD_CLIPTOMAXRATE,
