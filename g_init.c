@@ -186,6 +186,7 @@ proxyreconnectinfo_t *reconnectproxyinfo;
 char reconnect_address[256]             = {0};
 int reconnect_checklevel                = 0;
 int reconnect_time                      = 60;
+char *required_ui_keys[]                = {"name", "rate", "msg", "skin", NULL}; // end with null
 retrylist_info *retrylist;
 int runmode                             = 100; // don't change this
 bool say_group_enable                   = false;
@@ -971,7 +972,12 @@ bool checkReconnectList(char *username) {
 }
 
 /**
- * Called when a new player first connects to the server, before entering the game
+ * Called when a new player first connects to the server, before entering the
+ * game.
+ *
+ * Return values
+ *  true  = allow client to proceed connecting (ClientBegin is next)
+ *  false = reject the connection
  */
 bool ClientConnect(edict_t *ent, char *userinfo) {
     int client;
@@ -1053,27 +1059,26 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         }
     }
 
-    // check for malformed or illegal info strings
+    Info_RemoveKey(userinfo, "name");
     if (!Info_Validate(userinfo)) {
-        q2a_strcpy(userinfo, "\\name\\badinfo\\skin\\male/grunt");
+        Info_SetValueForKey(userinfo, "rejmsg", "admission denied: invalid client detected");
+        return false;
+    }
+
+    // ensure required keys are present and have values
+    char *val;
+    for (int i = 0; required_ui_keys[i] != NULL; i++) {
+        val = Info_ValueForKey(userinfo, required_ui_keys[i]);
+        if (*val == NULL) {
+            gi.cprintf(NULL, PRINT_HIGH, "%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
+            return false;
+        }
     }
 
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
-
-    // set name
-    s = Info_ValueForKey(userinfo, "name");
-    if (*s == 0) {
-        s = NULL;
-        return false;
-    }
-
     q2a_strncpy(proxyinfo[client].name, s, sizeof (proxyinfo[client].name) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
-    if (*skinname == 0) {
-        return false;
-    }
-
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
         gi.cprintf(NULL, PRINT_HIGH, "%s: skin name exceeds max length (IP = %s)\n", NAME(client), IP(client));
         return false;

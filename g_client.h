@@ -133,6 +133,7 @@ extern bool private_command_kick;
 extern int speedbot_check_type;
 extern int max_pmod_noreply;
 extern msec_limits_t msec;
+extern char *required_ui_keys[];
 
 void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);

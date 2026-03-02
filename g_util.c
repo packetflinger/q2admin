@@ -211,17 +211,69 @@ char *Info_ValueForKey(char *s, char *key) {
 }
 
 /**
- * Some characters are illegal in info strings because they can mess up the
- * server's parsing.
+ * Ensure the FORMAT of the userinfo string is valid, not necessarily the
+ * values. Check for overall length, length of keys and values, illegal
+ * characters, etc.
  */
 bool Info_Validate(char *s) {
-    if (q2a_strstr(s, "\"")) {
-        return false;
+    size_t len, total;
+    int c;
+
+    total = 0;
+    while (true) {
+        // validate key
+        if (*s == '\\') {
+            s++;
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+        }
+        if (!*s) {
+            return false;   // missing key
+        }
+        len = 0;
+        while (*s != '\\') {
+            c = *s++;
+            if (!Q_isprint(c) || c == '\"' || c == ';') {
+                return false;   // illegal characters
+            }
+            if (++len == MAX_INFO_KEY) {
+                return false;   // oversize key
+            }
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+            if (!*s) {
+                return false;   // missing value
+            }
+        }
+
+        // validate value
+        s++;
+        if (++total == MAX_INFO_STRING) {
+            return false;   // oversize infostring
+        }
+        if (!*s) {
+            return false;   // missing value
+        }
+        len = 0;
+        while (*s != '\\') {
+            c = *s++;
+            if (!Q_isprint(c) || c == '\"' || c == ';') {
+                return false;   // illegal characters
+            }
+            if (++len == MAX_INFO_VALUE) {
+                return false;   // oversize value
+            }
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+            if (!*s) {
+                return true;    // end of string
+            }
+        }
     }
-    if (q2a_strstr(s, ";")) {
-        return false;
-    }
-    return true;
+    return false;
 }
 
 /**
