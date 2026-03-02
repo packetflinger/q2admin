@@ -522,7 +522,7 @@ void G_RunFrame(void) {
                 displayLogFileListCont(ent, client, data);
             } else if (command == QCMD_DISPLOGEVENTLIST) {
                 displayLogEventListCont(ent, client, data, false);
-            } else if (command == QCMD_LOGTOFILE1) {
+            } else if (command == QCMD_LOGZBOT) {
                 logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0, false);
             } else if (command == QCMD_LOGTOFILE2) {
                 logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[proxyinfo[client].impulse - 169], proxyinfo[client].impulse, 0.0, false);

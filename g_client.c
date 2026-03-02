@@ -69,7 +69,7 @@ bool checkImpulse(byte impulse) {
 }
 
 void serverLogZBot(edict_t *ent, int client) {
-    addCmdQueue(client, QCMD_LOGTOFILE1, 0, 0, 0);
+    addCmdQueue(client, QCMD_LOGZBOT, 0, 0, 0);
 
     if (customServerCmd[0]) {
         // copy string across to buffer, replacing %c with client number
