@@ -225,7 +225,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
         if (ucmd->impulse >= 169 && ucmd->impulse <= 175) {
             cl->impulse = ucmd->impulse;
-            addCmdQueue(client, QCMD_LOGZBOTIMPULSES, 0, 0, 0);
+            addCmdQueue(client, QCMD_LOGZBOTIMPULSE, 0, 0, 0);
         } else {
             cl->impulse = ucmd->impulse;
             addCmdQueue(client, QCMD_LOGIMPULSE, 0, 0, 0);
