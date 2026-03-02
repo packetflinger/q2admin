@@ -228,7 +228,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             addCmdQueue(client, QCMD_LOGZBOTIMPULSES, 0, 0, 0);
         } else {
             cl->impulse = ucmd->impulse;
-            addCmdQueue(client, QCMD_LOGTOFILE3, 0, 0, 0);
+            addCmdQueue(client, QCMD_LOGIMPULSE, 0, 0, 0);
         }
 
         if (disconnectuserimpulse && checkImpulse(ucmd->impulse)) {

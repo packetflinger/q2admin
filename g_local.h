@@ -249,7 +249,7 @@ enum _commands {
     QCMD_CONNECTCMD,                // do both client and server custom cmds
     QCMD_LOGZBOT,                   // a zbot was detected, log it
     QCMD_LOGZBOTIMPULSES,           // log the control keys sent by a zbot
-    QCMD_LOGTOFILE3,
+    QCMD_LOGIMPULSE,                // log a regular impulse
     QCMD_RESTART,
     QCMD_CLIPTOMAXRATE,
     QCMD_CLIPTOMINRATE,
