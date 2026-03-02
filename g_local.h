@@ -294,7 +294,7 @@ enum _commands {
     QCMD_PMODVERTIMEOUT,
     QCMD_PMODVERTIMEOUT_INGAME,
     QCMD_SHOWMOTD,
-    QCMD_EXECMAPCFG,
+    QCMD_EXECMAPCFG,                // force client to exec various .cfg files
     QCMD_PRIVATECOMMAND,
     QCMD_GL_CHECK,
     QCMD_SETUPTIMESCALE,
