@@ -158,8 +158,8 @@ typedef struct {
     int done_server_and_blocklist;
     int private_command;            // ltime while waiting for responses
     int timescale;                  // player's current timescale (from userinfo)
-    bool show_fps;              // display fps to client every 0.5 sec
-    bool vid_restart;           // if client already forced to vid_restart
+    bool show_fps;                  // display fps to client every 0.5 sec
+    bool vid_restart;               // if client already forced to vid_restart
     bool private_command_got[PRIVATE_COMMANDS]; // if we received a response
     char serverip[16];              // have player reconnect here instead of proxy
     char cmdlist_stored[256];
