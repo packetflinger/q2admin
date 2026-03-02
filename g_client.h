@@ -31,6 +31,29 @@
 // time for their moves over a period of 16 server frames (at the default HZ).
 #define MSEC_SLOP                   1.125
 
+// The hacktype is the specific reason a client is being disconnected
+typedef enum {
+    HT_NONE,            // they way it should be
+    HT_GENERAL_PROXY,   // something between client and server
+    HT_GENERAL_AIMBOT,  // custom aim assist detected
+    HT_ZBOT,            // obvious zbot behavior
+    HT_RATBOT,          // obvious ratbot behavior
+    HT_CUSTOM_CLIENT,   // unknown but misbehaving
+    HT_MSEC,            // msec used is anything but 1000/cl_maxfps +/- slop
+    HT_TIMESCALE,       // timescale value is anything but 1.0
+    HT_ALIAS,           // aliases are not handled properly
+    HT_STUFF,           // seemingly doesn't respond to stufftet msgs
+    HT_USERINFO,        // client ui missing required values
+    HT_UNKNOWN,
+} hacktype_t;
+
+// The structure to hold most of the hack-related variables needed per client
+typedef struct {
+    hacktype_t type;
+    bool disconnect;    // should disconnect this client?
+    netadr_t addr;      // the address to kick if hack detected
+} hack_t;
+
 // What we need to figure out if a player is using some kind of aim assist
 typedef struct {
     short angles[2][2]; // pitch and yaw for current and last frame
@@ -117,3 +140,4 @@ void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 bool AimbotCheck(int client, usercmd_t *ucmd);
 void checkClientDeadlines(int c);
+char *hacktypeToString(hacktype_t h);

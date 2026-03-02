@@ -507,6 +507,7 @@ void InitGame(void) {
         q2a_memset(&proxyinfo[i].freeze, 0, sizeof(freeze_t));
         q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
         q2a_memset(&proxyinfo[i].userinfo, 0, sizeof(userinfo_t));
+        q2a_memset(&proxyinfo[i].hack, 0, sizeof(hack_t));
 
         proxyinfo[i].userinfo.changed_start = ltime;
 
@@ -1807,6 +1808,7 @@ void ClientBegin(edict_t *ent) {
     q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
     q2a_memset(&proxyinfo[client].checkvar_deadline, 0, sizeof(float) * CHECKVAR_MAX);
+    q2a_memset(&proxyinfo[client].hack, 0, sizeof(hack_t));
 
     if (ip_limit > 0) {
         int sameaddr = 1;

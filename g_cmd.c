@@ -2496,20 +2496,23 @@ void timescaleDetected(edict_t *ent, int client) {
  * A client has been determined to be illegitimate.
  */
 void hackDetected(edict_t *ent, int client) {
-    proxyinfo[client].charindex = -8;
+    proxyinfo_t *pi = &proxyinfo[client];
+
+    pi->charindex = -8;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     removeClientCommand(client, QCMD_TESTALIASCMD2);
-    proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
-    proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
+    pi->clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
+    pi->clientcommand |= CCMD_ZBOTDETECTED;
     q2a_strncpy(buffer, modifiedclientmsg, sizeof(buffer));
     q2a_strcat(buffer, "\n");
-    gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+    gi.bprintf(PRINT_HIGH, buffer, pi->name);
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
     if (disconnectuser) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, modifiedclientmsg);
+        char *msg = va("%s [%s] attempted using %s", pi->name, IP(client), hacktypeToString(pi->hack.type));
+        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, msg);
     }
 }
 
@@ -2758,25 +2761,23 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
         if (Q_stricmp(cmd, "alias") == 0) { // client doesn't support "alias" command, it just printed
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
+            proxyinfo[client].hack.type = HT_ALIAS;
             hackDetected(ent, client);
-            gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY1\n");
             return false;
         }
 
-        if (proxyinfo[client].hacked_disconnect == 1) {
+        if (proxyinfo[client].hack.disconnect) {
             sameip = 1;
-            gi.dprintf("hacked_disconnect_addr: \"%s\"\n", net_addressToString(&proxyinfo[client].hacked_disconnect_addr, false, false, false));
-            gi.dprintf("hacked_disconnect_addr: \"%s\"\n", net_addressToString(&proxyinfo[client].address, false, false, false));
-            if (!net_addressesMatch(&proxyinfo[client].hacked_disconnect_addr, &proxyinfo[client].address)) {
+            if (!net_addressesMatch(&proxyinfo[client].hack.addr, &proxyinfo[client].address)) {
                 sameip = 0;
             }
             if (sameip == 1) {
-                proxyinfo[client].hacked_disconnect = 0;
+                proxyinfo[client].hack.disconnect = false;
+                proxyinfo[client].hack.type = HT_UNKNOWN;
                 hackDetected(ent, client);
-                gi.dprintf("hackDetected() called near hacked_disconnect\n");
                 return false;
             }
-            proxyinfo[client].hacked_disconnect = 0;
+            proxyinfo[client].hack.disconnect = false;
         }
 
         // client doesn't send "rate" with userinfo
@@ -2784,8 +2785,8 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             char *ratte = Info_ValueForKey(proxyinfo[client].userinfo.raw, "rate");
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
+                proxyinfo[client].hack.type = HT_USERINFO;
                 hackDetected(ent, client);
-                gi.dprintf("hackDetected() called near rate check\n");
                 return false;
             }
         }
@@ -2795,8 +2796,8 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
         // alias cmd unsupported, it just printed the alias
         if (Q_stricmp(cmd, proxyinfo[client].alias_test_str1) == 0) {
+            proxyinfo[client].hack.type = HT_ALIAS;
             hackDetected(ent, client);
-            gi.dprintf("hackDetected() called near CCMD_WAITFORALIASREPLY2\n");
             return false;
         }
         // client sent back the value of the alias, normal behavior.
@@ -2810,8 +2811,8 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     if ((proxyinfo[client].clientcommand & CCMD_WAITFORCONNECTREPLY) &&
             Q_stricmp(cmd, proxyinfo[client].connect_test_str) == 0) {
         proxyinfo[client].clientcommand &= ~CCMD_WAITFORCONNECTREPLY;
-        proxyinfo[client].hacked_disconnect = 1;
-        proxyinfo[client].hacked_disconnect_addr = proxyinfo[client].address;
+        proxyinfo[client].hack.disconnect = true;
+        proxyinfo[client].hack.addr = proxyinfo[client].address;
         return false;
     }
 

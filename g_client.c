@@ -401,3 +401,34 @@ void checkClientDeadlines(int c) {
         }
     }
 }
+
+/**
+ * Get a string representation of the hack a client is suspected of using.
+ */
+char *hacktypeToString(hacktype_t h) {
+    switch (h) {
+    case HT_GENERAL_PROXY:
+        return "proxy";
+    case HT_GENERAL_AIMBOT:
+        return "aim assist";
+    case HT_ZBOT:
+        return "zbot";
+    case HT_RATBOT:
+        return "ratbot";
+    case HT_CUSTOM_CLIENT:
+        return "modified client";
+    case HT_MSEC:
+        return "MSEC manipulation";
+    case HT_TIMESCALE:
+        return "timescale manipulation";
+    case HT_ALIAS:
+        return "unexpected alias behavior";
+    case HT_STUFF:
+        return "stufftext non-compliance";
+    case HT_USERINFO:
+        return "non-standard userinfo";
+    case HT_UNKNOWN:
+        return "unknown";
+    }
+    return "";
+}

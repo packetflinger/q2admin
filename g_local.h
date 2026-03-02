@@ -137,8 +137,6 @@ typedef struct {
     char connect_test_str[RANDOM_STRING_LENGTH + 1];
     char timescale_test_str[RANDOM_STRING_LENGTH + 1];
     float timescale_deadline;
-    int hacked_disconnect;          // hack detected, disconnect the client
-    netadr_t hacked_disconnect_addr;
     int checked_hacked_exe;         // used in `rate` check
 
     // used to test the variables check list
@@ -191,6 +189,7 @@ typedef struct {
     freeze_t freeze;                // used to freeze a player in place
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply
+    hack_t hack;                    // all hack-related properties
 } proxyinfo_t;
 
 typedef struct {
