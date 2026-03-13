@@ -436,11 +436,6 @@ void G_RunFrame(void) {
 
                 if (!proxyinfo[client].bypass_level) {
                     if (dopversion) {
-                        /*if (client_check > 0)
-                        {
-                            addCmdQueue(client, QCMD_PMODVERTIMEOUT, 0, 0, 0);
-                            gi.cprintf(ent, PRINT_HIGH, "%s: p_version Standard Proxy Test\r\n", proxyinfo[client].name);
-                        }*/
                     }
                 }
             }
@@ -633,21 +628,6 @@ void G_RunFrame(void) {
                 stuffcmd(ent, "!bypass $clientuser $clientpass\n");
             } else if (command == QCMD_PMODVERTIMEOUT) {
                 //no reply? kick the bastard
-                if (!proxyinfo[client].bypass_level) {
-                    /*if (client_check > 0) {
-                        if (proxyinfo[client].pmod != 1) {
-                            gi.bprintf(PRINT_HIGH,NOMATCH_KICK_MSG,proxyinfo[client].name);
-                            sprintf(buffer,client_msg,version_check);
-                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_NOMATCH_KICK_MSG);
-                        } else if (proxyinfo[client].cmdlist == 7) { //Kick false NoCheat clients
-                            gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
-                            sprintf(buffer,client_msg,version_check);
-                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, FRKQ2_KICK_MSG);
-                        }
-                    }*/
-                }
             } else if (command == QCMD_PRIVATECOMMAND) {
                 for (j = 0; j < PRIVATE_COMMANDS; j++) {
                     //check each command, if we didnt get a response log it
@@ -667,30 +647,6 @@ void G_RunFrame(void) {
                     }
                 }
             } else if (command == QCMD_PMODVERTIMEOUT_INGAME) {
-                if (!proxyinfo[client].bypass_level) {
-                    /*if (client_check > 0)
-                    {
-                    //no reply? increase no reply count
-                            if (!proxyinfo[client].pmod)
-                            {
-                                    proxyinfo[client].pmod_noreply_count++;
-                                    if (proxyinfo[client].pmod_noreply_count > max_pmod_noreply)
-                                    {
-                                            gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);
-                                            sprintf(buffer,client_msg,version_check);
-                                            gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-                                            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
-                                    }
-                            }
-                            else if (proxyinfo[client].pmod != 1)
-                            {
-                                    gi.bprintf(PRINT_HIGH,MOD_KICK_MSG,proxyinfo[client].name,proxyinfo[client].pmod);
-                                    sprintf(buffer,client_msg,version_check);
-                                    gi.cprintf(getEnt((client + 1)),PRINT_HIGH,"%s\n",buffer);
-                                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
-                            }
-                    }*/
-                }
             } else if (command == QCMD_GL_CHECK) {
             } else if (command == QCMD_SETUPTIMESCALE) {
                 stuffcmd(ent, "set timescale $timescale u\n");

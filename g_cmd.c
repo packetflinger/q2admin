@@ -1273,12 +1273,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_STRING,
         zbotuserdisplay
     },
-    /*{
-        "client_check",
-        CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &client_check
-    },*/
     {
         "client_map_cfg",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
