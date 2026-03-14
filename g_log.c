@@ -495,6 +495,8 @@ void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *messag
 
     if (logtypes[(int) ltype].log) {
         convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, impulse, ret_time);
+
+        // each logtype can be linked to multiple log files
         for (unsigned int i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
             if ((logtypes[(int) ltype].logfiles & logfile) && logFiles[i].inuse && logFiles[i].fp) {
                fprintf(logFiles[i].fp, "%s\n", logline);
