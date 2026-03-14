@@ -491,16 +491,12 @@ bool isLogWritable(int index) {
  *   echo = whether to output the final log line to the server console.
  */
 void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int impulse, float ret_time, bool echo) {
-    if (logtypes[(int) ltype].log) {
-        char logline[4096];
-        char logname[356];
-        unsigned long logfile;
-        unsigned int i;
-        FILE *logfilePtr;
+    char logline[4096];
 
+    if (logtypes[(int) ltype].log) {
         convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, impulse, ret_time);
-        for (i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
-            if ((logtypes[(int) ltype].logfiles & logfile) && logFiles[i].inuse) {
+        for (unsigned int i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
+            if ((logtypes[(int) ltype].logfiles & logfile) && logFiles[i].inuse && logFiles[i].fp) {
                fprintf(logFiles[i].fp, "%s\n", logline);
             }
         }
