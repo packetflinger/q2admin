@@ -854,3 +854,22 @@ void displayLogEventListCont(edict_t *ent, int client, long logevent, bool oneti
         gi.cprintf(ent, PRINT_HIGH, "\nEnd Logevent List\n");
     }
 }
+
+/**
+ * Manually flush buffered log data
+ */
+void flushLogsRun(int startarg, edict_t *ent, int client) {
+    flushLogs();
+    gi.cprintf(ent, PRINT_HIGH, "All buffered log data has been flushed.\n");
+}
+
+/**
+ * Force any buffered log data to be written to disk
+ */
+void flushLogs(void) {
+    for (int i = 0; i < LOGTYPES_MAX; i++) {
+        if (logFiles[i].inuse && logFiles[i].fp != NULL) {
+            fflush(logFiles[i].fp);
+        }
+    }
+}

@@ -1298,6 +1298,13 @@ q2acmd_t q2aCommands[] = {
         &do_vid_restart
     },
     {
+        "flush_logs",
+        CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_NONE,
+        NULL,
+        flushLogsRun
+    },
+    {
         "gl_driver_check",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,

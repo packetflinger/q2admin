@@ -74,6 +74,8 @@ void displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum);
 void displaylogfileRun(int startarg, edict_t *ent, int client);
 void expandOutPortNum(char *srcdest, int max);
+void flushLogs(void);
+void flushLogsRun(int startarg, edict_t *ent, int client);
 bool isLogEvent(enum zb_logtypesenum ltype);
 void loadLogList(void);
 bool loadLogListFile(char *filename);
