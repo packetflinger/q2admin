@@ -160,7 +160,7 @@ int minrateallowed                      = 0;
 char motd[4096];
 msec_limits_t msec = {
         .max_allowed    = 5600,
-        .min_required   = 4400,
+        .min_required   = 0,    // 4400 should be a good value
         .timespan       = 5,
         .max_violations = 2,
         .action         = MVA_KICK
