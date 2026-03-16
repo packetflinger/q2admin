@@ -1141,7 +1141,7 @@ void CA_Print(uint8_t level, char *text) {
 /**
  * Called when a player issues the teleport command
  */
-void CA_Teleport(uint8_t client_id) {
+void CA_Teleport(uint8_t client_id, char *location) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
     }
@@ -1150,17 +1150,10 @@ void CA_Teleport(uint8_t client_id) {
         return;
     }
 
-    char *srv;
-    if (gi.argc() > 1) {
-        srv = gi.argv(1);
-    } else {
-        srv = "";
-    }
-
     CA_WriteByte(CMD_COMMAND);
     CA_WriteByte(CMD_COMMAND_TELEPORT);
     CA_WriteByte(client_id);
-    CA_WriteString("%s", srv);
+    CA_WriteString("%s", location);
 }
 
 /**

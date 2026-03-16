@@ -240,31 +240,31 @@ q2acmd_t q2aCommands[] = {
         "cloud_cmd_teleport",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.cmd_teleport,
+        cloud_config.cmd_teleport,
     },
     {
         "cloud_cmd_invite",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.cmd_invite,
+        cloud_config.cmd_invite,
     },
     {
         "cloud_cmd_seen",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.cmd_seen,
+        cloud_config.cmd_seen,
     },
     {
         "cloud_cmd_whois",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.cmd_whois,
+        cloud_config.cmd_whois,
     },
     {
         "cloud_dns",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.dns,
+        cloud_config.dns,
     },
     {
         "cloud_enabled",
@@ -276,7 +276,7 @@ q2acmd_t q2aCommands[] = {
         "cloud_address",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.address,
+        cloud_config.address,
     },
     {
         "cloud_port",
@@ -294,25 +294,25 @@ q2acmd_t q2aCommands[] = {
         "cloud_publickey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.public,
+        cloud_config.public,
     },
     {
         "cloud_privatekey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.private,
+        cloud_config.private,
     },
     {
         "cloud_serverkey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.serverkey,
+        cloud_config.serverkey,
     },
     {
         "cloud_uuid",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_config.uuid,
+        cloud_config.uuid,
     },
     {
         "cl_anglespeedkey_display",
@@ -1492,31 +1492,44 @@ q2acmd_t q2aCommands[] = {
 char mutedText[8192] = "";
 
 /**
- *
+ * A player issued the teleport command. The gameserver will send the request
+ * to the connected CloudAdmin server to find either the current list of
+ * available servers or the address of the server requested.
  */
 void Cmd_Teleport_f(edict_t *ent) {
-    if (!(cloud.flags & CFL_TELEPORT)) {
-        gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
+    if (!CLOUD_OK) {
+        gi.cprintf(ent, PRINT_HIGH, "Not currently connected to a CloudAdmin server.\n");
         return;
     }
-    uint8_t id = getEntOffset(ent) - 1;
-    CA_Teleport(id);
+    if (!(cloud.flags & CFL_TELEPORT)) {
+        gi.cprintf(ent, PRINT_HIGH, "Teleport command is not enabled in server config.\n");
+        return;
+    }
+    if (q2a_strlen(gi.argv(1)) > TELE_NAME_MAX) {
+        gi.cprintf(ent, PRINT_HIGH, "Invalid teleport destination.\n");
+        return;
+    }
+    CA_Teleport(getEntOffset(ent) - 1, gi.argv(1));
 }
 
 /**
  *
  */
 void Cmd_Invite_f(edict_t *ent) {
+    if (!CLOUD_OK) {
+        gi.cprintf(ent, PRINT_HIGH, "Not currently connected to a CloudAdmin server.\n");
+        return;
+    }
     if (!(cloud.flags & CFL_INVITE)) {
-            gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
-            return;
+        gi.cprintf(ent, PRINT_HIGH, "Invite command is not enabled in server config.\n");
+        return;
     }
     char *invitetext;
     uint8_t id = getEntOffset(ent) - 1;
     if (gi.argc() > 1) {
-            invitetext = gi.args();
+        invitetext = gi.args();
     } else {
-            invitetext = "";
+        invitetext = "";
     }
     CA_Invite(id, invitetext);
 }
@@ -2969,6 +2982,25 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         *checkforfloodafter = true;
     }
 
+    // cloud admin commands are runtime configurable (and might not start with
+    // "!") so they can't be handled in the normal q2Command struct.
+    if (Q_stricmp(cmd, cloud_config.cmd_teleport) == 0) {
+        Cmd_Teleport_f(ent);
+        return false;
+    }
+    if (Q_stricmp(cmd, cloud_config.cmd_invite) == 0) {
+        Cmd_Invite_f(ent);
+        return false;
+    }
+    if (Q_stricmp(cmd, cloud_config.cmd_seen) == 0) {
+        // not implemented yet
+        return false;
+    }
+    if (Q_stricmp(cmd, cloud_config.cmd_whois) == 0) {
+        // not implemented yet
+        return false;
+    }
+
     if (cmd[0] == '!') {
         if (proxyinfo[client].admin_level) {
             q2a_admin_command = doAdminCommand(ent, client);
@@ -3141,24 +3173,6 @@ void ClientCommand(edict_t *ent) {
 
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
-
-    if (Q_stricmp(cmd, cloud_config.cmd_teleport) == 0) {
-        Cmd_Teleport_f(ent);
-        return;
-    }
-
-    if (Q_stricmp(cmd, cloud_config.cmd_invite) == 0) {
-        Cmd_Invite_f(ent);
-        return;
-    }
-
-    if (Q_stricmp(cmd, cloud_config.cmd_seen) == 0) {
-        return;
-    }
-
-    if (Q_stricmp(cmd, cloud_config.cmd_whois) == 0) {
-        return;
-    }
 
     //Custom frkq2 check
     if ((do_franck_check) && (

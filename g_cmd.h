@@ -4,16 +4,22 @@
 
 #pragma once
 
-// where the command can't be run?
-#define CMDWHERE_CFGFILE        BIT(0)
-#define CMDWHERE_CLIENTCONSOLE  BIT(1)
-#define CMDWHERE_SERVERCONSOLE  BIT(2)
+// Where the command/setting allowed to be run/set from. For commands, they must
+// be prefixed with "!" when executing, but not when defined in the q2aCommands
+// structure.
+#define CMDWHERE_CFGFILE        BIT(0)  // any q2a*.cfg file
+#define CMDWHERE_CLIENTCONSOLE  BIT(1)  // cmd from admin-authed player in game
+#define CMDWHERE_SERVERCONSOLE  BIT(2)  // cmd typed into srv console (or rcon)
 
-// type of command
-#define CMDTYPE_NONE        0
-#define CMDTYPE_LOGICAL     1   // boolean
-#define CMDTYPE_NUMBER      2
-#define CMDTYPE_STRING      3
+// Types of commands/values. All values are inputed as strings, these values
+// determine how they're casted and stored internally.
+//  "string1" -> "string1"
+//  "Yes"     -> true
+//  "4.5"     -> 4.5
+#define CMDTYPE_NONE        0   // normal command
+#define CMDTYPE_LOGICAL     1   // boolean value (yes/no/1/0) case insensitive
+#define CMDTYPE_NUMBER      2   // integer or float value
+#define CMDTYPE_STRING      3   // any string
 
 #define MAX_BLOCK_MODELS    26
 

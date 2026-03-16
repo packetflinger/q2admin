@@ -57,19 +57,23 @@
 #define AUTH_FAIL_LIMIT 3            // stop trying after
 #define DIGEST_LEN      (SHA256_DIGEST_LENGTH)
 
+#define TELE_NAME_MAX   20
+
 
 /**
- * The various states of the cloud admin connection
+ * The various states of the cloud admin connection. A normal connection will
+ * hang out in the TRUSTED state most of the time (unless disabled).
  */
 typedef enum {
-    CLOUD_STATE_DISABLED,            // not using RA at all
+    CLOUD_STATE_DISABLED,            // not using CA at all
     CLOUD_STATE_DISCONNECTED,        // will try to connect when possible
     CLOUD_STATE_CONNECTING,          // mid connection
-    CLOUD_STATE_CONNECTED,           // connected
+    CLOUD_STATE_CONNECTED,           // connected, but still authenticating
     CLOUD_STATE_TRUSTED              // authenticated and ready to go
 } cloud_state_t;
 
-#define STATE(s)    (remote.state == RA_STATE_##s)
+#define CLOUD_OK    (cloud.state == CLOUD_STATE_TRUSTED)
+#define STATE(s)    (cloud.state == CLOUD_STATE_##s)
 
 typedef struct {
     byte      data[QUEUE_SIZE];
@@ -217,22 +221,6 @@ typedef struct {
     char uuid[37];
 } cloud_config_t;
 
-/*
-extern char cloud_address[256];
-extern int cloud_port;
-extern bool cloud_encryption;
-extern char cloud_privatekey[256];
-extern char cloud_publickey[256];
-extern char cloud_serverkey[256];
-extern char cloud_uuid[37];
-extern char cloud_dns[3];
-extern int cloud_flags;
-extern char cloud_cmd_teleport[25];
-extern char cloud_cmd_invite[25];
-extern char cloud_cmd_seen[25];
-extern char cloud_cmd_whois[25];
-*/
-
 void        CA_Send(void);
 void        CA_Init(void);
 void        CA_Shutdown(void);
@@ -257,7 +245,7 @@ void        CA_InitBuffer(void);
 uint16_t    getport(void);
 
 void        CA_Print(uint8_t level, char *text);
-void        CA_Teleport(uint8_t client_id);
+void        CA_Teleport(uint8_t client_id, char *where);
 void        CA_Frag(uint8_t victim, uint8_t attacker);
 void        CA_PlayerUpdate(uint8_t cl, const char *ui);
 void        CA_Invite(uint8_t cl, const char *text);
