@@ -16,7 +16,7 @@
 //  "string1" -> "string1"
 //  "Yes"     -> true
 //  "4.5"     -> 4.5
-#define CMDTYPE_NONE        0   // normal command
+#define CMDTYPE_COMMAND     0   // normal command
 #define CMDTYPE_LOGICAL     1   // boolean value (yes/no/1/0) case insensitive
 #define CMDTYPE_NUMBER      2   // integer or float value
 #define CMDTYPE_STRING      3   // any string
@@ -31,8 +31,8 @@ typedef struct {
     byte cmdwhere;
     byte cmdtype;
     void *datapoint;
-    CMDRUNFUNC *runfunc;
-    CMDINITFUNC *initfunc;
+    CMDRUNFUNC *runfunc;    // called when cmd is issued from console
+    CMDINITFUNC *initfunc;  // only for CFGFILE, called when file is read
 } q2acmd_t;
 extern q2acmd_t q2aCommands[];
 

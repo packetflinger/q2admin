@@ -1004,21 +1004,21 @@ q2acmd_t q2aCommands[] = {
     {
         "ban",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         banRun
     },
     {
         "chatban",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         chatbanRun
     },
     {
         "chatfloodprotect",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         chatFloodProtectRun,
         chatFloodProtectInit
@@ -1026,210 +1026,210 @@ q2acmd_t q2aCommands[] = {
     {
         "checkvarcmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         checkvarcmdRun
     },
     {
         "checkvardel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         checkvarDelRun
     },
     {
         "clearlogfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         clearlogfileRun
     },
     {
         "clientchatfloodprotect",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         clientchatfloodprotectRun
     },
     {
         "cloud",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         cloudRun,
     },
     {
         "cvarset",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         cvarsetRun
     },
     {
         "delban",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         delbanRun
     },
     {
         "delchatban",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         delchatbanRun
     },
     {
         "disablecmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         disablecmdRun
     },
     {
         "disabledel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         disableDelRun
     },
     {
         "displaylogfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         displaylogfileRun
     },
     {
         "floodcmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         floodcmdRun
     },
     {
         "flooddel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         floodDelRun
     },
     {
         "freeze",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         freezeRun
     },
     {
         "flush_logs",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         flushLogsRun
     },
     {
         "ip",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         ipRun
     },
     {
         "kick",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         kickRun
     },
     {
         "listbans",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listbansRun
     },
     {
         "listchatbans",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listchatbansRun
     },
     {
         "listcheckvar",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listcheckvarsRun
     },
     {
         "listdisable",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listdisablesRun
     },
     {
         "listfloods",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listfloodsRun
     },
     {
         "listlrcons",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listlrconsRun
     },
     {
         "listspawns",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listspawnsRun
     },
     {
         "listvotes",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         listvotesRun
     },
     {
         "logevent",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         logeventRun
     },
     {
         "logfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         logfileRun
     },
     {
         "lrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         lrconRun
     },
     {
         "lrcondel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         lrconDelRun
     },
     {
         "mute",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         muteRun
     },
@@ -1244,119 +1244,119 @@ q2acmd_t q2aCommands[] = {
     {
         "reloadbanfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadbanfileRun,
     },
     {
         "reloadexceptionlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         AC_ReloadExceptions,
     },
     {
         "reloadanticheatlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         AC_ReloadExceptions,
     },
     {
         "reloadhashlist",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadhashlistRun,
     },
     {
         "reloadcheckvarfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadCheckVarFileRun,
     },
     {
         "reloaddisablefile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadDisableFileRun,
     },
     {
         "reloadfloodfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadFloodFileRun,
     },
     {
         "reloadloginfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadLoginFileRun,
     },
     {
         "reloadlrconfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadlrconfileRun,
     },
     {
         "reloadspawnfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadSpawnFileRun,
     },
     {
         "reloadvotefile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadVoteFileRun,
     },
     {
         "reloadwhoisfile",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         reloadWhoisFileRun,
     },
     {
         "resetrcon",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         lrcon_reset_rcon_password,
     },
     {
         "say_group",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         sayGroupRun,
     },
     {
         "say_person",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         sayPersonRun,
     },
     {
         "say_person_low",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         sayPersonLowRun,
     },
     {
         "setadmin",
         CMDWHERE_CLIENTCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         setadminRun
     },
@@ -1371,70 +1371,70 @@ q2acmd_t q2aCommands[] = {
     {
         "spawncmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         spawncmdRun
     },
     {
         "spawndel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         spawnDelRun
     },
     {
         "stifle",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         stifleRun
     },
     {
+        "stuff",
+        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        stuffClientRun,
+    },
+    {
         "unfreeze",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         unfreezeRun
     },
     {
         "unstifle",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         unstifleRun
     },
     {
-        "stuff",
-        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
-        NULL,
-        stuffClientRun,
-    },
-    {
         "version",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         versionRun
     },
     {
         "votecmd",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         votecmdRun
     },
     {
         "votedel",
         CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         voteDelRun
     },
     {
         "vpnusers",
         CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_NONE,
+        CMDTYPE_COMMAND,
         NULL,
         vpnUsersRun,
     },
@@ -1930,13 +1930,19 @@ void processCommand(int cmdidx, int startarg, edict_t *ent) {
             gi.cprintf(ent, PRINT_HIGH, "%s = %d\n", q2aCommands[cmdidx].cmdname, *((int *) q2aCommands[cmdidx].datapoint));
             break;
         case CMDTYPE_STRING:
-            gi.cprintf(ent, PRINT_HIGH, "%s = %s\n", q2aCommands[cmdidx].cmdname, (char *) q2aCommands[cmdidx].datapoint);
+            gi.cprintf(ent, PRINT_HIGH, "%s = \"%s\"\n", q2aCommands[cmdidx].cmdname, (char *) q2aCommands[cmdidx].datapoint);
             break;
     }
 }
 
 /**
- * Open, read and parse a q2admin config file.
+ * Open, read and parse a q2admin config file. Only commands configured for
+ * CFGFILE access will be parsed. If the command has an INITFUNC registered,
+ * it will be run at the time the value is parsed instead of simply casting and
+ * assigning the value. The value will be supplied to the initfunc as a
+ * parameter. Improperly formatted values (like ones missing the closed quote
+ * at the end) will be silently ignored and the default value for that key
+ * used.
  *
  * Only returns false if the file doesn't exist.
  */
@@ -1954,7 +1960,7 @@ bool readCfgFile(char *cfgfilename) {
         char *cp = buffer;
         SKIPBLANK(cp);
         if (!(cp[0] == ';' || cp[0] == '\n' || isBlank(cp))) {
-            if (breakLine(cp, buff1, buff2, sizeof (buff2) - 1)) {
+            if (breakLine(cp, buff1, buff2, sizeof(buff2) - 1)) {
                 unsigned int i;
 
                 for (i = 0; i < lengthof(q2aCommands); i++) {
@@ -3009,7 +3015,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     if (q2aCommands[i].runfunc) {
                         (*q2aCommands[i].runfunc)(1, ent, client);
                     } else {
-                        processCommand(i, 1, ent);
+                        processCommand(i, 1, ent);  // show or set a config value
                     }
                     return false;
                 }
