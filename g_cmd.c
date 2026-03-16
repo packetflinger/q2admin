@@ -22,86 +22,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int lastClientCmd = -1;
 
-block_model block_models[MAX_BLOCK_MODELS] ={
-    //projected model wallhack protection list.
-    {
-        "models/items/adrenal/tris.md2"
-    },
-    {
-        "models/items/armor/body/tris.md2"
-    },
-    {
-        "models/items/armor/combat/tris.md2"
-    },
-    {
-        "models/items/armor/jacket/tris.md2"
-    },
-    {
-        "models/items/armor/shield/tris.md2"
-    },
-    {
-        "models/items/band/tris.md2"
-    },
-    {
-        "models/items/invulner/tris.md2"
-    },
-    {
-        "models/items/mega_h/tris.md2"
-    },
-    {
-        "models/items/quaddama/tris.md2"
-    },
-    {
-        "models/objects/rocket/tris.md2"
-    },
-    {
-        "models/ctf/strength/tris.md2"
-    },
-    {
-        "models/ctf/haste/tris.md2"
-    },
-    {
-        "models/ctf/resistance/tris.md2"
-    },
-    {
-        "models/ctf/regeneration/tris.md2"
-    },
-    {
-        "players/male/flag2.md2"
-    },
-    {
-        "players/male/flag1.md2"
-    },
-    {
-        "models/objects/grenade2/tris.md2"
-    },
-    {
-        "models/weapons/g_machn/tris.md2"
-    },
-    { 
-        "models/weapons/g_rocket/tris.md2"
-    },
-    { 
-        "models/weapons/g_hyperb/tris.md2"
-    },
-    {
-        "models/weapons/g_shotg/tris.md2"
-    },
-    {
-        "models/weapons/g_chain/tris.md2"
-    },
-    {
-        "models/weapons/g_rail/tris.md2"
-    },
-    {
-        "models/weapons/g_shotg2/tris.md2"
-    },
-    {
-        "models/weapons/g_launch/tris.md2"
-    },
-    {
-        "models/items/armor/shard/tris.md2"
-    }
+// Projected model wallhack protection list.
+block_model block_models[MAX_BLOCK_MODELS] = {
+    {"models/items/adrenal/tris.md2"},
+    {"models/items/armor/body/tris.md2"},
+    {"models/items/armor/combat/tris.md2"},
+    {"models/items/armor/jacket/tris.md2"},
+    {"models/items/armor/shield/tris.md2"},
+    {"models/items/band/tris.md2"},
+    {"models/items/invulner/tris.md2"},
+    {"models/items/mega_h/tris.md2"},
+    {"models/items/quaddama/tris.md2"},
+    {"models/objects/rocket/tris.md2"},
+    {"models/ctf/strength/tris.md2"},
+    {"models/ctf/haste/tris.md2"},
+    {"models/ctf/resistance/tris.md2"},
+    {"models/ctf/regeneration/tris.md2"},
+    {"players/male/flag2.md2"},
+    {"players/male/flag1.md2"},
+    {"models/objects/grenade2/tris.md2"},
+    {"models/weapons/g_machn/tris.md2"},
+    {"models/weapons/g_rocket/tris.md2"},
+    {"models/weapons/g_hyperb/tris.md2"},
+    {"models/weapons/g_shotg/tris.md2"},
+    {"models/weapons/g_chain/tris.md2"},
+    {"models/weapons/g_rail/tris.md2"},
+    {"models/weapons/g_shotg2/tris.md2"},
+    {"models/weapons/g_launch/tris.md2"},
+    {"models/items/armor/shard/tris.md2"}
 };
 
 q2acmd_t q2aCommands[] = {
