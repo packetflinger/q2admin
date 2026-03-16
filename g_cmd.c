@@ -234,85 +234,85 @@ q2acmd_t q2aCommands[] = {
         "cloud_flags",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &cloud_flags,
+        &cloud_config.flags,
     },
     {
         "cloud_cmd_teleport",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        cloud_cmd_teleport,
+        &cloud_config.cmd_teleport,
     },
     {
         "cloud_cmd_invite",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        cloud_cmd_invite,
+        &cloud_config.cmd_invite,
     },
     {
         "cloud_cmd_seen",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        cloud_cmd_seen,
+        &cloud_config.cmd_seen,
     },
     {
         "cloud_cmd_whois",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        cloud_cmd_whois,
+        &cloud_config.cmd_whois,
     },
     {
         "cloud_dns",
         CMDWHERE_CFGFILE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        cloud_dns,
+        &cloud_config.dns,
     },
     {
         "cloud_enabled",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &cloud_enabled,
+        &cloud_config.enabled,
     },
     {
         "cloud_address",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_address,
+        &cloud_config.address,
     },
     {
         "cloud_port",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &cloud_port,
+        &cloud_config.port,
     },
     {
         "cloud_encryption",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &cloud_encryption,
+        &cloud_config.encryption,
     },
     {
         "cloud_publickey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_publickey,
+        &cloud_config.public,
     },
     {
         "cloud_privatekey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_privatekey,
+        &cloud_config.private,
     },
     {
         "cloud_serverkey",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_serverkey,
+        &cloud_config.serverkey,
     },
     {
         "cloud_uuid",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &cloud_uuid,
+        &cloud_config.uuid,
     },
     {
         "cl_anglespeedkey_display",
@@ -3142,21 +3142,21 @@ void ClientCommand(edict_t *ent) {
     q2a_strcpy(stemp, "");
     q2a_strcat(stemp, gi.args());
 
-    if (Q_stricmp(cmd, cloud_cmd_teleport) == 0) {
+    if (Q_stricmp(cmd, cloud_config.cmd_teleport) == 0) {
         Cmd_Teleport_f(ent);
         return;
     }
 
-    if (Q_stricmp(cmd, cloud_cmd_invite) == 0) {
+    if (Q_stricmp(cmd, cloud_config.cmd_invite) == 0) {
         Cmd_Invite_f(ent);
         return;
     }
 
-    if (Q_stricmp(cmd, cloud_cmd_seen) == 0) {
+    if (Q_stricmp(cmd, cloud_config.cmd_seen) == 0) {
         return;
     }
 
-    if (Q_stricmp(cmd, cloud_cmd_whois) == 0) {
+    if (Q_stricmp(cmd, cloud_config.cmd_whois) == 0) {
         return;
     }
 

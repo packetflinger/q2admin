@@ -32,7 +32,7 @@ void CA_Init() {
     memset(&cloud, 0, sizeof(cloud));
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
-    if (!cloud_enabled) {
+    if (!cloud_config.enabled) {
         gi.cprintf(NULL, PRINT_HIGH, "Cloud Admin is disabled in your config.\n");
         return;
     }
@@ -44,15 +44,15 @@ void CA_Init() {
         return;
     }
 
-    cloud.connection.encrypted = cloud_encryption;
+    cloud.connection.encrypted = cloud_config.encryption;
     
-    if (!cloud_address[0]) {
+    if (!cloud_config.address[0]) {
         CA_dprintf("cloud_addr is not set, disabling\n");
         cloud.state = CLOUD_STATE_DISABLED;
         return;
     }
 
-    if (!cloud_port) {
+    if (!cloud_config.port) {
         CA_dprintf("cloud_port is not set, disabling\n");
         cloud.state = CLOUD_STATE_DISABLED;
         return;
@@ -87,8 +87,8 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
     }
 
     // Just in case it's set blank in the config
-    if (!cloud_dns[0]) {
-        q2a_strcpy(cloud_dns, "64");
+    if (!cloud_config.dns[0]) {
+        q2a_strcpy(cloud_config.dns, "64");
     }
 
     // Save the first one of each address family if more than 1. They'll be in
@@ -103,13 +103,13 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a)
     }
 
     // select one based on preference
-    if (cloud_dns[0] == '6' && v6) {
+    if (cloud_config.dns[0] == '6' && v6) {
         return v6;
-    } else if (cloud_dns[0] == '4' && v4) {
+    } else if (cloud_config.dns[0] == '4' && v4) {
         return v4;
-    } else if (cloud_dns[1] == '6' && v6) {
+    } else if (cloud_config.dns[1] == '6' && v6) {
         return v6;
-    } else if (cloud_dns[1] == '4' && v4) {
+    } else if (cloud_config.dns[1] == '4' && v4) {
         return v4;
     }
 
@@ -137,7 +137,7 @@ void CA_LookupAddress(void)
 
     errno = 0;
 
-    int err = getaddrinfo(cloud_address, va("%d",cloud_port), &hints, &res);
+    int err = getaddrinfo(cloud_config.address, va("%d",cloud_config.port), &hints, &res);
     if (err != 0) {
         CA_dprintf("DNS error\n");
         cloud.state = CLOUD_STATE_DISABLED;
@@ -177,7 +177,7 @@ void CA_LookupAddress(void)
         CA_dprintf("server resolved to %s\n", str_address);
     }
 
-    cloud.flags = cloud_flags;
+    cloud.flags = cloud_config.flags;
     cloud.state = CLOUD_STATE_DISCONNECTED;
 }
 
@@ -738,7 +738,7 @@ bool CA_VerifyServerAuth(void)
     offset += sizeof(sv_challenge);
 
     // transit will be encrypted so the keys will be next in the buffer
-    if (cloud_encryption) {
+    if (cloud_config.encryption) {
         q2a_memset(c->session_key, 0, sizeof(c->session_key));
         q2a_memcpy(c->session_key, response_plain + offset, sizeof(c->session_key));
         offset += sizeof(c->session_key);
@@ -911,11 +911,11 @@ void CA_SayHello(void)
 
     CA_WriteLong(MAGIC_CLIENT);
     CA_WriteByte(CMD_HELLO);
-    CA_WriteString(cloud_uuid);
+    CA_WriteString(cloud_config.uuid);
     CA_WriteLong(Q2A_REVISION);
     CA_WriteShort(cloud.port);
     CA_WriteByte(cloud.maxclients);
-    CA_WriteByte(cloud_encryption ? 1 : 0);
+    CA_WriteByte(cloud_config.encryption ? 1 : 0);
     CA_WriteData(challenge, RSA_LEN);
 }
 
@@ -1409,7 +1409,7 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport)
     }
 
     *localport = (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
-    remoteport = &cloud_port;
+    remoteport = &cloud_config.port;
 }
 
 /**
@@ -1435,11 +1435,11 @@ void cloudRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "[cloud admin status]\n");
         if (connected) {
             getCloudIP(connected_ip, &remote_port, &local_port);
-            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_port));
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_config.port));
         } else {
-            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "host:", va("%s:%d", cloud_address, cloud_port));
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "host:", va("%s:%d", cloud_config.address, cloud_config.port));
         }
-        gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "client uuid:", cloud_uuid);
+        gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "client uuid:", cloud_config.uuid);
         if (cloud.state == CLOUD_STATE_DISABLED) {
             gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "state:", "disabled");
             return;

@@ -197,7 +197,27 @@ typedef enum {
     CMD_COMMAND_WHOIS
 } cloud_cl_command_t;
 
-extern bool cloud_enabled;
+/**
+ * Cloud admin configuration
+ */
+typedef struct {
+    char address[256];
+    char cmd_invite[25];
+    char cmd_seen[25];
+    char cmd_teleport[25];
+    char cmd_whois[25];
+    char dns[3];
+    bool enabled;
+    bool encryption;
+    int flags;
+    int port;
+    char private[256];
+    char public[256];
+    char serverkey[256];
+    char uuid[37];
+} cloud_config_t;
+
+/*
 extern char cloud_address[256];
 extern int cloud_port;
 extern bool cloud_encryption;
@@ -211,6 +231,7 @@ extern char cloud_cmd_teleport[25];
 extern char cloud_cmd_invite[25];
 extern char cloud_cmd_seen[25];
 extern char cloud_cmd_whois[25];
+*/
 
 void        CA_Send(void);
 void        CA_Init(void);
@@ -275,6 +296,7 @@ void        CA_dprintf(char *fmt, ...);
 void        ReadCloudConfigFile(void);
 
 extern cloud_t cloud;
+extern cloud_config_t cloud_config;
 extern cvar_t *gamelib;
 
 #endif
