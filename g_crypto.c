@@ -39,7 +39,7 @@ void G_GenerateKeyPair(int bits)
 bool G_LoadKeys(void)
 {
     FILE *fp;
-    ca_connection_t *c = &cloud.connection;
+    cloud_connection_t *c = &cloud.connection;
     char path[200];
 
     gi.cprintf(NULL, PRINT_HIGH, "[cloud] loading encryption keys...");
@@ -275,7 +275,7 @@ void hexDump (char *desc, void *addr, int len)
  */
 size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
 {
-    ca_connection_t *c = &cloud.connection;
+    cloud_connection_t *c = &cloud.connection;
     int dest_len = 0;
     int written = 0;
 
@@ -301,7 +301,7 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
  */
 size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
 {
-    ca_connection_t *c = &cloud.connection;
+    cloud_connection_t *c = &cloud.connection;
     int dest_len = 0;
     int written = 0;
 

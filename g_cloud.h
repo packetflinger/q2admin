@@ -34,143 +34,142 @@
 #define CLOUDCMD_LAYOUT "sv !cloud <status|(dis|en)able|rule>"
 
 
-// Remote Admin flags
-#define RFL_FRAGS       BIT(0)
-#define RFL_CHAT        BIT(1)
-#define RFL_TELEPORT    BIT(2)
-#define RFL_INVITE      BIT(3)
-#define RFL_FIND        BIT(4)
-#define RFL_WHOIS       BIT(5)
-#define RFL_DEBUG       BIT(11)   // 1024
-#define RFL(f)          ((cloud.flags & RFL_##f) != 0)
+// Cloud Admin flags, enabled features
+#define CFL_FRAGS       BIT(0)
+#define CFL_CHAT        BIT(1)
+#define CFL_TELEPORT    BIT(2)
+#define CFL_INVITE      BIT(3)
+#define CFL_FIND        BIT(4)
+#define CFL_WHOIS       BIT(5)
+#define CFL_DEBUG       BIT(11)      // 1024
+#define CFL(f)          ((cloud.flags & CFL_##f) != 0)
 
 #define MAX_MSG_LEN     1000
 
 #define PING_FREQ_SECS  40
 #define PING_MISS_MAX   3
 
-#define RSA_LEN         256 // bytes, 2048 bits
-#define CHALLENGE_LEN   16  // bytes
-#define AESKEY_LEN      16  // bytes, 128 bits
-#define AESBLOCK_LEN    16  // bytes, 128 bits
+#define RSA_LEN         256          // bytes, 2048 bits
+#define CHALLENGE_LEN   16           // bytes
+#define AESKEY_LEN      16           // bytes, 128 bits
+#define AESBLOCK_LEN    16           // bytes, 128 bits
 #define AES_IV_LEN      16
-#define AUTH_FAIL_LIMIT 3   // stop trying after
+#define AUTH_FAIL_LIMIT 3            // stop trying after
 #define DIGEST_LEN      (SHA256_DIGEST_LENGTH)
 
 
 /**
- * The various states of the remote admin connection
+ * The various states of the cloud admin connection
  */
 typedef enum {
-    CA_STATE_DISABLED,      // not using RA at all
-    CA_STATE_DISCONNECTED,  // will try to connect when possible
-    CA_STATE_CONNECTING,    // mid connection
-    CA_STATE_CONNECTED,     // connected
-    CA_STATE_TRUSTED        // authenticated and ready to go
-} ca_state_t;
+    CLOUD_STATE_DISABLED,            // not using RA at all
+    CLOUD_STATE_DISCONNECTED,        // will try to connect when possible
+    CLOUD_STATE_CONNECTING,          // mid connection
+    CLOUD_STATE_CONNECTED,           // connected
+    CLOUD_STATE_TRUSTED              // authenticated and ready to go
+} cloud_state_t;
 
 #define STATE(s)    (remote.state == RA_STATE_##s)
 
 typedef struct {
     byte      data[QUEUE_SIZE];
     size_t    length;
-    uint32_t  index;    // for reading
+    uint32_t  index;                 // for reading
 } message_queue_t;
 
 /**
- * For pinging the server, if no reply after x frames, assuming
- * connection is broken and reconnect.
+ * For pinging the server, if no reply after x frames, assuming connection is
+ * broken and reconnect.
  */
 typedef struct {
-    bool  waiting;      // we sent a ping, waiting for a pong
-    uint32_t  frame_sent;   // when it was sent
-    uint32_t  frame_next;   // when to send the next one
-    uint8_t   miss_count;   // how many sent without a reply
-} ping_t;
+    bool  waiting;                   // we sent a ping, waiting for a pong
+    uint32_t  frame_sent;            // when it was sent
+    uint32_t  frame_next;            // when to send the next one
+    uint8_t   miss_count;            // how many sent without a reply
+} cloud_ping_t;
 
 /**
- * Authenticating with a Remote Admin server is a 4-way handshake.
- * These describe those levels
+ * Authenticating with a Cloud Admin server is a 4-way handshake. These
+ * describe those levels.
  */
 typedef enum {
-    RA_AUTH_SENT_CL_NONCE,
-    RA_AUTH_REC_KEY,
-    RA_AUTH_SENT_SV_NONCE,
-    RA_AUTH_REC_ACK,
-} ca_auth_t;
+    CLOUD_AUTH_SENT_CL_NONCE,
+    CLOUD_AUTH_REC_KEY,
+    CLOUD_AUTH_SENT_SV_NONCE,
+    CLOUD_AUTH_REC_ACK,
+} cloud_auth_t;
 
 /**
- * Connection specific stuff. Also holds the asymmetric and
- * symmetric encryption keys and nonces.
+ * Connection specific stuff. Also holds the asymmetric and symmetric
+ * encryption keys and nonces.
  */
 typedef struct {
-    uint32_t    socket;
-    bool    ipv6;
-    bool    trusted;    // is the server trusted?
-    bool    encrypted;  // should we encrypt?
-    bool    have_keys;  // do we have the shared keys?
-    ca_auth_t   authstage;
-    uint8_t     auth_fail_count;
+    uint32_t socket;
+    bool ipv6;                       // is this a v6 connection?
+    bool trusted;                    // is the server trusted?
+    bool encrypted;                  // should we encrypt?
+    bool have_keys;                  // do we have the shared keys?
+    cloud_auth_t authstage;
+    uint8_t auth_fail_count;
 
     // auth and encryption stuff
-    byte    cl_nonce[CHALLENGE_LEN];    // random data
-    byte    sv_nonce[CHALLENGE_LEN];    // random data
-    byte    session_key[AESKEY_LEN];    // shared encryption key (128bit)
-    byte    initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
+    byte cl_nonce[CHALLENGE_LEN];    // random data
+    byte sv_nonce[CHALLENGE_LEN];    // random data
+    byte session_key[AESKEY_LEN];    // shared encryption key (128bit)
+    byte initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
 
-    EVP_PKEY *public_key;   // our public key
-    EVP_PKEY *private_key;  // our private key
-    EVP_PKEY *server_key;   // CA server's public key
+    EVP_PKEY *public_key;            // our public key
+    EVP_PKEY *private_key;           // our private key
+    EVP_PKEY *server_key;            // CA server's public key
 
-    EVP_CIPHER_CTX *e_ctx;  // encryption context
-    EVP_CIPHER_CTX *d_ctx;  // decryption context
+    EVP_CIPHER_CTX *e_ctx;           // encryption context
+    EVP_CIPHER_CTX *d_ctx;           // decryption context
 
-    fd_set  set_r;          // read
-    fd_set  set_w;          // write
-    fd_set  set_e;          // error
-} ca_connection_t;
+    fd_set set_r;                    // read
+    fd_set set_w;                    // write
+    fd_set set_e;                    // error
+} cloud_connection_t;
 
 /**
  * Holds all info and state about the cloud admin connection
  */
 typedef struct {
-    ca_state_t       state;
-    ca_connection_t  connection;
-    uint32_t         connect_retry_frame;
-    uint32_t         connection_attempts;
-    uint32_t         disconnect_count;
-    uint32_t         connected_frame;  // the frame when we connected
-    struct addrinfo  *addr;
-    uint32_t         flags;
-    uint32_t         frame_number;
-    char             mapname[32];
-    uint8_t          maxclients;
-    uint16_t         port;
-    message_queue_t  queue;     // messages outgoing to RA server
-    message_queue_t  queue_in;  // messages incoming from RA server
-    ping_t           ping;
+    cloud_state_t state;
+    cloud_connection_t connection;
+    uint32_t connect_retry_frame;
+    uint32_t connection_attempts;
+    uint32_t disconnect_count;
+    uint32_t connected_frame;        // the frame when we connected
+    struct addrinfo *addr;
+    uint32_t flags;
+    uint32_t frame_number;
+    char mapname[32];
+    uint8_t maxclients;
+    uint16_t port;
+    message_queue_t queue;           // messages outgoing to RA server
+    message_queue_t queue_in;        // messages incoming from RA server
+    cloud_ping_t ping;
 } cloud_t;
 
 /**
- * Major client (q2server) to server (q2admin server)
- * commands.
+ * Major client (q2server) to server (q2admin server) commands.
  */
 typedef enum {
     CMD_NULL,
     CMD_HELLO,
-    CMD_QUIT,          // server quit
-    CMD_CONNECT,       // player
-    CMD_DISCONNECT,    // player
+    CMD_QUIT,                        // server quit
+    CMD_CONNECT,                     // player
+    CMD_DISCONNECT,                  // player
     CMD_PLAYERLIST,
     CMD_PLAYERUPDATE,
     CMD_PRINT,
-    CMD_COMMAND,       // teleport, invite, etc
+    CMD_COMMAND,                     // teleport, invite, etc
     CMD_PLAYERS,
-    CMD_FRAG,          // someone fragged someone else
-    CMD_MAP,           // map changed
-    CMD_PING,          //
+    CMD_FRAG,                        // someone fragged someone else
+    CMD_MAP,                         // map changed
+    CMD_PING,
     CMD_AUTH
-} ca_client_cmd_t;
+} cloud_client_cmd_t;
 
 /**
  * Server to client commands
@@ -187,7 +186,7 @@ typedef enum {
     SCMD_TRUSTED,
     SCMD_KEY,
     SCMD_GETPLAYERS,
-} ca_server_cmd_t;
+} cloud_server_cmd_t;
 
 /**
  * Sub commands. These are initiated by players
@@ -196,7 +195,7 @@ typedef enum {
     CMD_COMMAND_TELEPORT,
     CMD_COMMAND_INVITE,
     CMD_COMMAND_WHOIS
-} remote_cmd_command_t;
+} cloud_cl_command_t;
 
 extern bool cloud_enabled;
 extern char cloud_address[256];
@@ -264,8 +263,8 @@ void        CA_ParsePong(void);
 void        CA_ParseError(void);
 void        CA_SayClient(void);
 void        CA_SayAll(void);
-bool    G_LoadKeys(void);
-bool    CA_VerifyServerAuth(void);
+bool        G_LoadKeys(void);
+bool        CA_VerifyServerAuth(void);
 void        G_RSAError(void);
 void        hexDump (char *desc, void *addr, int len);
 void        CA_RotateKeys(void);
@@ -275,7 +274,7 @@ void        CA_printf(char *fmt, ...);
 void        CA_dprintf(char *fmt, ...);
 void        ReadCloudConfigFile(void);
 
-extern cloud_t  cloud;
-extern cvar_t    *gamelib;
+extern cloud_t cloud;
+extern cvar_t *gamelib;
 
 #endif

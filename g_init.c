@@ -862,7 +862,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     cloud.port = getport();
     cloud.frame_number = 0;
 
-    if (cloud.state == CA_STATE_TRUSTED) {
+    if (cloud.state == CLOUD_STATE_TRUSTED) {
         CA_Map(mapname);
     }
 

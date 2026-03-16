@@ -1495,7 +1495,7 @@ char mutedText[8192] = "";
  *
  */
 void Cmd_Teleport_f(edict_t *ent) {
-    if (!(cloud.flags & RFL_TELEPORT)) {
+    if (!(cloud.flags & CFL_TELEPORT)) {
         gi.cprintf(ent, PRINT_HIGH, "Teleport command is currently disabled.\n");
         return;
     }
@@ -1507,7 +1507,7 @@ void Cmd_Teleport_f(edict_t *ent) {
  *
  */
 void Cmd_Invite_f(edict_t *ent) {
-    if (!(cloud.flags & RFL_INVITE)) {
+    if (!(cloud.flags & CFL_INVITE)) {
             gi.cprintf(ent, PRINT_HIGH, "Invite command is currently disabled.\n");
             return;
     }
