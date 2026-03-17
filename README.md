@@ -120,6 +120,26 @@ Option | Type | Default | What it does
 `defaultchatbanmsg` | string | "" | Message players will see by default when they say something that isn't allowed
 `defaultreconnectmessage` | string | "" | Message players will see when they are forced to reconnect on connect
 `disablecmds_enable` | bool | no | Enable checking for disabled commands 
-
-gamelibrary |  | Specifies the real mod library to use. CVAR > config > filename
-remote_enabled | no | Enable remote admin functionality 
+`disconnectuser` | bool | yes | Kick a player if it's discovered they're cheating
+`disconnectuserimpulse` | bool | no | Kick a player if they use certain impulses
+`displayimpulses` | bool | no | Broadcast the fact that a player just used a certain impulse
+`displaynamechange` | bool | yes | Broadcast when someone changes their name
+`dopversion` | bool | ?? | Do a p_verion probe for proxies when a player connects
+`do_franck_check` | bool | yes | Check for franck when a player connects
+`do_vid_restart` | bool | no | Force client to do a `vid_restart` command when they connect. This can unload some wallhacks
+`enforce_deadlines` | bool | yes | When asking the player's client for certain information, set a reasonable deadline for a response and kick the player if no response is provided (indicates a modified client)
+`entity_classname_offset` | number | ??? | What byte offset can the `classname` property be found in the `edict_s` struct? Since most of the edict_s struct is opaque and filled in by the game library, it's not possible for q2admin to know where that value is located. This value can be different for each game mod. Using an incorrect value here can lead to crashes, especially if you're doing entity substitution/blocking.<br><br>Common values:<br>baseq2 = xxxxx<br>opentdm = xxxxxx
+`extendedsay_enable` | bool | no | ?????
+`filternonprintabletext` | bool | no | Strip console characters (ascii values in range 128-256) from chat messages
+`fpsfloodexempt` | bool | no | ?????
+`framesperprocess` | number | 0 | ?????
+`gamemaptomap` | bool | no | Convert any usage of `gamemap` command to `map`. This will cause all new maps to reload the game library and use significant resources. *Don't use this*. Use `sv_recycle` as part of q2pro/r1q2.
+`gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
+`gl_driver_check` | number | 0 | ???
+`gl_drive_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
+`hackuserdisplay` | string | ??? | The message to broadcast when a cheating player is discovered
+`http_cacert_path` | string | "/etc/ssl/certs" | Where do we find the system's certificate authority public keys? Only used if `http_veryifyssl` is enabled for ensuring the https server is who they say they are
+`http_debug` | bool | no | Show extra debug info related to CURL usage in the server console
+`http_enable` | bool | yes | Enable libcurl for downloading stuff via http(s)<br><br>Required for<br>- Remote ban files<br>- VPN detection<br>- Loading remote anticheat configs<br>- ASN banning
+`http_verifyssl` | bool | yes | When downloading a file via https, verify the TLS certificate is signed, valid, trusted and the common name on the cert matches the domain in the URL. Q2admin doesn't download and execute arbitrary files from the internet, so certificate issues are fairly low risk. Try disabling this if you're having trouble fetching https files (especially with https redirects)
+`impulsestokickon` | string | ??? | A list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu
