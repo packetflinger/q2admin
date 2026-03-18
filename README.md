@@ -143,3 +143,89 @@ Option | Type | Default | What it does
 `http_enable` | bool | yes | Enable libcurl for downloading stuff via http(s)<br><br>Required for<br>- Remote ban files<br>- VPN detection<br>- Loading remote anticheat configs<br>- ASN banning
 `http_verifyssl` | bool | yes | When downloading a file via https, verify the TLS certificate is signed, valid, trusted and the common name on the cert matches the domain in the URL. Q2admin doesn't download and execute arbitrary files from the internet, so certificate issues are fairly low risk. Try disabling this if you're having trouble fetching https files (especially with https redirects)
 `impulsestokickon` | string | ??? | A list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu
+`inverted_command[1-4]` | string | "" | Private commands stuffed to a player as part of the standard proxy check.
+`ip_limit` | number | 0 | The number of players allowed from the same IP address. Exceeding this limit kicks the player.<br><br>0 = unlimited/no filtering
+`ip_limit_vpn` | number | 0 | The number of players allowed from the same VPN provider. The ASN number of the provider is used here, so players can be on discontiguous netblocks and still be kicked.<br><br>0 = unlimited/no filtering
+`ipbanning_enable` | bool | yes | Enable the functionality of banning players based on their IP address.
+`kickonnamechange` | bool | no | If a player successfully joins with a password-protected name, kick them if they change names after connecting.
+`lock` | bool | no | lockdown mode, prevent anyone from joining. This is presumablity to allow for some kind of maintenance without player interference.
+`lockoutmsg` | string | ?? | The message to display to clients attempting to connect while the server is locked.
+`lrcon_timeout` | number | 2 | The seconds from now that an lrcon random password/request is valid for.
+`mapcfgexec` | bool | no | On new map (or connect), stuff these commands to player:<br><br>- `exec mapcfg/{oldmapname}-end.cfg`<br>- `exec mapcfg/{newmapname}-pre.cfg`
+`maxclientsperframe` | number | 100 | The number of players q2admin can deal with per server frame. This assumes default of 10HZ, *don't touch this unless you know what you're doing*
+`maxfps` | number | ???? | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps.
+`maximpulses` | number | 1 | Max impulses before taking action
+`maxmsglevel` | number | 3 | Max value allowed for the `msg` userinfo variable.
+`maxrate` | number | ?? | Max value allowed for the `rate` userinfo variable.
+`max_pmod_noreply` | number | 2 | The number of seconds before taking action for unanswered pmod request
+`minfps` | number | 0 | The minimum value allowed for the `cl_maxfps` cvar
+`msec_action` | number | 2 | What action should be taken if there are msec violations?<br><br>0 = legacy behavior, kick if over limit<br>1 = do nothing<br>2 = announce and kick the player
+`msec_max_allowed` | number | 5600 | The maximum cumulatvie msec consumption for `msec_timespan` amount of time. This value should be `(1000 * msec_timespan) * 1.12` -ish. The 1.12 multipier allows for some slop. This is a similar calculation to how q2pro allocates msec to clients but on a shorter timespan.
+`msec_max_violations` | number | 2 | How many violations allowed before taking action.
+`msec_min_required` | number | 0 | This is the minimum msec consumption required for the `msec_timespan` amount of time. If you really want to get strict, set this to `(1000 * msec_timespan) * 0.88` -ish. Modified clients can underflow their msec consumption in order to bank it and use it later in the same msec_timespan for a speed boost.<br><br>Be aware packet loss can affect this causing a player to be in violation if their move packet is never received, so they could be kicked simply for having poor network performance. Use at your own risk.
+`msec_timespan` | number | 5 | Span of seconds to evaluate msec consumption. The smaller the value the more unforgiving to things like packet loss and network jitter. The larger the span the more accurate reading you get, but that delays the ability to take action for that amount of time.
+`namechangefloodprotectmsg` | string | ??? | The message the player will see when they change their name too many times
+`nickbanning_enable` | bool | yes | Enable the ability to ban based on player name
+`numofdisplays` | number | 4 | How many times to in a row to broadcast that a player was caught cheating
+`printmessageonplaycmds` | bool | yes | Display when a player uses one of the `play_*` commands.<br><br>This command is useless for the actual `play` command because that command is kept in the client and not sent to the game library anymore with modern clients. Ancient 3.20 clients still send it though.
+`private_command[1-4]` | string | "" | Private commands stuff to a player as part of the standard proxy check
+`private_command_kick` | bool | no | If responses to the private commands are not received, kick the player.
+`proxy_bwproxy` | number | 1 | Check for bwproxies
+`proxy_nitro2` | number | 1 | Check for nitro2 proxies
+`q2adminrunmode` | number | 100 | 100 = fully operational, 0 = passthru - *don't touch this value*
+`q2a_command_check` | bool | false | ????
+`randomwaitreporttime` | number | 55 | ????
+`rcon_random_password` | bool | yes | Change the actual rcon password to random string and back for lrcon usage
+`rcon_insecure` | bool | yes | If no, lrcon commands are executed directly on the server rather than let the client execute it, this means the output is never seen by the client.
+`reconnect_address` | string | "" | The IP/hostname to force the client to reconnect to.
+`reconnect_checklevel` | number | 0 | How specific to do userinfo checking for reconnecting player. Positive integer means check the keys, 0 means just compare the whole userinfo string (different ordering will cause non-match)
+`reconnect_time` | number | 60 | The max time to wait for a reconnect
+`say_group_enable` | bool | no | Allow players to send chats to a specific group of other players
+`say_person_enable` | bool | yes | Allow players to send chats to another specific player, not everyone
+`serverinfoenable` | bool | yes | Add q2admin version to the server info string so it will appear in server browsers
+`serverip` | string | "" | Used in proxy checking
+`setmotd` | string | "" | The filename containing message-of-the-day data to display when players connect
+`skinchangefloodprotectmsg` | string | "" | Message to display to players who change their skin too many times
+`skincrashmsg` | string | "" | Message to display to players who attempt to use a special skin designed to crash the server
+`soloadlazy` | bool | no | Linux only. Sometimes the forward mod doesn't load properly and crashes. Try setting this to fix this behavior.
+`spawnentities_enable` | bool | no | Enable entity-related stuff like swapping or disabling
+`spawnentities_internal_enable` | bool | no | Whether q2admin will run it's own `SpawnEntities` function before forwarding to the real game library.
+`speedbot_check_type` | number | 3 | Whether or not to display when a speedbot is detected
+`swap_attack_use` | bool | no | If attack input is detected, change it to use. Vice-versa
+`timers_active` | bool | no | Whether q2admin timer support is enabled
+`timers_max_seconds` | number | 180 | The largest timer value allowed
+`timers_min_seconds` | number | 10 | The smallest timer value allowed
+`timescaledetect` | bool | yes | Monitor players' timescale variable. This is a cheat-locked cvar that would allow players to move faster
+`timescaleuserdisplay` | string | ??? | Message to send player if their timescale is greater than 1.0
+`userinfochange_count` | number | 40 | Players changing userinfo more than this will result in being kicked
+`userinfochange_time` | number | 60 | The timespan for flooding the server with userinfo changes
+`versionbanning_enable` | bool | yes | Enable the ability to ban players based on the client version they're using
+`voteclientmaxvotes` | number | 0 | Only allow clients to propose this many votes. 0 = unlimited
+`voteclientmaxvotetimeout` | number | 0 | ????
+`votecountnovotes` | bool | 1 | ???
+`voteminclients` | number | 0 | The minimum number of players required to propose a vote. 0 = any
+`votepasspercent` | number | 50 | This percent of players need to vote yes for it to pass
+`vote_enable` | bool | no | Enable the voting system
+`vpn_api_key` | string | "" | The API key for the VPN lookup service
+`vpn_enable` | bool | no | Enable VPN checking (requires `http_enable`)
+`vpn_kick` | bool | yes | Kick all players connecting from a VPN
+`whois_active` | number | 0 | Whether to enable whois tracking
+`zbc_enable` | bool | yes | Check clients for aim-assist (includes zbots and ratbots)
+`zbc_jittermax` | number | 4 | ???
+`zbc_jittermove` | number | 500 | The max jump in view angles between client frames before considering aim is assisted
+`zbc_jittertime` | number | 10 | ????
+`zbotdetect` | bool | yes | Detect zbots
+`zbotdetectactivetimeout` | number | -0 | ????
+`zbotuserdisplay` | string | ???? | The message sent to users when they're detected as a zbot
+
+## Commands
+
+Console command syntax:
+
+### `ban`
+
+Add an entry to the banlist
+```
+sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n
+```
+
