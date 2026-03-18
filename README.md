@@ -220,12 +220,170 @@ Option | Type | Default | What it does
 
 ## Commands
 
-Console command syntax:
-
 ### `ban`
 
 Add an entry to the banlist
 ```
-sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]\n
+sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+
+Examples:
+// don't allow players with names containing nametoban, show them the message "not allowed"
+sv !ban - NAME LIKE "nametoban" MSG "not allowed"
+
+// don't allow any player using q2pro r1908
+sv !ban - VERSION RE "^q2pro.*r1908.+"
+
+// allow players to use the name claire only if they have the right password.
+// passwords are supplied as "pw" in the userinfo
+sv !ban + NAME "claire" PASSWORD "superpassword"
+
+// don't allow a specific IPv4 address
+sv !ban - IP 192.0.2.3/32
+
+// don't allow players named claire from a specific IPv6 address
+sv !ban - NAME RE "^claire$" IP 2001:db8::face:b00b/128 MSG "go away"
+
+// don't allow any VPN address
+sv !ban - IP VPN MSG "vpns are not allowed"
+
+// don't allow anyone from Charter Communications [as7843]
+sv !ban - ASN as7843 MSG "Charter customers not allowed"  
 ```
 
+### `chatban`
+
+Add an entry to the chatban list
+```
+sv !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]
+
+Examples:
+// don't allow players to say "fart", use the default msg
+sv !chatban LIKE "fart" 
+
+// don't allow players to say "fart" and the friend "f4rt"
+sv !chatban RE ".*f[a4]rt.*" MSG "potty talk not allowed"
+```
+
+### `chatfloodprotect`
+
+Set the params for what constitutes a chat flood:
+1. The number of chat messages to trigger
+2. The number of seconds those messags are seen in
+3. The number of seconds that player will be silenced
+```
+// sending 10 chats in 5 seconds will result in a 30 second mute
+sv !chatfloodprotect 10 5 30
+```
+
+### `checkvarcmd`
+
+Manually add an entry to the checkvar list. 
+
+```
+Syntax:
+sv !checkvarcmd [CT/RG] "variable" ["value" | "lower" "upper"]
+```
+CT = constant value \
+RG = range
+```
+// force cl_maxpackets to be between 30-100
+sv !checkvarcmd RG cl_maxpackets 30 100
+
+// force gl_shadows to 1
+sv !checkvarcmd CT gl_shadows 1
+```
+
+### `checkvardel`
+
+Delete a checkvar entry from the list. The only arg is the index number of the entry to remove.
+```
+sv !checkvardel 2
+```
+
+### `clearlogfile`
+
+Delete all entries in a particular log file. The only arg is the number of the log file.
+```
+sv !clearlogfile 3
+```
+
+### `clientchatfloodprotect`
+
+Set custom chat flood protection for a specific player
+```
+sv !clientchatfloodprotect [CL # | name] [num] [secs] [silence]
+```
+Specify the client either by number using `CL` or directly by name. `Num` is the number of chat messages seen within `secs` seconds to trigger the rule resulting in this player being muted for `silence` seconds.
+```
+// Silence player #3 for 1 minute if they say 20 chats in 7 seconds
+sv !clientchatfloodprotection CL 3 20 7 60
+
+// Silence claire for 30 seconds if they say 10 chats in 5 seconds
+sv !clientchatfloodprotection claire 10 5 30
+```
+
+### `cloud`
+
+Enable/Disable or check the status of the Cloud Admin server connection
+```
+// enable connecting to cloud admin server
+sv !cloud enable
+
+// disable connecting to CA
+sv !cloud disable
+
+// show the connection status
+sv !cloud status
+```
+
+### `cvarset`
+
+Set (or unset) a CVAR to a specific value on the server
+```
+// set the variable "foo" to value "bar"
+sv !cvarset "foo" "bar"
+
+// unset the variable "foo"
+sv !cvarset "foo" none
+```
+
+### `delban`
+
+Delete a ban entry from the list. The only arg is the number of the ban entry to remove. Related commands: `ban`, `listbans`
+```
+// remove ban #4
+sv !delban 4
+```
+
+### `delchatban`
+
+Delete a chatban entry from the list. The only arg is the number of the ban entry to remove. Related commands: `chatban`, `listchatbans`
+```
+// remove ban #4
+sv !delchatban 4
+```
+
+### `disablecmd`
+
+Add an entry to the list of disabled commands. Related commands: `disabledel`
+```
+sv !disablecmd [SW/EX/RE] "command"
+```
+SW = starts with \
+EX = exact \
+RE = regular expression
+```
+// disable the play command
+sv !disablecmd EX "play"
+
+// disable say_team, say_person, say_group
+sv !disablecmd SW "say_"
+```
+
+### `disabledel`
+
+Delete a disabled command from the list. Takes the entry number as an arg. Related commands: `disablecmd`
+```
+// remove entry #5
+sv !disabledel 5
+```
