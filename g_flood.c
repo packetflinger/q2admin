@@ -557,7 +557,9 @@ void unstifleRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
+ * Set custom chat flood protection rules for a particular player.
  *
+ * Format: sv !clientchatfloodprotection [CL id | name] chatnum secs silence
  */
 void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
     char *text;

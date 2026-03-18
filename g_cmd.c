@@ -3709,7 +3709,7 @@ void kickRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- *
+ * Set a cvar on the server
  */
 void cvarsetRun(int startarg, edict_t *ent, int client) {
     char cbuffer[256];
