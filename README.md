@@ -1,29 +1,67 @@
 # Q2Admin
 
-Q2Admin is a management and security addon for Quake 2 servers. It acts as a proxy game module; the Quake 2 server loads q2admin as its game module and q2admin will open the actual game module and proxy between the two.
+Q2Admin is a management and security addon for Quake 2 servers. It acts as a proxy game module; the Quake 2 server loads q2admin as its game library and q2admin will open the actual game library and proxy between the two. This allows q2admin to inspect and alter much of the data between client and server. 
 
 
 ## Features
 
 * Detect and handle cheaters (old ratbots and proxies)
-* IPv6 Support
-* Chat and name filtering (prevent certain words from being used)
-* Force or prohibit specific skins
-* Force client-side variables (cvars) to ranges or exact values (`cl_maxfps`, `rate`, `timescale`, etc)
-* Useful commands commands added (`say_person`, `play_team`, `stuff`)
-* Remote management via webapp/SSH *still under development*
-  * View status and logs of all your Q2 servers (chats, frags, connections)
+  * Aim bots (ratbot, zbot)
+  * Proxies
+* IPv6 Support (requires v6-aware server AND mod)
+* Chat filtering
+* Name filtering
+* Skin filtering
+* Client-side variables management
+  * Disabling entirely
+  * Forcing an exact value
+  * Clamping to range
+* Useful commands added
+  * For management (ex: `stuff`, etc)
+  * For player experience (ex: `say_person`)
+* Out-of-band management via webapp/SSH *still under development*
+  * View status and logs of all your Q2 servers
   * Issue commands to groups of servers
   * Delegate control of servers to other admin users
-* Very flexible logging (up to 32 different log files)
-* Custom banning (IP, chat, nick, client version, VPN, ASN)
-* Built-in command disabling
+  * Centralized logging
+  * Centralized banning
+  * Custom maplists
+* Very flexible logging
+  *  Supports up to 32 different log files
+  *  23 different log contexts
+  *  Customizable log message formatting (per log)
+* Custom banning
+  * By IP address (including IPv6)
+  * By VPN status
+  * By ASN (entire ISPs)
+  * By client version
+  * Inclusion/exclusion
+  * Password protect any attribute
+    * password needed for certain names
+    * password needed to connect from certain IP
+    * password needed to use certain client software
+* Command disabling
 * Flood control
+  * Chat spam
+  * Name-change spam
+  * Skin-change spam
+  * Custom command spam
 * Limited RCON support
-* Map Entity disabling by class (`weapon_bfg`, `ammo_slugs`, `item_quad`, `trigger_hurt`, etc...)
-* Map entity swapping 
+  * Password only allows specific commands
+  * Least-privilege 
+* Entity disabling by class (`weapon_bfg`, `item_quad`, `trigger_hurt`, etc...)
+* Map entity swapping
+  * Ex: change powershields to powerscreens
 * Custom voting
-* VPN detection and banning
+  * Allow voting for any command with args
+  * Adds voting to unsupported mods (Rocket Arena 2)
+* VPN detection
+* Very flexible string handling
+  * Exact matches (x == y)
+  * Starting with... (x at the beginning of y
+  * Like... (x contained in y)
+  * Globbing (`q2dm*`)
+  * Full regular expression support (`^q2dm[1-8]$`)
 
 
 ## Compiling for Linux
