@@ -387,3 +387,171 @@ Delete a disabled command from the list. Takes the entry number as an arg. Relat
 // remove entry #5
 sv !disabledel 5
 ```
+
+### `displaylogfile`
+
+Spit out an entire log file to the server console. In order to not DOS the server, it spits out a single line per server frame. Quake2 server logs can grow to absurd sizes, displaying entire log files is really dumb, don't use this command! Once the process is started, there doesn't seem to be a way to stop it.
+
+```
+// display the whole file for log #12 one line at a time
+sv !displaylogfile 12
+```
+
+### `floodcmd`
+
+Add an entry to the floodcmd list. The floodcmd entry is for applying normal flood rules to any arbitrary command. Only the first part of the command is matched, not any arguments. Do not use this for any command that outputs chat messages (`say`, `say_team`, `say_person`, etc).
+```
+sv !floodcmd [SW/EX/RE] "command"
+```
+SW = starts with \
+EX = exact \
+RE = regular expression
+```
+// add floodcmd for the play command
+sv !floodcmd EX "play"
+
+// any command starting with "play_"
+sv !floodcmd SW "play_"
+```
+
+### `flooddel`
+
+Remove a floodcmd entry from the list. The only argument is the number of the entry.
+```
+// remove the #2 floodcmd
+sv !flooddel 2
+```
+
+### `freeze`
+
+Lock a specific player in place. This works by overriding the player's msec value to 0 in their `usercmd_t` messages.
+```
+// lock player 3 in place
+sv !freeze CL 3
+
+// lock player named claire in place
+sv !freeze claire
+```
+
+### `flush_logs`
+
+Flush the log buffers to disk if contain any pending data.
+```
+// write all buffered log data to the files
+sv !flush_logs
+```
+
+### `ip`
+
+Display a player's IP address, either by name or player ID.
+```
+// show player 0's IP
+sv !ip CL 0
+
+// show claire's IP
+sv !ip claire
+```
+
+### `kick`
+
+Remove one or more players from the server. Multiple players supported by ID only.
+```
+// disconnect player 4
+sv !kick CL 4
+
+// disconnect claire
+sv !kick claire
+
+// disconnect players 3, 5, and 7
+sv !kick CL 3 + 5 + 7
+```
+
+### `listbans`
+
+Show all ban entires currently loaded.
+```
+sv !listbans
+```
+
+### `listchatbans`
+
+Show all the chatban entires currently loaded.
+```
+sv !listchatbans
+```
+
+### `listcheckvar`
+
+Show all the checkvar entries currently loaded.
+```
+sv !listcheckvar
+```
+
+### `listdisable`
+
+Show all the disable entries currently loaded.
+```
+sv !listdisable
+```
+
+### `listfloods`
+
+Show all the flood entries currently loaded.
+```
+sv !listfloods
+```
+
+### `listlrcons`
+
+Show all the lrcon entries currently loaded.
+```
+sv !listlrcons
+```
+
+### `listspawns`
+
+Show all custom spawn entries currently loaded.
+```
+sv !listspawns
+```
+
+### `listvotes`
+
+Show all vote commands currently loaded.
+```
+sv !listvotes
+```
+
+### `logevent`
+
+Manually log an event or show/edit logs for a specific logtype
+```
+sv !logevent [view {logtype} / edit {logtype} [log {yes/no}] [logfiles [logfile1[+logfile2[...]]]] [format "format"]
+```
+Logtypes:
+- *ADMINLOG*
+- *BAN*
+- *CHAT*
+- *CHATBAN*
+- *CLIENTBEGIN*
+- *CLIENTCMDS*
+- *CLIENTCONNECT*
+- *CLIENTDISCONNECT*
+- *CLIENTKICK*
+- *CLIENTLRCON*
+- *CLIENTUSERINFO*
+- *DISABLECMD*
+- *ENTITYCREATE*
+- *ENTITYDELETE*
+- *IMPULSES*
+- *INTERNALWARN*
+- *INVALIDIP*
+- *NAMECHANGE*
+- *PERFORMANCEMONITOR*
+- *PRIVATELOG*
+- *SERVEREND*
+- *SERVERINIT*
+- *SERVERSTART*
+- *SKINCHANGE*
+- *ZBOT*
+- *ZBOTIMPULSES*
