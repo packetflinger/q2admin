@@ -1,6 +1,6 @@
 # Q2Admin
 
-Q2Admin is a management and security addon for Quake 2 servers. It acts as a proxy game module; the Quake 2 server loads q2admin as its game library and q2admin will open the actual game library and proxy between the two. This allows q2admin to inspect and alter much of the data between client and server. 
+Q2Admin is a management and security addon for Quake 2 servers. It acts as a proxy game module; the Quake 2 server loads q2admin as its game library and q2admin will open the actual game library and proxy between the two. This allows q2admin to inspect and alter much of the data between client and server on the fly. 
 
 
 ## Features
@@ -76,7 +76,13 @@ Edit `.config-win32mingw` file to suit your environment and rename it to `.confi
 
 ## Configuration
 
-Copy all all the .cfg files from the `runtime-config` directory to your mod directory. The main config file is `q2admin.cfg`, edit this file to suit your needs. You should specify the real game library in the main config file using the `gamelibrary` option. You can also the old `gamex86_64.real.so` or `gamex86.real.dll` method or use the `+set gamelib <libraryname>` command-line argument when starting your Quake 2 server.
+* Copy all all the .cfg files from the `runtime-config` directory to your mod directory.
+* Edit `q2admin.cfg` to suit your needs.
+* Inform q2admin what the actual game library is.
+  * Either set the `gamelibrary` option in `q2admin.cfg`
+  * Or name the real game library to `gamex86_64.real.so` or `gamex86.real.dll`
+  * Or use `+set gamelib <libraryname>` starting your Quake 2 server.
+* Edit each of the `q2a_*.cfg` files to setup the features you need. 
 
  
 ## Dependencies
@@ -88,6 +94,7 @@ Copy all all the .cfg files from the `runtime-config` directory to your mod dire
 5. `libpthread`
 
 All dependencies are included and statically linked. The resulting binary is about 8MB, most of which is related to libcrypto. This is unfortunately required for the Cloud Admin connection (authentication and transit encryption).  
+
 
 ## Settings
 
@@ -255,6 +262,7 @@ Option | Type | Default | What it does
 `zbotdetect` | bool | yes | Detect zbots
 `zbotdetectactivetimeout` | number | -0 | ????
 `zbotuserdisplay` | string | ???? | The message sent to users when they're detected as a zbot
+
 
 ## Commands
 
