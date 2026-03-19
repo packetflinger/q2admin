@@ -524,7 +524,7 @@ sv !listvotes
 
 ### `logevent`
 
-Manually log an event or show/edit logs for a specific logtype
+Manually show/edit logs definitions for a specific logtype
 ```
 sv !logevent [view {logtype} / edit {logtype} [log {yes/no}] [logfiles [logfile1[+logfile2[...]]]] [format "format"]
 ```
@@ -555,3 +555,92 @@ Logtypes:
 - *SKINCHANGE*
 - *ZBOT*
 - *ZBOTIMPULSES*
+```
+// View log setup for the "chat" logtype
+sv !logevent view chat
+
+// setup a new log for chatban logtype
+sv !logevent edit chatban log yes logfiles "chatbans.log" format "%s"
+
+// disable and existing log definition for chatbans
+sv !logevent edit chatban log no
+```
+
+### `logfile`
+
+View/edit all log file definitions. Unclear how this is different from `logevent` command.
+```
+sv !logfile [view [#]] / [edit # [mod] [filename]] / [del #]
+
+// list all logfiles
+sv !logfile view
+
+// change the filename for logfile 2 and keep it in the mod directory
+sv !logfile edit 2 yes newlogname.log
+
+// delete the log definition for log 3
+sv !logfile del 3
+```
+
+### `lrcon`
+
+Add limited-rcon entries in the current list. An lrcon entry is a least-privilege implemention of rcon passwords that are only allowed to run very specific commands. You're able to create up to 1024 of them. You can use these add moderators to watch over your server who can only do things like change maps or mute/kick players. You can also simply revoke this access and never have to reveal/change your actual rcon password. This functionality has since been integrated into q2pro and r1q2 (I think), so mileage may vary.
+
+The entire command (including args) is evaluated
+
+Related commands: `listlrcon`, `lrcondel`
+```
+sv !lrcon [SW/EX/RE] "password" "command"
+```
+SW = starts with \
+EX = exact \
+RE = regular expression
+```
+// Allow changing map to only q2dm1 through q2dm8 (as a regular expression) with password "dingleberry"
+sv !lrcon RE "dingleberry" "gamemap q2dm[1-8]"
+
+// allow the map to be changed to anything (note the space)
+sv !lrcon SW "dingleberry" "gamemap "
+
+// allow user to see the status output (to see ips)
+sv !lrcon EX "1ngr0wn" "status"
+```
+
+### `lrcondel`
+
+Delete an lrcon entry from the list. To view the current list use the `listlrcon` command.
+```
+// delete lrcon entry #4
+sv !lrcondel 4
+```
+
+### `mute`
+
+Toggle a player's ability to speak for a specific timespan or for the duration of their playing session. If the player is already muted, they will be unmuted. The time arg is not needed to unmute.
+
+Related commands: `stifle`
+```
+sv !mute [CL # | [LIKE] name] [[time in secs]|PERM] 
+```
+For a permanent mute, use "PERM" as the duration, otherwise it's a length of seconds. Permanent is relative here, if the player quits and rejoins, the mute will be gone.
+```
+// mute player 3 for 30 seconds
+sv !mute CL 3 30
+
+// mute claire for this whole playing session
+sv !mute claire PERM
+
+// unmute claire if they're already muted
+sv !mute claire
+```
+
+### `namechangefloodprotect`
+
+Set the global parameters for name-change flooding.
+```
+sv !namechangefloodprotect num_changes time_span prevention_time
+
+// Set limits to 5 name changes in 30 seconds, change change again for 5 minutes
+sv !namechangefloodprotect 5 30 300 
+```
+
