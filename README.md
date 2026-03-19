@@ -636,11 +636,140 @@ sv !mute claire
 
 ### `namechangefloodprotect`
 
-Set the global parameters for name-change flooding.
+Set the global parameters for name-change flooding. These apply to all players but are tracked individually, so one player triggering this rule will not affect other player's ability to change names.
 ```
 sv !namechangefloodprotect num_changes time_span prevention_time
 
-// Set limits to 5 name changes in 30 seconds, change change again for 5 minutes
+// Set limits to 5 name changes in 30 seconds, prevent change again for 5 minutes
 sv !namechangefloodprotect 5 30 300 
 ```
 
+### `readloadbanfile`
+
+Reread the banfile from disk. Useful to rehash the bans without needing to restart the server. This will reload ALL banlist files q2admin knows about, including:
+1. any `q2a_ban.cfg` file in the main q2 directory
+2. any `q2a_ban.cfg` file in the mod directory
+3. any remote (http) ban files included in 1 & 2.
+
+Ban file processing is recursive, so creating an include-loop will result in a very bad day. 
+```
+sv !reloadbanfile
+```
+
+### `reloadanticheatlist`
+
+Reread the anticheat exception list. This will first take any anticheat exceptions from a remote exception file (if one is defined), and then the the local config file.
+```
+sv !reloadanticheatlist
+```
+
+### `reloadexceptionlist`
+
+This is an alias for `reloadanticheatlist`
+```
+sv !reloadexceptionlist
+```
+
+### `reloadhashlist`
+
+Reread the anticheat hash list files:
+1. `anticheat-cvars.txt`
+2. `anticheat-hashes.txt`
+3. `anticheat-tokens.txt`
+```
+sv !reloadhashlist
+```
+
+### `reloadcheckvarfile`
+
+Reread the checkvar config
+```
+sv !reloadcheckvarfile
+```
+
+### `reloaddisablefile`
+
+Reread the disabled commands config
+```
+sv !reloaddisablefile
+```
+
+### `reloadfloodfile`
+
+Reread the command flood config
+```
+sv !reloadfloodfile
+```
+
+### `reloadloginfile`
+
+Reread the admin password/level config file
+```
+sv !reloadloginfile
+```
+
+### `reloadlrconfile`
+
+Reread the lrcon config from disk
+```
+sv !reloadlrconfile
+```
+
+### `reloadspawnfile`
+
+Reread the entity spawn config from disk
+```
+sv !reloadspawnfile
+```
+
+### `reloadvotefile`
+
+Reread the voting config from disk
+```
+sv !reloadvotefile
+```
+
+### `reloadwhoisfile`
+Reread the whois config from disk
+```
+sv !reloadwhoisfile
+```
+
+### `resetrcon`
+
+Reset the server's rcon password to it's original value. Every time an lrcon password is used, the real rcon password is changed to something random to prevent sniffing traffic to see the real rcon password. It's set back automatically after a timeout, but this command forces that reset.
+```
+sv !resetrcon
+```
+
+### `say_group`
+
+Send a private chat msg to a select group of players instead of to everyone.
+
+Related commands: `say_person`, `say_person_low`
+```
+// say hi to players 0, 4, and 5
+sv !say_group CL 0 + 4 + 5 "hey there"
+```
+
+### `say_person`
+
+Send a private message to a particular player instead of to everyone.
+
+Related commands: `say_person_low`, `say_group`
+```
+// say hi to player 2
+sv !say_person CL 2 "yooooo!"
+
+// say hi claire
+sv !say_person claire "hey bruh"
+```
+
+### `say_person_low`
+
+Send a message to a particular player as a PRINT_LOW message. This will not highlight the message as chat and will not trigger the chat sound in-game.
+
+Related commands: `say_person`, `say_group`
+```
+sv !say_person_low CL 3 "The white zone is for loading and unloading only"
+```
