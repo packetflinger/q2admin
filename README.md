@@ -773,3 +773,143 @@ Related commands: `say_person`, `say_group`
 ```
 sv !say_person_low CL 3 "The white zone is for loading and unloading only"
 ```
+
+### `setadmin`
+
+Seemingly unimplemented...
+
+### `skinchangefloodprotect`
+
+Set parameters around skin changes
+```
+sv !skinchangefloodprotect num_changes in_secs relax_secs
+
+// if someone changes skins 3 times in 10 seconds, prevent changes for 5 minutes
+sv !skinchangefloodprotect 3 10 300
+```
+
+### `spawncmd`
+
+Add an entry to block the spawning of a particular entity. This won't despawn entities that already linked, but can prevent them from respawning.
+
+Related commands: `listspawn`, `spawndel`
+```
+sv !spawncmd [SW/EX/RE] "classname"
+```
+SW = starts with \
+EX = exact \
+RE = regular expression
+```
+// prevent health from spawning
+sv !spawncmd SW "health_"
+
+// make it dark (untested probably won't work)
+sv !spawncmd RE ".*light.*"
+```
+
+### `spawndel`
+
+Remove a specific disabled spawn entry from the list. This isn't persistent, restarting the server will reload spawncmds from disk and restore the entry.
+```
+// remove spawn entry #4
+sv !spawndel 4
+```
+
+### `stifle`
+
+Half-mute for players. This allows the player to say one thing every minute.
+```
+sv !stifle [CL # | name] length_in_secs
+```
+The `length_in_secs` arg is how long the half-mute applies to the player, not the length of time between allowing the single chat message.
+```
+// half-mute for player named 888 for the next 10 minutes
+sv !stifle 888 600
+
+// half-mute player 0 for the next 30 minutes
+sv !stifle CL 0 1800
+```
+
+### `stuff`
+
+Force a player to execute a specific command (or set of commands) as if they typed it into their own console. You can specify the command directly or supply a file containing a list of commands.
+```
+sv !stuff [CL #] | name ["command" | FILE "filename"]
+```
+If you're supplying a file, it needs to be in the mod folder
+```
+// force claire to change name
+sv !stuff claire "name bunghole_breeze"
+
+// force player 2 to quit
+sv !stuff CL 2 "quit"
+
+// force player 4 to do all the commands in a file
+sv !stuff CL 4 FILE "stuffcmds.txt"
+```
+
+### `unfreeze`
+
+Release a player from being frozen.
+
+Related commands: `freeze`
+```
+// unfreeze player 0
+sv !unfreeze CL 0
+
+// unfreeze player named claire
+sv !unfreeze claire
+```
+
+### `unstifle`
+
+Remove a half-mute affecting a player
+```
+sv !unstifle CL 0
+
+sv !unstifle claire
+```
+
+### `version`
+
+Display q2admin's current version string
+```
+sv !version
+```
+
+### `votecmd`
+
+Add a new vote proposal for players to use
+```
+sv !votecmd [SW/EX/RE] "command"
+```
+SW = starts with \
+EX = exact \
+RE = regular expression
+```
+// allow voting for only the original 8 dm maps
+sv !votecmd RE "^gamemap q2dm[1-8]$"
+
+// allow voting to stifle any player
+sv !votecmd SW "^sv !stifle "
+
+// allow voting to kick 888 specifically
+sv !votecmd EX "sv !kick 888"
+```
+
+### `votedel`
+
+Remove a votecmd from the current list by number.
+
+Related commands: `listvote`, `votecmd`
+```
+// remove vote #5
+sv !votedel 5
+```
+
+### `vpnusers`
+
+Display all players who are connected via a VPN.
+```
+sv !vpnusers
+```
