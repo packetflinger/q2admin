@@ -7,9 +7,9 @@
 // Where the command/setting allowed to be run/set from. For commands, they must
 // be prefixed with "!" when executing, but not when defined in the q2aCommands
 // structure.
-#define CMDWHERE_CFGFILE        BIT(0)  // any q2a*.cfg file
-#define CMDWHERE_CLIENTCONSOLE  BIT(1)  // cmd from admin-authed player in game
-#define CMDWHERE_SERVERCONSOLE  BIT(2)  // cmd typed into srv console (or rcon)
+#define CMDCTX_CFGFILE        BIT(0)  // any q2a*.cfg file
+#define CMDCTX_CLIENTCONSOLE  BIT(1)  // cmd from admin-authed player in game
+#define CMDCTX_SERVERCONSOLE  BIT(2)  // cmd typed into srv console (or rcon)
 
 // Types of commands/values. All values are inputed as strings, these values
 // determine how they're casted and stored internally.
