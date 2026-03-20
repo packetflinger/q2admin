@@ -108,6 +108,7 @@ extern char *finalentities;
 
 // Common pattern for input-to-player resolution.
 #define PLAYERSPEC          "<[CL #] | [RE | [LIKE]] namepattern>"
+#define PLAYERSPECMULTI     "<[CL # [+ # [+ #]...]] | [RE | [LIKE]] namepattern>"
 
 typedef struct {
     bool admin;                     // player authed with !admin command

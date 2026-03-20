@@ -3688,7 +3688,7 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
             }
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_group [CL <id>]|name message\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_group %s message\n", PLAYERSPECMULTI);
     }
 }
 
@@ -3782,7 +3782,7 @@ void kickRun(int startarg, edict_t *ent, int client) {
             }
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !kick [CL] name\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !kick %s\n", PLAYERSPECMULTI);
     }
 }
 
