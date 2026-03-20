@@ -3629,7 +3629,7 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "Command sent to client!\n");
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !stuff [CL <id>]|name [client commands | FILE <filename>]\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !stuff %s [client commands | FILE <filename>]\n", PLAYERSPEC);
     }
 }
 
@@ -3723,7 +3723,7 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
         Q_snprintf(tmptext, sizeof(tmptext), "(private message) %s\n", text);
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person [CL <id>]|name message\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !say_person %s message\n", PLAYERSPEC);
     }
 }
 
@@ -3751,7 +3751,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
         Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", proxyinfo[clienti].name, IP(clienti));
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip [CL <id>]|name\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !ip %s\n", PLAYERSPEC);
     }
 }
 
@@ -3839,11 +3839,8 @@ void freezeRun(int startarg, edict_t *ent, int client) {
         secs = q2a_atoi(text);
     }
 
-    if (Q_stricmp(text, "help") == 0) {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !freeze [CL <id>]|name [seconds]\n");
-        return;
-    }
-    if (target == NULL) {
+    if (target == NULL || Q_stricmp(text, "help") == 0) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !freeze %s <seconds>\n", PLAYERSPEC);
         return;
     }
     if (proxyinfo[targeti].freeze.frozen) {
@@ -3873,6 +3870,7 @@ void unfreezeRun(int startarg, edict_t *ent, int client) {
     SKIPBLANK(text);
     target = getClientFromArg(client, ent, &targeti, text, &text);
     if (target == NULL) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !unfreeze %s\n", PLAYERSPEC);
         return;
     }
     if (!proxyinfo[targeti].freeze.frozen) {

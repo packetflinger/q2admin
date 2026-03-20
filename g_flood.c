@@ -465,7 +465,7 @@ void muteRun(int startarg, edict_t *ent, int client) {
 
         proxyinfo[clienti].clientcommand |= CCMD_PCSILENCE;
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !mute [LIKE/RE/CL] name [time(seconds)/PERM]\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !mute %s <time(seconds)/PERM>\n", PLAYERSPEC);
     }
 }
 
@@ -514,7 +514,7 @@ void stifleRun(int startarg, edict_t *ent, int client) {
             proxyinfo[clienti].clientcommand &= ~CCMD_STIFLED;
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !stifle [LIKE/RE/CL] name [seconds]\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !stifle %s <seconds>\n", PLAYERSPEC);
     }
 }
 
@@ -552,7 +552,7 @@ void unstifleRun(int startarg, edict_t *ent, int client) {
             proxyinfo[clienti].stifle_length = 0;
         }
     } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !unstifle [LIKE/RE/CL] <name|id>\n");
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !unstifle %s\n", PLAYERSPEC);
     }
 }
 
@@ -621,7 +621,7 @@ void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
         return;
     }
 
-    gi.cprintf(ent, PRINT_HIGH, "[sv] !clientchatfloodprotect [LIKE/RE/CL] name [xxx(num) xxx(sec) xxx(silence) / disable]\n");
+    gi.cprintf(ent, PRINT_HIGH, "[sv] !clientchatfloodprotect %s <[xxx(num) xxx(sec) xxx(silence) / disable]>\n", PLAYERSPEC);
 }
 
 /**

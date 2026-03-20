@@ -106,6 +106,9 @@ extern char *finalentities;
 
 #define DEFAULTLOCKOUTMSG       "This server is currently locked."
 
+// Common pattern for input-to-player resolution.
+#define PLAYERSPEC          "<[CL #] | [RE | [LIKE]] namepattern>"
+
 typedef struct {
     bool admin;                     // player authed with !admin command
     unsigned char retries;
