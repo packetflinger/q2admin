@@ -1,10 +1,6 @@
 /*
- *
  * Mini regex-module inspired by Rob Pike's regex code described in:
- *
  * http://www.cs.princeton.edu/courses/archive/spr09/cos333/beautiful.html
- *
- *
  *
  * Supports:
  * ---------
@@ -23,8 +19,6 @@
  *   '\W'       Non-alphanumeric
  *   '\d'       Digits, [0-9]
  *   '\D'       Non-digits
- *
- *
  */
 
 #ifndef _TINY_REGEX_C
