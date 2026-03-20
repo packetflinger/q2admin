@@ -530,6 +530,13 @@ q2acmd_t q2aCommands[] = {
         &IPBanning_Enable
     },
     {
+        "kick",
+        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        kickRun
+    },
+    {
         "kickonnamechange",
         CMDWHERE_CFGFILE | CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -1134,13 +1141,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_COMMAND,
         NULL,
         ipRun
-    },
-    {
-        "kick",
-        CMDWHERE_CLIENTCONSOLE | CMDWHERE_SERVERCONSOLE,
-        CMDTYPE_COMMAND,
-        NULL,
-        kickRun
     },
     {
         "listbans",
@@ -2030,61 +2030,84 @@ void readCfgFiles(void) {
  * ent      = edict of the player who issued the command
  * cp       = the complete set of args from the command
  * text     = pointer to name parsed if not using CL
+ *
+ * Called from sayGroupCmd, sayGroupRun, kickRun
  */
 int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     int8_t clienti;
-    uint8_t like, maxi;
+    uint8_t like, numfound;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
+    re_t r;
+    int matchlen;
 
-    maxi = 0;
+    numfound = 0;
 
-    if (startContains(cp, "CL")) {
+    if (startContains(cp, "LIKE ")) {
+        like = 1;
+        cp += 4;
+        SKIPBLANK(cp);
+        if (*cp == '\"') {
+            cp++;
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp++;
+        } else {
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+        }
+        SKIPBLANK(cp);
+    } else if (startContains(cp, "RE ")) {
+        like = 2;
+        cp += 3;
+        SKIPBLANK(cp);
+        if (*cp == '\"') {
+            cp++;
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp++;
+        } else {
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+        }
+        SKIPBLANK(cp);
+        q_strupr(strbuffer);
+        r = re_compile(strbuffer);
+        if (r == NULL) {
+            gi.cprintf(ent, PRINT_HIGH, "invalid regex pattern\n");
+            return NULL;
+        }
+    } else if (startContains(cp, "CL")) {
         like = 3;
-
         cp += 2;
         SKIPBLANK(cp);
-
         if (!isdigit(*cp)) {
+            gi.cprintf(ent, PRINT_HIGH, "invalid client ID, integers only\n");
             return 0;
         }
-
         // un-select all players in case they were left from some other cmd
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             proxyinfo[clienti].clientcommand &= ~CCMD_SELECTED;
         }
-
         if (isdigit(*cp)) {
             while (*cp) {
                 clienti = q2a_atoi(cp);
-
                 if (clienti >= 0 && clienti < maxclients->value && proxyinfo[clienti].inuse) {
                     proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
-                    maxi++;
+                    numfound++;
                 }
-
                 while (isdigit(*cp)) {
                     cp++;
                 }
-
                 SKIPBLANK(cp);
-
                 if (*cp && *cp != '+') {
                     break;
                 }
-
                 if (*cp == '+') {
                     cp++;
                 }
-
                 SKIPBLANK(cp);
-
                 if (*cp && !isdigit(*cp)) {
                     break;
                 }
             }
         }
-
         SKIPBLANK(cp);
     } else {
         like = 0;
@@ -2105,20 +2128,28 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
-                    case 0:
+                    case 0: // name
                         q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
                         if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
-                            maxi++;
+                            numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
-                            maxi++;
+                            numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
                         break;
 
-                    case 1:
+                    case 1: // LIKE
                         if (stringContains(proxyinfo[clienti].name, strbuffer)) {
-                            maxi++;
+                            numfound++;
+                            proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
+                        }
+                        break;
+                    case 2: // RE
+                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
+                        q_strupr(strbuffer);
+                        if (re_matchp(r, strbuffer, &matchlen) == 0) {
+                            numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
                         break;
@@ -2127,9 +2158,9 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
         }
     }
 
-    if (maxi) {
+    if (numfound) {
         *text = cp;
-        return maxi;
+        return numfound;
     } else {
         gi.cprintf(ent, PRINT_HIGH, "no player name matches found.\n");
     }
