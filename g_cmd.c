@@ -2138,43 +2138,81 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 }
 
 /**
- * Resolve a single player edict from command args.
+ * Resolve a single player edict from command args. This supports resolving
+ * player ID to name directly, contains, regular expressions, globbing, or
+ * exact matching. You can wrap the lookup string in quotes or not and it is
+ * case-insensitive.
  *
- * Either "CL {number}" or "name"
+ * PlayerSpec:
+ * [CL #] | [[LIKE | RE] "namepattern"]
+ *
+ * Examples of matching player named "snootersmith" with ID 2:
+ *   CL 2
+ *   LIKE snoot
+ *   LIKE "oters"
+ *   snootersm* (globbing only works when NOT using LIKE or RE)
+ *   snootersmith
+ *   RE "^sno+ter.*$"
+ *   RE snooters.*
  */
 edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, char **text) {
     int8_t clienti, foundclienti;
     uint8_t like, matchcount;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
+    re_t r;
+    int matchlen;
 
     foundclienti = -1;
     matchcount = 0;
 
-    if (startContains(cp, "CL ")) {
+    if (startContains(cp, "LIKE ")) {
+        like = 1;
+        cp += 4;
+        SKIPBLANK(cp);
+        if (*cp == '\"') {
+            cp++;
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp++;
+        } else {
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+        }
+        SKIPBLANK(cp);
+    } else if (startContains(cp, "RE ")) {
+        like = 2;
+        cp += 3;
+        SKIPBLANK(cp);
+        if (*cp == '\"') {
+            cp++;
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp++;
+        } else {
+            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+        }
+        SKIPBLANK(cp);
+        q_strupr(strbuffer);
+        r = re_compile(strbuffer);
+        if (r == NULL) {
+            gi.cprintf(ent, PRINT_HIGH, "invalid regex pattern\n");
+            return NULL;
+        }
+    } else if (startContains(cp, "CL ")) {
         like = 3;
-
         cp += 2;
         SKIPBLANK(cp);
-
         if (!isdigit(*cp)) {
             return NULL;
         }
-
         foundclienti = q2a_atoi(cp);
-
         while (isdigit(*cp)) {
             cp++;
         }
-
         SKIPBLANK(cp);
-
         if (foundclienti < 0 || foundclienti > maxclients->value || !proxyinfo[foundclienti].inuse) {
             foundclienti = -1;
         }
     } else {
         like = 0;
-
         if (*cp == '\"') {
             cp++;
             cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
@@ -2185,31 +2223,42 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
         SKIPBLANK(cp);
     }
 
-    if (like < 3) {
+    if (like < 3) { // anything other than "CL #"
         for (clienti = 0; clienti < maxclients->value; clienti++) {
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
-                    case 0:
+                    case 0: // name
                         q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
                         if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
                             foundclienti = clienti;
                             matchcount++;
                             if (matchcount > 1) {
-                                gi.cprintf(ent, PRINT_HIGH, "2 or more player names matched.\n");
+                                gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
                                 return NULL;
                             }
                         } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
                             if (foundclienti != -1) {
-                                gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
+                                gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
                                 return NULL;
                             }
                             foundclienti = clienti;
                         }
                         break;
-                    case 1:
+                    case 1: // LIKE
                         if (stringContains(proxyinfo[clienti].name, strbuffer)) {
                             if (foundclienti != -1) {
-                                gi.cprintf(ent, PRINT_HIGH, "2 or more player name matches.\n");
+                                gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
+                                return NULL;
+                            }
+                            foundclienti = clienti;
+                        }
+                        break;
+                    case 2: // RE
+                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
+                        q_strupr(strbuffer);
+                        if (re_matchp(r, strbuffer, &matchlen) == 0) {
+                            if (foundclienti != -1) {
+                                gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched regex pattern\n");
                                 return NULL;
                             }
                             foundclienti = clienti;
