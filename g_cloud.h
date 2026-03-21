@@ -282,6 +282,8 @@ void        cloudRun(int startarg, edict_t *ent, int client);
 void        CA_printf(char *fmt, ...);
 void        CA_dprintf(char *fmt, ...);
 void        ReadCloudConfigFile(void);
+void        Cmd_Invite_f(edict_t *ent);
+void        Cmd_Teleport_f(edict_t *ent);
 
 extern cloud_t cloud;
 extern cloud_config_t cloud_config;

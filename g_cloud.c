@@ -1458,3 +1458,46 @@ void CA_dprintf(char *fmt, ...) {
 
     gi.cprintf(NULL, PRINT_HIGH, "[cloud] %s", cbuffer);
 }
+
+/**
+ * A player issued the teleport command. The gameserver will send the request
+ * to the connected CloudAdmin server to find either the current list of
+ * available servers or the address of the server requested.
+ */
+void Cmd_Teleport_f(edict_t *ent) {
+    if (!CLOUD_OK) {
+        gi.cprintf(ent, PRINT_HIGH, "Not currently connected to a CloudAdmin server.\n");
+        return;
+    }
+    if (!(cloud.flags & CFL_TELEPORT)) {
+        gi.cprintf(ent, PRINT_HIGH, "Teleport command is not enabled in server config.\n");
+        return;
+    }
+    if (q2a_strlen(gi.argv(1)) > TELE_NAME_MAX) {
+        gi.cprintf(ent, PRINT_HIGH, "Invalid teleport destination.\n");
+        return;
+    }
+    CA_Teleport(getEntOffset(ent) - 1, gi.argv(1));
+}
+
+/**
+ *
+ */
+void Cmd_Invite_f(edict_t *ent) {
+    if (!CLOUD_OK) {
+        gi.cprintf(ent, PRINT_HIGH, "Not currently connected to a CloudAdmin server.\n");
+        return;
+    }
+    if (!(cloud.flags & CFL_INVITE)) {
+        gi.cprintf(ent, PRINT_HIGH, "Invite command is not enabled in server config.\n");
+        return;
+    }
+    char *invitetext;
+    uint8_t id = getEntOffset(ent) - 1;
+    if (gi.argc() > 1) {
+        invitetext = gi.args();
+    } else {
+        invitetext = "";
+    }
+    CA_Invite(id, invitetext);
+}

@@ -48,8 +48,6 @@ void cl_pitchspeed_enableRun(int startarg, edict_t *ent, int client);
 void ClientCommand(edict_t *ent);
 void clientsidetimeoutInit(char *arg);
 void clientsidetimeoutRun(int startarg, edict_t *ent, int client);
-void Cmd_Invite_f(edict_t *ent);
-void Cmd_Teleport_f(edict_t *ent);
 void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...);
 void cvarsetRun(int startarg, edict_t *ent, int client);
 bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter);
