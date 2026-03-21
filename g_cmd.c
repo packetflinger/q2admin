@@ -1245,6 +1245,13 @@ q2acmd_t q2aCommands[] = {
         &swap_attack_use
     },
     {
+        "testplayer",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        testPlayerRun
+    },
+    {
         "timers_active",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -3836,3 +3843,27 @@ void unfreezeRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(targeti, QCMD_UNFREEZEPLAYER, 0.0, 0, "You thawed\n");
 }
 
+/**
+ * For testing the getPlayerFromArg func
+ */
+void testPlayerRun(int startarg, edict_t *ent, int client) {
+    char *text;
+    edict_t *enti;
+    int clienti;
+
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+    SKIPBLANK(text);
+    enti = getClientFromArg(client, ent, &clienti, text, &text);
+
+    if (enti) {
+        gi.cprintf(ent, PRINT_HIGH, "%s\n", NAME(clienti));
+    } else {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !testplayer %s\n", PLAYERSPEC);
+    }
+
+}

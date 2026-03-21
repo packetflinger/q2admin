@@ -83,6 +83,7 @@ void ServerCommand(void);
 void setadminRun(int startarg, edict_t *ent, int client);
 void stuffClientRun(int startarg, edict_t *ent, int client);
 void stuffNextLine(edict_t *ent, int client);
+void testPlayerRun(int startarg, edict_t *ent, int client);
 void timescaleDetected(edict_t *ent, int client);
 void unfreezeRun(int startarg, edict_t *ent, int client);
 void motdRun(int startarg, edict_t *ent, int client);
