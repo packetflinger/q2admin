@@ -2032,7 +2032,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
         r = re_compile(strbuffer);
         if (r == NULL) {
             gi.cprintf(ent, PRINT_HIGH, "invalid regex pattern\n");
-            return NULL;
+            return numfound;
         }
     } else if (startContains(cp, "CL")) {
         like = 3;
