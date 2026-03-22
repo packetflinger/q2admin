@@ -313,7 +313,7 @@ int doAdminCommand(edict_t *ent, int client) {
     }
     if (proxyinfo[client].admin_level & ADMIN_LEVEL5) {
         if (strcmp(gi.argv(0), "!auth") == 0) {
-            ADMIN_auth(ent);
+            adm_auth(ent);
             done = 1;
             gi.cprintf(ent, PRINT_HIGH, "A new auth command has been issued.\n");
         } else if (strcmp(gi.argv(0), "!gfx") == 0) {
