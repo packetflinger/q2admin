@@ -824,6 +824,12 @@ void CA_DisconnectedPeer(void) {
     cloud.connection.trusted = false;
     cloud.connection.have_keys = false;
     cloud.disconnect_count++;
+
+    closesocket(cloud.connection.socket);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_r);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_w);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_e);
+
     memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
     memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
 
