@@ -169,9 +169,9 @@ Option | Type | Default | What it does
 `consolechat_disable` | bool | no | Disable sending player chat to the server console
 `consolelog_enable` | bool | no | Enable logging some events to the server console
 `consolelog_pattern` | string | "[q2a] %s\n" | The printf-like format for events logged to server console
-`customclientcmd` | string | "" | Command to stuff to players ?????
+`customclientcmd` | string | "" | Command to stuff to players when they're detected as a cheat prior to disconnecting them
 `customclientcmdconnect` | string | "" | Command to stuff to players when they connect
-`customservercmd` | string | "" | Command to run on the server ?????
+`customservercmd` | string | "" | Command to run on the server when a client is detected as a cheat. The `%c` placeholder is substituted with the offending client's ID number.
 `customservercmdconnect` | string | "" | Command to run on the server when a player connects
 `defaultbanmsg` | string | "" | Message players will see by default when they are not allowed to connect
 `defaultchatbanmsg` | string | "" | Message players will see by default when they say something that isn't allowed
