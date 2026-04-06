@@ -173,7 +173,7 @@ Option | Type | Default | What it does
 `do_vid_restart` | bool | no | Force client to do a `vid_restart` command when they connect. This can unload some wallhacks
 `enforce_deadlines` | bool | yes | When asking the player's client for certain information, set a reasonable deadline for a response and kick the player if no response is provided (indicates a modified client)
 `entity_classname_offset` | number | 280 | What byte offset can the `classname` property be found in the `edict_s` struct? Since most of the edict_s struct is opaque and filled in by the game library, it's not possible for q2admin to know where that value is located. This value can be different for each game mod. Using an incorrect value here can lead to crashes, especially if you're doing entity substitution/blocking.<br><br>Common values:<br>baseq2 = 280<br>opentdm = xxxxxx
-`extendedsay_enable` | bool | no | Add to regular `say` command for targeting specific players or groups (`!p`, `!g`)
+`extendedsay_enable` | bool | no | Add to regular `say` command for targeting specific players or groups. Syntax:<br>`say !p PLAYERSPEC msg`<br>`say !g PLAYERSPECMULTI msg`
 `filternonprintabletext` | bool | no | Strip console characters (ascii values in range 128-256) from chat messages
 `fpsfloodexempt` | bool | no | ?????
 `framesperprocess` | number | 0 | ?????

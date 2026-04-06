@@ -2958,12 +2958,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
             if (say_person_enable && startContains(args, "!p")) { // say_person
                 if (sayPersonCmd(ent, client, args + 2)) {
-                    gi.cprintf(ent, PRINT_HIGH, "say !p [LIKE/CL] name message\n");
+                    gi.cprintf(ent, PRINT_HIGH, "say !p %s message\n", PLAYERSPEC);
                 }
                 return false;
             } else if (say_group_enable && startContains(args, "!g")) { // say_group
                 if (sayGroupCmd(ent, client, args + 2)) {
-                    gi.cprintf(ent, PRINT_HIGH, "say !g [LIKE/CL] name message\n");
+                    gi.cprintf(ent, PRINT_HIGH, "say !g %s message\n", PLAYERSPECMULTI);
                 }
                 return false;
             }
