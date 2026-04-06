@@ -259,7 +259,7 @@ Option | Type | Default | What it does
 `versionbanning_enable` | bool | yes | Enable the ability to ban players based on the client version they're using
 `voteclientmaxvotes` | number | 0 | Only allow clients to propose this many votes. 0 = unlimited
 `voteclientmaxvotetimeout` | number | 0 | The timespan to consider for `voteclientmaxvotes`
-`votecountnovotes` | bool | 1 | ???
+`votecountnovotes` | bool | 1 | Whether not voting counts as voting no when calculating vote percentage.<br>0 = calculate % as yes/total-no<br>1 = calculate % as yes/total
 `voteminclients` | number | 0 | The minimum number of players required to propose a vote. 0 = any
 `votepasspercent` | number | 50 | This percent of players need to vote yes for it to pass
 `vote_enable` | bool | no | Enable the voting system
