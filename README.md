@@ -221,7 +221,7 @@ Option | Type | Default | What it does
 `msec_max_violations` | number | 2 | How many violations allowed before taking action.
 `msec_min_required` | number | 0 | This is the minimum msec consumption required for the `msec_timespan` amount of time. If you really want to get strict, set this to `(1000 * msec_timespan) * 0.88` -ish. Modified clients can underflow their msec consumption in order to bank it and use it later in the same msec_timespan for a speed boost.<br><br>Be aware packet loss can affect this causing a player to be in violation if their move packet is never received, so they could be kicked simply for having poor network performance. Use at your own risk.
 `msec_timespan` | number | 5 | Span of seconds to evaluate msec consumption. The smaller the value the more unforgiving to things like packet loss and network jitter. The larger the span the more accurate reading you get, but that delays the ability to take action for that amount of time.
-`namechangefloodprotectmsg` | string | ??? | The message the player will see when they change their name too many times
+`namechangefloodprotectmsg` | string | "%s changed names too many times." | The message the player will see when they change their name too many times
 `nickbanning_enable` | bool | yes | Enable the ability to ban based on player name
 `numofdisplays` | number | 4 | How many times to in a row to broadcast that a player was caught cheating
 `printmessageonplaycmds` | bool | yes | Display when a player uses one of the `play_*` commands.<br><br>This command is useless for the actual `play` command because that command is kept in the client and not sent to the game library anymore with modern clients. Ancient 3.20 clients still send it though.
