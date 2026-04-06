@@ -29,7 +29,7 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
 * Very flexible logging
   *  Supports up to 32 different log files
   *  23 different log contexts
-  *  Customizable log message formatting (per log)
+  *  Per-log customizable message formatting
 * Custom banning
   * By IP address (including IPv6)
   * By VPN status
