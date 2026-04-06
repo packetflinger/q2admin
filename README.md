@@ -213,7 +213,7 @@ Option | Type | Default | What it does
 `maxfps` | number | 0 | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps. Value of 0 means no max.
 `maximpulses` | number | 1 | Max impulses before taking action
 `maxmsglevel` | number | 3 | Max value allowed for the `msg` userinfo variable.
-`maxrate` | number | ?? | Max value allowed for the `rate` userinfo variable.
+`maxrate` | number | 0 | Max value allowed for the `rate` userinfo variable. Value of `0` means no limit.
 `max_pmod_noreply` | number | 2 | The number of seconds before taking action for unanswered pmod request
 `minfps` | number | 0 | The minimum value allowed for the `cl_maxfps` cvar
 `msec_action` | number | 2 | What action should be taken if there are msec violations?<br><br>0 = legacy behavior, kick if over limit<br>1 = do nothing<br>2 = announce and kick the player
