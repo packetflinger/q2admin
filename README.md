@@ -101,19 +101,19 @@ All dependencies are included and statically linked. The resulting binary is abo
 ### Server CVARs
 CVAR | Purpose | Default
 --- | --- | ----
-`gamelib` | Specify the real game library for q2admin to load |
-`q2aconfig` | Specify the main config filename | q2admin.cfg
-`configfile_ban` | Config file for bans | q2a_ban.cfg
-`configfile_bypass` | Config file for bypass access | q2a_bypass.cfg
-`configfile_cloud` | Cloud admin config | q2a_cloud.cfg
-`configfile_cvar` | CVAR banning config | q2a_cvar.cfg
-`configfile_disable` | Command disabling config | q2a_disable.cfg
-`configfile_flood` | Flood config | q2a_flood.cfg
-`configfile_login` | Admin definitions | q2a_login.cfg
-`configfile_log` | Logging setup | q2a_log.cfg
-`configfile_rcon` | LRCON setup | q2a_lrcon.cfg
-`configfile_spawn` | Entity disabling config | q2a_spawn.cfg
-`configfile_vote` | Voting setup | q2a_vote.cfg
+`gamelib` | Specify the real game library for q2admin to load | ""
+`q2aconfig` | Specify the main config filename | "q2admin.cfg"
+`configfile_ban` | Config file for bans | "q2a_ban.cfg"
+`configfile_bypass` | Config file for bypass access | "q2a_bypass.cfg"
+`configfile_cloud` | Cloud admin config | "q2a_cloud.cfg"
+`configfile_cvar` | CVAR banning config | "q2a_cvar.cfg"
+`configfile_disable` | Command disabling config | "q2a_disable.cfg"
+`configfile_flood` | Flood config | "q2a_flood.cfg"
+`configfile_login` | Admin definitions | "q2a_login.cfg"
+`configfile_log` | Logging setup | "q2a_log.cfg"
+`configfile_rcon` | LRCON setup | "q2a_lrcon.cfg"
+`configfile_spawn` | Entity disabling config | "q2a_spawn.cfg"
+`configfile_vote` | Voting setup | "q2a_vote.cfg"
 
 
 ### Config Options
