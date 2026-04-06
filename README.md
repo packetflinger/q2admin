@@ -268,7 +268,7 @@ Option | Type | Default | What it does
 `vpn_kick` | bool | yes | Kick all players connecting from a VPN
 `whois_active` | number | 0 | Whether to enable whois tracking
 `zbc_enable` | bool | yes | Check clients for aim-assist (includes zbots and ratbots)
-`zbc_jittermax` | number | 4 | ???
+`zbc_jittermax` | number | 4 | The max number of aim-assist violations detected per `zbc_jittertime` before taking action. The smaller the number the more likely you are to see false-positives.
 `zbc_jittermove` | number | 500 | The max jump in view angles between client frames before considering aim is assisted
 `zbc_jittertime` | number | 10 | ????
 `zbotdetect` | bool | yes | Detect zbots
