@@ -76,7 +76,7 @@ Edit `.config-win32mingw` file to suit your environment and rename it to `.confi
 
 ## Configuration
 
-* Copy all all the .cfg files from the `runtime-config` directory to your mod directory.
+* Copy all the .cfg files from the `runtime-config` directory to your mod directory.
 * Edit `q2admin.cfg` to suit your needs.
 * Inform q2admin what the actual game library is.
   * Either set the `gamelibrary` option in `q2admin.cfg`
