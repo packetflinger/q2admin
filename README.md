@@ -168,7 +168,7 @@ Option | Type | Default | What it does
 `disconnectuserimpulse` | bool | no | Kick a player if they use certain impulses
 `displayimpulses` | bool | no | Broadcast the fact that a player just used a certain impulse
 `displaynamechange` | bool | yes | Broadcast when someone changes their name
-`dopversion` | bool | ?? | Do a p_verion probe for proxies when a player connects
+`dopversion` | bool | yes | Do a p_verion probe for proxies when a player connects
 `do_franck_check` | bool | yes | Check for franck when a player connects
 `do_vid_restart` | bool | no | Force client to do a `vid_restart` command when they connect. This can unload some wallhacks
 `enforce_deadlines` | bool | yes | When asking the player's client for certain information, set a reasonable deadline for a response and kick the player if no response is provided (indicates a modified client)
