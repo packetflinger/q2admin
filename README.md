@@ -210,7 +210,7 @@ Option | Type | Default | What it does
 `lrcon_timeout` | number | 2 | The seconds from now that an lrcon random password/request is valid for.
 `mapcfgexec` | bool | no | On new map (or connect), stuff these commands to player:<br><br>- `exec mapcfg/{oldmapname}-end.cfg`<br>- `exec mapcfg/{newmapname}-pre.cfg`
 `maxclientsperframe` | number | 100 | The number of players q2admin can deal with per server frame. This assumes default of 10HZ, *don't touch this unless you know what you're doing*
-`maxfps` | number | ???? | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps.
+`maxfps` | number | 0 | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps. Value of 0 means no max.
 `maximpulses` | number | 1 | Max impulses before taking action
 `maxmsglevel` | number | 3 | Max value allowed for the `msg` userinfo variable.
 `maxrate` | number | ?? | Max value allowed for the `rate` userinfo variable.
