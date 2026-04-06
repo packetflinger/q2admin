@@ -194,7 +194,7 @@ Option | Type | Default | What it does
 `gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
 `gl_driver_check` | number | 0 | Checks for GL driver changes and disconnects player if they're over `gl_driver_max_changes`
 `gl_driver_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
-`hackuserdisplay` | string | ??? | The message to broadcast when a cheating player is discovered
+`hackuserdisplay` | string | "%s is using a modified client" | The message to broadcast when a cheating player is discovered
 `http_cacert_path` | string | "/etc/ssl/certs" | Where do we find the system's certificate authority public keys? Only used if `http_veryifyssl` is enabled for ensuring the https server is who they say they are
 `http_debug` | bool | no | Show extra debug info related to CURL usage in the server console
 `http_enable` | bool | yes | Enable libcurl for downloading stuff via http(s)<br><br>Required for<br>- Remote ban files<br>- VPN detection<br>- Loading remote anticheat configs<br>- ASN banning
