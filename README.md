@@ -175,7 +175,7 @@ Option | Type | Default | What it does
 `entity_classname_offset` | number | 280 | What byte offset can the `classname` property be found in the `edict_s` struct? Since most of the edict_s struct is opaque and filled in by the game library, it's not possible for q2admin to know where that value is located. This value can be different for each game mod. Using an incorrect value here can lead to crashes, especially if you're doing entity substitution/blocking.<br><br>Common values:<br>baseq2 = 280<br>opentdm = xxxxxx
 `extendedsay_enable` | bool | no | Add to regular `say` command for targeting specific players or groups. Syntax:<br>`say !p PLAYERSPEC msg`<br>`say !g PLAYERSPECMULTI msg`
 `filternonprintabletext` | bool | no | Strip console characters (ascii values in range 128-256) from chat messages
-`fpsfloodexempt` | bool | no | ?????
+`fpsfloodexempt` | bool | no | Consider excessive `cl_maxfps` changes as flooding. This is common in the Jump mod
 `framesperprocess` | number | 0 | ?????
 `gamemaptomap` | bool | no | Convert any usage of `gamemap` command to `map`. This will cause all new maps to reload the game library and use significant resources. *Don't use this*. Use `sv_recycle` as part of q2pro/r1q2.
 `gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
