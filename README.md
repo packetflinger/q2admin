@@ -206,7 +206,7 @@ Option | Type | Default | What it does
 `ipbanning_enable` | bool | yes | Enable the functionality of banning players based on their IP address.
 `kickonnamechange` | bool | no | If a player successfully joins with a password-protected name, kick them if they change names after connecting.
 `lock` | bool | no | lockdown mode, prevent anyone from joining. This is presumablity to allow for some kind of maintenance without player interference.
-`lockoutmsg` | string | ?? | The message to display to clients attempting to connect while the server is locked.
+`lockoutmsg` | string | "This server is currently locked." | The message to display to clients attempting to connect while the server is locked.
 `lrcon_timeout` | number | 2 | The seconds from now that an lrcon random password/request is valid for.
 `mapcfgexec` | bool | no | On new map (or connect), stuff these commands to player:<br><br>- `exec mapcfg/{oldmapname}-end.cfg`<br>- `exec mapcfg/{newmapname}-pre.cfg`
 `maxclientsperframe` | number | 100 | The number of players q2admin can deal with per server frame. This assumes default of 10HZ, *don't touch this unless you know what you're doing*
