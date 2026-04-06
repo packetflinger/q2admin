@@ -176,7 +176,7 @@ Option | Type | Default | What it does
 `extendedsay_enable` | bool | no | Add to regular `say` command for targeting specific players or groups. Syntax:<br>`say !p PLAYERSPEC msg`<br>`say !g PLAYERSPECMULTI msg`
 `filternonprintabletext` | bool | no | Strip console characters (ascii values in range 128-256) from chat messages
 `fpsfloodexempt` | bool | no | Consider excessive `cl_maxfps` changes as flooding. This is common in the Jump mod
-`framesperprocess` | number | 0 | ?????
+`framesperprocess` | number | 0 | The number of server frames to process for every q2admin frame. 0 = process every frame. It's currently unclear how this affects things like msec checking, better to leave this value at 0.
 `gamemaptomap` | bool | no | Convert any usage of `gamemap` command to `map`. This will cause all new maps to reload the game library and use significant resources. *Don't use this*. Use `sv_recycle` as part of q2pro/r1q2.
 `gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
 `gl_driver_check` | number | 0 | ???
