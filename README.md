@@ -79,8 +79,17 @@ Edit `.config-win32mingw` file to suit your environment and rename it to `.confi
 * Copy all the .cfg files from the `runtime-config` directory to your mod directory.
 * Edit `q2admin.cfg` to suit your needs.
 * Inform q2admin what the actual game library is.
-  * Either set the `gamelibrary` option in `q2admin.cfg`
-  * Or name the real game library to `gamex86_64.real.so` or `gamex86.real.dll`
+  * Either set the `gamelibrary` option in `q2admin.cfg` (**recommended**)
+  * Or specifically name the real game library: `game{arch}.real.{ext}`
+    * Linux libraries have a `.so` extension while Windows uses `.dll`
+    * For 32-bit systems the architechture should be `x86`
+      * Older R1Q2 and 3.2[01] servers will probably look for `i386` for arch
+    * For 64-bit systems, the arch will be `x86_64`
+    * Examples:
+      * 64-bit Linux:   `gamex86_64.real.so`
+      * 32-bit Windows: `gamex86.real.dll`
+      * Ancient Linux:  `gamei386.real.so`
+    * You cannot mix architectures. The Quake 2 server, q2admin, and the mod all need to either by compiled for 32 or 64 bit. Unfortunately many mods are only available as compiled binaries, the source code is not available or long lost. So depending on what mod you want to run, that will almost certainly dictate what architecture you'll need to run. 
   * Or use `+set gamelib <libraryname>` starting your Quake 2 server.
 * Edit each of the `q2a_*.cfg` files to setup the features you need. 
 
