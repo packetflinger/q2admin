@@ -108,6 +108,9 @@ All dependencies are included and statically linked. The resulting binary is abo
 ## Settings
 
 ### Server CVARs
+
+Set in your server config or at the command line using `+set {cvar} {value}`
+
 CVAR | Purpose | Default
 --- | --- | ----
 `gamelib` | Specify the real game library for q2admin to load | ""
