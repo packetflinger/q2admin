@@ -230,8 +230,8 @@ Option | Type | Default | What it does
 `proxy_bwproxy` | number | 1 | Check for bwproxies
 `proxy_nitro2` | number | 1 | Check for nitro2 proxies
 `q2adminrunmode` | number | 100 | 100 = fully operational, 0 = passthru - *don't touch this value*
-`q2a_command_check` | bool | false | ????
-`randomwaitreporttime` | number | 55 | ????
+`q2a_command_check` | bool | false | ???? (seemingly unused?)
+`randomwaitreporttime` | number | 55 | Used for seeding a random delay time for proxy checking. Only used if `zbotdetectactivetimeout` is set to `-1`. 
 `rcon_random_password` | bool | yes | Change the actual rcon password to random string and back for lrcon usage
 `rcon_insecure` | bool | yes | If no, lrcon commands are executed directly on the server rather than let the client execute it, this means the output is never seen by the client.
 `reconnect_address` | string | "" | The IP/hostname to force the client to reconnect to.
