@@ -148,7 +148,7 @@ Option | Type | Default | What it does
 `cl_anglespeedkey_display` | bool | yes | Broadcast to all players when someone is messing with their cl_anglespeedkey cvar
 `cl_anglespeedkey_enable` | bool | no | Enable cl_anglespeedkey monitoring
 `cl_anglespeedkey_kick` | bool | no | Kick players caught manipulating this cvar
-`cl_anglespeedkey_kickmsg` | string | ?? | The message to send the offending player when they're kicked
+`cl_anglespeedkey_kickmsg` | string | "cl_anglespeedkey changes not allowed ont his server" | The message to send the offending player when they're kicked
 `cl_pitchspeed_display` | bool | yes | Broadcast to all players when someone is messing with their cl_pitchspeed cvar
 `cl_pitchspeed_enable` | bool | no | Enable cl_pitchspeed monitoring
 `cl_pitchspeed_kick` | bool | no | Kick players caught manipulating this cvar
