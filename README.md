@@ -152,7 +152,7 @@ Option | Type | Default | What it does
 `cl_pitchspeed_display` | bool | yes | Broadcast to all players when someone is messing with their cl_pitchspeed cvar
 `cl_pitchspeed_enable` | bool | no | Enable cl_pitchspeed monitoring
 `cl_pitchspeed_kick` | bool | no | Kick players caught manipulating this cvar
-`cl_pitchspeed_kickmsg` | string | ?? | The message to send the offending player when they're kicked
+`cl_pitchspeed_kickmsg` | string | "cl_pitchspeed changes not allowed on this server" | The message to send the offending player when they're kicked
 `consolechat_disable` | bool | no | Disable sending player chat to the server console
 `consolelog_enable` | bool | no | Enable logging some events to the server console
 `consolelog_pattern` | string | "[q2a] %s\n" | The printf-like format for events logged to server console
