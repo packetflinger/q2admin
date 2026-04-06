@@ -270,7 +270,7 @@ Option | Type | Default | What it does
 `zbc_enable` | bool | yes | Check clients for aim-assist (includes zbots and ratbots)
 `zbc_jittermax` | number | 4 | The max number of aim-assist violations detected per `zbc_jittertime` before taking action. The smaller the number the more likely you are to see false-positives.
 `zbc_jittermove` | number | 500 | The max jump in view angles between client frames before considering aim is assisted
-`zbc_jittertime` | number | 10 | ????
+`zbc_jittertime` | number | 10 | Timespan in seconds for considering aim-assist violations. `zbc_jittermax` number of violations in this span is considered aim-assist usage and player will be shamed and kicked.
 `zbotdetect` | bool | yes | Detect zbots
 `zbotdetectactivetimeout` | number | -0 | ????
 `zbotuserdisplay` | string | ???? | The message sent to users when they're detected as a zbot
