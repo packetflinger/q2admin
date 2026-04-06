@@ -130,6 +130,7 @@ Option | Type | Default | What it does
 `clientsidetimeout` | number | 30 | Delay in seconds for ratbot and proxy detection. Clamped to a minimum of 5 seconds
 `clientvotecommand` | string | "qvote" | The command players will use to cast and propose votes
 `clientvotetimeout` | number | 60 | The number of seconds a vote proposal valid for
+`client_map_cfg` | number | 6 | Bitmask controlling what config files get automatically stuffed to clients <br><br>set map_name [map] = 1<br>exec [mapname].cfg = 2 <br> exec all.cfg = 4
 `cloud_flags` | number | 4095 | Bitmask for what cloud admin features are enabled. Add them up:<br>1 = frag accounting<br>2 = log chat<br>4 = support teleporting <br>8 = support inviting <br>16 = enable finding players <br>32 = enable whois <br>1024 = show debug info 
 `cloud_cmd_teleport` | string | "!teleport" | Command to teleport between servers
 `cloud_cmd_invite` | string | "!invite" | Command to invite players from other servers
@@ -144,7 +145,6 @@ Option | Type | Default | What it does
 `cloud_publickey` | string | "public.pem" | The q2 server's public key, this get shared with the Cloud Admin server
 `cloud_serverkey` | string | "server.pem" | The Cloud Admin server's public key
 `cloud_uuid` | string | "" | A unique identifier shared between the q2 server and the Cloud Admin server
-`client_map_cfg` | number | 6 | Bitmask controlling what config files get automatically stuffed to clients <br><br>set map_name [map] = 1<br>exec [mapname].cfg = 2 <br> exec all.cfg = 4
 `cl_anglespeedkey_display` | bool | yes | Broadcast to all players when someone is messing with their cl_anglespeedkey cvar
 `cl_anglespeedkey_enable` | bool | no | Enable cl_anglespeedkey monitoring
 `cl_anglespeedkey_kick` | bool | no | Kick players caught manipulating this cvar
