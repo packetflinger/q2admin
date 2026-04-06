@@ -270,12 +270,6 @@ q2acmd_t q2aCommands[] = {
         &client_map_cfg
     },
     {
-        "client_msg",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &client_msg
-    },
-    {
         "cl_anglespeedkey_display",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,

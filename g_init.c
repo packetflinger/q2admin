@@ -78,7 +78,6 @@ char chatFloodProtectMsg[256];
 bool checkClientIpAddress               = true;
 char clientVoteCommand[256];
 int client_map_cfg                      = CLMAPCFG_EXACT | CLMAPCFG_ALL;
-char client_msg[256];
 cloud_config_t cloud_config = {
         .address = "[::1]",
         .cmd_invite = "!invite",

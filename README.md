@@ -145,7 +145,6 @@ Option | Type | Default | What it does
 `cloud_serverkey` | string | "server.pem" | The Cloud Admin server's public key
 `cloud_uuid` | string | "" | A unique identifier shared between the q2 server and the Cloud Admin server
 `client_map_cfg` | number | 6 | Bitmask controlling what config files get automatically stuffed to clients <br><br>set map_name [map] = 1<br>exec [mapname].cfg = 2 <br> exec all.cfg = 4
-`client_msg` | string | ?? | ??
 `cl_anglespeedkey_display` | bool | yes | Broadcast to all players when someone is messing with their cl_anglespeedkey cvar
 `cl_anglespeedkey_enable` | bool | no | Enable cl_anglespeedkey monitoring
 `cl_anglespeedkey_kick` | bool | no | Kick players caught manipulating this cvar

@@ -881,7 +881,6 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
         private_commands[i].command[0] = 0;
     }
 
-    q2a_strcpy(client_msg, DEFAULTQ2AMSG);
     q2a_strcpy(zbotuserdisplay, DEFAULTUSERDISPLAY);
     q2a_strcpy(timescaleuserdisplay, DEFAULTTSDISPLAY);
     q2a_strcpy(modifiedclientmsg, DEFAULTMODIFIEDCLIENTMSG);

@@ -559,7 +559,6 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 #define Q2A_REVISION    0
 #endif
 
-#define DEFAULTQ2AMSG       "\nThis server requires %s anti cheat client.\n"
 #define NOMATCH_KICK_MSG    "%s has not provided adequate authentication.\n"
 #define MOD_KICK_MSG        "%s failed the pmodified check on this map, error %d.\n"
 #define PRV_KICK_MSG        "%s is using a modified client.\n"
