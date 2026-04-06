@@ -126,7 +126,7 @@ Option | Type | Default | What it does
 `checkclientipaddress` | bool | yes | Do various checks based on a player's IP
 `checkvar_poll_time` | number | 60 | How many seconds between CVAR checks?
 `checkvarcmds_enable` | bool | yes | Enable CVAR checking
-`clientremindtimeout` | number | ?? | ??
+`clientremindtimeout` | number | 10 | Remind clients of an active vote every this many seconds
 `clientsidetimeout` | number | ?? | ??
 `clientvotecommand` | string | "qvote" | The command players will use to cast and propose votes
 `clientvotetimeout` | number | ?? | How long is a vote proposal valid?
