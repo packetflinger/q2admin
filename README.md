@@ -192,8 +192,8 @@ Option | Type | Default | What it does
 `framesperprocess` | number | 0 | The number of server frames to process for every q2admin frame. 0 = process every frame. It's currently unclear how this affects things like msec checking, better to leave this value at 0.
 `gamemaptomap` | bool | no | Convert any usage of `gamemap` command to `map`. This will cause all new maps to reload the game library and use significant resources. *Don't use this*. Use `sv_recycle` as part of q2pro/r1q2.
 `gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
-`gl_driver_check` | number | 0 | ???
-`gl_drive_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
+`gl_driver_check` | number | 0 | Checks for GL driver changes and disconnects player if they're over `gl_driver_max_changes`
+`gl_driver_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
 `hackuserdisplay` | string | ??? | The message to broadcast when a cheating player is discovered
 `http_cacert_path` | string | "/etc/ssl/certs" | Where do we find the system's certificate authority public keys? Only used if `http_veryifyssl` is enabled for ensuring the https server is who they say they are
 `http_debug` | bool | no | Show extra debug info related to CURL usage in the server console
