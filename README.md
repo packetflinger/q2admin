@@ -258,7 +258,7 @@ Option | Type | Default | What it does
 `userinfochange_time` | number | 60 | The timespan for flooding the server with userinfo changes
 `versionbanning_enable` | bool | yes | Enable the ability to ban players based on the client version they're using
 `voteclientmaxvotes` | number | 0 | Only allow clients to propose this many votes. 0 = unlimited
-`voteclientmaxvotetimeout` | number | 0 | ????
+`voteclientmaxvotetimeout` | number | 0 | The timespan to consider for `voteclientmaxvotes`
 `votecountnovotes` | bool | 1 | ???
 `voteminclients` | number | 0 | The minimum number of players required to propose a vote. 0 = any
 `votepasspercent` | number | 50 | This percent of players need to vote yes for it to pass
