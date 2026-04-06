@@ -124,7 +124,7 @@ Option | Type | Default | What it does
 `chatbanning_enable` | bool | yes | Filter chat messages based on config
 `chatfloodprotectmsg` | string | "" | Msg to send when flooding is triggered
 `checkclientipaddress` | bool | yes | Do various checks based on a player's IP
-`checkvar_poll_time` | number |  | How many seconds between CVAR checks?
+`checkvar_poll_time` | number | 60 | How many seconds between CVAR checks?
 `checkvarcmds_enable` | bool | yes | Enable CVAR checking
 `clientremindtimeout` | number | ?? | ??
 `clientsidetimeout` | number | ?? | ??
