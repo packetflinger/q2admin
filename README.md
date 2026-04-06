@@ -127,9 +127,9 @@ Option | Type | Default | What it does
 `checkvar_poll_time` | number | 60 | How many seconds between CVAR checks?
 `checkvarcmds_enable` | bool | yes | Enable CVAR checking
 `clientremindtimeout` | number | 10 | Remind clients of an active vote every this many seconds
-`clientsidetimeout` | number | ?? | ??
+`clientsidetimeout` | number | 30 | Delay in seconds for ratbot and proxy detection. Clamped to a minimum of 5 seconds
 `clientvotecommand` | string | "qvote" | The command players will use to cast and propose votes
-`clientvotetimeout` | number | ?? | How long is a vote proposal valid?
+`clientvotetimeout` | number | 60 | The number of seconds a vote proposal valid for
 `cloud_flags` | number | 4095 | Bitmask for what cloud admin features are enabled. Add them up:<br>1 = frag accounting<br>2 = log chat<br>4 = support teleporting <br>8 = support inviting <br>16 = enable finding players <br>32 = enable whois <br>1024 = show debug info 
 `cloud_cmd_teleport` | string | "!teleport" | Command to teleport between servers
 `cloud_cmd_invite` | string | "!invite" | Command to invite players from other servers
