@@ -199,7 +199,7 @@ Option | Type | Default | What it does
 `http_debug` | bool | no | Show extra debug info related to CURL usage in the server console
 `http_enable` | bool | yes | Enable libcurl for downloading stuff via http(s)<br><br>Required for<br>- Remote ban files<br>- VPN detection<br>- Loading remote anticheat configs<br>- ASN banning
 `http_verifyssl` | bool | yes | When downloading a file via https, verify the TLS certificate is signed, valid, trusted and the common name on the cert matches the domain in the URL. Q2admin doesn't download and execute arbitrary files from the internet, so certificate issues are fairly low risk. Try disabling this if you're having trouble fetching https files (especially with https redirects)
-`impulsestokickon` | string | ??? | A list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu
+`impulsestokickon` | string | "" | A comma-separated list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu. Default is empty, but a good value for this is "`169, 170, 171, 172, 173, 174, 175`"
 `inverted_command[1-4]` | string | "" | Private commands stuffed to a player as part of the standard proxy check.
 `ip_limit` | number | 0 | The number of players allowed from the same IP address. Exceeding this limit kicks the player.<br><br>0 = unlimited/no filtering
 `ip_limit_vpn` | number | 0 | The number of players allowed from the same VPN provider. The ASN number of the provider is used here, so players can be on discontiguous netblocks and still be kicked.<br><br>0 = unlimited/no filtering
