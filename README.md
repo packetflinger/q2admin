@@ -129,7 +129,7 @@ CVAR | Purpose | Default
 
 
 ### Config Options
-Set these options in the main q2admin config files
+Set these options in the main q2admin config files. Unfortunately, many of these options are very poorly named and can lead to confusion. They've been in use for decades now and will probaby remain for backward compatability for the foreseeable future.
 Option | Type | Default | What it does
 --- | --- | --- | ---
 `adminpassword` | string | "" | A password to use to auth as an admin
