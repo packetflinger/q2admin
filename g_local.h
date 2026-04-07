@@ -76,6 +76,9 @@ extern edict_t *g_edicts;
 #define GMF_ALLOW_INDEX_OVERFLOW    BIT(14)     // game wants PF_FindIndex() to return 0 on overflow
 #define GMF_PROTOCOL_EXTENSIONS     BIT(15)     // game supports protocol extensions
 
+// Both game and server need to support the feature
+#define FEATURE_SUPPORT(f)          (((int)g_feature->value & f) && ((int)sv_feature & f))
+
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
 #define ALLOWED_MAXCMDS_SAFETY         45
