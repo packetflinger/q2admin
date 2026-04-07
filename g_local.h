@@ -62,6 +62,20 @@ extern edict_t *g_edicts;
 #define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
 #define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
+// R1Q2 and Q2PRO specific features
+#define GMF_CLIENTNUM               BIT(0)      // game sets clientNum gclient_s field
+#define GMF_PROPERINUSE             BIT(1)      // game maintains edict_s inuse field properly
+#define GMF_MVDSPEC                 BIT(2)      // game is dummy MVD client aware
+#define GMF_WANT_ALL_DISCONNECTS    BIT(3)      // game wants ClientDisconnect() for non-spawned clients
+
+// Q2PRO specific features
+#define GMF_ENHANCED_SAVEGAMES      BIT(10)     // game supports safe/portable savegames
+#define GMF_VARIABLE_FPS            BIT(11)     // game supports variable server FPS
+#define GMF_EXTRA_USERINFO          BIT(12)     // game wants extra userinfo after normal userinfo
+#define GMF_IPV6_ADDRESS_AWARE      BIT(13)     // game supports IPv6 addresses
+#define GMF_ALLOW_INDEX_OVERFLOW    BIT(14)     // game wants PF_FindIndex() to return 0 on overflow
+#define GMF_PROTOCOL_EXTENSIONS     BIT(15)     // game supports protocol extensions
+
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
 #define ALLOWED_MAXCMDS_SAFETY         45
@@ -334,7 +348,9 @@ enum _commands {
 #define MINIMUMTIMEOUT  5
 #define MAXSTARTTRY     500
 
-extern cvar_t *rcon_password,
+extern cvar_t *g_features,      // features the game supports
+              *sv_features,     // features the server supports
+              *rcon_password,
               *gamedir,
               *maxclients,
               *logfile,

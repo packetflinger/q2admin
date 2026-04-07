@@ -40,6 +40,7 @@ cvar_t *configfile_rcon;
 cvar_t *configfile_spawn;
 cvar_t *configfile_vote;
 cvar_t *gamedir;
+cvar_t *g_features;
 cvar_t *logfile;
 cvar_t *maxclients;
 cvar_t *port;
@@ -54,6 +55,7 @@ cvar_t *q2adminhashlist_dir;
 cvar_t *rcon_password;
 cvar_t *rconpassword;   // why?
 cvar_t *serverbindip;
+cvar_t *sv_features;
 cvar_t *tune_spawn_bfg;
 cvar_t *tune_spawn_chaingun;
 cvar_t *tune_spawn_grenadelauncher;
@@ -443,6 +445,14 @@ void InitGame(void) {
     profile_stop(2, "mod->InitGame", 0, NULL);
 
     G_MergeEdicts();
+
+    g_features = gi.cvar("g_features", "0", CVAR_NOSET);
+    sv_features = gi.cvar("sv_features", "0", CVAR_NOSET);
+
+    if (q2a_developer) {
+        gi.dprintf("Game supports: %s\n", featuresToString((int)g_features->value));
+        gi.dprintf("Server supports: %s\n", featuresToString((int)sv_features->value));
+    }
 
     maxclients = gi.cvar("maxclients", "4", 0);
     logfile = gi.cvar("logfile", "0", 0);
@@ -1953,4 +1963,45 @@ void ReadLevel(char *filename) {
     ge_mod->ReadLevel(filename);
     G_MergeEdicts();
     profile_stop(1, "q2admin->ReadLevel", 0, NULL);
+}
+
+/**
+ * Build a string of what's included in a feature bitmask
+ */
+char *featuresToString(int f) {
+    static char out[256];
+
+    q2a_memset(&out, 0, sizeof(out));
+    if (f & GMF_CLIENTNUM) {
+        q2a_strcat(out, va("proper clientnum, "));
+    }
+    if (f & GMF_PROPERINUSE) {
+        q2a_strcat(out, va("proper inuse, "));
+    }
+    if (f & GMF_MVDSPEC) {
+        q2a_strcat(out, va("MVD client aware, "));
+    }
+    if (f & GMF_WANT_ALL_DISCONNECTS) {
+        q2a_strcat(out, va("proper disconnects, "));
+    }
+    if (f & GMF_ENHANCED_SAVEGAMES) {
+        q2a_strcat(out, va("enhanced saves, "));
+    }
+    if (f & GMF_VARIABLE_FPS) {
+        q2a_strcat(out, va("variable FPS, "));
+    }
+    if (f & GMF_EXTRA_USERINFO) {
+        q2a_strcat(out, va("additional userinfo, "));
+    }
+    if (f & GMF_IPV6_ADDRESS_AWARE) {
+        q2a_strcat(out, va("IPv6, "));
+    }
+    if (f & GMF_ALLOW_INDEX_OVERFLOW) {
+        q2a_strcat(out, va("index overflowing, "));
+    }
+    if (f & GMF_PROTOCOL_EXTENSIONS) {
+        q2a_strcat(out, va("protocol extensions, "));
+    }
+    out[q2a_strlen(out)-2] = 0; // trim the last ", "
+    return out;
 }
