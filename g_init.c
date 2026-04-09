@@ -984,16 +984,50 @@ bool checkReconnectList(char *username) {
 
 /**
  * Called when a new player first connects to the server, before entering the
- * game.
+ * game. This function checks the userinfo string from the client as well.
+ *
+ * If the forward game library supports the GMF_EXTRA_USERINFO feature, the
+ * player's IP will be removed from the standard userinfo and added to the
+ * extended portion (not sure why). Therefore q2admin needs to be aware of
+ * this feature and be able to find the client's IP depending on where it is.
+ * When this feature is enabled, the extra data is appended AFTER THE NULL at
+ * the end of the original userinfo string:
+ *
+ *  "\key1\val2\key2\val2<NULL>\exkey1\exval1\exkey2\exval2<NULL>"
+ *
+ * Q2admin will build a new userinfo string combining these into a single
+ * string with only a null at the end. The extra userinfo should include these
+ * key/value pairs:
+ *
+ *     challenge/<number>
+ *     ip/<address:port>  (ex: "192.0.2.3:12345", ex: "[2001:db8::b00b:face]:12345")
+ *     major/<protocol>   (ex: "36" the main protocol version, 34/35/36)
+ *     minor/<protocol>   (ex: "1021" the minor protocol version)
+ *     netchan/<type>     (ex: "1" )
+ *     packetlen/<number> (ex: "1390" default MTU of 1400 with room for headers)
+ *     qport/<number>     (ex: "234" random num for Q2 UDP connection tracking)
+ *     zlib/<number>      ("1" or "0" depending on zlib support)
  *
  * Return values
  *  true  = allow client to proceed connecting (ClientBegin is next)
  *  false = reject the connection
  */
-bool ClientConnect(edict_t *ent, char *userinfo) {
+bool ClientConnect(edict_t *ent, char *ui) {
     int client;
-    char *s;
-    char *skinname;
+    char *s, *skinname, *extra, *userinfo;
+
+    client = getEntOffset(ent) - 1;
+
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        extra = ui + q2a_strlen(ui) + 1;
+        if (q2a_strlen(extra) == 0) {
+            Info_SetValueForKey(ui, "rejmsg", "Error: wonky userinfo.");
+            return false;
+        }
+        userinfo = va("%s%s", ui, extra);
+    } else {
+        userinfo = ui;
+    }
 
     bool ret;
     bool userInfoOverflow = false;
@@ -1006,7 +1040,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     if (runmode == 0) {
-        ret = ge_mod->ClientConnect(ent, userinfo);
+        ret = ge_mod->ClientConnect(ent, ui);
         G_MergeEdicts();
         return ret;
     }
@@ -1044,8 +1078,6 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
             }
         }
     }
-
-    client = getEntOffset(ent) - 1;
 
     q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
@@ -1209,7 +1241,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
 
         if (doConnect) {
             profile_start(2);
-            ret = ge_mod->ClientConnect(ent, userinfo);
+            ret = ge_mod->ClientConnect(ent, ui);
             profile_stop(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
