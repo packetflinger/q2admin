@@ -1094,7 +1094,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
             if (!banOnConnect) {
                 ret = 0;
-                Info_SetValueForKey(userinfo, "rejmsg", "banned: proxy/bot signature found");
+                Info_SetValueForKey(ui, "rejmsg", "banned: proxy/bot signature found");
             } else {
                 proxyinfo[client].clientcommand |= CCMD_BANNED;
                 q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
@@ -1103,7 +1103,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     if (!Info_Validate(userinfo)) {
-        Info_SetValueForKey(userinfo, "rejmsg", "admission denied: invalid client detected");
+        Info_SetValueForKey(ui, "rejmsg", "admission denied: invalid client detected");
         return false;
     }
 
@@ -1143,7 +1143,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
         if (banOnConnect) {
             ret = 0;
-            Info_SetValueForKey(userinfo, "rejmsg", "rejected: invalid IP address");
+            Info_SetValueForKey(ui, "rejmsg", "rejected: invalid IP address");
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strcpy(proxyinfo[client].buffer, "Client doesn't have a valid IP address");
@@ -1152,7 +1152,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
             ret = 0;
-            Info_SetValueForKey(userinfo, "rejmsg", va("banned: %s", currentBanMsg));
+            Info_SetValueForKey(ui, "rejmsg", va("banned: %s", currentBanMsg));
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
