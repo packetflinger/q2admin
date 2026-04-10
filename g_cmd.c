@@ -974,6 +974,12 @@ q2acmd_t q2aCommands[] = {
         &q2a_command_check
     },
     {
+        "q2a_developer",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &q2a_developer
+    },
+    {
         "randomwaitreporttime",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
