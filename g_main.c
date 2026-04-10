@@ -810,7 +810,6 @@ void G_RunFrame(void) {
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
     cvar_t *gamelib;
-    unsigned int i;
 
     dllloaded = false;
     gi = *import;
@@ -877,7 +876,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
         q2a_strcpy(moddir, "baseq2");
     }
 
-    for (i = 0; i < PRIVATE_COMMANDS; i++) {
+    for (int i = 0; i < PRIVATE_COMMANDS; i++) {
         private_commands[i].command[0] = 0;
     }
 
