@@ -1084,6 +1084,15 @@ bool ClientConnect(edict_t *ent, char *ui) {
     proxyinfo[client].enteredgame = ltime;
     proxyinfo[client].userinfo.changed_start = ltime;
 
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        proxyinfo[client].challenge = q2a_atoi(Info_ValueForKey(userinfo, "challenge"));
+        proxyinfo[client].protocol_major = q2a_atoi(Info_ValueForKey(userinfo, "major"));
+        proxyinfo[client].protocol_minor = q2a_atoi(Info_ValueForKey(userinfo, "minor"));
+        proxyinfo[client].mtu = q2a_atoi(Info_ValueForKey(userinfo, "packetlen"));
+        proxyinfo[client].qport = q2a_atoi(Info_ValueForKey(userinfo, "qport"));
+        proxyinfo[client].zlib = q2a_strcmp(Info_ValueForKey(userinfo, "zlib"), "1") == 0;
+    }
+
     ret = 1;
 
     if (client < maxclients->value) {

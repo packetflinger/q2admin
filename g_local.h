@@ -211,6 +211,12 @@ typedef struct {
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply
     hack_t hack;                    // all hack-related properties
+    int protocol_major;             // 34=old clients, 35=r1q2, 36=q2pro
+    int protocol_minor;
+    int challenge;                  // random number issued prior to connecting
+    int mtu;                        // packet length set for client
+    int qport;                      // for UDP connection tracking
+    bool zlib;                      // is client using zlib compression?
 } proxyinfo_t;
 
 typedef struct {
