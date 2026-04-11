@@ -120,9 +120,6 @@ extern vec3_t vec3_origin;
 
 struct cplane_s;
 
-#define nanmask (255<<23)
-#define IS_NAN(x) (((*(int *)&x)&nanmask)==nanmask)
-
 #if !defined C_ONLY
   extern long Q_ftol(float f);
 #else
