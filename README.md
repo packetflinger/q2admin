@@ -56,7 +56,6 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
   * Allow voting for any command with args
   * Adds voting to unsupported mods (Rocket Arena 2)
 * VPN detection
-* Variable FPS support
 * Very flexible string handling
   * Exact matches (x == y)
   * Starting with... (x at the beginning of y
