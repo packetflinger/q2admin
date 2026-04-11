@@ -91,21 +91,8 @@ extern edict_t *g_edicts;
 // protocol bytes that can be directly added to messages
 #define SVC_STUFFTEXT                  11
 
-// variable server FPS
-#if USE_FPS
-  #define HZ            game.framerate
-  #define FRAMETIME     game.frametime
-  #define FRAMEDIV      game.framediv
-  #define FRAMESYNC     !(level.framenum % game.framediv)
-#else
-  #define HZ            BASE_FRAMERATE
-  #define FRAMETIME     BASE_FRAMETIME_1000
-  #define FRAMEDIV      1
-  #define FRAMESYNC     1
-#endif
-
-#define SECS_TO_FRAMES(seconds)        (int)((seconds) * HZ)
-#define FRAMES_TO_SECS(frames)         (int)((frames) * FRAMETIME)
+#define SECS_TO_FRAMES(seconds)        (int)((seconds) * hz)
+#define FRAMES_TO_SECS(frames)         (int)((frames) * frametime)
 
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME                       765  // clear when unloading the dll
@@ -424,6 +411,7 @@ extern bool mapcfgexec;
 extern bool checkClientIpAddress;
 extern bool votecountnovotes;
 
+extern int hz;
 extern int votepasspercent;
 extern int voteminclients;
 extern int clientMaxVoteTimeout;
@@ -503,6 +491,7 @@ extern int zbotdetectactivetimeout;
 extern int lframenum;
 
 extern float ltime;
+extern float frametime;
 
 extern char *impulsemessages[];
 extern char cmdpassedvote[2048];

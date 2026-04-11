@@ -98,11 +98,6 @@ do { \
 #define PRINT_DEVELOPER	1  // only print when "developer 1"
 #define PRINT_ALERT		2
 
-#define BASE_FRAMERATE          10
-#define BASE_FRAMETIME          100
-#define BASE_1_FRAMETIME        0.01f   // 1/BASE_FRAMETIME
-#define BASE_FRAMETIME_1000     0.1f    // BASE_FRAMETIME/1000
-
 // destination class for gi.multicast()
 
 typedef enum {

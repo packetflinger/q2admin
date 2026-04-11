@@ -131,6 +131,7 @@ struct chatflood_s floodinfo = {
 };
 bool fpsFloodExempt                     = false;
 int framesperprocess                    = 0;
+float frametime                         = 0.1;  // seconds per frame
 char gamelibrary[MAX_QPATH]             = ""; // game library from config file
 bool gamemaptomap                       = false;
 int gl_driver_check                     = 0;
@@ -141,6 +142,7 @@ char http_cacert_path[256]              = "/etc/ssl/certs";
 bool http_debug                         = false;
 bool http_enable                        = true;
 bool http_verifyssl                     = true;
+int  hz                                 = 10;
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 char lanip[256]                         = "";
@@ -452,6 +454,12 @@ void InitGame(void) {
     if (q2a_developer) {
         gi.dprintf("Game supports: %s\n", featuresToString((int)g_features->value));
         gi.dprintf("Server supports: %s\n", featuresToString((int)sv_features->value));
+    }
+
+    if (FEATURE_SUPPORTED(GMF_VARIABLE_FPS)) {
+        hz = (int) gi.cvar("sv_fps", "10", CVAR_NOSET)->value;
+        frametime = (float) 1 / hz;
+        gi.cprintf(NULL, PRINT_HIGH, "[q2admin] server fps=%d\n", hz);
     }
 
     maxclients = gi.cvar("maxclients", "4", 0);

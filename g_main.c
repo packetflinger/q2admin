@@ -112,7 +112,7 @@ void G_RunFrame(void) {
     profile_start(1);
 
     lframenum++;
-    ltime = lframenum * FRAMETIME;
+    ltime = lframenum * frametime;
 
     if (serverinfoenable && (lframenum > 10)) {
         Q_snprintf(buffer, sizeof(buffer), "set q2admin \"%s\" s\n", version);
