@@ -281,7 +281,24 @@ Option | Type | Default | What it does
 
 ### `ban`
 
-Add an entry to the banlist
+Add an entry to the banlist. The action of each entry can either be exclusionary (keeping players out (the default)) or inclusionary (allowing players in). Every filter defined in a ban command must match in order for the action to apply, if not, the opposite action is applied. Ban checking stops at the point where the first entry matches a player. This means exceptions (inclusion rules meant to override some other exclusion rule) have to match first. Ban entries are checked from newest to oldest or in the context of the banlist file, from bottom up. New ban commands are checked against all currently players immediately unless the `NOCHECK` parameter is used. 
+
+Player attributes available for filtering:
+* Player name
+* IP address
+* ASN
+* Player client version
+
+Additional controls
+* Password (inclusionary)
+* Max number of connections (inclusionary)
+* Custom messages to affected players
+* Text flood controls
+* Time-to-live
+* Materialization
+
+To deny access to any players matching a rule, use the `-` modifier. To allow access to matching players use the `+` modifier. 
+
 ```
 sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
 
