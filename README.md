@@ -64,13 +64,13 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
   * Globbing (`q2dm*`)
   * Full regular expression support (`^q2dm[1-8]$`)
 
+## Compiling
 
-## Compiling for Linux
+### Linux
 
-Simply run `make` in the root folder 
+Simply run `make` in the mod source directory
 
-
-## Compiling for Windows using MinGW
+### Windows (via MinGW)
 
 Edit `.config-win32mingw` file to suit your environment and rename it to `.config`. Then run `make` to build your DLL.
 
@@ -283,6 +283,8 @@ Option | Type | Default | What it does
 
 Add an entry to the banlist. The action of each entry can either be exclusionary (keeping players out (the default)) or inclusionary (allowing players in). Every filter defined in a ban command must match in order for the action to apply, if not, the opposite action is applied. Ban checking stops at the point where the first entry matches a player. This means exceptions (inclusion rules meant to override some other exclusion rule) have to match first. Ban entries are checked from newest to oldest or in the context of the banlist file, from bottom up. New ban commands are checked against all currently players immediately unless the `NOCHECK` parameter is used. 
 
+Related commands: `listbans`, `delban`
+
 Player attributes available for filtering:
 * Player name
 * IP address
@@ -295,40 +297,59 @@ Additional controls
 * Custom messages to affected players
 * Text flood controls
 * Time-to-live
-* Materialization
-
-To deny access to any players matching a rule, use the `-` modifier. To allow access to matching players use the `+` modifier. 
+* Materialization 
 
 ```
-sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+// Syntax
+sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] \
+        [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] \
+        [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] \
+        [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] \
+        [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+
 
 Examples:
-// don't allow players with names containing nametoban, show them the message "not allowed"
+// Don't allow players with names containing nametoban, show them
+// the message "not allowed"
 sv !ban - NAME LIKE "nametoban" MSG "not allowed"
 
-// don't allow any player using q2pro r1908
+// Don't allow anyone with a variation of the name claire
+// Matches "CLAIRE" "Claire" "cL4ire" "clA1rE" "clair3"
+sv !ban - NAME RE "^[Cc][Ll][Aa4][Ii1][Rr][Ee3]$" MSG "go away"
+
+// Don't allow any player using q2pro r1908
 sv !ban - VERSION RE "^q2pro.*r1908.+"
 
-// allow players to use the name claire only if they have the right password.
-// passwords are supplied as "pw" in the userinfo
+// Allow players to use the name claire only if they have the
+// correct password. Passwords are supplied as "pw" in the userinfo:
+// "set pw 'superpassword' u" 
 sv !ban + NAME "claire" PASSWORD "superpassword"
 
-// don't allow a specific IPv4 address
+// Don't allow a specific IP addresses (or CIDR ranges)
 sv !ban - IP 192.0.2.3/32
+sv !ban - IP 10.0.5.23
+sv !ban - IP 2001:db8::face:b00b
+sv !ban - IP 2001:db8:c0ff:ee::/96
 
-// don't allow players named claire from a specific IPv6 address
-sv !ban - NAME RE "^claire$" IP 2001:db8::face:b00b/128 MSG "go away"
+// Only allow players from a specific IP range
+sv !ban + IP 10.11.12.0/24
 
-// don't allow any VPN address
+// Don't allow players named claire from a specific IPv6 address
+sv !ban - NAME RE "^claire$" IP 2001:db8:0:a11:b33f:7ac0 MSG "go away"
+
+// Don't allow any VPN clients
 sv !ban - IP VPN MSG "vpns are not allowed"
 
-// don't allow anyone from Charter Communications [as7843]
+// Don't allow anyone from Charter Communications [as7843]
+// You can find these on sites like https://hackertarget.com/as-ip-lookup/
 sv !ban - ASN as7843 MSG "Charter customers not allowed"  
 ```
 
 ### `chatban`
 
-Add an entry to the chatban list
+Add an entry to the chatban list. This acts just like the `ban` command for chat messages.
+
+Related commands: `delchatban`, `listchatbans`
 ```
 sv !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]
 
@@ -353,7 +374,9 @@ sv !chatfloodprotect 10 5 30
 
 ### `checkvarcmd`
 
-Manually add an entry to the checkvar list. 
+Manually add an entry to the checkvar list. These ensure client-side variables are set to specific values or fall within specific ranges. If a value does not match the client will be stuffed the appropriate value.
+
+Related commands: `checkvardel`
 
 ```
 Syntax:
