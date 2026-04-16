@@ -42,44 +42,6 @@ void HandleDownload(download_t *download, char *buff, int len, int code) {
 }
 
 /**
- * Properly escapes a path with HTTP %encoding. libcurl's function seems to
- * treat '/' and such as illegal chars and encodes almost the entire URL...
- */
-static void HTTP_EscapePath(const char *filePath, char *escaped) {
-    int     i;
-    size_t  len;
-    char    *p;
-
-    p = escaped;
-
-    len = strlen(filePath);
-    for (i = 0; i < len; i++) {
-        if (!isalnum (filePath[i]) && filePath[i] != ';' && filePath[i] != '/' &&
-            filePath[i] != '?' && filePath[i] != ':' && filePath[i] != '@' && filePath[i] != '&' &&
-            filePath[i] != '=' && filePath[i] != '+' && filePath[i] != '$' && filePath[i] != ',' &&
-            filePath[i] != '[' && filePath[i] != ']' && filePath[i] != '-' && filePath[i] != '_' &&
-            filePath[i] != '.' && filePath[i] != '!' && filePath[i] != '~' && filePath[i] != '*' &&
-            filePath[i] != '\'' && filePath[i] != '(' && filePath[i] != ')') {
-            sprintf (p, "%%%02x", filePath[i]);
-            p += 3;
-        } else {
-            *p = filePath[i];
-            p++;
-        }
-    }
-    p[0] = 0;
-
-    //using ./ in a url is legal, but all browsers condense the path and some IDS / request
-    //filtering systems act a bit funky if http requests come in with uncondensed paths.
-    len = strlen(escaped);
-    p = escaped;
-    while ((p = strstr (p, "./"))) {
-        q2a_memmove(p, p+2, len - (p - escaped) - 1);
-        len -= 2;
-    }
-}
-
-/**
  * libcurl callback
  */
 static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream) {
