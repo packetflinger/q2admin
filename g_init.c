@@ -1128,7 +1128,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     char *val;
     for (int i = 0; required_ui_keys[i] != NULL; i++) {
         val = Info_ValueForKey(userinfo, required_ui_keys[i]);
-        if (*val == NULL) {
+        if (val[0] == 0) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
             return false;
         }
