@@ -177,8 +177,6 @@ void HTTP_ResolveVPNServer(void) {
  * Actually starts a download by adding it to the curl multi handle.
  */
 void HTTP_StartDownload(dlhandle_t *dl) {
-    char escapedFilePath[1024*3];
-
     dl->tempBuffer = NULL;
     dl->speed = 0;
     dl->fileSize = 0;
