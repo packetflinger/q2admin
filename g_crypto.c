@@ -335,7 +335,7 @@ void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
 
     EVP_DigestInit_ex2(ctx, md, NULL);
     EVP_DigestUpdate(ctx, src, src_len);
-    EVP_DigestFinal_ex(ctx, dest, &md_len);
+    EVP_DigestFinal_ex(ctx, (unsigned char *)dest, &md_len);
 
     EVP_MD_CTX_free(ctx);
 }
