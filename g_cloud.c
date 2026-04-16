@@ -513,7 +513,7 @@ void CA_SendMessages(void) {
  */
 void CA_ReadMessages(void) {
     uint32_t ret, packet_count;
-    byte iv[AES_IV_LEN], temp_iv[DIGEST_LEN];
+    byte temp_iv[DIGEST_LEN];
     struct timeval tv;
     message_queue_t *in, dec;
 
