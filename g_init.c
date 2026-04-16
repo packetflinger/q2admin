@@ -1022,7 +1022,7 @@ bool checkReconnectList(char *username) {
  */
 bool ClientConnect(edict_t *ent, char *ui) {
     int client;
-    char *s, *skinname, *extra, *userinfo;
+    char *skinname, *extra, *userinfo;
 
     client = getEntOffset(ent) - 1;
 
