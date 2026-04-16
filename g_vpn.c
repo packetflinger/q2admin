@@ -66,10 +66,10 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
 
         security = json_getProperty(root, "security");
         if (security) {
-            v->is_vpn = Q_stricmp(json_getPropertyValue(security, "vpn"), "true") == 0;
-            v->is_proxy = Q_stricmp(json_getPropertyValue(security, "proxy"), "true") == 0;
-            v->is_tor = Q_stricmp(json_getPropertyValue(security, "tor"), "true") == 0;
-            v->is_relay = Q_stricmp(json_getPropertyValue(security, "relay"), "true") == 0;
+            v->is_vpn = Q_stricmp((char *)json_getPropertyValue(security, "vpn"), "true") == 0;
+            v->is_proxy = Q_stricmp((char *)json_getPropertyValue(security, "proxy"), "true") == 0;
+            v->is_tor = Q_stricmp((char *)json_getPropertyValue(security, "tor"), "true") == 0;
+            v->is_relay = Q_stricmp((char *)json_getPropertyValue(security, "relay"), "true") == 0;
             if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
                 v->state = VPN_POSITIVE;
             }
