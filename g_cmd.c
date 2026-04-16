@@ -1999,7 +1999,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     uint8_t like, numfound;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
-    re_t r;
+    re_t r = {0};
     int matchlen;
 
     numfound = 0;
@@ -2109,7 +2109,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                     case 2: // RE
                         q2a_strcpy(strbuffer, proxyinfo[clienti].name);
                         q_strupr(strbuffer);
-                        if (r && re_matchp(r, strbuffer, &matchlen) == 0) {
+                        if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
