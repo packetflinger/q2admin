@@ -201,7 +201,7 @@ void displayNextVote(edict_t *ent, int client, long votecmd) {
     if (votecmd < maxvote_cmds) {
         switch (votecmds[votecmd].type) {
             case VOTE_SW:
-                gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
             case VOTE_EX:
                 gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
