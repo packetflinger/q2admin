@@ -2152,7 +2152,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
     uint8_t like, matchcount;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
-    re_t r;
+    re_t r = {0};
     int matchlen;
 
     foundclienti = -1;
