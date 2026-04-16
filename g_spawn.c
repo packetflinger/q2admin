@@ -229,7 +229,7 @@ void displayNextSpawn(edict_t *ent, int client, long spawncmd) {
     if (spawncmd < maxspawn_cmds) {
         switch (spawncmds[spawncmd].type) {
             case SPAWN_SW:
-                gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
             case SPAWN_EX:
                 gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
