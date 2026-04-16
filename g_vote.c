@@ -207,7 +207,7 @@ void displayNextVote(edict_t *ent, int client, long votecmd) {
                 gi.cprintf(ent, PRINT_HIGH, "%4ld EX:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
             case VOTE_RE:
-                gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld RE:\"%s\"\n", votecmd + 1, votecmds[votecmd].votecmd);
                 break;
         }
         votecmd++;
