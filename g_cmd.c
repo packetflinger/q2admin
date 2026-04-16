@@ -2109,7 +2109,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                     case 2: // RE
                         q2a_strcpy(strbuffer, proxyinfo[clienti].name);
                         q_strupr(strbuffer);
-                        if (re_matchp(r, strbuffer, &matchlen) == 0) {
+                        if (r && re_matchp(r, strbuffer, &matchlen) == 0) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
@@ -3503,7 +3503,7 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
  */
 void impulsesToKickOnInit(char *arg) {
     while (*arg && maxImpulses < MAXIMPULSESTOTEST) {
-        impulsesToKickOn[maxImpulses] = q2a_atoi(arg);
+        impulsesToKickOn[(int)maxImpulses] = q2a_atoi(arg);
         maxImpulses++;
         while (*arg && *arg != ' ') {
             arg++;
