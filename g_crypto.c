@@ -129,7 +129,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
         return len;
     }
 
-    if (EVP_PKEY_decrypt(ctx, NULL, &len, src, src_len) <= 0) {
+    if (EVP_PKEY_decrypt(ctx, NULL, &len, (const unsigned char *)src, src_len) <= 0) {
         CA_printf("error getting decrypt size\n");
         return 0;
     }
@@ -141,7 +141,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
         return 0;
     }
 
-    if (EVP_PKEY_decrypt(ctx, newplain, &len, src, src_len) <= 0) {
+    if (EVP_PKEY_decrypt(ctx, (unsigned char *)newplain, &len, (const unsigned char *)src, src_len) <= 0) {
         CA_printf("error decrypting\n");
         return 0;
     }
@@ -173,7 +173,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
         return 0;
     }
 
-    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, in, inlen) <= 0) {
+    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
         CA_printf("encrypt error\n");
         return 0;
     }
@@ -184,7 +184,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
         CA_printf("malloc error while encrypting\n");
     }
 
-    if (EVP_PKEY_encrypt(ctx, out1, &cipherlen, in, inlen) <= 0) {
+    if (EVP_PKEY_encrypt(ctx, (unsigned char *)out1, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
         CA_printf("error encrypting\n");
     }
 
