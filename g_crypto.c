@@ -326,7 +326,7 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
  * of the DIGEST_LEN macro in g_cloud.h too!!
  */
 void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
-    EVP_MD *md;
+    const EVP_MD *md;
     EVP_MD_CTX *ctx;
     unsigned int md_len;
 
