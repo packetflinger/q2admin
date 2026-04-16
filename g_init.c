@@ -280,7 +280,7 @@ const char *entAllowlist[MAX_ENTALLOWLIST] = {
  */
 bool entSwapAllowed(char *cn) {
     for (int i = 0; i < MAX_ENTALLOWLIST; i++) {
-        if (Q_stricmp(entAllowlist[i], cn) == 0) {
+        if (Q_stricmp((char *)entAllowlist[i], cn) == 0) {
             return true;
         }
     }
