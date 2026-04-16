@@ -286,7 +286,7 @@ void G_RunFrame(void) {
                         maxReconnectList++;
                     }
 
-                    q2a_strncpy(buffer, ("%s\n", defaultreconnectmessage), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer));
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
                     generateRandomString(ReconnectString, 5);
