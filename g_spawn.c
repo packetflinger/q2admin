@@ -232,7 +232,7 @@ void displayNextSpawn(edict_t *ent, int client, long spawncmd) {
                 gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
             case SPAWN_EX:
-                gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld EX:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
                 break;
             case SPAWN_RE:
                 gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\"\n", spawncmd + 1, spawncmds[spawncmd].spawncmd);
