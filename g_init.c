@@ -893,11 +893,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
  */
 bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* userInfoOverflow) {
     char *ip = FindIpAddressInUserInfo(userinfo, userInfoOverflow);
-
     if (*ip) {
-        unsigned int i;
-        int num;
-
         if (q2a_strcmp(ip, "loopback") == 0) {
             net_parseIP(&proxyinfo[client].address, "127.0.0.1:0");
         } else {
@@ -906,7 +902,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
     }
 
     ip = Info_ValueForKey(userinfo, "Nitro2");
-
     if (*ip) {
         if (proxy_nitro2) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
@@ -916,7 +911,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
     }
 
     ip = Info_ValueForKey(userinfo, "bwproxy");
-
     if (*ip) {
         if (proxy_bwproxy) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
@@ -924,7 +918,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
             return true;
         }
     }
-
     return false;
 }
 
