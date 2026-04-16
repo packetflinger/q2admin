@@ -54,7 +54,6 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
     vpn_t *v;
     json_t mem[32];
     const json_t *root, *security, *net;
-    const char *vpn, *proxy, *tor, *relay;
     int i = getEntOffset(download->initiator) - 1;
 
     if (buff) {
