@@ -815,7 +815,7 @@ void generateRandomString(char *buffer, int length) {
 pathtype_t validatePath(const char *s) {
     int res = PATH_VALID;
 
-    if (*s == "/") {
+    if (*s == '/') {
         return PATH_INVALID;
     }
     if (stringContains(s, "..")) {
