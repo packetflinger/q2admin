@@ -1584,7 +1584,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         if (proxyinfo[client].userinfo.maxfps == 0) {
             gi.bprintf(PRINT_HIGH, (PRV_KICK_MSG, proxyinfo[client].name));
             
-            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, (PRV_KICK_MSG, proxyinfo[client].name));
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, proxyinfo[client].name));
         } else {
             if (maxfpsallowed) {
                 if (proxyinfo[client].userinfo.maxfps > maxfpsallowed) {
