@@ -512,7 +512,7 @@ void CA_SendMessages(void) {
  * Accept any incoming messages from the server
  */
 void CA_ReadMessages(void) {
-    uint32_t ret, packet_count;
+    uint32_t ret;
     byte temp_iv[DIGEST_LEN];
     struct timeval tv;
     message_queue_t *in, dec;
