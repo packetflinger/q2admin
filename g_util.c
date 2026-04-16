@@ -456,7 +456,7 @@ int isBlank(char *buff1) {
 char *processstring(char *output, char *input, int max, char end) {
     while (*input && *input != end && max) {
         if (*input == '\\') {
-            *input++;
+            input++;
 
             if ((*input == 'n') || (*input == 'N')) {
                 *output++ = '\n';
