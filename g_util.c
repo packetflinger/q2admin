@@ -818,7 +818,7 @@ pathtype_t validatePath(const char *s) {
     if (*s == '/') {
         return PATH_INVALID;
     }
-    if (stringContains(s, "..")) {
+    if (stringContains((char *)s, "..")) {
         return PATH_INVALID;
     }
     for (; *s; s++) {
