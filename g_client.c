@@ -407,6 +407,8 @@ void checkClientDeadlines(int c) {
  */
 char *hacktypeToString(hacktype_t h) {
     switch (h) {
+    case HT_NONE:
+        return "none";
     case HT_GENERAL_PROXY:
         return "proxy";
     case HT_GENERAL_AIMBOT:
