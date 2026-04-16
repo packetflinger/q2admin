@@ -283,11 +283,11 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
         return 0;
     }
 
-    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
-    EVP_EncryptUpdate(c->e_ctx, dest + dest_len, &dest_len, src, src_len);
+    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, (const unsigned char *)c->session_key, (const unsigned char *)c->initial_value);
+    EVP_EncryptUpdate(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len, (const unsigned char *)src, src_len);
     written += dest_len;
 
-    EVP_EncryptFinal_ex(c->e_ctx, dest + dest_len, &dest_len);
+    EVP_EncryptFinal_ex(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len);
     written += dest_len;
 
     return written;
