@@ -1465,8 +1465,6 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
 void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     int client;
     bool passon;
-
-    char *s = Info_ValueForKey(userinfo, "name");
     char tmptext[128];
     char *cl_max_temp;
     char *cl_max_curr;
