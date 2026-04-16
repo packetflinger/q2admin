@@ -485,7 +485,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strncpy(buffer, ("%s\n", zbotuserdisplay), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer));
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
