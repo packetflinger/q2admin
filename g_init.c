@@ -1156,7 +1156,6 @@ bool ClientConnect(edict_t *ent, char *ui) {
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
     } else if (checkClientIpAddress && !HASIP(client)) {
-        char *ip = FindIpAddressInUserInfo(userinfo, 0);
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
         if (banOnConnect) {
             ret = 0;
