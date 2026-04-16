@@ -200,7 +200,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
 void G_RSAError()
 {
     int error = 0;
-    char *msg;
+    char *msg = "";
 
     ERR_load_crypto_strings();
 
