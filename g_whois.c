@@ -268,19 +268,19 @@ void whois_read_file(void) {
     WHOIS_COUNT = 0;
     while ((!feof(f)) && (WHOIS_COUNT < whois_active)) {
         fscanf(f, "%i %s %s %s %s %s %s %s %s %s %s %s %s",
-                whois_details[WHOIS_COUNT].id,
-                whois_details[WHOIS_COUNT].ip,
-                whois_details[WHOIS_COUNT].seen,
-                whois_details[WHOIS_COUNT].dyn[0].name,
-                whois_details[WHOIS_COUNT].dyn[1].name,
-                whois_details[WHOIS_COUNT].dyn[2].name,
-                whois_details[WHOIS_COUNT].dyn[3].name,
-                whois_details[WHOIS_COUNT].dyn[4].name,
-                whois_details[WHOIS_COUNT].dyn[5].name,
-                whois_details[WHOIS_COUNT].dyn[6].name,
-                whois_details[WHOIS_COUNT].dyn[7].name,
-                whois_details[WHOIS_COUNT].dyn[8].name,
-                whois_details[WHOIS_COUNT].dyn[9].name);
+                &whois_details[WHOIS_COUNT].id,
+                &whois_details[WHOIS_COUNT].ip,
+                &whois_details[WHOIS_COUNT].seen,
+                &whois_details[WHOIS_COUNT].dyn[0].name,
+                &whois_details[WHOIS_COUNT].dyn[1].name,
+                &whois_details[WHOIS_COUNT].dyn[2].name,
+                &whois_details[WHOIS_COUNT].dyn[3].name,
+                &whois_details[WHOIS_COUNT].dyn[4].name,
+                &whois_details[WHOIS_COUNT].dyn[5].name,
+                &whois_details[WHOIS_COUNT].dyn[6].name,
+                &whois_details[WHOIS_COUNT].dyn[7].name,
+                &whois_details[WHOIS_COUNT].dyn[8].name,
+                &whois_details[WHOIS_COUNT].dyn[9].name);
 
         //convert all � back to spaces
         temp_len = strlen(whois_details[WHOIS_COUNT].ip);
