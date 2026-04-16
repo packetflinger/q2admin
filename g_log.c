@@ -682,7 +682,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
  *
  */
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum) {
-    gi.cprintf(ent, PRINT_HIGH, "  %3d    %s  %s\n", logfilenum + 1, logFiles[logfilenum].mod ? "Yes" : " No", logFiles[logfilenum].filename);
+    gi.cprintf(ent, PRINT_HIGH, "  %3ld    %s  %s\n", logfilenum + 1, logFiles[logfilenum].mod ? "Yes" : " No", logFiles[logfilenum].filename);
     for (logfilenum++; logfilenum < MAXLOGS; logfilenum++) {
         if (logFiles[logfilenum].inuse) {
             break;
