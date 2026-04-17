@@ -1135,14 +1135,14 @@ void CA_Print(uint8_t level, char *text) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
     }
-    
-    if (!(cloud.flags & CFL_CHAT)) {
+
+    if ((cloud.flags & CFL_CHAT) != 0) {
         return;
     }
 
     CA_WriteByte(CMD_PRINT);
     CA_WriteByte(level);
-    CA_WriteString("%s",text);
+    CA_WriteString("%s", text);
 }
 
 /**
