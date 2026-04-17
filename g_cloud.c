@@ -1113,8 +1113,7 @@ void CA_PlayerConnect(edict_t *ent) {
  * Called when a player disconnects
  */
 void CA_PlayerDisconnect(edict_t *ent) {
-    int8_t cl;
-    cl = getEntOffset(ent) - 1;
+    int8_t cl = getEntOffset(ent) - 1;
 
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
