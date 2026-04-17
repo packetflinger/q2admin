@@ -1097,8 +1097,7 @@ void CA_ReadData(void *out, size_t len) {
  * ClientBegin().
  */
 void CA_PlayerConnect(edict_t *ent) {
-    int8_t cl;
-    cl = getEntOffset(ent) - 1;
+    int8_t cl = getEntOffset(ent) - 1;
 
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
