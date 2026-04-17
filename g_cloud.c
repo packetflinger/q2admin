@@ -1186,7 +1186,7 @@ void CA_Invite(uint8_t cl, const char *text) {
         return;
     }
 
-    if (!(cloud.flags & CFL_INVITE)) {
+    if ((cloud.flags & CFL_INVITE) == 0) {
         return;
     }
 
@@ -1204,7 +1204,7 @@ void CA_Whois(uint8_t cl, const char *name) {
         return;
     }
 
-    if (!(cloud.flags & CFL_WHOIS)) {
+    if ((cloud.flags & CFL_WHOIS) == 0) {
         return;
     }
 
@@ -1222,7 +1222,7 @@ void CA_Frag(uint8_t victim, uint8_t attacker) {
         return;
     }
 
-    if (!(cloud.flags & CFL_FRAGS)) {
+    if ((cloud.flags & CFL_FRAGS) == 0) {
         return;
     }
 
