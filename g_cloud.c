@@ -979,7 +979,7 @@ void CA_WriteByte(uint8_t b) {
  * Read a short (2 bytes) from the message buffer
  */
 uint16_t CA_ReadShort(void) {
-    message_queue_t *q = cloud.queue_in;
+    message_queue_t *q = &cloud.queue_in;
     int s = q->data[q->index] + (q->data[q->index + 1] << 8);
     q->index += 2;
     return s & 0xffff;
@@ -997,7 +997,7 @@ void CA_WriteShort(uint16_t s) {
  * Read 4 bytes from the message buffer
  */
 int32_t CA_ReadLong(void) {
-    message_queue_t *q = cloud.queue_in;
+    message_queue_t *q = &cloud.queue_in;
     int num = q->data[q->index] + (q->data[q->index + 1] << 8) +
             (q->data[q->index + 2] << 16) + (q->data[q->index + 3] << 24);
     q->index += 4;
