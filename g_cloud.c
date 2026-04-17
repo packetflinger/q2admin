@@ -1136,7 +1136,7 @@ void CA_Print(uint8_t level, char *text) {
         return;
     }
 
-    if ((cloud.flags & CFL_CHAT) != 0) {
+    if ((cloud.flags & CFL_CHAT) == 0) {
         return;
     }
 
@@ -1153,7 +1153,7 @@ void CA_Teleport(uint8_t client_id, char *location) {
         return;
     }
 
-    if (!(cloud.flags & CFL_TELEPORT)) {
+    if ((cloud.flags & CFL_TELEPORT) == 0) {
         return;
     }
 
