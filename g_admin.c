@@ -190,22 +190,33 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
     proxyinfo_t *pi = &proxyinfo[user];
     char *ui = pi->userinfo.raw;
 
-    gi.cprintf(ent, PRINT_HIGH, "User Info for \"%s\" [%d]\n",NAME(user), user);
-    gi.cprintf(ent, PRINT_HIGH, "  IP Address   %s\n", IP(user));
-    gi.cprintf(ent, PRINT_HIGH, "  Client ver   %s\n", pi->client_version);
-    gi.cprintf(ent, PRINT_HIGH, "  MSG          %s\n", Info_ValueForKey(ui, "msg"));
-    gi.cprintf(ent, PRINT_HIGH, "  Spectator    %s\n", Info_ValueForKey(ui, "spectator"));
+    gi.cprintf(ent, PRINT_HIGH, "\nUser Info for \"%s\" [%d]\n",NAME(user), user);
+    gi.cprintf(ent, PRINT_HIGH, "  ip address   %s\n", IP(user));
+    gi.cprintf(ent, PRINT_HIGH, "  sw version   %s\n", pi->client_version);
+
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        gi.cprintf(ent, PRINT_HIGH, "  Protocol     %d\n", pi->protocol_major);
+        gi.cprintf(ent, PRINT_HIGH, "  protocol     %d\n", pi->protocol_minor);
+        gi.cprintf(ent, PRINT_HIGH, "  challenge    %d\n", pi->challenge);
+        gi.cprintf(ent, PRINT_HIGH, "  mtu          %d\n", pi->mtu);
+        gi.cprintf(ent, PRINT_HIGH, "  qport        %d\n", pi->qport);
+        gi.cprintf(ent, PRINT_HIGH, "  zlib         %s\n", pi->zlib ? "yes" : "no");
+    }
+
+    gi.cprintf(ent, PRINT_HIGH, "  msg level    %s\n", Info_ValueForKey(ui, "msg"));
+    gi.cprintf(ent, PRINT_HIGH, "  spectator    %s\n", Info_ValueForKey(ui, "spectator"));
     gi.cprintf(ent, PRINT_HIGH, "  cl_maxfps    %s\n", Info_ValueForKey(ui, "cl_maxfps"));
-    gi.cprintf(ent, PRINT_HIGH, "  Gender       %s\n", Info_ValueForKey(ui, "gender"));
-    gi.cprintf(ent, PRINT_HIGH, "  FOV          %s\n", Info_ValueForKey(ui, "fov"));
-    gi.cprintf(ent, PRINT_HIGH, "  Rate         %s\n", Info_ValueForKey(ui, "rate"));
-    gi.cprintf(ent, PRINT_HIGH, "  Skin         %s\n", Info_ValueForKey(ui, "skin"));
-    gi.cprintf(ent, PRINT_HIGH, "  Hand         %s\n", Info_ValueForKey(ui, "hand"));
+    gi.cprintf(ent, PRINT_HIGH, "  gender       %s\n", Info_ValueForKey(ui, "gender"));
+    gi.cprintf(ent, PRINT_HIGH, "  fov          %s\n", Info_ValueForKey(ui, "fov"));
+    gi.cprintf(ent, PRINT_HIGH, "  rate         %s\n", Info_ValueForKey(ui, "rate"));
+    gi.cprintf(ent, PRINT_HIGH, "  skin         %s\n", Info_ValueForKey(ui, "skin"));
+    gi.cprintf(ent, PRINT_HIGH, "  hand         %s\n", Info_ValueForKey(ui, "hand"));
+
     if (strlen(pi->gl_driver)) {
         gi.cprintf(ent, PRINT_HIGH, "  gl_driver    %s\n", pi->gl_driver);
     }
     if (proxyinfo[client].admin_level & ADMIN_LEVEL8) {
-        gi.cprintf(ent, PRINT_HIGH, "  Full Userinfo\n    \"%s\"\n", ui);
+        gi.cprintf(ent, PRINT_HIGH, "\nFull Userinfo:\n  \"%s\"\n", ui);
     }
 }
 

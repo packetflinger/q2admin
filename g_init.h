@@ -13,6 +13,7 @@ void ClientDisconnect(edict_t *ent);
 void ClientUserinfoChanged(edict_t *ent, char *userinfo);
 char *COM_Parse(char **data_p, char **command_p);
 bool entSwapAllowed(char *cn);
+char *featuresToString(int f);
 char *FindIpAddressInUserInfo(char *userinfo, bool *userInfoOverflow);
 void InitGame(void);
 void ReadGame(char *filename);

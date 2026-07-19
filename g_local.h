@@ -62,6 +62,23 @@ extern edict_t *g_edicts;
 #define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
 #define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
 
+// R1Q2 and Q2PRO specific features
+#define GMF_CLIENTNUM               BIT(0)      // game sets clientNum gclient_s field
+#define GMF_PROPERINUSE             BIT(1)      // game maintains edict_s inuse field properly
+#define GMF_MVDSPEC                 BIT(2)      // game is dummy MVD client aware
+#define GMF_WANT_ALL_DISCONNECTS    BIT(3)      // game wants ClientDisconnect() for non-spawned clients
+
+// Q2PRO specific features
+#define GMF_ENHANCED_SAVEGAMES      BIT(10)     // game supports safe/portable savegames
+#define GMF_VARIABLE_FPS            BIT(11)     // game supports variable server FPS
+#define GMF_EXTRA_USERINFO          BIT(12)     // game wants extra userinfo after normal userinfo
+#define GMF_IPV6_ADDRESS_AWARE      BIT(13)     // game supports IPv6 addresses
+#define GMF_ALLOW_INDEX_OVERFLOW    BIT(14)     // game wants PF_FindIndex() to return 0 on overflow
+#define GMF_PROTOCOL_EXTENSIONS     BIT(15)     // game supports protocol extensions
+
+// Both game and server need to support the feature
+#define FEATURE_SUPPORTED(f)          ((((unsigned)g_features->value) & f) == (((unsigned)sv_features->value) & f))
+
 #define PRIVATE_COMMANDS               8
 #define ALLOWED_MAXCMDS                50
 #define ALLOWED_MAXCMDS_SAFETY         45
@@ -74,21 +91,8 @@ extern edict_t *g_edicts;
 // protocol bytes that can be directly added to messages
 #define SVC_STUFFTEXT                  11
 
-// variable server FPS
-#if USE_FPS
-  #define HZ            game.framerate
-  #define FRAMETIME     game.frametime
-  #define FRAMEDIV      game.framediv
-  #define FRAMESYNC     !(level.framenum % game.framediv)
-#else
-  #define HZ            BASE_FRAMERATE
-  #define FRAMETIME     BASE_FRAMETIME_1000
-  #define FRAMEDIV      1
-  #define FRAMESYNC     1
-#endif
-
-#define SECS_TO_FRAMES(seconds)        (int)((seconds) * HZ)
-#define FRAMES_TO_SECS(frames)         (int)((frames) * FRAMETIME)
+#define SECS_TO_FRAMES(seconds)        (int)((seconds) * hz)
+#define FRAMES_TO_SECS(frames)         (int)((frames) * frametime)
 
 // memory tags to allow dynamic memory to be cleaned up
 #define TAG_GAME                       765  // clear when unloading the dll
@@ -194,6 +198,12 @@ typedef struct {
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply
     hack_t hack;                    // all hack-related properties
+    int protocol_major;             // 34=old clients, 35=r1q2, 36=q2pro
+    int protocol_minor;
+    int challenge;                  // random number issued prior to connecting
+    int mtu;                        // packet length set for client
+    int qport;                      // for UDP connection tracking
+    bool zlib;                      // is client using zlib compression?
 } proxyinfo_t;
 
 typedef struct {
@@ -334,7 +344,9 @@ enum _commands {
 #define MINIMUMTIMEOUT  5
 #define MAXSTARTTRY     500
 
-extern cvar_t *rcon_password,
+extern cvar_t *g_features,      // features the game supports
+              *sv_features,     // features the server supports
+              *rcon_password,
               *gamedir,
               *maxclients,
               *logfile,
@@ -399,6 +411,7 @@ extern bool mapcfgexec;
 extern bool checkClientIpAddress;
 extern bool votecountnovotes;
 
+extern int hz;
 extern int votepasspercent;
 extern int voteminclients;
 extern int clientMaxVoteTimeout;
@@ -478,6 +491,7 @@ extern int zbotdetectactivetimeout;
 extern int lframenum;
 
 extern float ltime;
+extern float frametime;
 
 extern char *impulsemessages[];
 extern char cmdpassedvote[2048];
@@ -559,7 +573,6 @@ const char *q2a_inet_ntop (int af, const void *src, char *dst, socklen_t size);
 #define Q2A_REVISION    0
 #endif
 
-#define DEFAULTQ2AMSG       "\nThis server requires %s anti cheat client.\n"
 #define NOMATCH_KICK_MSG    "%s has not provided adequate authentication.\n"
 #define MOD_KICK_MSG        "%s failed the pmodified check on this map, error %d.\n"
 #define PRV_KICK_MSG        "%s is using a modified client.\n"

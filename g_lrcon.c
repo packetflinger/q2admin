@@ -321,15 +321,15 @@ void displayNextLRCon(edict_t *ent, int client, long lrconnum) {
     if (lrconnum < maxlrcon_cmds) {
         switch (lrconcmds[lrconnum].type) {
             case LRC_SW:
-                gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld SW:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
                 break;
 
             case LRC_EX:
-                gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld EX:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
                 break;
 
             case LRC_RE:
-                gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
+                gi.cprintf(ent, PRINT_HIGH, "%4ld RE:\"%s\" \"%s\"\n", lrconnum + 1, lrconcmds[lrconnum].password, lrconcmds[lrconnum].lrconcmd);
                 break;
         }
         lrconnum++;

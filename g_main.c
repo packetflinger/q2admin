@@ -112,7 +112,7 @@ void G_RunFrame(void) {
     profile_start(1);
 
     lframenum++;
-    ltime = lframenum * FRAMETIME;
+    ltime = lframenum * frametime;
 
     if (serverinfoenable && (lframenum > 10)) {
         Q_snprintf(buffer, sizeof(buffer), "set q2admin \"%s\" s\n", version);
@@ -286,7 +286,7 @@ void G_RunFrame(void) {
                         maxReconnectList++;
                     }
 
-                    q2a_strncpy(buffer, ("%s\n", defaultreconnectmessage), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer));
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
                     generateRandomString(ReconnectString, 5);
@@ -413,7 +413,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strncpy(buffer, ("%s\n", zbotuserdisplay), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer));
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -485,7 +485,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strncpy(buffer, ("%s\n", zbotuserdisplay), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer));
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -520,7 +520,10 @@ void G_RunFrame(void) {
             } else if (command == QCMD_LOGZBOT) {
                 logEvent(LT_ZBOT, client, ent, NULL, proxyinfo[client].charindex, 0.0, false);
             } else if (command == QCMD_LOGZBOTIMPULSE) {
-                logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[proxyinfo[client].impulse - 169], proxyinfo[client].impulse, 0.0, false);
+                int idx = proxyinfo[client].impulse - 169;
+                if (0 <= idx && idx <= 7) {
+                    logEvent(LT_ZBOTIMPULSES, client, ent, impulsemessages[idx], proxyinfo[client].impulse, 0.0, false);
+                }
             } else if (command == QCMD_LOGIMPULSE) {
                 logEvent(LT_IMPULSES, client, ent, NULL, proxyinfo[client].impulse, 0.0, false);
             } else if (command == QCMD_CONNECTCMD) {
@@ -810,7 +813,6 @@ void G_RunFrame(void) {
 q_exported game_export_t *GetGameAPI(game_import_t *import) {
     GAMEAPI *getapi;
     cvar_t *gamelib;
-    unsigned int i;
 
     dllloaded = false;
     gi = *import;
@@ -877,11 +879,10 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
         q2a_strcpy(moddir, "baseq2");
     }
 
-    for (i = 0; i < PRIVATE_COMMANDS; i++) {
+    for (int i = 0; i < PRIVATE_COMMANDS; i++) {
         private_commands[i].command[0] = 0;
     }
 
-    q2a_strcpy(client_msg, DEFAULTQ2AMSG);
     q2a_strcpy(zbotuserdisplay, DEFAULTUSERDISPLAY);
     q2a_strcpy(timescaleuserdisplay, DEFAULTTSDISPLAY);
     q2a_strcpy(modifiedclientmsg, DEFAULTMODIFIEDCLIENTMSG);

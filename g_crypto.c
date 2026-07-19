@@ -129,7 +129,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
         return len;
     }
 
-    if (EVP_PKEY_decrypt(ctx, NULL, &len, src, src_len) <= 0) {
+    if (EVP_PKEY_decrypt(ctx, NULL, &len, (const unsigned char *)src, src_len) <= 0) {
         CA_printf("error getting decrypt size\n");
         return 0;
     }
@@ -141,7 +141,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len)
         return 0;
     }
 
-    if (EVP_PKEY_decrypt(ctx, newplain, &len, src, src_len) <= 0) {
+    if (EVP_PKEY_decrypt(ctx, (unsigned char *)newplain, &len, (const unsigned char *)src, src_len) <= 0) {
         CA_printf("error decrypting\n");
         return 0;
     }
@@ -173,7 +173,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
         return 0;
     }
 
-    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, in, inlen) <= 0) {
+    if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
         CA_printf("encrypt error\n");
         return 0;
     }
@@ -184,7 +184,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
         CA_printf("malloc error while encrypting\n");
     }
 
-    if (EVP_PKEY_encrypt(ctx, out1, &cipherlen, in, inlen) <= 0) {
+    if (EVP_PKEY_encrypt(ctx, (unsigned char *)out1, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
         CA_printf("error encrypting\n");
     }
 
@@ -200,7 +200,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
 void G_RSAError()
 {
     int error = 0;
-    char *msg;
+    char *msg = "";
 
     ERR_load_crypto_strings();
 
@@ -283,11 +283,11 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len)
         return 0;
     }
 
-    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
-    EVP_EncryptUpdate(c->e_ctx, dest + dest_len, &dest_len, src, src_len);
+    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, (const unsigned char *)c->session_key, (const unsigned char *)c->initial_value);
+    EVP_EncryptUpdate(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len, (const unsigned char *)src, src_len);
     written += dest_len;
 
-    EVP_EncryptFinal_ex(c->e_ctx, dest + dest_len, &dest_len);
+    EVP_EncryptFinal_ex(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len);
     written += dest_len;
 
     return written;
@@ -308,11 +308,11 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
     if (!(c || c->d_ctx)) {
         return 0;
     }
-    EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, c->session_key, c->initial_value);
-    EVP_DecryptUpdate(c->d_ctx, dest + dest_len, &dest_len, src, src_len);
+    EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, (const unsigned char *)c->session_key, (const unsigned char *)c->initial_value);
+    EVP_DecryptUpdate(c->d_ctx, (unsigned char *)(dest + dest_len), &dest_len, (const unsigned char *)src, src_len);
     written += dest_len;
 
-    EVP_DecryptFinal_ex(c->d_ctx, dest + dest_len, &dest_len);
+    EVP_DecryptFinal_ex(c->d_ctx, (unsigned char *)(dest + dest_len), &dest_len);
     written += dest_len;
 
     return written;
@@ -326,7 +326,7 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len)
  * of the DIGEST_LEN macro in g_cloud.h too!!
  */
 void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
-    EVP_MD *md;
+    const EVP_MD *md;
     EVP_MD_CTX *ctx;
     unsigned int md_len;
 
@@ -335,7 +335,7 @@ void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
 
     EVP_DigestInit_ex2(ctx, md, NULL);
     EVP_DigestUpdate(ctx, src, src_len);
-    EVP_DigestFinal_ex(ctx, dest, &md_len);
+    EVP_DigestFinal_ex(ctx, (unsigned char *)dest, &md_len);
 
     EVP_MD_CTX_free(ctx);
 }

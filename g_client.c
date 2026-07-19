@@ -190,7 +190,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             }
         }
 
-        cl->msec.end_frame = lframenum + (msec.timespan * HZ);
+        cl->msec.end_frame = lframenum + (msec.timespan * hz);
         cl->msec.previous = cl->msec.total;
         cl->msec.total = 0;
         cl->frames_count = 0;
@@ -338,7 +338,7 @@ bool AimbotCheck(int client, usercmd_t *ucmd) {
             ucmd->angles[YAW] != a->angles[prev][YAW] &&
             abs(ucmd->angles[PITCH] - a->angles[prev][PITCH]) +
             abs(ucmd->angles[YAW] - a->angles[prev][YAW]) >= zbc_jittermove) {
-        if (ltime <= a->jitter_last + FRAMETIME) {
+        if (ltime <= a->jitter_last + frametime) {
             if (!a->jitter) {
                 a->jitter_time = ltime;
             }
@@ -407,6 +407,8 @@ void checkClientDeadlines(int c) {
  */
 char *hacktypeToString(hacktype_t h) {
     switch (h) {
+    case HT_NONE:
+        return "none";
     case HT_GENERAL_PROXY:
         return "proxy";
     case HT_GENERAL_AIMBOT:

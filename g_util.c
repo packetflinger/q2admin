@@ -456,7 +456,7 @@ int isBlank(char *buff1) {
 char *processstring(char *output, char *input, int max, char end) {
     while (*input && *input != end && max) {
         if (*input == '\\') {
-            *input++;
+            input++;
 
             if ((*input == 'n') || (*input == 'N')) {
                 *output++ = '\n';
@@ -815,10 +815,10 @@ void generateRandomString(char *buffer, int length) {
 pathtype_t validatePath(const char *s) {
     int res = PATH_VALID;
 
-    if (*s == "/") {
+    if (*s == '/') {
         return PATH_INVALID;
     }
-    if (stringContains(s, "..")) {
+    if (stringContains((char *)s, "..")) {
         return PATH_INVALID;
     }
     for (; *s; s++) {

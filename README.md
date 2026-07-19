@@ -29,7 +29,7 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
 * Very flexible logging
   *  Supports up to 32 different log files
   *  23 different log contexts
-  *  Customizable log message formatting (per log)
+  *  Per-log customizable message formatting
 * Custom banning
   * By IP address (including IPv6)
   * By VPN status
@@ -56,6 +56,7 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
   * Allow voting for any command with args
   * Adds voting to unsupported mods (Rocket Arena 2)
 * VPN detection
+* Variable framerate support
 * Very flexible string handling
   * Exact matches (x == y)
   * Starting with... (x at the beginning of y
@@ -63,24 +64,33 @@ Q2Admin is a management and security addon for Quake 2 servers. It acts as a pro
   * Globbing (`q2dm*`)
   * Full regular expression support (`^q2dm[1-8]$`)
 
+## Compiling
 
-## Compiling for Linux
+### Linux
 
-Simply run `make` in the root folder 
+Simply run `make` in the mod source directory
 
-
-## Compiling for Windows using MinGW
+### Windows (via MinGW)
 
 Edit `.config-win32mingw` file to suit your environment and rename it to `.config`. Then run `make` to build your DLL.
 
 
 ## Configuration
 
-* Copy all all the .cfg files from the `runtime-config` directory to your mod directory.
+* Copy all the .cfg files from the `runtime-config` directory to your mod directory.
 * Edit `q2admin.cfg` to suit your needs.
 * Inform q2admin what the actual game library is.
-  * Either set the `gamelibrary` option in `q2admin.cfg`
-  * Or name the real game library to `gamex86_64.real.so` or `gamex86.real.dll`
+  * Either set the `gamelibrary` option in `q2admin.cfg` (**recommended**)
+  * Or specifically name the real game library: `game{arch}.real.{ext}`
+    * Linux libraries have a `.so` extension while Windows uses `.dll`
+    * For 32-bit systems the architechture should be `x86`
+      * Older R1Q2 and 3.2[01] servers will probably look for `i386` for arch
+    * For 64-bit systems, the arch will be `x86_64`
+    * Examples:
+      * 64-bit Linux:   `gamex86_64.real.so`
+      * 32-bit Windows: `gamex86.real.dll`
+      * Ancient Linux:  `gamei386.real.so`
+    * You cannot mix architectures. The Quake 2 server, q2admin, and the mod all need to either by compiled for 32 or 64 bit. Unfortunately many mods are only available as compiled binaries, the source code is not available or long lost. So depending on what mod you want to run, that will almost certainly dictate what architecture you'll need to run. 
   * Or use `+set gamelib <libraryname>` starting your Quake 2 server.
 * Edit each of the `q2a_*.cfg` files to setup the features you need. 
 
@@ -99,24 +109,28 @@ All dependencies are included and statically linked. The resulting binary is abo
 ## Settings
 
 ### Server CVARs
+
+Set in your server config or at the command line using `+set {cvar} {value}`
+
 CVAR | Purpose | Default
 --- | --- | ----
-`gamelib` | Specify the real game library for q2admin to load |
-`q2aconfig` | Specify the main config filename | q2admin.cfg
-`configfile_ban` | Config file for bans | q2a_ban.cfg
-`configfile_bypass` | Config file for bypass access | q2a_bypass.cfg
-`configfile_cloud` | Cloud admin config | q2a_cloud.cfg
-`configfile_cvar` | CVAR banning config | q2a_cvar.cfg
-`configfile_disable` | Command disabling config | q2a_disable.cfg
-`configfile_flood` | Flood config | q2a_flood.cfg
-`configfile_login` | Admin definitions | q2a_login.cfg
-`configfile_log` | Logging setup | q2a_log.cfg
-`configfile_rcon` | LRCON setup | q2a_lrcon.cfg
-`configfile_spawn` | Entity disabling config | q2a_spawn.cfg
-`configfile_vote` | Voting setup | q2a_vote.cfg
+`gamelib` | Specify the real game library for q2admin to load | ""
+`q2aconfig` | Specify the main config filename | "q2admin.cfg"
+`configfile_ban` | Config file for bans | "q2a_ban.cfg"
+`configfile_bypass` | Config file for bypass access | "q2a_bypass.cfg"
+`configfile_cloud` | Cloud admin config | "q2a_cloud.cfg"
+`configfile_cvar` | CVAR banning config | "q2a_cvar.cfg"
+`configfile_disable` | Command disabling config | "q2a_disable.cfg"
+`configfile_flood` | Flood config | "q2a_flood.cfg"
+`configfile_login` | Admin definitions | "q2a_login.cfg"
+`configfile_log` | Logging setup | "q2a_log.cfg"
+`configfile_rcon` | LRCON setup | "q2a_lrcon.cfg"
+`configfile_spawn` | Entity disabling config | "q2a_spawn.cfg"
+`configfile_vote` | Voting setup | "q2a_vote.cfg"
 
 
 ### Config Options
+Set these options in the main q2admin config files. Unfortunately, many of these options are very poorly named and can lead to confusion. They've been in use for decades now and will probaby remain for backward compatability for the foreseeable future.
 Option | Type | Default | What it does
 --- | --- | --- | ---
 `adminpassword` | string | "" | A password to use to auth as an admin
@@ -124,12 +138,13 @@ Option | Type | Default | What it does
 `chatbanning_enable` | bool | yes | Filter chat messages based on config
 `chatfloodprotectmsg` | string | "" | Msg to send when flooding is triggered
 `checkclientipaddress` | bool | yes | Do various checks based on a player's IP
-`checkvar_poll_time` | number |  | How many seconds between CVAR checks?
+`checkvar_poll_time` | number | 60 | How many seconds between CVAR checks?
 `checkvarcmds_enable` | bool | yes | Enable CVAR checking
-`clientremindtimeout` | number | ?? | ??
-`clientsidetimeout` | number | ?? | ??
+`clientremindtimeout` | number | 10 | Remind clients of an active vote every this many seconds
+`clientsidetimeout` | number | 30 | Delay in seconds for ratbot and proxy detection. Clamped to a minimum of 5 seconds
 `clientvotecommand` | string | "qvote" | The command players will use to cast and propose votes
-`clientvotetimeout` | number | ?? | How long is a vote proposal valid?
+`clientvotetimeout` | number | 60 | The number of seconds a vote proposal valid for
+`client_map_cfg` | number | 6 | Bitmask controlling what config files get automatically stuffed to clients <br><br>set map_name [map] = 1<br>exec [mapname].cfg = 2 <br> exec all.cfg = 4
 `cloud_flags` | number | 4095 | Bitmask for what cloud admin features are enabled. Add them up:<br>1 = frag accounting<br>2 = log chat<br>4 = support teleporting <br>8 = support inviting <br>16 = enable finding players <br>32 = enable whois <br>1024 = show debug info 
 `cloud_cmd_teleport` | string | "!teleport" | Command to teleport between servers
 `cloud_cmd_invite` | string | "!invite" | Command to invite players from other servers
@@ -144,22 +159,20 @@ Option | Type | Default | What it does
 `cloud_publickey` | string | "public.pem" | The q2 server's public key, this get shared with the Cloud Admin server
 `cloud_serverkey` | string | "server.pem" | The Cloud Admin server's public key
 `cloud_uuid` | string | "" | A unique identifier shared between the q2 server and the Cloud Admin server
-`client_map_cfg` | number | 6 | Bitmask controlling what config files get automatically stuffed to clients <br><br>set map_name [map] = 1<br>exec [mapname].cfg = 2 <br> exec all.cfg = 4
-`client_msg` | string | ?? | ??
 `cl_anglespeedkey_display` | bool | yes | Broadcast to all players when someone is messing with their cl_anglespeedkey cvar
 `cl_anglespeedkey_enable` | bool | no | Enable cl_anglespeedkey monitoring
 `cl_anglespeedkey_kick` | bool | no | Kick players caught manipulating this cvar
-`cl_anglespeedkey_kickmsg` | string | ?? | The message to send the offending player when they're kicked
+`cl_anglespeedkey_kickmsg` | string | "cl_anglespeedkey changes not allowed ont his server" | The message to send the offending player when they're kicked
 `cl_pitchspeed_display` | bool | yes | Broadcast to all players when someone is messing with their cl_pitchspeed cvar
 `cl_pitchspeed_enable` | bool | no | Enable cl_pitchspeed monitoring
 `cl_pitchspeed_kick` | bool | no | Kick players caught manipulating this cvar
-`cl_pitchspeed_kickmsg` | string | ?? | The message to send the offending player when they're kicked
+`cl_pitchspeed_kickmsg` | string | "cl_pitchspeed changes not allowed on this server" | The message to send the offending player when they're kicked
 `consolechat_disable` | bool | no | Disable sending player chat to the server console
 `consolelog_enable` | bool | no | Enable logging some events to the server console
 `consolelog_pattern` | string | "[q2a] %s\n" | The printf-like format for events logged to server console
-`customclientcmd` | string | "" | Command to stuff to players ?????
+`customclientcmd` | string | "" | Command to stuff to players when they're detected as a cheat prior to disconnecting them
 `customclientcmdconnect` | string | "" | Command to stuff to players when they connect
-`customservercmd` | string | "" | Command to run on the server ?????
+`customservercmd` | string | "" | Command to run on the server when a client is detected as a cheat. The `%c` placeholder is substituted with the offending client's ID number.
 `customservercmdconnect` | string | "" | Command to run on the server when a player connects
 `defaultbanmsg` | string | "" | Message players will see by default when they are not allowed to connect
 `defaultchatbanmsg` | string | "" | Message players will see by default when they say something that isn't allowed
@@ -169,47 +182,47 @@ Option | Type | Default | What it does
 `disconnectuserimpulse` | bool | no | Kick a player if they use certain impulses
 `displayimpulses` | bool | no | Broadcast the fact that a player just used a certain impulse
 `displaynamechange` | bool | yes | Broadcast when someone changes their name
-`dopversion` | bool | ?? | Do a p_verion probe for proxies when a player connects
+`dopversion` | bool | yes | Do a p_verion probe for proxies when a player connects
 `do_franck_check` | bool | yes | Check for franck when a player connects
 `do_vid_restart` | bool | no | Force client to do a `vid_restart` command when they connect. This can unload some wallhacks
 `enforce_deadlines` | bool | yes | When asking the player's client for certain information, set a reasonable deadline for a response and kick the player if no response is provided (indicates a modified client)
-`entity_classname_offset` | number | ??? | What byte offset can the `classname` property be found in the `edict_s` struct? Since most of the edict_s struct is opaque and filled in by the game library, it's not possible for q2admin to know where that value is located. This value can be different for each game mod. Using an incorrect value here can lead to crashes, especially if you're doing entity substitution/blocking.<br><br>Common values:<br>baseq2 = xxxxx<br>opentdm = xxxxxx
-`extendedsay_enable` | bool | no | ?????
+`entity_classname_offset` | number | 280 | What byte offset can the `classname` property be found in the `edict_s` struct? Since most of the edict_s struct is opaque and filled in by the game library, it's not possible for q2admin to know where that value is located. This value can be different for each game mod. Using an incorrect value here can lead to crashes, especially if you're doing entity substitution/blocking.<br><br>Common values:<br>baseq2 = 280<br>opentdm = xxxxxx
+`extendedsay_enable` | bool | no | Add to regular `say` command for targeting specific players or groups. Syntax:<br>`say !p PLAYERSPEC msg`<br>`say !g PLAYERSPECMULTI msg`
 `filternonprintabletext` | bool | no | Strip console characters (ascii values in range 128-256) from chat messages
-`fpsfloodexempt` | bool | no | ?????
-`framesperprocess` | number | 0 | ?????
+`fpsfloodexempt` | bool | no | Consider excessive `cl_maxfps` changes as flooding. This is common in the Jump mod
+`framesperprocess` | number | 0 | The number of server frames to process for every q2admin frame. 0 = process every frame. It's currently unclear how this affects things like msec checking, better to leave this value at 0.
 `gamemaptomap` | bool | no | Convert any usage of `gamemap` command to `map`. This will cause all new maps to reload the game library and use significant resources. *Don't use this*. Use `sv_recycle` as part of q2pro/r1q2.
 `gamelibrary` | string | "" | Specifies the real mod library to use. This can be in various ways which have different priorites.<br><br>Setting game via CVAR when server is run will override all, then this option in the config, then using filenames (*gamex86_64.real.so*)
-`gl_driver_check` | number | 0 | ???
-`gl_drive_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
-`hackuserdisplay` | string | ??? | The message to broadcast when a cheating player is discovered
+`gl_driver_check` | number | 0 | Checks for GL driver changes and disconnects player if they're over `gl_driver_max_changes`
+`gl_driver_max_changes` | number | 3 | Number of times the GL drive can be changed before assuming shenanigans. To catch people toggling a wallhack while playing
+`hackuserdisplay` | string | "%s is using a modified client" | The message to broadcast when a cheating player is discovered
 `http_cacert_path` | string | "/etc/ssl/certs" | Where do we find the system's certificate authority public keys? Only used if `http_veryifyssl` is enabled for ensuring the https server is who they say they are
 `http_debug` | bool | no | Show extra debug info related to CURL usage in the server console
 `http_enable` | bool | yes | Enable libcurl for downloading stuff via http(s)<br><br>Required for<br>- Remote ban files<br>- VPN detection<br>- Loading remote anticheat configs<br>- ASN banning
 `http_verifyssl` | bool | yes | When downloading a file via https, verify the TLS certificate is signed, valid, trusted and the common name on the cert matches the domain in the URL. Q2admin doesn't download and execute arbitrary files from the internet, so certificate issues are fairly low risk. Try disabling this if you're having trouble fetching https files (especially with https redirects)
-`impulsestokickon` | string | ??? | A list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu
+`impulsestokickon` | string | "" | A comma-separated list of impulse values that will earn a player a kick. These values are what zbot's use for their onscreen menu. Default is empty, but a good value for this is "`169, 170, 171, 172, 173, 174, 175`"
 `inverted_command[1-4]` | string | "" | Private commands stuffed to a player as part of the standard proxy check.
 `ip_limit` | number | 0 | The number of players allowed from the same IP address. Exceeding this limit kicks the player.<br><br>0 = unlimited/no filtering
 `ip_limit_vpn` | number | 0 | The number of players allowed from the same VPN provider. The ASN number of the provider is used here, so players can be on discontiguous netblocks and still be kicked.<br><br>0 = unlimited/no filtering
 `ipbanning_enable` | bool | yes | Enable the functionality of banning players based on their IP address.
 `kickonnamechange` | bool | no | If a player successfully joins with a password-protected name, kick them if they change names after connecting.
 `lock` | bool | no | lockdown mode, prevent anyone from joining. This is presumablity to allow for some kind of maintenance without player interference.
-`lockoutmsg` | string | ?? | The message to display to clients attempting to connect while the server is locked.
+`lockoutmsg` | string | "This server is currently locked." | The message to display to clients attempting to connect while the server is locked.
 `lrcon_timeout` | number | 2 | The seconds from now that an lrcon random password/request is valid for.
 `mapcfgexec` | bool | no | On new map (or connect), stuff these commands to player:<br><br>- `exec mapcfg/{oldmapname}-end.cfg`<br>- `exec mapcfg/{newmapname}-pre.cfg`
 `maxclientsperframe` | number | 100 | The number of players q2admin can deal with per server frame. This assumes default of 10HZ, *don't touch this unless you know what you're doing*
-`maxfps` | number | ???? | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps.
+`maxfps` | number | 0 | The maximum value for `cl_maxfps` cvar allowed on this server. It should be evenly divisible by 1000, 125 is a good value. I've seen 150 used on map `q2duel5` for making some otherwise impossible jumps. Value of 0 means no max.
 `maximpulses` | number | 1 | Max impulses before taking action
 `maxmsglevel` | number | 3 | Max value allowed for the `msg` userinfo variable.
-`maxrate` | number | ?? | Max value allowed for the `rate` userinfo variable.
+`maxrate` | number | 0 | Max value allowed for the `rate` userinfo variable. Value of `0` means no limit.
 `max_pmod_noreply` | number | 2 | The number of seconds before taking action for unanswered pmod request
 `minfps` | number | 0 | The minimum value allowed for the `cl_maxfps` cvar
 `msec_action` | number | 2 | What action should be taken if there are msec violations?<br><br>0 = legacy behavior, kick if over limit<br>1 = do nothing<br>2 = announce and kick the player
-`msec_max_allowed` | number | 5600 | The maximum cumulatvie msec consumption for `msec_timespan` amount of time. This value should be `(1000 * msec_timespan) * 1.12` -ish. The 1.12 multipier allows for some slop. This is a similar calculation to how q2pro allocates msec to clients but on a shorter timespan.
+`msec_max_allowed` | number | 5600 | The maximum cumulative msec consumption for `msec_timespan` amount of time. This value should be `(1000 * msec_timespan) * 1.12` -ish. The 1.12 multipier allows for some slop. This is a similar calculation to how q2pro allocates msec to clients but on a shorter timespan.
 `msec_max_violations` | number | 2 | How many violations allowed before taking action.
 `msec_min_required` | number | 0 | This is the minimum msec consumption required for the `msec_timespan` amount of time. If you really want to get strict, set this to `(1000 * msec_timespan) * 0.88` -ish. Modified clients can underflow their msec consumption in order to bank it and use it later in the same msec_timespan for a speed boost.<br><br>Be aware packet loss can affect this causing a player to be in violation if their move packet is never received, so they could be kicked simply for having poor network performance. Use at your own risk.
 `msec_timespan` | number | 5 | Span of seconds to evaluate msec consumption. The smaller the value the more unforgiving to things like packet loss and network jitter. The larger the span the more accurate reading you get, but that delays the ability to take action for that amount of time.
-`namechangefloodprotectmsg` | string | ??? | The message the player will see when they change their name too many times
+`namechangefloodprotectmsg` | string | "%s changed names too many times." | The message the player will see when they change their name too many times
 `nickbanning_enable` | bool | yes | Enable the ability to ban based on player name
 `numofdisplays` | number | 4 | How many times to in a row to broadcast that a player was caught cheating
 `printmessageonplaycmds` | bool | yes | Display when a player uses one of the `play_*` commands.<br><br>This command is useless for the actual `play` command because that command is kept in the client and not sent to the game library anymore with modern clients. Ancient 3.20 clients still send it though.
@@ -218,8 +231,8 @@ Option | Type | Default | What it does
 `proxy_bwproxy` | number | 1 | Check for bwproxies
 `proxy_nitro2` | number | 1 | Check for nitro2 proxies
 `q2adminrunmode` | number | 100 | 100 = fully operational, 0 = passthru - *don't touch this value*
-`q2a_command_check` | bool | false | ????
-`randomwaitreporttime` | number | 55 | ????
+`q2a_command_check` | bool | false | ???? (seemingly unused?)
+`randomwaitreporttime` | number | 55 | Used for seeding a random delay time for proxy checking. Only used if `zbotdetectactivetimeout` is set to `-1`. 
 `rcon_random_password` | bool | yes | Change the actual rcon password to random string and back for lrcon usage
 `rcon_insecure` | bool | yes | If no, lrcon commands are executed directly on the server rather than let the client execute it, this means the output is never seen by the client.
 `reconnect_address` | string | "" | The IP/hostname to force the client to reconnect to.
@@ -246,8 +259,8 @@ Option | Type | Default | What it does
 `userinfochange_time` | number | 60 | The timespan for flooding the server with userinfo changes
 `versionbanning_enable` | bool | yes | Enable the ability to ban players based on the client version they're using
 `voteclientmaxvotes` | number | 0 | Only allow clients to propose this many votes. 0 = unlimited
-`voteclientmaxvotetimeout` | number | 0 | ????
-`votecountnovotes` | bool | 1 | ???
+`voteclientmaxvotetimeout` | number | 0 | The timespan to consider for `voteclientmaxvotes`
+`votecountnovotes` | bool | 1 | Whether not voting counts as voting no when calculating vote percentage.<br>0 = calculate % as yes/total-no<br>1 = calculate % as yes/total
 `voteminclients` | number | 0 | The minimum number of players required to propose a vote. 0 = any
 `votepasspercent` | number | 50 | This percent of players need to vote yes for it to pass
 `vote_enable` | bool | no | Enable the voting system
@@ -256,49 +269,87 @@ Option | Type | Default | What it does
 `vpn_kick` | bool | yes | Kick all players connecting from a VPN
 `whois_active` | number | 0 | Whether to enable whois tracking
 `zbc_enable` | bool | yes | Check clients for aim-assist (includes zbots and ratbots)
-`zbc_jittermax` | number | 4 | ???
+`zbc_jittermax` | number | 4 | The max number of aim-assist violations detected per `zbc_jittertime` before taking action. The smaller the number the more likely you are to see false-positives.
 `zbc_jittermove` | number | 500 | The max jump in view angles between client frames before considering aim is assisted
-`zbc_jittertime` | number | 10 | ????
+`zbc_jittertime` | number | 10 | Timespan in seconds for considering aim-assist violations. `zbc_jittermax` number of violations in this span is considered aim-assist usage and player will be shamed and kicked.
 `zbotdetect` | bool | yes | Detect zbots
-`zbotdetectactivetimeout` | number | -0 | ????
-`zbotuserdisplay` | string | ???? | The message sent to users when they're detected as a zbot
+`zbotdetectactivetimeout` | number | 0 | Number of seconds to delay zbot proxy checking. Use -1 for random time linked to `randomwaitreporttime`
+`zbotuserdisplay` | string | "%s is using a client side proxy." | The message sent to users when they're detected as a zbot
 
 
 ## Commands
 
 ### `ban`
 
-Add an entry to the banlist
+Add an entry to the banlist. The action of each entry can either be exclusionary (keeping players out (the default)) or inclusionary (allowing players in). Every filter defined in a ban command must match in order for the action to apply, if not, the opposite action is applied. Ban checking stops at the point where the first entry matches a player. This means exceptions (inclusion rules meant to override some other exclusion rule) have to match first. Ban entries are checked from newest to oldest or in the context of the banlist file, from bottom up. New ban commands are checked against all currently players immediately unless the `NOCHECK` parameter is used. 
+
+Related commands: `listbans`, `delban`
+
+Player attributes available for filtering:
+* Player name
+* IP address
+* ASN
+* Player client version
+
+Additional controls
+* Password (inclusionary)
+* Max number of connections (inclusionary)
+* Custom messages to affected players
+* Text flood controls
+* Time-to-live
+* Materialization 
+
 ```
-sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+// Syntax
+sv !BAN [+/-(-)] [ALL/[NAME [LIKE/RE] name/%%p x/BLANK/ALL(ALL)] \
+        [IP VPN/ipv4addr/ipv6addr/%%p x][/yyy(32|128)]] \
+        [ASN as###] [VERSION [LIKE/RE] xxx] [PASSWORD xxx] \
+        [MAX 0-xxx(0)] [FLOOD xxx(num) xxx(sec) xxx(silence] \
+        [MSG xxx] [TIME 1-xxx(mins)] [SAVE [MOD]] [NOCHECK]
+
 
 Examples:
-// don't allow players with names containing nametoban, show them the message "not allowed"
+// Don't allow players with names containing nametoban, show them
+// the message "not allowed"
 sv !ban - NAME LIKE "nametoban" MSG "not allowed"
 
-// don't allow any player using q2pro r1908
+// Don't allow anyone with a variation of the name claire
+// Matches "CLAIRE" "Claire" "cL4ire" "clA1rE" "clair3"
+sv !ban - NAME RE "^[Cc][Ll][Aa4][Ii1][Rr][Ee3]$" MSG "go away"
+
+// Don't allow any player using q2pro r1908
 sv !ban - VERSION RE "^q2pro.*r1908.+"
 
-// allow players to use the name claire only if they have the right password.
-// passwords are supplied as "pw" in the userinfo
+// Allow players to use the name claire only if they have the
+// correct password. Passwords are supplied as "pw" in the userinfo:
+// "set pw 'superpassword' u" 
 sv !ban + NAME "claire" PASSWORD "superpassword"
 
-// don't allow a specific IPv4 address
+// Don't allow a specific IP addresses (or CIDR ranges)
 sv !ban - IP 192.0.2.3/32
+sv !ban - IP 10.0.5.23
+sv !ban - IP 2001:db8::face:b00b
+sv !ban - IP 2001:db8:c0ff:ee::/96
 
-// don't allow players named claire from a specific IPv6 address
-sv !ban - NAME RE "^claire$" IP 2001:db8::face:b00b/128 MSG "go away"
+// Only allow players from a specific IP range
+sv !ban + IP 10.11.12.0/24
 
-// don't allow any VPN address
+// Don't allow players named claire from a specific IPv6 address
+sv !ban - NAME RE "^claire$" IP 2001:db8:0:a11:b33f:7ac0 MSG "go away"
+
+// Don't allow any VPN clients
 sv !ban - IP VPN MSG "vpns are not allowed"
 
-// don't allow anyone from Charter Communications [as7843]
+// Don't allow anyone from Charter Communications [as7843]
+// You can find these on sites like https://hackertarget.com/as-ip-lookup/
 sv !ban - ASN as7843 MSG "Charter customers not allowed"  
 ```
 
 ### `chatban`
 
-Add an entry to the chatban list
+Add an entry to the chatban list. This acts just like the `ban` command for chat messages.
+
+Related commands: `delchatban`, `listchatbans`
 ```
 sv !CHATBAN [LIKE/RE(LIKE)] xxx [MSG xxx] [SAVE [MOD]]
 
@@ -323,7 +374,9 @@ sv !chatfloodprotect 10 5 30
 
 ### `checkvarcmd`
 
-Manually add an entry to the checkvar list. 
+Manually add an entry to the checkvar list. These ensure client-side variables are set to specific values or fall within specific ranges. If a value does not match the client will be stuffed the appropriate value.
+
+Related commands: `checkvardel`
 
 ```
 Syntax:

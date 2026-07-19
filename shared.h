@@ -98,11 +98,6 @@ do { \
 #define PRINT_DEVELOPER	1  // only print when "developer 1"
 #define PRINT_ALERT		2
 
-#define BASE_FRAMERATE          10
-#define BASE_FRAMETIME          100
-#define BASE_1_FRAMETIME        0.01f   // 1/BASE_FRAMETIME
-#define BASE_FRAMETIME_1000     0.1f    // BASE_FRAMETIME/1000
-
 // destination class for gi.multicast()
 
 typedef enum {
@@ -123,14 +118,7 @@ typedef int fixed16_t;
 
 extern vec3_t vec3_origin;
 
-#ifndef M_PI
-  #define M_PI  3.14159265358979323846 // matches value in gcc v2 math.h
-#endif
-
 struct cplane_s;
-
-#define nanmask (255<<23)
-#define IS_NAN(x) (((*(int *)&x)&nanmask)==nanmask)
 
 #if !defined C_ONLY
   extern long Q_ftol(float f);
@@ -276,15 +264,15 @@ static inline int Q_charascii(int c) {
 #define CONTENTS_LADDER         BIT(28)
 
 // content masks
-#define MASK_ALL    (-1)
-#define MASK_SOLID    (CONTENTS_SOLID|CONTENTS_WINDOW)
-#define MASK_PLAYERSOLID  (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#define MASK_DEADSOLID   (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
-#define MASK_MONSTERSOLID  (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
-#define MASK_WATER    (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
-#define MASK_OPAQUE    (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
-#define MASK_SHOT    (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
-#define MASK_CURRENT   (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN)
+#define MASK_ALL            (-1)
+#define MASK_SOLID          (CONTENTS_SOLID|CONTENTS_WINDOW)
+#define MASK_PLAYERSOLID    (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
+#define MASK_DEADSOLID      (CONTENTS_SOLID|CONTENTS_PLAYERCLIP|CONTENTS_WINDOW)
+#define MASK_MONSTERSOLID   (CONTENTS_SOLID|CONTENTS_MONSTERCLIP|CONTENTS_WINDOW|CONTENTS_MONSTER)
+#define MASK_WATER          (CONTENTS_WATER|CONTENTS_LAVA|CONTENTS_SLIME)
+#define MASK_OPAQUE         (CONTENTS_SOLID|CONTENTS_SLIME|CONTENTS_LAVA)
+#define MASK_SHOT           (CONTENTS_SOLID|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEADMONSTER)
+#define MASK_CURRENT        (CONTENTS_CURRENT_0|CONTENTS_CURRENT_90|CONTENTS_CURRENT_180|CONTENTS_CURRENT_270|CONTENTS_CURRENT_UP|CONTENTS_CURRENT_DOWN)
 
 // plane_t structure
 // !!! if this is changed, it must be changed in asm code too !!!
@@ -308,7 +296,7 @@ typedef struct cplane_s {
 
 typedef struct cmodel_s {
     vec3_t mins, maxs;
-    vec3_t origin; // for sounds or lights
+    vec3_t origin;          // for sounds or lights
     int headnode;
 } cmodel_t;
 
@@ -320,8 +308,8 @@ typedef struct csurface_s {
 
 // a trace is returned when a box is swept through the world
 typedef struct {
-    bool allsolid;      // if true, plane is not valid
-    bool startsolid;    // if true, the initial point was in a solid area
+    bool allsolid;          // if true, plane is not valid
+    bool startsolid;        // if true, the initial point was in a solid area
     float fraction;         // time completed, 1.0 = didn't hit anything
     vec3_t endpos;          // final position
     cplane_t plane;         // surface normal at impact
@@ -338,15 +326,14 @@ typedef enum {
     PM_SPECTATOR,
     // no acceleration or turning
     PM_DEAD,
-    PM_GIB, // different bounding box
+    PM_GIB,                 // different bounding box
     PM_FREEZE
 } pmtype_t;
 
-// this structure needs to be communicated bit-accurate
-// from the server to the client to guarantee that
-// prediction stays in sync, so no floats are used.
-// if any part of the game code modifies this struct, it
-// will result in a prediction error of some degree.
+// This structure needs to be communicated bit-accurate from the server to the
+// client to guarantee that prediction stays in sync, so no floats are used. If
+// any part of the game code modifies this struct, it will result in a
+// prediction error of some degree.
 typedef struct {
     pmtype_t pm_type;
     short origin[3];        // 12.3
@@ -370,16 +357,16 @@ typedef struct usercmd_s {
     byte buttons;
     short angles[3];
     short forwardmove, sidemove, upmove;
-    byte impulse; // remove?
-    byte lightlevel; // light level the player is standing on
+    byte impulse;           // remove?
+    byte lightlevel;        // light level the player is standing on
 } usercmd_t;
 
-#define MAXTOUCH 32
+#define MAXTOUCH        32
 
 typedef struct {
     pmove_state_t s;
     usercmd_t cmd;          // in
-    bool snapinitial;   // if s has been changed outside pmove
+    bool snapinitial;       // if s has been changed outside pmove
     int numtouch;
     struct edict_s *touchents[MAXTOUCH];
     vec3_t viewangles;      // clamped
@@ -392,17 +379,16 @@ typedef struct {
     int (*pointcontents) (vec3_t point);
 } pmove_t;
 
-#define MAX_STATS    32
+#define MAX_STATS       32
 
-// config strings are a general means of communication from
-// the server to all connected clients.
-// Each config string can be at most MAX_QPATH characters.
+// Configstrings are a general means of communication from the server to all
+// connected clients. Each config string can be at most MAX_QPATH characters.
 #define CS_NAME             0
 #define CS_CDTRACK          1
 #define CS_SKY              2
-#define CS_SKYAXIS          3  // %f %f %f format
+#define CS_SKYAXIS          3   // %f %f %f format
 #define CS_SKYROTATE        4
-#define CS_STATUSBAR        5  // display program string
+#define CS_STATUSBAR        5   // display program string
 #define CS_MAXCLIENTS       30
 #define CS_MAPCHECKSUM      31  // for catching cheater maps
 #define CS_MODELS           32
@@ -413,14 +399,13 @@ typedef struct {
 #define CS_PLAYERSKINS      (CS_ITEMS+MAX_ITEMS)
 #define MAX_CONFIGSTRINGS   (CS_PLAYERSKINS+MAX_CLIENTS)
 
-// entity_state_t is the information conveyed from the server
-// in an update message about entities that the client will
-// need to render in some way
+// entity_state_t is the information conveyed from the server in an update
+// message about entities that the client will need to render in some way
 typedef struct entity_state_s {
-    int number; // edict index
+    int number;                 // edict index
     vec3_t origin;
     vec3_t angles;
-    vec3_t old_origin; // for lerping
+    vec3_t old_origin;          // for lerping
     int modelindex;
     int modelindex2, modelindex3, modelindex4; // weapons, CTF flags, etc
     int frame;

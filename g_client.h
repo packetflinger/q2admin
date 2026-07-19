@@ -128,7 +128,6 @@ extern int minfpsallowed;
 extern int zbc_jittermax;
 extern int zbc_jittertime;
 extern int zbc_jittermove;
-extern char client_msg[256];
 extern bool private_command_kick;
 extern int speedbot_check_type;
 extern int max_pmod_noreply;

@@ -270,12 +270,6 @@ q2acmd_t q2aCommands[] = {
         &client_map_cfg
     },
     {
-        "client_msg",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &client_msg
-    },
-    {
         "cl_anglespeedkey_display",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -978,6 +972,12 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &q2a_command_check
+    },
+    {
+        "q2a_developer",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &q2a_developer
     },
     {
         "randomwaitreporttime",
@@ -1999,7 +1999,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
     uint8_t like, numfound;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
-    re_t r;
+    re_t r = {0};
     int matchlen;
 
     numfound = 0;
@@ -2152,7 +2152,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
     uint8_t like, matchcount;
     char strbuffer[sizeof(buffer)];
     char strbuffer2[sizeof(buffer)];
-    re_t r;
+    re_t r = {0};
     int matchlen;
 
     foundclienti = -1;
@@ -2567,7 +2567,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (*(rcon_password->string) && q2a_strstr(response, rcon_password->string)) {
-        Q_vsnprintf(abuffer, sizeof(abuffer), "EXPLOIT - %s", response);
+        Q_snprintf(abuffer, sizeof(abuffer), "EXPLOIT - %s", response);
         logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
         return false;
     }
@@ -2964,12 +2964,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
             if (say_person_enable && startContains(args, "!p")) { // say_person
                 if (sayPersonCmd(ent, client, args + 2)) {
-                    gi.cprintf(ent, PRINT_HIGH, "say !p [LIKE/CL] name message\n");
+                    gi.cprintf(ent, PRINT_HIGH, "say !p %s message\n", PLAYERSPEC);
                 }
                 return false;
             } else if (say_group_enable && startContains(args, "!g")) { // say_group
                 if (sayGroupCmd(ent, client, args + 2)) {
-                    gi.cprintf(ent, PRINT_HIGH, "say !g [LIKE/CL] name message\n");
+                    gi.cprintf(ent, PRINT_HIGH, "say !g %s message\n", PLAYERSPECMULTI);
                 }
                 return false;
             }
@@ -3503,7 +3503,7 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
  */
 void impulsesToKickOnInit(char *arg) {
     while (*arg && maxImpulses < MAXIMPULSESTOTEST) {
-        impulsesToKickOn[maxImpulses] = q2a_atoi(arg);
+        impulsesToKickOn[(int)maxImpulses] = q2a_atoi(arg);
         maxImpulses++;
         while (*arg && *arg != ' ') {
             arg++;

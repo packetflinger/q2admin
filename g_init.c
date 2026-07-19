@@ -40,6 +40,7 @@ cvar_t *configfile_rcon;
 cvar_t *configfile_spawn;
 cvar_t *configfile_vote;
 cvar_t *gamedir;
+cvar_t *g_features;
 cvar_t *logfile;
 cvar_t *maxclients;
 cvar_t *port;
@@ -54,6 +55,7 @@ cvar_t *q2adminhashlist_dir;
 cvar_t *rcon_password;
 cvar_t *rconpassword;   // why?
 cvar_t *serverbindip;
+cvar_t *sv_features;
 cvar_t *tune_spawn_bfg;
 cvar_t *tune_spawn_chaingun;
 cvar_t *tune_spawn_grenadelauncher;
@@ -78,7 +80,6 @@ char chatFloodProtectMsg[256];
 bool checkClientIpAddress               = true;
 char clientVoteCommand[256];
 int client_map_cfg                      = CLMAPCFG_EXACT | CLMAPCFG_ALL;
-char client_msg[256];
 cloud_config_t cloud_config = {
         .address = "[::1]",
         .cmd_invite = "!invite",
@@ -130,6 +131,7 @@ struct chatflood_s floodinfo = {
 };
 bool fpsFloodExempt                     = false;
 int framesperprocess                    = 0;
+float frametime                         = 0.1;  // seconds per frame
 char gamelibrary[MAX_QPATH]             = ""; // game library from config file
 bool gamemaptomap                       = false;
 int gl_driver_check                     = 0;
@@ -140,6 +142,7 @@ char http_cacert_path[256]              = "/etc/ssl/certs";
 bool http_debug                         = false;
 bool http_enable                        = true;
 bool http_verifyssl                     = true;
+int  hz                                 = 10;
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 char lanip[256]                         = "";
@@ -180,7 +183,7 @@ proxyinfo_t *proxyinfoBase;
 int proxy_bwproxy                       = 1;
 int proxy_nitro2                        = 1;
 bool q2a_command_check                  = false;
-int q2a_developer                       = 1;
+int q2a_developer                       = 0;
 bool quake2dirsupport                   = true;
 int randomwaitreporttime                = 55;
 reconnect_info *reconnectlist;
@@ -277,7 +280,7 @@ const char *entAllowlist[MAX_ENTALLOWLIST] = {
  */
 bool entSwapAllowed(char *cn) {
     for (int i = 0; i < MAX_ENTALLOWLIST; i++) {
-        if (Q_stricmp(entAllowlist[i], cn) == 0) {
+        if (Q_stricmp((char *)entAllowlist[i], cn) == 0) {
             return true;
         }
     }
@@ -444,6 +447,20 @@ void InitGame(void) {
     profile_stop(2, "mod->InitGame", 0, NULL);
 
     G_MergeEdicts();
+
+    g_features = gi.cvar("g_features", "0", CVAR_NOSET);
+    sv_features = gi.cvar("sv_features", "0", CVAR_NOSET);
+
+    if (q2a_developer) {
+        gi.dprintf("Game supports: %s\n", featuresToString((int)g_features->value));
+        gi.dprintf("Server supports: %s\n", featuresToString((int)sv_features->value));
+    }
+
+    if (FEATURE_SUPPORTED(GMF_VARIABLE_FPS)) {
+        hz = (int) gi.cvar("sv_fps", "10", CVAR_NOSET)->value;
+        frametime = (float) 1 / hz;
+        gi.cprintf(NULL, PRINT_HIGH, "[q2admin] server fps=%d\n", hz);
+    }
 
     maxclients = gi.cvar("maxclients", "4", 0);
     logfile = gi.cvar("logfile", "0", 0);
@@ -876,11 +893,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
  */
 bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* userInfoOverflow) {
     char *ip = FindIpAddressInUserInfo(userinfo, userInfoOverflow);
-
     if (*ip) {
-        unsigned int i;
-        int num;
-
         if (q2a_strcmp(ip, "loopback") == 0) {
             net_parseIP(&proxyinfo[client].address, "127.0.0.1:0");
         } else {
@@ -889,7 +902,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
     }
 
     ip = Info_ValueForKey(userinfo, "Nitro2");
-
     if (*ip) {
         if (proxy_nitro2) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
@@ -899,7 +911,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
     }
 
     ip = Info_ValueForKey(userinfo, "bwproxy");
-
     if (*ip) {
         if (proxy_bwproxy) {
             proxyinfo[client].clientcommand |= CCMD_NITRO2PROXY;
@@ -907,7 +918,6 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
             return true;
         }
     }
-
     return false;
 }
 
@@ -975,16 +985,50 @@ bool checkReconnectList(char *username) {
 
 /**
  * Called when a new player first connects to the server, before entering the
- * game.
+ * game. This function checks the userinfo string from the client as well.
+ *
+ * If the forward game library supports the GMF_EXTRA_USERINFO feature, the
+ * player's IP will be removed from the standard userinfo and added to the
+ * extended portion (not sure why). Therefore q2admin needs to be aware of
+ * this feature and be able to find the client's IP depending on where it is.
+ * When this feature is enabled, the extra data is appended AFTER THE NULL at
+ * the end of the original userinfo string:
+ *
+ *  "\key1\val2\key2\val2<NULL>\exkey1\exval1\exkey2\exval2<NULL>"
+ *
+ * Q2admin will build a new userinfo string combining these into a single
+ * string with only a null at the end. The extra userinfo should include these
+ * key/value pairs:
+ *
+ *     challenge/<number>
+ *     ip/<address:port>  (ex: "192.0.2.3:12345", ex: "[2001:db8::b00b:face]:12345")
+ *     major/<protocol>   (ex: "36" the main protocol version, 34/35/36)
+ *     minor/<protocol>   (ex: "1021" the minor protocol version)
+ *     netchan/<type>     (ex: "1" )
+ *     packetlen/<number> (ex: "1390" default MTU of 1400 with room for headers)
+ *     qport/<number>     (ex: "234" random num for Q2 UDP connection tracking)
+ *     zlib/<number>      ("1" or "0" depending on zlib support)
  *
  * Return values
  *  true  = allow client to proceed connecting (ClientBegin is next)
  *  false = reject the connection
  */
-bool ClientConnect(edict_t *ent, char *userinfo) {
+bool ClientConnect(edict_t *ent, char *ui) {
     int client;
-    char *s;
-    char *skinname;
+    char *skinname, *extra, *userinfo;
+
+    client = getEntOffset(ent) - 1;
+
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        extra = ui + q2a_strlen(ui) + 1;
+        if (q2a_strlen(extra) == 0) {
+            Info_SetValueForKey(ui, "rejmsg", "Error: wonky userinfo.");
+            return false;
+        }
+        userinfo = va("%s%s", ui, extra);
+    } else {
+        userinfo = ui;
+    }
 
     bool ret;
     bool userInfoOverflow = false;
@@ -997,7 +1041,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     if (runmode == 0) {
-        ret = ge_mod->ClientConnect(ent, userinfo);
+        ret = ge_mod->ClientConnect(ent, ui);
         G_MergeEdicts();
         return ret;
     }
@@ -1036,12 +1080,19 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         }
     }
 
-    client = getEntOffset(ent) - 1;
-
     q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
     proxyinfo[client].enteredgame = ltime;
     proxyinfo[client].userinfo.changed_start = ltime;
+
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        proxyinfo[client].challenge = q2a_atoi(Info_ValueForKey(userinfo, "challenge"));
+        proxyinfo[client].protocol_major = q2a_atoi(Info_ValueForKey(userinfo, "major"));
+        proxyinfo[client].protocol_minor = q2a_atoi(Info_ValueForKey(userinfo, "minor"));
+        proxyinfo[client].mtu = q2a_atoi(Info_ValueForKey(userinfo, "packetlen"));
+        proxyinfo[client].qport = q2a_atoi(Info_ValueForKey(userinfo, "qport"));
+        proxyinfo[client].zlib = q2a_strcmp(Info_ValueForKey(userinfo, "zlib"), "1") == 0;
+    }
 
     ret = 1;
 
@@ -1053,7 +1104,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
 
             if (!banOnConnect) {
                 ret = 0;
-                Info_SetValueForKey(userinfo, "rejmsg", "banned: proxy/bot signature found");
+                Info_SetValueForKey(ui, "rejmsg", "banned: proxy/bot signature found");
             } else {
                 proxyinfo[client].clientcommand |= CCMD_BANNED;
                 q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
@@ -1062,7 +1113,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     }
 
     if (!Info_Validate(userinfo)) {
-        Info_SetValueForKey(userinfo, "rejmsg", "admission denied: invalid client detected");
+        Info_SetValueForKey(ui, "rejmsg", "admission denied: invalid client detected");
         return false;
     }
 
@@ -1070,7 +1121,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
     char *val;
     for (int i = 0; required_ui_keys[i] != NULL; i++) {
         val = Info_ValueForKey(userinfo, required_ui_keys[i]);
-        if (*val == NULL) {
+        if (val[0] == 0) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
             return false;
         }
@@ -1098,11 +1149,10 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
         }
     } else if (checkClientIpAddress && !HASIP(client)) {
-        char *ip = FindIpAddressInUserInfo(userinfo, 0);
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
         if (banOnConnect) {
             ret = 0;
-            Info_SetValueForKey(userinfo, "rejmsg", "rejected: invalid IP address");
+            Info_SetValueForKey(ui, "rejmsg", "rejected: invalid IP address");
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strcpy(proxyinfo[client].buffer, "Client doesn't have a valid IP address");
@@ -1111,7 +1161,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
             ret = 0;
-            Info_SetValueForKey(userinfo, "rejmsg", va("banned: %s", currentBanMsg));
+            Info_SetValueForKey(ui, "rejmsg", va("banned: %s", currentBanMsg));
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
@@ -1200,7 +1250,7 @@ bool ClientConnect(edict_t *ent, char *userinfo) {
 
         if (doConnect) {
             profile_start(2);
-            ret = ge_mod->ClientConnect(ent, userinfo);
+            ret = ge_mod->ClientConnect(ent, ui);
             profile_stop(2, "mod->ClientConnect", client, ent);
 
             G_MergeEdicts();
@@ -1407,8 +1457,6 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
 void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     int client;
     bool passon;
-
-    char *s = Info_ValueForKey(userinfo, "name");
     char tmptext[128];
     char *cl_max_temp;
     char *cl_max_curr;
@@ -1526,9 +1574,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
         //my check here, if maxfps = 0 and it has length we will NOT allow
         if (proxyinfo[client].userinfo.maxfps == 0) {
-            gi.bprintf(PRINT_HIGH, (PRV_KICK_MSG, proxyinfo[client].name));
+            gi.bprintf(PRINT_HIGH, va(PRV_KICK_MSG, proxyinfo[client].name));
             
-            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, (PRV_KICK_MSG, proxyinfo[client].name));
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, proxyinfo[client].name));
         } else {
             if (maxfpsallowed) {
                 if (proxyinfo[client].userinfo.maxfps > maxfpsallowed) {
@@ -1954,4 +2002,45 @@ void ReadLevel(char *filename) {
     ge_mod->ReadLevel(filename);
     G_MergeEdicts();
     profile_stop(1, "q2admin->ReadLevel", 0, NULL);
+}
+
+/**
+ * Build a string of what's included in a feature bitmask
+ */
+char *featuresToString(int f) {
+    static char out[256];
+
+    q2a_memset(&out, 0, sizeof(out));
+    if (f & GMF_CLIENTNUM) {
+        q2a_strcat(out, va("proper clientnum, "));
+    }
+    if (f & GMF_PROPERINUSE) {
+        q2a_strcat(out, va("proper inuse, "));
+    }
+    if (f & GMF_MVDSPEC) {
+        q2a_strcat(out, va("MVD client aware, "));
+    }
+    if (f & GMF_WANT_ALL_DISCONNECTS) {
+        q2a_strcat(out, va("proper disconnects, "));
+    }
+    if (f & GMF_ENHANCED_SAVEGAMES) {
+        q2a_strcat(out, va("enhanced saves, "));
+    }
+    if (f & GMF_VARIABLE_FPS) {
+        q2a_strcat(out, va("variable FPS, "));
+    }
+    if (f & GMF_EXTRA_USERINFO) {
+        q2a_strcat(out, va("additional userinfo, "));
+    }
+    if (f & GMF_IPV6_ADDRESS_AWARE) {
+        q2a_strcat(out, va("IPv6, "));
+    }
+    if (f & GMF_ALLOW_INDEX_OVERFLOW) {
+        q2a_strcat(out, va("index overflowing, "));
+    }
+    if (f & GMF_PROTOCOL_EXTENSIONS) {
+        q2a_strcat(out, va("protocol extensions, "));
+    }
+    out[q2a_strlen(out)-2] = 0; // trim the last ", "
+    return out;
 }

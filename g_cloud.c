@@ -16,6 +16,7 @@
  */
 
 #include "g_local.h"
+#include <pthread.h>
 
 cloud_t cloud;
 
@@ -512,8 +513,8 @@ void CA_SendMessages(void) {
  * Accept any incoming messages from the server
  */
 void CA_ReadMessages(void) {
-    uint32_t ret, packet_count;
-    byte iv[AES_IV_LEN], temp_iv[DIGEST_LEN];
+    uint32_t ret;
+    byte temp_iv[DIGEST_LEN];
     struct timeval tv;
     message_queue_t *in, dec;
 
@@ -824,6 +825,12 @@ void CA_DisconnectedPeer(void) {
     cloud.connection.trusted = false;
     cloud.connection.have_keys = false;
     cloud.disconnect_count++;
+
+    closesocket(cloud.connection.socket);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_r);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_w);
+    FD_CLR(cloud.connection.socket, &cloud.connection.set_e);
+
     memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
     memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
 
@@ -880,7 +887,7 @@ void CA_SayHello(void) {
     }
 
     // random data to challenge backend with
-    RAND_bytes(cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
+    RAND_bytes((unsigned char *)cloud.connection.cl_nonce, sizeof(cloud.connection.cl_nonce));
 
     byte challenge[RSA_LEN];
     q2a_memset(challenge, 0, sizeof(challenge));
@@ -973,8 +980,10 @@ void CA_WriteByte(uint8_t b) {
  * Read a short (2 bytes) from the message buffer
  */
 uint16_t CA_ReadShort(void) {
-    return    (cloud.queue_in.data[cloud.queue_in.index++] +
-            (cloud.queue_in.data[cloud.queue_in.index++] << 8)) & 0xffff;
+    message_queue_t *q = &cloud.queue_in;
+    int s = q->data[q->index] + (q->data[q->index + 1] << 8);
+    q->index += 2;
+    return s & 0xffff;
 }
 
 /**
@@ -989,10 +998,11 @@ void CA_WriteShort(uint16_t s) {
  * Read 4 bytes from the message buffer
  */
 int32_t CA_ReadLong(void) {
-    return    cloud.queue_in.data[cloud.queue_in.index++] +
-            (cloud.queue_in.data[cloud.queue_in.index++] << 8) +
-            (cloud.queue_in.data[cloud.queue_in.index++] << 16) +
-            (cloud.queue_in.data[cloud.queue_in.index++] << 24);
+    message_queue_t *q = &cloud.queue_in;
+    int num = q->data[q->index] + (q->data[q->index + 1] << 8) +
+            (q->data[q->index + 2] << 16) + (q->data[q->index + 3] << 24);
+    q->index += 4;
+    return num;
 }
 
 /**
@@ -1088,8 +1098,7 @@ void CA_ReadData(void *out, size_t len) {
  * ClientBegin().
  */
 void CA_PlayerConnect(edict_t *ent) {
-    int8_t cl;
-    cl = getEntOffset(ent) - 1;
+    int8_t cl = getEntOffset(ent) - 1;
 
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
@@ -1105,8 +1114,7 @@ void CA_PlayerConnect(edict_t *ent) {
  * Called when a player disconnects
  */
 void CA_PlayerDisconnect(edict_t *ent) {
-    int8_t cl;
-    cl = getEntOffset(ent) - 1;
+    int8_t cl = getEntOffset(ent) - 1;
 
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
@@ -1128,14 +1136,14 @@ void CA_Print(uint8_t level, char *text) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
         return;
     }
-    
-    if (!(cloud.flags & CFL_CHAT)) {
+
+    if ((cloud.flags & CFL_CHAT) == 0) {
         return;
     }
 
     CA_WriteByte(CMD_PRINT);
     CA_WriteByte(level);
-    CA_WriteString("%s",text);
+    CA_WriteString("%s", text);
 }
 
 /**
@@ -1146,7 +1154,7 @@ void CA_Teleport(uint8_t client_id, char *location) {
         return;
     }
 
-    if (!(cloud.flags & CFL_TELEPORT)) {
+    if ((cloud.flags & CFL_TELEPORT) == 0) {
         return;
     }
 
@@ -1179,7 +1187,7 @@ void CA_Invite(uint8_t cl, const char *text) {
         return;
     }
 
-    if (!(cloud.flags & CFL_INVITE)) {
+    if ((cloud.flags & CFL_INVITE) == 0) {
         return;
     }
 
@@ -1197,7 +1205,7 @@ void CA_Whois(uint8_t cl, const char *name) {
         return;
     }
 
-    if (!(cloud.flags & CFL_WHOIS)) {
+    if ((cloud.flags & CFL_WHOIS) == 0) {
         return;
     }
 
@@ -1215,7 +1223,7 @@ void CA_Frag(uint8_t victim, uint8_t attacker) {
         return;
     }
 
-    if (!(cloud.flags & CFL_FRAGS)) {
+    if ((cloud.flags & CFL_FRAGS) == 0) {
         return;
     }
 
