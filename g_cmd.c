@@ -2567,7 +2567,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (*(rcon_password->string) && q2a_strstr(response, rcon_password->string)) {
-        Q_vsnprintf(abuffer, sizeof(abuffer), "EXPLOIT - %s", response);
+        Q_snprintf(abuffer, sizeof(abuffer), "EXPLOIT - %s", response);
         logEvent(LT_ADMINLOG, client, ent, abuffer, 0, 0.0, true);
         return false;
     }

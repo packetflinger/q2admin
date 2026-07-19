@@ -16,6 +16,7 @@
  */
 
 #include "g_local.h"
+#include <pthread.h>
 
 cloud_t cloud;
 
