@@ -1110,6 +1110,12 @@ bool ClientConnect(edict_t *ent, char *ui) {
                 q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
             }
         }
+
+        vpn_t *knownAddress = findAddressInCache(proxyinfo[client].address);
+        if (knownAddress) {
+            // Client will be kicked/allowed accordingly when bans are checked
+            proxyinfo[client].vpn = *knownAddress;
+        }
     }
 
     if (!Info_Validate(userinfo)) {
