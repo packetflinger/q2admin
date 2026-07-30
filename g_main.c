@@ -606,8 +606,6 @@ void G_RunFrame(void) {
                 displayNextDisable(ent, client, data);
             } else if (command == QCMD_DISPCHECKVAR) {
                 displayNextCheckvar(ent, client, data);
-            } else if (command == QCMD_DISPCACHE) {
-                displayNextCacheEntry(ent, client, data);
             } else if (command == QCMD_CHECKVARTESTS) {
                 checkVariableTest(ent, client, data);
             } else if (command == QCMD_CHANGENAME) {

@@ -317,8 +317,7 @@ enum _commands {
     QCMD_TESTCMDQUEUE,
     QCMD_CLIENTVERSION,
     QCMD_FREEZEPLAYER,
-    QCMD_UNFREEZEPLAYER,
-    QCMD_DISPCACHE,
+    QCMD_UNFREEZEPLAYER
 };
 
 // Internal Warnings for logging
