@@ -191,7 +191,11 @@ proxyreconnectinfo_t *reconnectproxyinfo;
 char reconnect_address[256]             = {0};
 int reconnect_checklevel                = 0;
 int reconnect_time                      = 60;
-char *required_ui_keys[]                = {"name", "rate", "msg", "skin", NULL}; // end with null
+// "msg" excluded: yquake2 never sends it (not in its userinfo cvars), so
+// requiring it rejected every yquake2 connection. Safe to omit - both
+// places that read it already tolerate a missing value (q2a_atoi("") == 0,
+// the most permissive message level).
+char *required_ui_keys[]                = {"name", "rate", "skin", NULL}; // end with null
 retrylist_info *retrylist;
 int runmode                             = 100; // don't change this
 bool say_group_enable                   = false;
