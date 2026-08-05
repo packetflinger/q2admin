@@ -973,6 +973,10 @@ uint8_t CA_ReadByte(void) {
  * Write a single byte to the message buffer
  */
 void CA_WriteByte(uint8_t b) {
+    if (cloud.queue.length >= QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping byte\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = b & 0xff;
 }
 
@@ -990,6 +994,10 @@ uint16_t CA_ReadShort(void) {
  * Write 2 bytes to the message buffer
  */
 void CA_WriteShort(uint16_t s) {
+    if (cloud.queue.length + 2 > QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping short\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = s & 0xff;
     cloud.queue.data[cloud.queue.length++] = (s >> 8) & 0xff;
 }
@@ -1009,6 +1017,10 @@ int32_t CA_ReadLong(void) {
  * Write 4 bytes (long) to the message buffer
  */
 void CA_WriteLong(uint32_t i) {
+    if (cloud.queue.length + 4 > QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping long\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = i & 0xff;
     cloud.queue.data[cloud.queue.length++] = (i >> 8) & 0xff;
     cloud.queue.data[cloud.queue.length++] = (i >> 16) & 0xff;
@@ -1067,7 +1079,13 @@ void CA_WriteString(const char *fmt, ...) {
         return;
     }
     
-    if (len > MAX_MSG_LEN - cloud.queue.length) {
+    // MAX_MSG_LEN only bounds this function's local scratch buffer above
+    // (vsnprintf already truncates safely, and len is re-derived via
+    // strlen() from the truncated result) - the real constraint is the
+    // shared outgoing queue's actual capacity. Checked as addition, never
+    // subtraction, so it can't underflow if cloud.queue.length is ever
+    // unexpectedly large.
+    if (cloud.queue.length + len + 1 > QUEUE_SIZE) {
         CA_WriteByte(0);
         return;
     }
