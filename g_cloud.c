@@ -546,7 +546,14 @@ void CA_ReadMessages(void) {
 
         // socket read buffer has data waiting in it
         if (ret) {
-            ret = recv(cloud.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+            if (in->length >= QUEUE_SIZE - 1) {
+                // already full - stop reading until CA_ParseMessage() has
+                // drained some of it, instead of overflowing in->data[]
+                break;
+            }
+
+            ret = recv(cloud.connection.socket, in->data + in->length,
+                    (QUEUE_SIZE - 1) - in->length, 0);
 
             if (ret == 0) {
                 CA_DisconnectedPeer();
@@ -1042,18 +1049,29 @@ void CA_WriteData(const void *data, size_t length) {
  */
 char *CA_ReadString(void) {
     static char str[MAX_STRING_CHARS];
-    static char character;
+    message_queue_t *q = &cloud.queue_in;
     size_t i, len = 0;
+    bool terminated = false;
 
-    do {
+    // Never scan past what was actually received, and never past what str[]
+    // can hold. The original unbounded scan could walk arbitrarily far past
+    // valid data if a message ever arrives split across recv() calls (there's
+    // no length-prefix framing on this wire for arbitrary strings), reading
+    // out of bounds and then overflowing str[] when reconstructing it below.
+    while (q->index + len < q->length && len < MAX_STRING_CHARS - 1) {
+        if (q->data[q->index + len] == 0) {
+            terminated = true;
+            break;
+        }
         len++;
-    } while (cloud.queue_in.data[(cloud.queue_in.index + len)] != 0);
+    }
 
-    q2a_memset(&str, 0, MAX_STRING_CHARS);
-
-    for (i=0; i<=len; i++) {
-        character = CA_ReadByte() & 0x7f;
-        q2a_strcat(str,  &character);
+    q2a_memset(str, 0, MAX_STRING_CHARS);
+    for (i=0; i<len; i++) {
+        str[i] = CA_ReadByte() & 0x7f;
+    }
+    if (terminated) {
+        CA_ReadByte(); // consume the actual NUL terminator
     }
 
     return str;
@@ -1279,6 +1297,10 @@ void CA_SayClient(void) {
     client_id = CA_ReadByte();
     level = CA_ReadByte();
     string = CA_ReadString();
+
+    if (client_id >= cloud.maxclients) {
+        return;
+    }
 
     ent = proxyinfo[client_id].ent;
 
