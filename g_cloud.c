@@ -708,9 +708,16 @@ bool CA_VerifyServerAuth(void) {
     byte sv_challenge[CHALLENGE_LEN];   // The nonce sent from the server
     uint8_t offset = 0;                 // Used to find the parts of
                                         // server's auth response
+    uint16_t resp_len;                  // Peer-supplied length, must be
+                                        // validated before use below
 
     q2a_memset(response, 0, sizeof(response));
-    CA_ReadData(response, CA_ReadShort());
+    resp_len = CA_ReadShort();
+    if (resp_len > sizeof(response)) {
+        CA_dprintf("server auth response too large (%u bytes), dropping\n", resp_len);
+        return false;
+    }
+    CA_ReadData(response, resp_len);
 
     q2a_memset(response_plain, 0, sizeof(response_plain));
     dec_len = G_PrivateDecrypt(response_plain, response, sizeof(response));
