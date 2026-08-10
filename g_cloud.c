@@ -546,7 +546,14 @@ void CA_ReadMessages(void) {
 
         // socket read buffer has data waiting in it
         if (ret) {
-            ret = recv(cloud.connection.socket, in->data + in->length, QUEUE_SIZE - 1, 0);
+            if (in->length >= QUEUE_SIZE - 1) {
+                // already full - stop reading until CA_ParseMessage() has
+                // drained some of it, instead of overflowing in->data[]
+                break;
+            }
+
+            ret = recv(cloud.connection.socket, in->data + in->length,
+                    (QUEUE_SIZE - 1) - in->length, 0);
 
             if (ret == 0) {
                 CA_DisconnectedPeer();
@@ -701,9 +708,16 @@ bool CA_VerifyServerAuth(void) {
     byte sv_challenge[CHALLENGE_LEN];   // The nonce sent from the server
     uint8_t offset = 0;                 // Used to find the parts of
                                         // server's auth response
+    uint16_t resp_len;                  // Peer-supplied length, must be
+                                        // validated before use below
 
     q2a_memset(response, 0, sizeof(response));
-    CA_ReadData(response, CA_ReadShort());
+    resp_len = CA_ReadShort();
+    if (resp_len > sizeof(response)) {
+        CA_dprintf("server auth response too large (%u bytes), dropping\n", resp_len);
+        return false;
+    }
+    CA_ReadData(response, resp_len);
 
     q2a_memset(response_plain, 0, sizeof(response_plain));
     dec_len = G_PrivateDecrypt(response_plain, response, sizeof(response));
@@ -867,7 +881,7 @@ void CA_PlayerList(void) {
     for (i=0; i<cloud.maxclients; i++) {
         if (proxyinfo[i].inuse) {
             CA_WriteByte(i);
-            CA_WriteString("%s", proxyinfo[i].userinfo);
+            CA_WriteString("%s", proxyinfo[i].userinfo.raw);
             CA_WriteString("%s", proxyinfo[i].client_version);
         }
     }
@@ -973,6 +987,10 @@ uint8_t CA_ReadByte(void) {
  * Write a single byte to the message buffer
  */
 void CA_WriteByte(uint8_t b) {
+    if (cloud.queue.length >= QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping byte\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = b & 0xff;
 }
 
@@ -990,6 +1008,10 @@ uint16_t CA_ReadShort(void) {
  * Write 2 bytes to the message buffer
  */
 void CA_WriteShort(uint16_t s) {
+    if (cloud.queue.length + 2 > QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping short\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = s & 0xff;
     cloud.queue.data[cloud.queue.length++] = (s >> 8) & 0xff;
 }
@@ -1009,6 +1031,10 @@ int32_t CA_ReadLong(void) {
  * Write 4 bytes (long) to the message buffer
  */
 void CA_WriteLong(uint32_t i) {
+    if (cloud.queue.length + 4 > QUEUE_SIZE) {
+        CA_dprintf("outgoing queue full, dropping long\n");
+        return;
+    }
     cloud.queue.data[cloud.queue.length++] = i & 0xff;
     cloud.queue.data[cloud.queue.length++] = (i >> 8) & 0xff;
     cloud.queue.data[cloud.queue.length++] = (i >> 16) & 0xff;
@@ -1030,18 +1056,29 @@ void CA_WriteData(const void *data, size_t length) {
  */
 char *CA_ReadString(void) {
     static char str[MAX_STRING_CHARS];
-    static char character;
+    message_queue_t *q = &cloud.queue_in;
     size_t i, len = 0;
+    bool terminated = false;
 
-    do {
+    // Never scan past what was actually received, and never past what str[]
+    // can hold. The original unbounded scan could walk arbitrarily far past
+    // valid data if a message ever arrives split across recv() calls (there's
+    // no length-prefix framing on this wire for arbitrary strings), reading
+    // out of bounds and then overflowing str[] when reconstructing it below.
+    while (q->index + len < q->length && len < MAX_STRING_CHARS - 1) {
+        if (q->data[q->index + len] == 0) {
+            terminated = true;
+            break;
+        }
         len++;
-    } while (cloud.queue_in.data[(cloud.queue_in.index + len)] != 0);
+    }
 
-    q2a_memset(&str, 0, MAX_STRING_CHARS);
-
-    for (i=0; i<=len; i++) {
-        character = CA_ReadByte() & 0x7f;
-        q2a_strcat(str,  &character);
+    q2a_memset(str, 0, MAX_STRING_CHARS);
+    for (i=0; i<len; i++) {
+        str[i] = CA_ReadByte() & 0x7f;
+    }
+    if (terminated) {
+        CA_ReadByte(); // consume the actual NUL terminator
     }
 
     return str;
@@ -1067,7 +1104,13 @@ void CA_WriteString(const char *fmt, ...) {
         return;
     }
     
-    if (len > MAX_MSG_LEN - cloud.queue.length) {
+    // MAX_MSG_LEN only bounds this function's local scratch buffer above
+    // (vsnprintf already truncates safely, and len is re-derived via
+    // strlen() from the truncated result) - the real constraint is the
+    // shared outgoing queue's actual capacity. Checked as addition, never
+    // subtraction, so it can't underflow if cloud.queue.length is ever
+    // unexpectedly large.
+    if (cloud.queue.length + len + 1 > QUEUE_SIZE) {
         CA_WriteByte(0);
         return;
     }
@@ -1106,7 +1149,7 @@ void CA_PlayerConnect(edict_t *ent) {
 
     CA_WriteByte(CMD_CONNECT);
     CA_WriteByte(cl);
-    CA_WriteString("%s", proxyinfo[cl].userinfo);
+    CA_WriteString("%s", proxyinfo[cl].userinfo.raw);
     CA_WriteString("%s", proxyinfo[cl].client_version);
 }
 
@@ -1175,7 +1218,7 @@ void CA_PlayerUpdate(uint8_t cl, const char *ui) {
 
     CA_WriteByte(CMD_PLAYERUPDATE);
     CA_WriteByte(cl);
-    CA_WriteString("%s", proxyinfo[cl].userinfo);
+    CA_WriteString("%s", proxyinfo[cl].userinfo.raw);
     CA_WriteString("%s", proxyinfo[cl].client_version);
 }
 
@@ -1261,6 +1304,10 @@ void CA_SayClient(void) {
     client_id = CA_ReadByte();
     level = CA_ReadByte();
     string = CA_ReadString();
+
+    if (client_id >= cloud.maxclients) {
+        return;
+    }
 
     ent = proxyinfo[client_id].ent;
 
