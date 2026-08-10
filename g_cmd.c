@@ -2581,7 +2581,6 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
             if (zbotdetect) {
                 addCmdQueue(client, QCMD_RESTART, 1, 0, 0);
-                stuffcmd(ent, "set msg 0 u\n");
                 addCmdQueue(client, QCMD_LETRATBOTQUIT, 1, 0, 0);
                 if (!(proxyinfo[client].clientcommand & CCMD_RBOTCLEAR)) {
                     addCmdQueue(client, QCMD_TESTRATBOT, 12, 0, 0);
