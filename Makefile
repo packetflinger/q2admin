@@ -68,7 +68,7 @@ ifdef CONFIG_WINDOWS
 	    deps/win32/lib/libmingw32.a \
 	    deps/win32/lib/libdl.a \
 	    -static -static-libgcc \
-	    -lpthread -ldl
+	    -lpthread -ldl -lsqlite3
     CFLAGS += -I/usr/i686-w64-mingw32/sys-root/mingw/include
     INCLUDE = 
 else
@@ -91,6 +91,7 @@ HEADERS :=  game.h \
             g_flood.h \
             g_http.h \
             g_init.h \
+            g_ip.h \
             g_json.h \
             g_local.h \
             g_log.h \
@@ -120,6 +121,7 @@ OBJS :=     g_admin.o \
             g_flood.o \
             g_http.o \
             g_init.o \
+            g_ip.o \
             g_json.o \
             g_libc.o \
             g_log.o \

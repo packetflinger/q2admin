@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include <stdbool.h>
+#include <sqlite3.h>
 #include "platform.h"
 #include "shared.h"
 #include "game.h"
@@ -38,6 +39,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_flood.h"
 #include "g_http.h"
 #include "g_init.h"
+#include "g_ip.h"
 #include "g_log.h"
 #include "g_lrcon.h"
 #include "g_queue.h"
