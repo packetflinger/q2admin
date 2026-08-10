@@ -236,7 +236,11 @@ uint16_t    CA_ReadShort(void);
 int32_t     CA_ReadLong(void);
 char        *CA_ReadString(void);
 void        CA_ReadData(void *out, size_t len);
+#if defined(__GNUC__) || defined(__clang__)
+void        CA_WriteString(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
+#else
 void        CA_WriteString(const char *fmt, ...);
+#endif
 void        CA_WriteByte(uint8_t b);
 void        CA_WriteLong(uint32_t i);
 void        CA_WriteShort(uint16_t s);
