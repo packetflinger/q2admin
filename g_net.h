@@ -6,9 +6,10 @@
 
 #define IP(x)     (net_addressToString(&proxyinfo[x].address, false, false, false))
 #define IPMASK(x) (net_addressToString(&proxyinfo[x].address, false, false, true))
-#define IPSTR(a)  (net_addressToString(a->address, false, false))
+#define IPSTR(a)  (net_addressToString(a->address, false, false, false))
 #define IPSTRMASK(a) (net_addressToString(a, false, false, true))
 #define HASIP(x)  (proxyinfo[x].address.ip.u8[0] != 0)
+#define CLIENTIP(x) (net_addressToString(x, false, false, false))
 
 typedef enum {
     NA_UNSPECIFIED,

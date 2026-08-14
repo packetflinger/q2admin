@@ -488,6 +488,8 @@ extern proxyinfo_t *proxyinfo;
 extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
 
+extern sqlite3 *ipdb;
+
 extern int clientsidetimeout;
 extern int zbotdetectactivetimeout;
 extern int lframenum;

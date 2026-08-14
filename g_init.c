@@ -180,6 +180,7 @@ bool printmessageonplaycmds             = true;
 bool private_command_kick               = false;
 proxyinfo_t *proxyinfo;
 proxyinfo_t *proxyinfoBase;
+sqlite3 *ipdb;
 int proxy_bwproxy                       = 1;
 int proxy_nitro2                        = 1;
 bool q2a_command_check                  = false;
@@ -548,6 +549,8 @@ void InitGame(void) {
     }
 
     profile_stop(1, "q2admin->InitGame", 0, NULL);
+    gi.cprintf(NULL, PRINT_HIGH, "opening IP database\n");
+    ipdb = IP_OpenDatabase("baseq2/ips.sqlite");
     HTTP_Init();
     CA_Init();
 }

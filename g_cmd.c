@@ -658,6 +658,13 @@ q2acmd_t q2aCommands[] = {
         &IPBanning_Enable
     },
     {
+        "iplookup",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        iplookupRun
+    },
+    {
         "kick",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,

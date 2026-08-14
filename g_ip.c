@@ -39,9 +39,10 @@ ipcontext_t IP_Lookup(sqlite3 *db, netadr_t addr) {
     if (!db) {
         return noipcontext;
     }
+    q2a_memset(&out, 0, sizeof(ipcontext_t));
+    out.source = addr;
 
-    const char *sql = "SELECT asn, cidr FROM vpn_prefix WHERE first <= ? AND last > ?;";
-
+    const char *sql = "SELECT asn, cidr FROM vpn_prefix WHERE first <= ? AND last > ? LIMIT 1;";
     ret = sqlite3_prepare_v2(db, sql, -1, &st, NULL);
     if (ret != SQLITE_OK) {
         gi.cprintf(NULL, PRINT_HIGH, "Error looking up IP %s: %s\n", IPSTRMASK(&addr), sqlite3_errmsg(db));
@@ -54,9 +55,9 @@ ipcontext_t IP_Lookup(sqlite3 *db, netadr_t addr) {
 
     while ((ret = sqlite3_step(st)) == SQLITE_ROW) {
        out.asnumber = sqlite3_column_int(st, 0);
-       q2a_memset(&out.prefix, 0, sizeof(out.prefix));
-       strncpy(out.prefix, sqlite3_column_text(st, 1), sizeof(out.prefix));
+       q2a_strncpy(out.prefix, sqlite3_column_text(st, 1), sizeof(out.prefix));
        out.found = true;
+       out.vpn = true;
     }
     sqlite3_finalize(st);
     return out;
@@ -81,3 +82,25 @@ sqlite3 *IP_OpenDatabase(const char *dbfile) {
     return db;
 }
 
+/**
+ * Server console command to manually look up an IP's context in the database.
+ */
+void iplookupRun(int startarg, edict_t *ent, int client) {
+    ipcontext_t ctx;
+    netadr_t addr;
+
+    q2a_memset(&addr, 0, sizeof(netadr_t));
+    addr = net_parseIPAddressBase(gi.argv(startarg));
+    if (addr.ip.u8[0] != 0) {
+        ctx = IP_Lookup(ipdb, addr);
+        if (!ctx.found) {
+            gi.cprintf(ent, PRINT_HIGH, "  %s not found in database\n", CLIENTIP(&addr));
+            return;
+        }
+        gi.cprintf(ent, PRINT_HIGH, "  Prefix: %s\n", ctx.prefix);
+        gi.cprintf(ent, PRINT_HIGH, "  ASN::   %d\n", ctx.asnumber);
+        gi.cprintf(ent, PRINT_HIGH, "  VPN:    %s\n", ctx.vpn ? "yes" : "no");
+    } else {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !iplookup x.x.x.x\n");
+    }
+}
