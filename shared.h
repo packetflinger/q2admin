@@ -18,7 +18,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
  */
 
-#ifdef _WIN32
+#ifdef defined(_MSC_VER) && !defined(__clang__) && !defined(__INTEL_COMPILER)
+  // These are MSVC specific, not just for building for windows.
   // unknown pragmas are SUPPOSED to be ignored, but....
   #pragma warning(disable : 4244)     // MIPS
   #pragma warning(disable : 4136)     // X86
