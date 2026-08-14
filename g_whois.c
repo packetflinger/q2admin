@@ -114,8 +114,8 @@ void whois_adduser(int client, edict_t *ent) {
         WHOIS_COUNT = WHOIS_COUNT - 1; //If max reached, replace latest entry with new client
     }
     whois_details[WHOIS_COUNT].id = WHOIS_COUNT;
-    q2a_strncpy(whois_details[WHOIS_COUNT].ip, IP(client), 22);
-    q2a_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, 16);
+    q2a_strncpy(whois_details[WHOIS_COUNT].ip, IP(client), WHOISIPLEN-1);
+    q2a_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, WHOISNAMELEN-1);
     proxyinfo[client].userid = WHOIS_COUNT;
     WHOIS_COUNT++;
 }

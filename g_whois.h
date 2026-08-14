@@ -6,14 +6,16 @@
 #pragma once
 
 #define WHOISFILE   "whois.dat"
+#define WHOISIPLEN  50
+#define WHOISNAMELEN 16
 
 typedef struct {
-    char name[16];
+    char name[WHOISNAMELEN];
 } user_dyn;
 
 typedef struct {
     int id;
-    char ip[22];
+    char ip[WHOISIPLEN]; // allow for ipv6
     char seen[32];
     user_dyn dyn[10];
 } user_details;
