@@ -55,7 +55,7 @@ ipcontext_t IP_Lookup(sqlite3 *db, netadr_t addr) {
 
     while ((ret = sqlite3_step(st)) == SQLITE_ROW) {
        out.asnumber = sqlite3_column_int(st, 0);
-       q2a_strncpy(out.prefix, sqlite3_column_text(st, 1), sizeof(out.prefix));
+       q2a_strncpy(out.prefix, sqlite3_column_text(st, 1), sizeof(out.prefix)-1);
        out.found = true;
        out.vpn = true;
     }

@@ -232,7 +232,7 @@ void G_RunFrame(void) {
                     char *ip = ipbuffer;
                     char *bp = ip;
 
-                    q2a_strncpy(ipbuffer, IP(client), sizeof(ipbuffer));
+                    q2a_strncpy(ipbuffer, IP(client), sizeof(ipbuffer)-1);
 
                     while (*bp && (*bp != ':')) {
                         bp++;
@@ -286,7 +286,7 @@ void G_RunFrame(void) {
                         maxReconnectList++;
                     }
 
-                    q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer)-1);
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
                     generateRandomString(ReconnectString, 5);
@@ -413,7 +413,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer)-1);
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -485,7 +485,7 @@ void G_RunFrame(void) {
                 if (displayzbotuser) {
                     unsigned int i;
 
-                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer));
+                    q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer)-1);
 
                     for (i = 0; i < numofdisplays; i++) {
                         gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
@@ -873,7 +873,7 @@ q_exported game_export_t *GetGameAPI(game_import_t *import) {
     q2adminhashlist_dir = gi.cvar("q2adminhashlist_dir", "", 0);
 
     gamedir = gi.cvar("game", "baseq2", 0);
-    q2a_strncpy(moddir, gamedir->string, sizeof(moddir));
+    q2a_strncpy(moddir, gamedir->string, sizeof(moddir)-1);
 
     if (moddir[0] == 0) {
         q2a_strcpy(moddir, "baseq2");

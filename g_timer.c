@@ -36,7 +36,7 @@ void timer_start(int client, edict_t *ent) {
         return;
     }
     proxyinfo[client].timers[num].start = ltime + seconds;
-    q2a_strncpy(proxyinfo[client].timers[num].action, gi.argv(3), sizeof(proxyinfo[client].timers[num].action));
+    q2a_strncpy(proxyinfo[client].timers[num].action, gi.argv(3), sizeof(proxyinfo[client].timers[num].action)-1);
 
 }
 

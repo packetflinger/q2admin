@@ -165,7 +165,7 @@ bool checkforfloodcmd(char *cp, int floodcmd) {
 bool checkforfloodcmds(char *cp) {
     unsigned int i;
 
-    q2a_strncpy(buffer, cp, sizeof(buffer));
+    q2a_strncpy(buffer, cp, sizeof(buffer)-1);
     q_strupr(buffer);
     for (i = 0; i < maxflood_cmds; i++) {
         if (checkforfloodcmd(buffer, i)) {

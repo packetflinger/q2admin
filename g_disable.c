@@ -167,7 +167,7 @@ bool checkfordisablecmd(char *cp, int disablecmd) {
 bool checkDisabledCommand(char *cmd) {
     unsigned int i;
 
-    q2a_strncpy(buffer, cmd, sizeof(buffer));
+    q2a_strncpy(buffer, cmd, sizeof(buffer)-1);
     q_strupr(buffer);
     for (i = 0; i < maxdisable_cmds; i++) {
         if (checkfordisablecmd(buffer, i)) {

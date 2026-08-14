@@ -63,7 +63,7 @@ void openLogFiles(void) {
             if (logFiles[i].mod) {
                 Q_snprintf(name, sizeof(name), "%s/%s", moddir, logFiles[i].filename);
             } else {
-                q2a_strncpy(name, logFiles[i].filename, sizeof(name));
+                q2a_strncpy(name, logFiles[i].filename, sizeof(name)-1);
             }
             logFiles[i].fp = fopen(name, "at");
             if (logFiles[i].fp == NULL) {
@@ -209,7 +209,7 @@ bool loadLogListFile(char *filename) {
                 }
             } else {
                 for (i = 0; i < LOGTYPES_MAX; i++) {
-                    q2a_strncpy(buffer, logtypes[i].logtype, sizeof(buffer));
+                    q2a_strncpy(buffer, logtypes[i].logtype, sizeof(buffer)-1);
                     q2a_strcat(buffer, ":");
 
                     if (startContains(cp, buffer)) {
@@ -410,7 +410,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 't') {	// long format
                 time(&ltimetemp);
-                q2a_strncpy(buffer, ctime(&ltimetemp), sizeof(buffer));
+                q2a_strncpy(buffer, ctime(&ltimetemp), sizeof(buffer)-1);
 
                 cp = buffer;
                 while (*cp && *cp != '\n') {
@@ -545,7 +545,7 @@ void displayLogFileCont(edict_t *ent, int client, long logfilereadpos) {
     if (logFiles[logNum].mod) {
         Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[logNum].filename);
     } else {
-        q2a_strncpy(logname, logFiles[logNum].filename, sizeof(logname));
+        q2a_strncpy(logname, logFiles[logNum].filename, sizeof(logname)-1);
     }
 
     logfilePtr = fopen(logname, "rt");
@@ -588,7 +588,7 @@ void clearlogfileRun(int startarg, edict_t *ent, int client) {
             if (logFiles[logToDisplay].mod) {
                 Q_snprintf(logname, sizeof(logname), "%s/%s", moddir, logFiles[logToDisplay].filename);
             } else {
-                q2a_strncpy(logname, logFiles[logToDisplay].filename, sizeof(logname));
+                q2a_strncpy(logname, logFiles[logToDisplay].filename, sizeof(logname)-1);
             }
 
             logfilePtr = fopen(logname, "w+t");
@@ -653,7 +653,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
         processstring(filename, mod ? gi.argv(startarg + 3) : cmd, sizeof (filename) - 1, 0);
         if (!isBlank(filename)) {
             logFiles[logfilenum].mod = mod;
-            q2a_strncpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename));
+            q2a_strncpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename)-1);
             logFiles[logfilenum].inuse = true;
             gi.cprintf(ent, PRINT_HIGH, "Log file Added!\n");
         } else {
@@ -741,7 +741,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
             }
             log = logtypes[i].log;
             logfiles = logtypes[i].logfiles;
-            q2a_strncpy(format, logtypes[i].format, sizeof(format));
+            q2a_strncpy(format, logtypes[i].format, sizeof(format)-1);
             for (argi = startarg + 2; gi.argc() > argi; argi++) {
                 cmd = gi.argv(argi);
                 if (Q_stricmp(cmd, "LOG") == 0) {

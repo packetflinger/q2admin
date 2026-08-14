@@ -23,7 +23,7 @@ void whois(int client, edict_t *ent) {
         return;
     }
 
-    strncpy(a1, gi.argv(1), sizeof(a1));
+    strncpy(a1, gi.argv(1), sizeof(a1)-1);
     a1[sizeof(a1)-1] = 0;
 
     temp = q2a_atoi(a1);
@@ -207,7 +207,7 @@ void whois_write_file(void) {
             continue;
         }
 
-        q2a_strncpy(temp, whois_details[i].ip, sizeof(temp));
+        q2a_strncpy(temp, whois_details[i].ip, sizeof(temp)-1);
         temp_len = strlen(temp);
 
         //convert spaces to �
@@ -218,7 +218,7 @@ void whois_write_file(void) {
         }
         fprintf(f, "%i %s ", whois_details[i].id, temp);
 
-        q2a_strncpy(temp, whois_details[i].seen, sizeof(temp));
+        q2a_strncpy(temp, whois_details[i].seen, sizeof(temp)-1);
         temp_len = strlen(temp);
 
         for (j = 0; j < temp_len; j++) {
@@ -230,7 +230,7 @@ void whois_write_file(void) {
 
         for (j = 0; j < 10; j++) {
             if (whois_details[i].dyn[j].name[0]) {
-                q2a_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp));
+                q2a_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp)-1);
                 temp_len = strlen(temp);
 
                 for (k = 0; k < temp_len; k++) {

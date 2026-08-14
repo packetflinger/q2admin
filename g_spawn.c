@@ -204,7 +204,7 @@ bool checkforspawncmd(char *cp, int spawncmd) {
 bool checkDisabledEntities(char *cp) {
     unsigned int i;
 
-    q2a_strncpy(buffer, cp, sizeof(buffer));
+    q2a_strncpy(buffer, cp, sizeof(buffer)-1);
     q_strupr(buffer);
     for (i = 0; i < maxspawn_cmds; i++) {
         if (checkforspawncmd(buffer, i)) {

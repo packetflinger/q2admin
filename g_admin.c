@@ -341,7 +341,7 @@ int doAdminCommand(edict_t *ent, int client) {
                 if (strcmp(gi.argv(1), "all") == 0) {
                     for (send_to_client = 0; send_to_client < maxclients->value; send_to_client++)
                         if (proxyinfo[send_to_client].inuse) {
-                            q2a_strncpy(send_string, gi.argv(2), sizeof(send_string));
+                            q2a_strncpy(send_string, gi.argv(2), sizeof(send_string)-1);
                             if (gi.argc() > 3)
                                 for (i = 3; i < gi.argc(); i++) {
                                     strcat(send_string, " ");
@@ -353,7 +353,7 @@ int doAdminCommand(edict_t *ent, int client) {
                         }
                 } else
                     if (proxyinfo[send_to_client].inuse) {
-                    q2a_strncpy(send_string, gi.argv(2), sizeof(send_string));
+                    q2a_strncpy(send_string, gi.argv(2), sizeof(send_string)-1);
                     if (gi.argc() > 3)
                         for (i = 3; i < gi.argc(); i++) {
                             strcat(send_string, " ");

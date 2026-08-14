@@ -77,7 +77,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
         net = json_getProperty(root, "network");
         if (net) {
             proxyinfo[i].network = net_parseIPAddressMask(json_getPropertyValue(net, "network"));
-            q2a_strncpy(proxyinfo[i].auton_sys_num, json_getPropertyValue(net, "autonomous_system_number"), sizeof(proxyinfo[i].auton_sys_num));
+            q2a_strncpy(proxyinfo[i].auton_sys_num, json_getPropertyValue(net, "autonomous_system_number"), sizeof(proxyinfo[i].auton_sys_num)-1);
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {

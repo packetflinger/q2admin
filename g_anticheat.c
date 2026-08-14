@@ -53,9 +53,9 @@ void AC_UpdateList(void) {
         char cfgAnticheatRemoteList[100];
 
         if (!q2adminanticheat_file || isBlank(q2adminanticheat_file->string)) {
-            q2a_strncpy(cfgAnticheatRemoteList, ANTICHEATEXCEPTIONREMOTEFILE, sizeof(cfgAnticheatRemoteList));
+            q2a_strncpy(cfgAnticheatRemoteList, ANTICHEATEXCEPTIONREMOTEFILE, sizeof(cfgAnticheatRemoteList)-1);
         } else {
-            q2a_strncpy(cfgAnticheatRemoteList, q2adminanticheat_file->string, sizeof(cfgAnticheatRemoteList));
+            q2a_strncpy(cfgAnticheatRemoteList, q2adminanticheat_file->string, sizeof(cfgAnticheatRemoteList)-1);
         }
         ret = AC_GetRemoteFile(cfgAnticheatRemoteList);
         if (!ret) {
@@ -76,7 +76,7 @@ void AC_UpdateList(void) {
 void AC_LoadExceptions(void) {	
     if ((int) q2adminanticheat_enable->value) {
         AC_UpdateList();
-        q2a_strncpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n", sizeof(buffer));
+        q2a_strncpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n", sizeof(buffer)-1);
         gi.AddCommandString(buffer);
     }
 }
@@ -125,16 +125,16 @@ bool ReadRemoteHashListFile(char *bfname, char *blname) {
 void getR1chHashList(char *hashname) {
 
     char cfgHashList_enabled[100];
-    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled)-1);
 
     if (cfgHashList_enabled[0] == '1') {
         bool ret;
         char cfgHashRemoteList[100];
 
         if (!q2adminhashlist_dir || isBlank(q2adminhashlist_dir->string)) {
-            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, HASHLISTREMOTEDIR, sizeof(cfgHashRemoteList)), "/"), hashname);
+            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, HASHLISTREMOTEDIR, sizeof(cfgHashRemoteList)-1), "/"), hashname);
         } else {
-            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)), "/"), hashname);
+            q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)-1), "/"), hashname);
         }
         ret = ReadRemoteHashListFile(cfgHashRemoteList, hashname);
 
@@ -150,7 +150,7 @@ void getR1chHashList(char *hashname) {
  */
 void loadhashlist(void) {
     char cfgHashList_enabled[100];
-    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled));
+    q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled)-1);
     if (cfgHashList_enabled[0] == '1') {
         getR1chHashList("anticheat-cvars.txt");
         getR1chHashList("anticheat-hashes.txt");

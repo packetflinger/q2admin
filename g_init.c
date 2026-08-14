@@ -771,7 +771,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 
     if (spawnentities_enable) {
         readSpawnLists();
-        q2a_strncpy(buffer, moddir, sizeof(buffer));
+        q2a_strncpy(buffer, moddir, sizeof(buffer)-1);
         q2a_strcat(buffer, "/q2adminmaps/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, ".q2aspawn");
@@ -870,9 +870,9 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readCheckVarLists();
 
     // exec the map cfg file...
-    q2a_strncpy(gmapname, mapname, sizeof(gmapname));
+    q2a_strncpy(gmapname, mapname, sizeof(gmapname)-1);
     if (mapcfgexec) {
-        q2a_strncpy(gmapname, mapname, sizeof(gmapname));
+        q2a_strncpy(gmapname, mapname, sizeof(gmapname)-1);
         q2a_strcpy(buffer, "exec mapcfg/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, "-post.cfg\n");
@@ -884,7 +884,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     }
 
     cloud.maxclients = (int) maxclients->value;
-    q2a_strncpy(cloud.mapname, mapname, sizeof(cloud.mapname));
+    q2a_strncpy(cloud.mapname, mapname, sizeof(cloud.mapname)-1);
     cloud.port = getport();
     cloud.frame_number = 0;
 
@@ -1114,7 +1114,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
                 Info_SetValueForKey(ui, "rejmsg", "banned: proxy/bot signature found");
             } else {
                 proxyinfo[client].clientcommand |= CCMD_BANNED;
-                q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
+                q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
             }
         }
     }
@@ -1134,7 +1134,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         }
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw)-1);
     q2a_strncpy(proxyinfo[client].name, Info_ValueForKey(userinfo, "name"), sizeof(proxyinfo[client].name) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
@@ -1153,7 +1153,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
             ret = 0;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
-            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
+            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
         }
     } else if (checkClientIpAddress && !HASIP(client)) {
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
@@ -1171,7 +1171,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
             Info_SetValueForKey(ui, "rejmsg", va("banned: %s", currentBanMsg));
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
-            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer));
+            q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
         }
     } else if (ret && !(proxyinfo[client].clientcommand & CCMD_BANNED)) {
         bool doConnect = true;
@@ -1670,7 +1670,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         addCmdQueue(client, QCMD_MSGDISCONNECT, 2, 0, 0);
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw)-1);
 
     proxyinfo[client].next_report = 0;
 
