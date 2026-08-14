@@ -1,3 +1,28 @@
+# Override defaults in the file named ".config" in the same directory as the
+# source.
+#
+# For verbose output, to see the exact command used for building each at each
+# step, define the "V" environment variable. Example: $ V=1 make
+#
+# Dependencies:
+#  - curl     (for http downloading configs/etc)
+#  - openssl  (for cloudadmin crypto and https)
+#  - sqlite   (for IP context lookups (vpn/asn)
+#  - zlib     (required by openssl)
+#
+# If the build setup is not changed, pre-compiled bundled dependencies will be
+# used instead of shared libraries on the build system. The binary will still
+# be dynamically linked, but the required libraries will be baked in. This
+# results in the final q2admin binary being rather large (~8-10MB). This is not
+# an issue on modern hardware with large amounts of ram. If you're running
+# multiple gameservers on the same hardware and want to save some memory, you
+# can link with the shared libraries on the host system instead by adding the
+# following to your .config file:
+#
+#    SHARED_DEPS=1
+#
+
+
 -include .config
 
 ifndef CPU
@@ -11,8 +36,9 @@ endif
 ifndef VER
     VER := $(REV)~$(shell git rev-parse --short HEAD)
 endif
+
 ifndef YEAR
-	YEAR := $(shell date +%Y)
+    YEAR := $(shell date +%Y)
 endif
 
 CC ?= gcc
@@ -21,24 +47,33 @@ WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
 
-INCLUDES ?= -Ideps/$(CPU)/curl/include \
-            -Ideps/$(CPU)/zlib/include \
-            -Ideps/$(CPU)/openssl/include
-            
-CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
-
-ifdef CONFIG_MACOS
-    LDFLAGS ?= -shared -framework CoreFoundation -framework CoreServices -framework SystemConfiguration
-else
+# Assuming linux at this point, update later for windows/mac
+ifndef SHARED_DEPS
+    INCLUDES ?= -Ideps/$(CPU)/curl/include \
+                -Ideps/$(CPU)/zlib/include \
+                -Ideps/$(CPU)/openssl/include \
+                -Ideps/$(CPU)/sqlite/include
+    CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB $(INCLUDES)
     LDFLAGS ?= -shared
+    LIBS ?=     deps/$(CPU)/curl/lib/libcurl.a \
+                deps/$(CPU)/zlib/lib/libz.a \
+                deps/$(CPU)/openssl/lib/libssl.a \
+                deps/$(CPU)/openssl/lib/libcrypto.a \
+                deps/$(CPU)/sqlite/lib/libsqlite3.a \
+                -lpthread \
+                -ldl
+else
+    INCLUDES ?= -I/usr/include
+    CFLAGS += -Wall -O3 -fno-strict-aliasing -g -MMD
+    LDFLAGS ?= -shared
+    LIBS ?= -lcurl -lz -lssl -lcrypto -lsqlite3 -lpthread -ldl
 endif
 
-LIBS ?= deps/$(CPU)/curl/lib/libcurl.a \
-        deps/$(CPU)/zlib/lib/libz.a \
-        deps/$(CPU)/openssl/lib/libssl.a \
-        deps/$(CPU)/openssl/lib/libcrypto.a \
-        -lpthread \
-        -ldl
+ifdef CONFIG_MACOS
+    LDFLAGS += -framework CoreFoundation \
+               -framework CoreServices \
+               -framework SystemConfiguration
+endif
 
 ifdef CONFIG_WINDOWS
     CC = i686-w64-mingw32-gcc
@@ -49,28 +84,29 @@ ifdef CONFIG_WINDOWS
     LDFLAGS += -mconsole
     LDFLAGS += -Wl,--nxcompat,--dynamicbase
     LIBS =  deps/win32/lib/libws2_32.a \
-	    deps/win32/lib/libcurl.a \
-	    deps/win32/lib/libcrypto.a \
-	    deps/win32/lib/libcrypt32.a \
-	    deps/win32/lib/libz.a \
-	    deps/win32/lib/libssl.a \
-	    deps/win32/lib/libssh2.a \
-	    deps/win32/lib/libidn2.a \
-	    deps/win32/lib/libssp.a \
-	    deps/win32/lib/libiconv.a \
-	    deps/win32/lib/libintl.a \
-	    deps/win32/lib/libwldap32.a \
-	    deps/win32/lib/libgdi32.a \
-	    deps/win32/lib/libcrypto.a \
-	    deps/win32/lib/libcrypt32.a \
-	    deps/win32/lib/libws2_32.a \
-	    deps/win32/lib/libSDL2main.a \
-	    deps/win32/lib/libmingw32.a \
-	    deps/win32/lib/libdl.a \
-	    -static -static-libgcc \
-	    -lpthread -ldl -lsqlite3
-    CFLAGS += -I/usr/i686-w64-mingw32/sys-root/mingw/include
-    INCLUDE = 
+            deps/win32/lib/libcurl.a \
+            deps/win32/lib/libcrypto.a \
+            deps/win32/lib/libcrypt32.a \
+            deps/win32/lib/libz.a \
+            deps/win32/lib/libssl.a \
+            deps/win32/lib/libssh2.a \
+            deps/win32/lib/libidn2.a \
+            deps/win32/lib/libssp.a \
+            deps/win32/lib/libiconv.a \
+            deps/win32/lib/libintl.a \
+            deps/win32/lib/libwldap32.a \
+            deps/win32/lib/libgdi32.a \
+            deps/win32/lib/libcrypto.a \
+            deps/win32/lib/libcrypt32.a \
+            deps/win32/lib/libws2_32.a \
+            deps/win32/lib/libSDL2main.a \
+            deps/win32/lib/libmingw32.a \
+            deps/win32/lib/libdl.a \
+            -static -static-libgcc \
+           -lpthread -ldl -lsqlite3
+    INCLUDES = -Ideps/win32/include \
+               -I/usr/i686-w64-mingw32/sys-root/mingw/include
+    CFLAGS = -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB  $(INCLUDES)
 else
     CFLAGS += -fPIC -ffast-math -w -DLINUX
 endif
@@ -138,12 +174,14 @@ OBJS :=     g_admin.o \
             g_whois.o
 
 ifdef CONFIG_WINDOWS
+    EXT ?= dll
     CPU := x86
-    TARGET ?= game$(CPU)-q2admin-r$(VER).dll
+    TARGET ?= game$(CPU)-q2admin-r$(VER).$(EXT)
     OBJS += q2admin.o
 else
+    EXT ?= so
     LIBS += -lm
-    TARGET ?= game$(CPU)-q2admin-r$(VER).so
+    TARGET ?= game$(CPU)-q2admin-r$(VER).$(EXT)
 endif
 
 all: $(TARGET)
