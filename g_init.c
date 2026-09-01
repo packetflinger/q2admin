@@ -143,6 +143,7 @@ bool http_debug                         = false;
 bool http_enable                        = true;
 bool http_verifyssl                     = true;
 int  hz                                 = 10;
+char ip_database_file[256]              = "baseq2/ips.sqlite";
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 char lanip[256]                         = "";
@@ -550,7 +551,7 @@ void InitGame(void) {
 
     profile_stop(1, "q2admin->InitGame", 0, NULL);
     gi.cprintf(NULL, PRINT_HIGH, "opening IP database\n");
-    ipdb = IP_OpenDatabase("baseq2/ips.sqlite");
+    //ipdb = IP_OpenDatabase(ip_database_file);
     HTTP_Init();
     CA_Init();
 }

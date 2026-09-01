@@ -76,7 +76,7 @@ sqlite3 *IP_OpenDatabase(const char *dbfile) {
 
     ret = sqlite3_open(dbfile, &db);
     if (ret != SQLITE_OK) {
-        gi.cprintf(NULL, PRINT_HIGH, "Unable to open IP database \"%s\": %s\n", dbfile, sqlite3_errmsg(db));
+        gi.cprintf(NULL, PRINT_HIGH, "[q2admin] Unable to open IP database \"%s\": %s\n", dbfile, sqlite3_errmsg(db));
         return NULL;
     }
     return db;
@@ -104,3 +104,4 @@ void iplookupRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !iplookup x.x.x.x\n");
     }
 }
+

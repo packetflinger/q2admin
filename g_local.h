@@ -538,6 +538,8 @@ extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
 
+extern char ip_database_file[256];
+
 // zb_clib.c
 #ifdef Q2ADMINCLIB
 char *q2a_strcpy(char *strDestination, const char *strSource);

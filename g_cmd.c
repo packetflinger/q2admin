@@ -640,6 +640,12 @@ q2acmd_t q2aCommands[] = {
         ipRun
     },
     {
+        "ip_database_file",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &ip_database_file,
+    },
+    {
         "ip_limit",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
