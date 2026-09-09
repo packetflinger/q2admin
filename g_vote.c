@@ -90,7 +90,7 @@ bool ReadVoteFile(char *votename) {
                 continue;
             }
 
-            votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_GAME);
+            votecmds[maxvote_cmds].votecmd = G_Malloc(len);
             q2a_strcpy(votecmds[maxvote_cmds].votecmd, cp);
 
             if (votecmds[maxvote_cmds].type == VOTE_RE) {
@@ -124,7 +124,7 @@ bool ReadVoteFile(char *votename) {
 void freeVoteLists(void) {
     while (maxvote_cmds) {
         maxvote_cmds--;
-        gi.TagFree(votecmds[maxvote_cmds].votecmd);
+        G_Free(votecmds[maxvote_cmds].votecmd);
     }
 }
 
@@ -256,14 +256,14 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
 
-    votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_GAME);
+    votecmds[maxvote_cmds].votecmd = G_Malloc(len);
     processString(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
 
     if (votecmds[maxvote_cmds].type == VOTE_RE) {
         q_strupr(cmd);
         votecmds[maxvote_cmds].r = re_compile(cmd);
         if (!votecmds[maxvote_cmds].r) {
-            gi.TagFree(votecmds[maxvote_cmds].votecmd);
+            G_Free(votecmds[maxvote_cmds].votecmd);
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -310,7 +310,7 @@ void voteDelRun(int startarg, edict_t *ent, int client) {
 
     vote--;
 
-    gi.TagFree(votecmds[vote].votecmd);
+    G_Free(votecmds[vote].votecmd);
 
     if (vote + 1 < maxvote_cmds) {
         q2a_memmove((votecmds + vote), (votecmds + vote + 1), sizeof (votecmd_t) * (maxvote_cmds - vote));
