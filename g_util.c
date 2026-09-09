@@ -641,7 +641,7 @@ size_t Q_concat(char *dest, size_t size, ...) {
     while ((s = va_arg(argptr, const char *)) != NULL) {
         len = strlen(s);
         if (total + len < size) {
-            memcpy(dest, s, len);
+            q2a_memcpy(dest, s, len);
             dest += len;
         }
         total += len;

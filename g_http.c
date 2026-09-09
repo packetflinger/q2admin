@@ -371,7 +371,7 @@ void HTTP_RunDownloads(void) {
 static size_t http_GetFile_callback(void *ptr, size_t size, size_t nmemb, void *out) {
     generic_file_t *gf = (generic_file_t *)out;
     size_t total = size * nmemb;
-    memcpy(gf->data, ptr, total);
+    q2a_memcpy(gf->data, ptr, total);
     gf->index += total;
     return total;
 }
