@@ -103,10 +103,10 @@ void freeBanLists(void) {
         banhead = banhead->next;
 
         if (freeentry->msg) {
-            gi.TagFree(freeentry->msg);
+            G_Free(freeentry->msg);
         }
 
-        gi.TagFree(freeentry);
+        G_Free(freeentry);
     }
 
     while (chatbanhead) {
@@ -114,10 +114,10 @@ void freeBanLists(void) {
         chatbanhead = chatbanhead->next;
 
         if (freeentry->msg) {
-            gi.TagFree(freeentry->msg);
+            G_Free(freeentry->msg);
         }
 
-        gi.TagFree(freeentry);
+        G_Free(freeentry);
     }
 
     banNumUpto = 0;
@@ -217,7 +217,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -231,7 +231,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -268,7 +268,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                gi.TagFree(newentry);
+                G_Free(newentry);
                 return;
             }
 
@@ -284,7 +284,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -301,7 +301,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -325,7 +325,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -335,7 +335,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (!isdigit(*cp)) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -356,7 +356,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -373,7 +373,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (!newentry->r) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        gi.TagFree(newentry);
+                        G_Free(newentry);
                         return;
                     }
                 }
@@ -402,7 +402,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (!newentry->r) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
             }
@@ -423,7 +423,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                gi.TagFree(newentry);
+                G_Free(newentry);
                 return;
             }
 
@@ -439,7 +439,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (gi.argc() <= startarg) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        gi.TagFree(newentry);
+                        G_Free(newentry);
                         return;
                     }
 
@@ -449,7 +449,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (!isdigit(*cp)) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        gi.TagFree(newentry);
+                        G_Free(newentry);
                         return;
                     }
 
@@ -476,7 +476,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        gi.TagFree(newentry);
+                        G_Free(newentry);
                         return;
                     }
 
@@ -495,7 +495,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                     if (*cp != 0) {
                         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        gi.TagFree(newentry);
+                        G_Free(newentry);
                         return;
                     }
                 } else {
@@ -529,7 +529,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                gi.TagFree(newentry);
+                G_Free(newentry);
                 return;
             }
             cp = gi.argv(startarg);
@@ -553,7 +553,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             if (gi.argc() <= startarg) {
                 gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                 gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                gi.TagFree(newentry);
+                G_Free(newentry);
                 return;
             }
 
@@ -567,7 +567,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
 
@@ -579,7 +579,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (gi.argc() <= startarg) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
                 cp = gi.argv(startarg);
@@ -609,7 +609,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 if (!newentry->vr) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
                     gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                     return;
                 }
             }
@@ -623,7 +623,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -654,7 +654,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -684,7 +684,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg + 2) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -733,7 +733,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -773,9 +773,9 @@ void banRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
             if (newentry->msg) {
-                gi.TagFree(newentry->msg);
+                G_Free(newentry->msg);
             }
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -806,9 +806,9 @@ void banRun(int startarg, edict_t *ent, int client) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
             if (newentry->msg) {
-                gi.TagFree(newentry->msg);
+                G_Free(newentry->msg);
             }
-            gi.TagFree(newentry);
+            G_Free(newentry);
             return;
         }
 
@@ -854,9 +854,9 @@ void banRun(int startarg, edict_t *ent, int client) {
     if (*cp != 0) {
         // something is wrong...
         if (newentry->msg) {
-            gi.TagFree(newentry->msg);
+            G_Free(newentry->msg);
         }
-        gi.TagFree(newentry);
+        G_Free(newentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
         return;
@@ -866,10 +866,9 @@ void banRun(int startarg, edict_t *ent, int client) {
     if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) {
         // no, abort
         if (newentry->msg) {
-            gi.TagFree(newentry->msg);
+            G_Free(newentry->msg);
         }
-        gi.dprintf("problems!\n");
-        gi.TagFree(newentry);
+        G_Free(newentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
         return;
@@ -968,10 +967,10 @@ int checkBanList(edict_t *ent, int client) {
                 }
 
                 if (checkentry->msg) {
-                    gi.TagFree(checkentry->msg);
+                    G_Free(checkentry->msg);
                 }
 
-                gi.TagFree(checkentry);
+                G_Free(checkentry);
 
                 if (prevcheckentry) {
                     checkentry = prevcheckentry->next;
@@ -1314,9 +1313,9 @@ void delbanRun(int startarg, edict_t *ent, int client) {
                 banhead = findentry->next;
             }
             if (findentry->msg) {
-                gi.TagFree(findentry->msg);
+                G_Free(findentry->msg);
             }
-            gi.TagFree(findentry);
+            G_Free(findentry);
             gi.cprintf(ent, PRINT_HIGH, "Ban deleted.\n");
         } else {
             gi.cprintf(ent, PRINT_HIGH, "Ban not found.\n");
@@ -1351,7 +1350,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
-            gi.TagFree(cnewentry);
+            G_Free(cnewentry);
             return;
         }
 
@@ -1367,7 +1366,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
-            gi.TagFree(cnewentry);
+            G_Free(cnewentry);
             return;
         }
 
@@ -1397,7 +1396,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (!cnewentry->r) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
-            gi.TagFree(cnewentry);
+            G_Free(cnewentry);
             return;
         }
     }
@@ -1414,7 +1413,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         if (gi.argc() <= startarg) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
             gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
-            gi.TagFree(cnewentry);
+            G_Free(cnewentry);
             return;
         }
 
@@ -1479,9 +1478,9 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     if (*cp != 0) {
         // something is wrong...
         if (cnewentry->msg) {
-            gi.TagFree(cnewentry->msg);
+            G_Free(cnewentry->msg);
         }
-        gi.TagFree(cnewentry);
+        G_Free(cnewentry);
         gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
         gi.cprintf(ent, PRINT_HIGH, CHATBANCMD_LAYOUT);
         return;
@@ -1641,9 +1640,9 @@ void delchatbanRun(int startarg, edict_t *ent, int client) {
                 chatbanhead = findentry->next;
             }
             if (findentry->msg) {
-                gi.TagFree(findentry->msg);
+                G_Free(findentry->msg);
             }
-            gi.TagFree(findentry);
+            G_Free(findentry);
             gi.cprintf(ent, PRINT_HIGH, "Chat Ban deleted.\n");
         } else {
             gi.cprintf(ent, PRINT_HIGH, "Chat Ban not found.\n");
@@ -1872,7 +1871,7 @@ char *ban_parseBan(char *cp) {
                 q_strupr(strbuffer);
                 newentry->vr = re_compile(strbuffer);
                 if (!newentry->vr) {
-                    gi.TagFree(newentry);
+                    G_Free(newentry);
                 }
             }
             SKIPBLANK(cp);
@@ -1977,10 +1976,10 @@ char *ban_parseBan(char *cp) {
             (newentry->type == NICKRE && !newentry->r)) {
         // no, abort
         if (newentry->msg) {
-            gi.TagFree(newentry->msg);
+            G_Free(newentry->msg);
         }
-        gi.TagFree(newentry);
-        gi.dprintf("Error loading BAN\n");
+        G_Free(newentry);
+        q2a_printf("Error loading BAN\n");
     } else {
         // we have the ban record...
         // insert at the head of the correct list.
@@ -2073,10 +2072,10 @@ char *ban_parseChatban(char *cp) {
     if (cnewentry->type == CNOTUSED || (cnewentry->type == CHATRE && !cnewentry->r)) {
         // no, abort
         if (cnewentry->msg) {
-            gi.TagFree(cnewentry->msg);
+            G_Free(cnewentry->msg);
         }
-        gi.TagFree(cnewentry);
-        gi.dprintf("[q2admin] invalid chatban, syntax: %s\n", CHATBANFILE_LAYOUT);
+        G_Free(cnewentry);
+        q2a_printf("invalid chatban, syntax: %s\n", CHATBANFILE_LAYOUT);
     } else {
         // we have the ban record...
         // insert at the head of the correct list.
