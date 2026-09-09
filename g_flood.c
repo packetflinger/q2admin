@@ -79,7 +79,7 @@ bool ReadFloodFile(char *floodname) {
                 continue;
             }
 
-            floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_GAME);
+            floodcmds[maxflood_cmds].floodcmd = G_Malloc(len);
             q2a_strcpy(floodcmds[maxflood_cmds].floodcmd, cp);
 
             if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
@@ -110,7 +110,7 @@ bool ReadFloodFile(char *floodname) {
 void freeFloodLists(void) {
     while (maxflood_cmds) {
         maxflood_cmds--;
-        gi.TagFree(floodcmds[maxflood_cmds].floodcmd);
+        G_Free(floodcmds[maxflood_cmds].floodcmd);
     }
 }
 
@@ -696,14 +696,14 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
 
-    floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_GAME);
+    floodcmds[maxflood_cmds].floodcmd = G_Malloc(len);
     processString(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
         q_strupr(cmd);
         floodcmds[maxflood_cmds].r = re_compile(cmd);
         if (!floodcmds[maxflood_cmds].r) {
-            gi.TagFree(floodcmds[maxflood_cmds].floodcmd);
+            G_Free(floodcmds[maxflood_cmds].floodcmd);
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -747,7 +747,7 @@ void floodDelRun(int startarg, edict_t *ent, int client) {
     }
 
     flood--;
-    gi.TagFree(floodcmds[flood].floodcmd);
+    G_Free(floodcmds[flood].floodcmd);
 
     if (flood + 1 < maxflood_cmds) {
         q2a_memmove((floodcmds + flood), (floodcmds + flood + 1), sizeof (floodcmd_t) * (maxflood_cmds - flood));
