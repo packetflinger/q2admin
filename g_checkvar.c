@@ -70,7 +70,7 @@ bool ReadCheckVarFile(char *checkvarname) {
             }
 
             cp++;
-            cp = processstring(checkvarList[maxcheckvars].variablename, cp, sizeof (checkvarList[maxcheckvars].variablename) - 1, '\"');
+            cp = processString(checkvarList[maxcheckvars].variablename, cp, sizeof (checkvarList[maxcheckvars].variablename) - 1, '\"');
 
             // make sure you are at the end quote
             while (*cp && *cp != '\"') {
@@ -97,7 +97,7 @@ bool ReadCheckVarFile(char *checkvarname) {
                     continue;
                 }
                 cp++;
-                cp = processstring(checkvarList[maxcheckvars].value, cp, sizeof (checkvarList[maxcheckvars].value) - 1, '\"');
+                cp = processString(checkvarList[maxcheckvars].value, cp, sizeof (checkvarList[maxcheckvars].value) - 1, '\"');
                 continue;
             }
             else if (checkvarList[maxcheckvars].type == CV_RANGE) {
@@ -109,7 +109,7 @@ bool ReadCheckVarFile(char *checkvarname) {
                 }
 
                 cp++;
-                cp = processstring(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
+                cp = processString(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
 
                 checkvarList[maxcheckvars].lower = q2a_atof(rangevalue);
 
@@ -131,7 +131,7 @@ bool ReadCheckVarFile(char *checkvarname) {
                 }
 
                 cp++;
-                cp = processstring(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
+                cp = processString(rangevalue, cp, sizeof (rangevalue) - 1, '\"');
                 checkvarList[maxcheckvars].upper = q2a_atof(rangevalue);
             }
             maxcheckvars++;
@@ -310,12 +310,12 @@ void checkvarcmdRun(int startarg, edict_t *ent, int client) {
         return;
     }
 
-    processstring(checkvarList[maxcheckvars].variablename, cmd, sizeof (checkvarList[maxcheckvars].variablename) - 1, 0);
+    processString(checkvarList[maxcheckvars].variablename, cmd, sizeof (checkvarList[maxcheckvars].variablename) - 1, 0);
 
     switch (checkvarList[maxcheckvars].type) {
         case CV_CONSTANT:
             cmd = gi.argv(startarg);
-            processstring(checkvarList[maxcheckvars].value, cmd, sizeof (checkvarList[maxcheckvars].value) - 1, 0);
+            processString(checkvarList[maxcheckvars].value, cmd, sizeof (checkvarList[maxcheckvars].value) - 1, 0);
             break;
 
         case CV_RANGE:

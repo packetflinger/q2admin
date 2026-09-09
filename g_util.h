@@ -30,7 +30,7 @@ void Info_SetValueForKey(char *s, const char *key, const char *value);
 bool Info_Validate(char *s);
 char *Info_ValueForKey(char *s, char *key);
 int isBlank(char *buff1);
-char *processstring(char *output, char *input, int max, char end);
+char *processString(char *output, char *input, int max, char end);
 size_t Q_concat(char *dest, size_t size, ...);
 size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...);
 size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...);

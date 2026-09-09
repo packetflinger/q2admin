@@ -193,7 +193,7 @@ bool loadLogListFile(char *filename) {
                         // copy filename
                         cp++;
 
-                        cp = processstring(logFiles[lognum].filename, cp, sizeof (logFiles[lognum].filename) - 1, '\"');
+                        cp = processString(logFiles[lognum].filename, cp, sizeof (logFiles[lognum].filename) - 1, '\"');
 
                         expandOutPortNum(logFiles[lognum].filename, sizeof (logFiles[lognum].filename) - 1);
 
@@ -264,7 +264,7 @@ bool loadLogListFile(char *filename) {
                                     cp++;
 
                                     // copy format
-                                    cp = processstring(logtypes[i].format, cp, sizeof (logtypes[i].format) - 1, '\"');
+                                    cp = processString(logtypes[i].format, cp, sizeof (logtypes[i].format) - 1, '\"');
 
                                     if (!isBlank(logtypes[i].format)) {
                                         logtypes[i].log = true;
@@ -650,7 +650,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
         logfilenum--;
         cmd = gi.argv(startarg + 2);
         mod = startContains(cmd, "mod");
-        processstring(filename, mod ? gi.argv(startarg + 3) : cmd, sizeof (filename) - 1, 0);
+        processString(filename, mod ? gi.argv(startarg + 3) : cmd, sizeof (filename) - 1, 0);
         if (!isBlank(filename)) {
             logFiles[logfilenum].mod = mod;
             q2a_strncpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename)-1);
@@ -801,7 +801,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
                         return;
                     }
                     cmd = gi.argv(argi);
-                    processstring(format, cmd, sizeof (format) - 1, 0);
+                    processString(format, cmd, sizeof (format) - 1, 0);
                     if (isBlank(format)) {
                         gi.cprintf(ent, PRINT_HIGH, LOGEVENTCMD);
                         return;

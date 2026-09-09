@@ -393,7 +393,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                 q2a_strcat(savecmd, "\" ");
 
                 // copy name
-                processstring(newentry->nick, cp, sizeof(newentry->nick) - 1, 0);
+                processString(newentry->nick, cp, sizeof(newentry->nick) - 1, 0);
             }
 
             if (newentry->type == NICKRE) { // compile RE
@@ -539,7 +539,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
             q2a_strcat(savecmd, "ASN ");
             q2a_memset(newentry->asn, 0, sizeof(newentry->asn));
-            processstring(newentry->asn, cp, sizeof(newentry->asn)-1, '\"');
+            processString(newentry->asn, cp, sizeof(newentry->asn)-1, '\"');
             q2a_strcat(savecmd, "\"");
             q2a_strcat(savecmd, cp);
             q2a_strcat(savecmd, "\" ");
@@ -596,7 +596,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             q2a_strcat(savecmd, "\" ");
 
             q2a_memset(newentry->version, 0, sizeof(newentry->version));
-            processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
+            processString(newentry->version, cp, sizeof(newentry->version)-1, '\"');
             if (gi.argc() <= startarg) {
                 cp = "";
             } else {
@@ -638,7 +638,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         q2a_strcat(savecmd, "\" ");
 
         // copy password
-        processstring(newentry->password, cp, sizeof (newentry->password) - 1, 0);
+        processString(newentry->password, cp, sizeof (newentry->password) - 1, 0);
 
         if (gi.argc() <= startarg) {
             cp = "";
@@ -748,7 +748,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         q2a_strcat(savecmd, "\" ");
 
         // copy MSG
-        processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
+        processString(buffer2, cp, sizeof (buffer2) - 1, '\"');
 
         num = q2a_strlen(buffer2);
 
@@ -1390,7 +1390,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     q2a_strcat(savecmd, "\" ");
 
     // copy chat
-    cp = processstring(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, 0);
+    cp = processString(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, 0);
 
     if (cnewentry->type == CHATRE) { // compile RE
         q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer)-1);
@@ -1429,7 +1429,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         q2a_strcat(savecmd, "\" ");
 
         // copy MSG
-        processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
+        processString(buffer2, cp, sizeof (buffer2) - 1, '\"');
 
         num = q2a_strlen(buffer2);
 
@@ -1784,7 +1784,7 @@ char *ban_parseBan(char *cp) {
                 }
 
                 cp++;
-                cp = processstring(newentry->nick, cp, sizeof (newentry->nick) - 1, '\"');
+                cp = processString(newentry->nick, cp, sizeof (newentry->nick) - 1, '\"');
 
                 // make sure you are at the end quote
                 while (*cp && *cp != '\"') {
@@ -1868,7 +1868,7 @@ char *ban_parseBan(char *cp) {
 
             q2a_memset(newentry->version, 0, sizeof(newentry->version));
             cp++; // eat the opening quote
-            processstring(newentry->version, cp, sizeof(newentry->version)-1, '\"');
+            processString(newentry->version, cp, sizeof(newentry->version)-1, '\"');
             cp += strlen(newentry->version) + 1;
             allver = false;
             if (newentry->vtype == VERSION_REGEX) {
@@ -1891,7 +1891,7 @@ char *ban_parseBan(char *cp) {
         SKIPBLANK(cp);
         if (*cp == '\"') {
             cp++;
-            cp = processstring(newentry->password, cp, sizeof (newentry->password) - 1, '\"');
+            cp = processString(newentry->password, cp, sizeof (newentry->password) - 1, '\"');
 
             // make sure you are at the end quote
             while (*cp && *cp != '\"') {
@@ -1956,7 +1956,7 @@ char *ban_parseBan(char *cp) {
         cp += 3;
         SKIPBLANK(cp);
         cp++;
-        cp = processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
+        cp = processString(buffer2, cp, sizeof (buffer2) - 1, '\"');
 
         // make sure you are at the end quote
         while (*cp && *cp != '\"') {
@@ -2027,7 +2027,7 @@ char *ban_parseChatban(char *cp) {
 
     if (*cp == '\"') {
         cp++;
-        cp = processstring(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, '\"');
+        cp = processString(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, '\"');
 
         // make sure you are at the end quote
         while (*cp && *cp != '\"') {
@@ -2053,7 +2053,7 @@ char *ban_parseChatban(char *cp) {
         cp += 3;
         SKIPBLANK(cp);
         cp++; // swallow the "
-        cp = processstring(buffer2, cp, sizeof (buffer2) - 1, '\"');
+        cp = processString(buffer2, cp, sizeof (buffer2) - 1, '\"');
 
         // make sure you are at the end quote
         while (*cp && *cp != '\"') {
@@ -2104,7 +2104,7 @@ char *ban_parseInclude(char *in) {
     SKIPBLANK(in);
     if (*in == '\"') {
         in++;
-        in = processstring(strbuffer, in, sizeof(strbuffer) - 1, '\"');
+        in = processString(strbuffer, in, sizeof(strbuffer) - 1, '\"');
         if (strbuffer[0]) {
             if (startContains(strbuffer, "http")) {
                 gi.cprintf(NULL, PRINT_HIGH, "[q2admin] reading remote ban file: %s\n", strbuffer);

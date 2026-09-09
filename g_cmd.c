@@ -1890,7 +1890,7 @@ void processCommand(int cmdidx, int startarg, edict_t *ent) {
                 *((int *) q2aCommands[cmdidx].datapoint) = q2a_atoi(gi.argv(startarg));
                 break;
             case CMDTYPE_STRING:
-                processstring(q2aCommands[cmdidx].datapoint, gi.argv(startarg), 255, 0);
+                processString(q2aCommands[cmdidx].datapoint, gi.argv(startarg), 255, 0);
                 break;
         }
     }
@@ -2023,10 +2023,10 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
         SKIPBLANK(cp);
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
     } else if (startContains(cp, "RE ")) {
@@ -2035,10 +2035,10 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
         SKIPBLANK(cp);
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
         q_strupr(strbuffer);
@@ -2088,10 +2088,10 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
 
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof (strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof (strbuffer), ' ');
         }
         SKIPBLANK(cp);
     }
@@ -2177,10 +2177,10 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
         SKIPBLANK(cp);
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
     } else if (startContains(cp, "RE ")) {
@@ -2189,10 +2189,10 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
         SKIPBLANK(cp);
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof(strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
         q_strupr(strbuffer);
@@ -2220,10 +2220,10 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
         like = 0;
         if (*cp == '\"') {
             cp++;
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), '\"');
+            cp = processString(strbuffer, cp, sizeof (strbuffer), '\"');
             cp++;
         } else {
-            cp = processstring(strbuffer, cp, sizeof (strbuffer), ' ');
+            cp = processString(strbuffer, cp, sizeof (strbuffer), ' ');
         }
         SKIPBLANK(cp);
     }
@@ -3532,7 +3532,7 @@ void motdRun(int startarg, edict_t *ent, int client) {
         FILE *fp;
         int len, currentlen;
 
-        processstring(motdFilename, gi.argv(startarg), sizeof(motdFilename), 0);
+        processString(motdFilename, gi.argv(startarg), sizeof(motdFilename), 0);
         fp = fopen(motdFilename, "rt");
         if (!fp) {
             gi.cprintf(ent, PRINT_HIGH, "MOTD file could not be opened\n");
@@ -3584,7 +3584,7 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
                 gi.cprintf(ent, PRINT_HIGH, "Client already being stuffed... please wait\n");
                 return;
             }
-            processstring(buffer, text, sizeof (buffer) - 1, 0);
+            processString(buffer, text, sizeof (buffer) - 1, 0);
             proxyinfo[clienti].stuffFile = fopen(buffer, "rt");
             if (proxyinfo[clienti].stuffFile) {
                 addCmdQueue(clienti, QCMD_STUFFCLIENT, 0, 0, 0);
@@ -3595,9 +3595,9 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
         } else {
             if (*text == '\"') {
                 text++;
-                processstring(buffer, text, sizeof (buffer) - 2, '\"');
+                processString(buffer, text, sizeof (buffer) - 2, '\"');
             } else {
-                processstring(buffer, text, sizeof (buffer) - 2, 0);
+                processString(buffer, text, sizeof (buffer) - 2, 0);
             }
             q2a_strcat(buffer, "\n");
             stuffcmd(enti, buffer);
@@ -3771,7 +3771,7 @@ void cvarsetRun(int startarg, edict_t *ent, int client) {
     if (gi.argc() < startarg + 1) {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !cvarset <cvarname> <value>\n");
     }
-    processstring(cbuffer, gi.argv(startarg + 1), 255, 0);
+    processString(cbuffer, gi.argv(startarg + 1), 255, 0);
     if (Q_stricmp(cbuffer, "none") == 0) {
         cbuffer[0] = 0;
     }

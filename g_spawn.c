@@ -287,7 +287,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
     len = q2a_strlen(cmd) + 20;
 
     spawncmds[maxspawn_cmds].spawncmd = gi.TagMalloc(len, TAG_GAME);
-    processstring(spawncmds[maxspawn_cmds].spawncmd, cmd, len - 1, 0);
+    processString(spawncmds[maxspawn_cmds].spawncmd, cmd, len - 1, 0);
     //  q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, cmd);
 
     if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {

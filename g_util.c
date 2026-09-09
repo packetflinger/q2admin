@@ -366,7 +366,7 @@ int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
         return 0;
     }
     cp++;
-    cp = processstring(buff2, cp, buff2size, '\"');
+    cp = processString(buff2, cp, buff2size, '\"');
     if (!buff2[0] || *cp != '\"') {
         return 0;
     }
@@ -413,7 +413,6 @@ int isBlank(char *buff1) {
     return !(*buff1);
 }
 
-// TODO: rename this in proper camelcase
 /**
  * Resolve special tokens in input string and render output
  *
@@ -426,7 +425,7 @@ int isBlank(char *buff1) {
  *
  *  (case insensitive)
  */
-char *processstring(char *output, char *input, int max, char end) {
+char *processString(char *output, char *input, int max, char end) {
     while (*input && *input != end && max) {
         if (*input == '\\') {
             input++;

@@ -244,7 +244,7 @@ void disablecmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
     disablecmds[maxdisable_cmds].disablecmd = gi.TagMalloc(len, TAG_GAME);
-    processstring(disablecmds[maxdisable_cmds].disablecmd, cmd, len - 1, 0);
+    processString(disablecmds[maxdisable_cmds].disablecmd, cmd, len - 1, 0);
 
     if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
         q_strupr(cmd);

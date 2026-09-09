@@ -697,7 +697,7 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
     len = q2a_strlen(cmd) + 20;
 
     floodcmds[maxflood_cmds].floodcmd = gi.TagMalloc(len, TAG_GAME);
-    processstring(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
+    processString(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
         q_strupr(cmd);

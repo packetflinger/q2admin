@@ -257,7 +257,7 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
     len = q2a_strlen(cmd) + 20;
 
     votecmds[maxvote_cmds].votecmd = gi.TagMalloc(len, TAG_GAME);
-    processstring(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
+    processString(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
 
     if (votecmds[maxvote_cmds].type == VOTE_RE) {
         q_strupr(cmd);

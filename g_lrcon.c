@@ -394,7 +394,7 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     len = q2a_strlen(cmd) + 20;
 
     lrconcmds[maxlrcon_cmds].lrconcmd = gi.TagMalloc(len, TAG_GAME);
-    processstring(lrconcmds[maxlrcon_cmds].lrconcmd, cmd, len - 1, 0);
+    processString(lrconcmds[maxlrcon_cmds].lrconcmd, cmd, len - 1, 0);
     //  q2a_strcpy(lrconcmds[maxlrcon_cmds].lrconcmd, cmd);
 
     if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
