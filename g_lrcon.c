@@ -87,17 +87,13 @@ bool ReadLRconFile(char *lrcname) {
             }
 
             if (!len || *pp == 0) {
-                gi.dprintf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                 // no command or zero length password
                 continue;
             }
 
             // allocate memory for password and copy into buffer
-
-            //r1ch 2005-01-26 fix insufficient memory allocation BEGIN
-            lrconcmds[maxlrcon_cmds].password = gi.TagMalloc(len + 1, TAG_GAME);
-            //r1ch 2005-01-26 fix insufficient memory allocation END
-
+            lrconcmds[maxlrcon_cmds].password = G_Malloc(len + 1);
             pp = lrconcmds[maxlrcon_cmds].password;
             while (*cp && *cp != ' ') {
                 *pp++ = *cp++;
@@ -109,12 +105,12 @@ bool ReadLRconFile(char *lrcname) {
 
             // zero length command
             if (!len) {
-                gi.TagFree(lrconcmds[maxlrcon_cmds].password);
-                gi.dprintf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                G_Free(lrconcmds[maxlrcon_cmds].password);
+                q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                 continue;
             }
 
-            lrconcmds[maxlrcon_cmds].lrconcmd = gi.TagMalloc(len, TAG_GAME);
+            lrconcmds[maxlrcon_cmds].lrconcmd = G_Malloc(len);
             q2a_strcpy(lrconcmds[maxlrcon_cmds].lrconcmd, cp);
 
             if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
@@ -122,7 +118,7 @@ bool ReadLRconFile(char *lrcname) {
                 lrconcmds[maxlrcon_cmds].r = re_compile(cp);
                 if (!lrconcmds[maxlrcon_cmds].r) {
                     // malformed re... skip this lrcon
-                    gi.dprintf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                    q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                     continue;
                 }
             } else {
@@ -148,8 +144,8 @@ bool ReadLRconFile(char *lrcname) {
 void freeLRconLists(void) {
     while (maxlrcon_cmds) {
         maxlrcon_cmds--;
-        gi.TagFree(lrconcmds[maxlrcon_cmds].password);
-        gi.TagFree(lrconcmds[maxlrcon_cmds].lrconcmd);
+        G_Free(lrconcmds[maxlrcon_cmds].password);
+        G_Free(lrconcmds[maxlrcon_cmds].lrconcmd);
     }
 }
 
@@ -378,7 +374,7 @@ void lrconRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 1;
 
-    lrconcmds[maxlrcon_cmds].password = gi.TagMalloc(len, TAG_GAME);
+    lrconcmds[maxlrcon_cmds].password = G_Malloc(len);
 
     q2a_strcpy(lrconcmds[maxlrcon_cmds].password, cmd);
 
@@ -386,14 +382,14 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     cmd = gi.argv(startarg + 2);
 
     if (isBlank(cmd)) {
-        gi.TagFree(lrconcmds[maxlrcon_cmds].password);
+        G_Free(lrconcmds[maxlrcon_cmds].password);
         gi.cprintf(ent, PRINT_HIGH, LRCONCMD);
         return;
     }
 
     len = q2a_strlen(cmd) + 20;
 
-    lrconcmds[maxlrcon_cmds].lrconcmd = gi.TagMalloc(len, TAG_GAME);
+    lrconcmds[maxlrcon_cmds].lrconcmd = G_Malloc(len);
     processString(lrconcmds[maxlrcon_cmds].lrconcmd, cmd, len - 1, 0);
     //  q2a_strcpy(lrconcmds[maxlrcon_cmds].lrconcmd, cmd);
 
@@ -401,8 +397,8 @@ void lrconRun(int startarg, edict_t *ent, int client) {
         q_strupr(cmd);
         lrconcmds[maxlrcon_cmds].r = re_compile(cmd);
         if (!lrconcmds[maxlrcon_cmds].r) {
-            gi.TagFree(lrconcmds[maxlrcon_cmds].password);
-            gi.TagFree(lrconcmds[maxlrcon_cmds].lrconcmd);
+            G_Free(lrconcmds[maxlrcon_cmds].password);
+            G_Free(lrconcmds[maxlrcon_cmds].lrconcmd);
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -445,8 +441,8 @@ void lrconDelRun(int startarg, edict_t *ent, int client) {
         return;
     }
     lrcon--;
-    gi.TagFree(lrconcmds[lrcon].password);
-    gi.TagFree(lrconcmds[lrcon].lrconcmd);
+    G_Free(lrconcmds[lrcon].password);
+    G_Free(lrconcmds[lrcon].lrconcmd);
     if (lrcon + 1 < maxlrcon_cmds) {
         q2a_memmove((lrconcmds + lrcon), (lrconcmds + lrcon + 1), sizeof (lrconcmd_t) * (maxlrcon_cmds - lrcon));
     }
