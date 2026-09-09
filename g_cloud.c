@@ -30,7 +30,7 @@ void CA_Init() {
 
     ReadCloudConfigFile();
 
-    memset(&cloud, 0, sizeof(cloud));
+    q2a_memset(&cloud, 0, sizeof(cloud));
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
     if (!cloud_config.enabled) {
