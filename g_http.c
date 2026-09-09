@@ -73,10 +73,10 @@ static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream) {
         char        *tmp;
 
         tmp = dl->tempBuffer;
-        dl->tempBuffer = gi.TagMalloc((int)new_size, TAG_GAME);
+        dl->tempBuffer = G_Malloc((int)new_size);
         if (tmp) {
             q2a_memcpy(dl->tempBuffer, tmp, dl->fileSize);
-            gi.TagFree(tmp);
+            G_Free(tmp);
         }
         dl->fileSize = new_size;
     }
