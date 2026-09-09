@@ -333,13 +333,26 @@ void G_MergeEdicts(void) {
 }
 
 /**
+ * Break up a configuration file line into the variable and value. For example:
  *
+ * Input line:  `variable1 "value1"`
+ *   `buffer` is the entire input line
+ *   `buff1` will be "variable1" upon return
+ *   `buff2` will be "value1" upon return (the original quotes are stripped)
+ *
+ * Return value
+ *   1 for successfully parsing the line
+ *   0 for being unsuccessful (formatting issues)
+ *
+ * Note: There can be any number of spaces or tabs at the beginning of the line
+ * or (and only) between the variable and the value. The value MUST be quoted.
  */
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
     char *cp, *dp;
 
     cp = buffer;
     dp = buff1;
+    SKIPBLANK(cp);
     while (*cp && *cp != ' ' && *cp != '\t') {
         *dp++ = *cp++;
     }
