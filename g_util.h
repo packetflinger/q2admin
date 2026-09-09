@@ -44,7 +44,7 @@ size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
 size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr);
 int q2a_ceil(float x);
 int q2a_floor(float x);
-int startContains(char *src, char *cmp);
+bool startContains(char *src, char *cmp);
 bool startswith(char *needle, char *haystack);
 int stringContains(char *buff1, char *buff2);
 void stuffcmd(edict_t *e, char *s);

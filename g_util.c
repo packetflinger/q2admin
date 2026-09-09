@@ -378,7 +378,7 @@ int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
  *
  * Why does this not return a bool?
  */
-int startContains(char *src, char *cmp) {
+bool startContains(char *src, char *cmp) {
     while (*cmp) {
         if (!(*src) || toupper(*src) != toupper(*cmp)) {
             return 0;
