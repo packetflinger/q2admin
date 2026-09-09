@@ -204,7 +204,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     startarg++;
 
     // allocate memory for ban record
-    newentry = gi.TagMalloc(sizeof(baninfo_t), TAG_GAME);
+    newentry = G_Malloc(sizeof(baninfo_t));
     q2a_memset(newentry, 0, sizeof(baninfo_t));
 
     q2a_strncpy(savecmd, "BAN: ", sizeof(savecmd)-1);
@@ -751,7 +751,7 @@ void banRun(int startarg, edict_t *ent, int client) {
         num = q2a_strlen(buffer2);
 
         if (num) {
-            newentry->msg = gi.TagMalloc(num + 1, TAG_GAME);
+            newentry->msg = G_Malloc(num + 1);
             q2a_strncpy(newentry->msg, buffer2, num + 1);
         } else {
             newentry->msg = NULL;
@@ -1342,7 +1342,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     startarg++;
 
     // allocate memory for ban record
-    cnewentry = gi.TagMalloc(sizeof (chatbaninfo_t), TAG_GAME);
+    cnewentry = G_Malloc(sizeof(chatbaninfo_t));
     cnewentry->r = 0;
 
     q2a_strncpy(savecmd, "CHATBAN: ", sizeof(savecmd)-1);
@@ -1432,7 +1432,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         num = q2a_strlen(buffer2);
 
         if (num) {
-            cnewentry->msg = gi.TagMalloc(num + 1, TAG_GAME);
+            cnewentry->msg = G_Malloc(num + 1);
             q2a_strncpy(cnewentry->msg, buffer2, num + 1);
         } else {
             cnewentry->msg = NULL;
@@ -1707,7 +1707,7 @@ char *ban_parseBan(char *cp) {
     int num;
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
-    newentry = gi.TagMalloc(sizeof(baninfo_t), TAG_GAME);
+    newentry = G_Malloc(sizeof(baninfo_t));
     newentry->loadType = LT_PERM;
     newentry->timeout = 0.0;
     newentry->r = 0;
@@ -1962,7 +1962,7 @@ char *ban_parseBan(char *cp) {
         SKIPBLANK(cp);
         num = q2a_strlen(buffer2);
         if (num) {
-            newentry->msg = gi.TagMalloc(num + 1, TAG_GAME);
+            newentry->msg = G_Malloc(num + 1);
             q2a_strncpy(newentry->msg, buffer2, num + 1);
         } else {
             newentry->msg = NULL;
@@ -2002,7 +2002,7 @@ char *ban_parseChatban(char *cp) {
     int num;
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
-    cnewentry = gi.TagMalloc(sizeof(chatbaninfo_t), TAG_GAME);
+    cnewentry = G_Malloc(sizeof(chatbaninfo_t));
     cnewentry->loadType = LT_PERM;
     cnewentry->r = 0;
 
@@ -2060,7 +2060,7 @@ char *ban_parseChatban(char *cp) {
         num = q2a_strlen(buffer2);
 
         if (num) {
-            cnewentry->msg = gi.TagMalloc(num + 1, TAG_GAME);
+            cnewentry->msg = G_Malloc(num + 1);
             q2a_strncpy(cnewentry->msg, buffer2, num + 1);
         } else {
             cnewentry->msg = NULL;
