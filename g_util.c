@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 void stuffcmd(edict_t *e, char *s) {
     if (q2a_developer) {
-        gi.dprintf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
+        q2a_printf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
     }
     gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
@@ -799,4 +799,22 @@ pathtype_t validatePath(const char *s) {
         }
     }
     return res;
+}
+
+/**
+ * Print a formatted string to the server console prepended with an identifier
+ * to make it obvious the message was from q2admin. Primary use-case is for
+ * console logging and info prints.
+ */
+void q2a_printf(char *fmt, ...) {
+    char cbuffer[8192];
+    va_list arglist;
+    char *cp;
+
+    va_start(arglist, fmt);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
+    va_end(arglist);
+
+    // NULL edict sends to the console only
+    gi.cprintf(NULL, PRINT_HIGH, "[q2a] %s", cbuffer);
 }

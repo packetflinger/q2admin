@@ -31,6 +31,7 @@ bool Info_Validate(char *s);
 char *Info_ValueForKey(char *s, char *key);
 int isBlank(char *buff1);
 char *processString(char *output, char *input, int max, char end);
+void q2a_printf(char *fmt, ...);
 size_t Q_concat(char *dest, size_t size, ...);
 size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...);
 size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...);

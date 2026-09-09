@@ -458,14 +458,14 @@ void InitGame(void) {
     sv_features = gi.cvar("sv_features", "0", CVAR_NOSET);
 
     if (q2a_developer) {
-        gi.dprintf("Game supports: %s\n", featuresToString((int)g_features->value));
-        gi.dprintf("Server supports: %s\n", featuresToString((int)sv_features->value));
+        q2a_printf("Game supports:   %s\n", featuresToString((int)g_features->value));
+        q2a_printf("Server supports: %s\n", featuresToString((int)sv_features->value));
     }
 
     if (FEATURE_SUPPORTED(GMF_VARIABLE_FPS)) {
         hz = (int) gi.cvar("sv_fps", "10", CVAR_NOSET)->value;
         frametime = (float) 1 / hz;
-        gi.cprintf(NULL, PRINT_HIGH, "[q2admin] server fps=%d\n", hz);
+        q2a_printf("server fps=%d\n", hz);
     }
 
     maxclients = gi.cvar("maxclients", "4", 0);
@@ -545,7 +545,6 @@ void InitGame(void) {
     if (whois_active) {
         whois_details = G_Malloc(whois_active * sizeof(user_details));
         memset(whois_details, 0, whois_active * sizeof(user_details));
-        gi.dprintf("[q2admin] reading whois file\n");
         whois_read_file();
     }
 

@@ -1981,7 +1981,7 @@ void readCfgFiles(void) {
         ret = true;
     }
     if (!ret) {
-        gi.dprintf("Q2A: %s could not be found\n", q2aconfig->string);
+        q2a_printf("%s could not be found\n", q2aconfig->string);
     }
 }
 

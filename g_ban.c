@@ -85,9 +85,7 @@ bool ReadBanFile(char *bfname) {
             } else if (startContains(data, "INCLUDE:")) {
                 data = ban_parseInclude(data);
             } else {
-                gi.cprintf(NULL, PRINT_HIGH,
-                        "[q2admin] invalid ban at line %d, ignoring\n",
-                        uptoLine);
+                q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 continue;
             }
         }
@@ -149,7 +147,7 @@ void readBanLists(void) {
     }
 
     if (!ret) {
-        // gi.cprintf(NULL, PRINT_HIGH, "WARNING: %s could not be found\n", configfile_ban->string);
+        q2a_printf("WARNING: %s could not be found\n", configfile_ban->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0, true);
     }
 
@@ -172,7 +170,7 @@ void readBanLists(void) {
         }
 
         if (!ret) {
-            // gi.dprintf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
+            q2a_printf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
             logEvent(LT_INTERNALWARN, 0, NULL, BANLISTREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0, true);
         }
     }
@@ -1680,9 +1678,7 @@ bool parseBanFileContents(char *data) {
             } else if (startContains(data, "INCLUDE:")) {
                 data = ban_parseInclude(data);
             } else {
-                gi.cprintf(NULL, PRINT_HIGH,
-                        "[q2admin] invalid ban at line %d, ignoring\n",
-                        uptoLine);
+                q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 // just jump to the next line and try again
                 while (*data != '\n' || !*data) {
                     data++;
@@ -2107,21 +2103,21 @@ char *ban_parseInclude(char *in) {
         in = processString(strbuffer, in, sizeof(strbuffer) - 1, '\"');
         if (strbuffer[0]) {
             if (startContains(strbuffer, "http")) {
-                gi.cprintf(NULL, PRINT_HIGH, "[q2admin] reading remote ban file: %s\n", strbuffer);
+                q2a_printf("reading remote ban file: %s\n", strbuffer);
                 ReadRemoteBanFile(strbuffer);
             } else {
                 if (validatePath(strbuffer) == PATH_INVALID) {
-                    gi.cprintf(NULL, PRINT_HIGH, "[q2admin] invalid path in ban config: %s\n", strbuffer);
+                    q2a_printf("invalid path in ban config: %s\n", strbuffer);
                 } else {
-                    gi.cprintf(NULL, PRINT_HIGH, "[q2admin] reading included ban file: %s\n", strbuffer);
+                    q2a_printf("reading included ban file: %s\n", strbuffer);
                     ReadBanFile(strbuffer);
                 }
             }
         } else {
-            gi.dprintf("[q2admin] ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
+            q2a_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
         }
     } else {
-        gi.dprintf("[q2admin] ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
+        q2a_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
     }
     return in;
 }

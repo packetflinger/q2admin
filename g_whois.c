@@ -258,10 +258,10 @@ void whois_read_file(void) {
     int temp_len, name_len;
 
     Q_snprintf(name, sizeof(name), "%s/%s", moddir, WHOISFILE);
-
+    q2a_printf("reading whois file: %s\n", name);
     f = fopen(name, "rb");
     if (!f) {
-        gi.dprintf("WARNING: %s could not be found\n", name);
+        q2a_printf("WARNING: %s could not be found\n", name);
         return;
     }
 
@@ -321,5 +321,5 @@ void whois_read_file(void) {
  */
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client) {
     whois_read_file();
-    gi.cprintf(ent, PRINT_HIGH, "Whois file reloaded.\n");
+    q2a_printf(ent, PRINT_HIGH, "whois file reloaded.\n");
 }
