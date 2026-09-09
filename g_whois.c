@@ -23,7 +23,7 @@ void whois(int client, edict_t *ent) {
         return;
     }
 
-    strncpy(a1, gi.argv(1), sizeof(a1)-1);
+    q2a_strncpy(a1, gi.argv(1), sizeof(a1)-1);
     a1[sizeof(a1)-1] = 0;
 
     temp = q2a_atoi(a1);
