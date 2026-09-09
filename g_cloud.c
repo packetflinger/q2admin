@@ -845,8 +845,8 @@ void CA_DisconnectedPeer(void) {
     FD_CLR(cloud.connection.socket, &cloud.connection.set_w);
     FD_CLR(cloud.connection.socket, &cloud.connection.set_e);
 
-    memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
-    memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
+    q2a_memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
+    q2a_memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
 
     // try reconnecting a reasonably random amount of time later
     srand((unsigned) time(NULL));
