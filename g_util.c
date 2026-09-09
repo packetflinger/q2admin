@@ -124,46 +124,6 @@ int Q_stricmp(char *string1, char *string2) {
 }
 
 /**
- * Allocate some memory of a particular size, returning a pointer to the start
- * of this addressable space. This memory will automatically be free'd when the
- * game unloads, however it's good to free it when no longer needed before.
- */
-char *q2admin_malloc(int size) {
-    char *mem = gi.TagMalloc(size + sizeof(int), TAG_GAME);
-    *(int *) mem = size;
-    return mem + sizeof(int);
-}
-
-/**
- * Reallocate the size of an existing memory allocation. The space will be
- * automatically free'd when the game unloads, but should be free'd manually
- * when no longer needed.
- */
-char *q2admin_realloc(char *oldmem, int newsize) {
-    int oldsize;
-    int *start = (int *)(oldmem - sizeof(int));
-    char *newmem;
-
-    oldsize = *start;
-    if (oldsize >= newsize) {
-        return oldmem;
-    }
-    newmem = gi.TagMalloc(newsize + sizeof(int), TAG_GAME);
-    *(int *)newmem = newsize;
-    newmem += sizeof(int);
-    q2a_memcpy(newmem, oldmem, newsize - oldsize);
-    gi.TagFree(start);
-    return newmem;
-}
-
-/**
- * Free tag-allocated memory.
- */
-void q2admin_free(char *mem) {
-    gi.TagFree(mem - sizeof(int));
-}
-
-/**
  * Searches the string for the given key and returns the associated value, or
  * an empty string.
  */
