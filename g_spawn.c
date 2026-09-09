@@ -83,7 +83,7 @@ bool ReadSpawnFile(char *spawnname, bool onelevelflag) {
                 continue;
             }
 
-            spawncmds[maxspawn_cmds].spawncmd = gi.TagMalloc(len, TAG_GAME);
+            spawncmds[maxspawn_cmds].spawncmd = G_Malloc(len);
             q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, cp);
 
             if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {
@@ -131,7 +131,7 @@ bool ReadSpawnFile(char *spawnname, bool onelevelflag) {
 void freeSpawnLists(void) {
     while (maxspawn_cmds) {
         maxspawn_cmds--;
-        gi.TagFree(spawncmds[maxspawn_cmds].spawncmd);
+        G_Free(spawncmds[maxspawn_cmds].spawncmd);
     }
 }
 
@@ -143,7 +143,7 @@ void freeOneLevelSpawnLists(void) {
 
     while (spawn < maxspawn_cmds) {
         if (spawncmds[spawn].onelevelflag) {
-            gi.TagFree(spawncmds[spawn].spawncmd);
+            G_Free(spawncmds[spawn].spawncmd);
 
             if (spawn + 1 < maxspawn_cmds) {
                 q2a_memmove((spawncmds + spawn), (spawncmds + spawn + 1), sizeof (spawncmd_t) * (maxspawn_cmds - spawn));
@@ -286,7 +286,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
 
     len = q2a_strlen(cmd) + 20;
 
-    spawncmds[maxspawn_cmds].spawncmd = gi.TagMalloc(len, TAG_GAME);
+    spawncmds[maxspawn_cmds].spawncmd = G_Malloc(len);
     processString(spawncmds[maxspawn_cmds].spawncmd, cmd, len - 1, 0);
     //  q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, cmd);
 
@@ -294,7 +294,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
         q_strupr(cmd);
         spawncmds[maxspawn_cmds].r = re_compile(cmd);
         if (!spawncmds[maxspawn_cmds].r) {
-            gi.TagFree(spawncmds[maxspawn_cmds].spawncmd);
+            G_Free(spawncmds[maxspawn_cmds].spawncmd);
 
             // malformed re...
             gi.cprintf(ent, PRINT_HIGH, "Regular expression couldn't compile!\n");
@@ -341,7 +341,7 @@ void spawnDelRun(int startarg, edict_t *ent, int client) {
 
     spawn--;
 
-    gi.TagFree(spawncmds[spawn].spawncmd);
+    G_Free(spawncmds[spawn].spawncmd);
 
     if (spawn + 1 < maxspawn_cmds) {
         q2a_memmove((spawncmds + spawn), (spawncmds + spawn + 1), sizeof (spawncmd_t) * (maxspawn_cmds - spawn));
