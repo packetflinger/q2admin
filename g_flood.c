@@ -80,7 +80,7 @@ bool ReadFloodFile(char *floodname) {
             }
 
             floodcmds[maxflood_cmds].floodcmd = G_Malloc(len);
-            q2a_strcpy(floodcmds[maxflood_cmds].floodcmd, cp);
+            Q_snprintf(floodcmds[maxflood_cmds].floodcmd, len, "%s", cp);
 
             if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
                 q_strupr(cp);
