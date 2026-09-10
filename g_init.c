@@ -563,22 +563,27 @@ void InitGame(void) {
  * needle: what we're looking for
  * token: what we have
  * found: a match was found and substituted
+ *
+ * TODO: Why does this not just return a bool instead of setting a pointer arg?
+ * TODO: Check destination size. Currently just malloc-ing twice the size of
+ *       the original entity string to cover. That combined with the entity
+ *       allow-list keeps it relatively safe.
  */
 void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, bool *found) {
     if (sub->string[0] && (!Q_stricmp(needle, token))) {
         if (!entSwapAllowed(sub->string)) {
-            gi.cprintf(NULL, PRINT_HIGH, "Can't swap entities %s > %s (classname not allowlisted)\n", needle, sub->string);
+            q2a_printf("can't swap entities %s > %s (classname not allowlisted)\n", needle, sub->string);
             return;
         }
         q2a_strcat(newents, va("\"%s\"\n", sub->string));
-        gi.cprintf(NULL, PRINT_HIGH, "Entity swap: %s > %s\n", needle, sub->string);
+        q2a_printf("entity swap: %s > %s\n", needle, sub->string);
         *found = true;
     }
 }
 
 /**
- * Make a new entity string making any needed substitutions based on the
- * tune_spawn_* CVARS.
+ * Make a new null-terminated entity string making any needed substitutions
+ * based on the `tune_spawn_*` CVARS.
  */
 void SubstituteEntities(char *newents, char *oldents) {
     bool replaced;
@@ -654,7 +659,7 @@ void SubstituteEntities(char *newents, char *oldents) {
             SubstituteEntity(newents, tune_spawn_grenades, "ammo_grenades", com_tok, &replaced);
 
             // add the original token if it wasn't replaced
-            if (replaced == false) {
+            if (!replaced) {
                 q2a_strcat(newents, va("\"%s\"\n", com_tok));
             }
 
