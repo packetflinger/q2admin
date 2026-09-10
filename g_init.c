@@ -1110,8 +1110,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
 
             if (!banOnConnect) {
-                ret = 0;
-                Info_SetValueForKey(ui, "rejmsg", "banned: proxy/bot signature found");
+                // ret = 0;
+                Info_SetValueForKey(ui, "rejmsg", "rejected: proxy/bot signature found");
+                return false;
             } else {
                 proxyinfo[client].clientcommand |= CCMD_BANNED;
                 q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
@@ -1120,7 +1121,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     if (!Info_Validate(userinfo)) {
-        Info_SetValueForKey(ui, "rejmsg", "admission denied: invalid client detected");
+        Info_SetValueForKey(ui, "rejmsg", "rejected: invalid client detected");
         return false;
     }
 
@@ -1129,7 +1130,8 @@ bool ClientConnect(edict_t *ent, char *ui) {
     for (int i = 0; required_ui_keys[i] != NULL; i++) {
         val = Info_ValueForKey(userinfo, required_ui_keys[i]);
         if (val[0] == 0) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
+            q2a_printf("%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
+            Info_SetValueForKey(ui, "rejmsg", "rejected: userinfo missing required value");
             return false;
         }
     }
@@ -1139,7 +1141,8 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s: skin name exceeds max length (IP = %s)\n", NAME(client), IP(client));
+        q2a_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
+        Info_SetValueForKey(ui, "rejmsg", "rejected: invalid skin");
         return false;
     }
 
@@ -1150,7 +1153,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
         currentBanMsg = lockoutmsg;
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
-            ret = 0;
+            // ret = 0;
+            Info_SetValueForKey(ui, "rejmsg", va("rejected: %s", currentBanMsg));
+            return false;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
@@ -1158,8 +1163,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
     } else if (checkClientIpAddress && !HASIP(client)) {
         logEvent(LT_INVALIDIP, client, ent, userinfo, 0, 0.0, true);
         if (banOnConnect) {
-            ret = 0;
+            // ret = 0;
             Info_SetValueForKey(ui, "rejmsg", "rejected: invalid IP address");
+            return false;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strcpy(proxyinfo[client].buffer, "Client doesn't have a valid IP address");
@@ -1167,8 +1173,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
     } else if (checkCheckIfBanned(ent, client)) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
-            ret = 0;
+            // ret = 0;
             Info_SetValueForKey(ui, "rejmsg", va("banned: %s", currentBanMsg));
+            return false;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             q2a_strncpy(proxyinfo[client].buffer, currentBanMsg, sizeof(proxyinfo[client].buffer)-1);
@@ -1277,7 +1284,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
 
         if (userInfoOverflow) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s: %s (%s)\n", proxyinfo[client].name, "WARNING: Client's userinfo space looks to have overflowed!", IP(client));
+            q2a_printf("%s: WARNING: userinfo overflowed (%s)\n", proxyinfo[client].name, IP(client));
             proxyinfo[client].clientcommand |= CCMD_CLIENTOVERFLOWED;
         }
     }
