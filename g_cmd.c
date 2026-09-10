@@ -1623,7 +1623,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
             chatpest_t *pest = &proxyinfo[clienti].pest;
             pest->printchars += strlen(cbuffer) - 1; // don't count the trailing \n
             pest->chatrate = pest->printchars / (ltime - proxyinfo[clienti].enteredgame);
-            q2a_strncpy(pest->last[pest->last_index], cbuffer, MAX_CHAT_CHARS);
+            q2a_strncpy(pest->last[pest->last_index], cbuffer, MAX_CHAT_CHARS - 1);
             if (pest->last_index == (MSG_SAVE_COUNT - 1)) {
                 pest->last_index = -1;
             }
