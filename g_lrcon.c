@@ -111,7 +111,7 @@ bool ReadLRconFile(char *lrcname) {
             }
 
             lrconcmds[maxlrcon_cmds].lrconcmd = G_Malloc(len);
-            q2a_strcpy(lrconcmds[maxlrcon_cmds].lrconcmd, cp);
+            Q_snprintf(lrconcmds[maxlrcon_cmds].lrconcmd, sizeof(lrconcmds[maxlrcon_cmds].lrconcmd), "%s", cp);
 
             if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
                 q_strupr(cp);
@@ -373,11 +373,8 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     }
 
     len = q2a_strlen(cmd) + 1;
-
     lrconcmds[maxlrcon_cmds].password = G_Malloc(len);
-
-    q2a_strcpy(lrconcmds[maxlrcon_cmds].password, cmd);
-
+    Q_snprintf(lrconcmds[maxlrcon_cmds].password, len, "%s", cmd);
 
     cmd = gi.argv(startarg + 2);
 
@@ -388,10 +385,8 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     }
 
     len = q2a_strlen(cmd) + 20;
-
     lrconcmds[maxlrcon_cmds].lrconcmd = G_Malloc(len);
     processString(lrconcmds[maxlrcon_cmds].lrconcmd, cmd, len - 1, 0);
-    //  q2a_strcpy(lrconcmds[maxlrcon_cmds].lrconcmd, cmd);
 
     if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
         q_strupr(cmd);
