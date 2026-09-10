@@ -809,7 +809,6 @@ pathtype_t validatePath(const char *s) {
 void q2a_printf(char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
-    char *cp;
 
     va_start(arglist, fmt);
     Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
