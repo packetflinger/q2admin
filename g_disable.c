@@ -82,7 +82,7 @@ bool ReadDisableFile(char *disablename) {
             }
 
             disablecmds[maxdisable_cmds].disablecmd = G_Malloc(len);
-            q2a_strcpy(disablecmds[maxdisable_cmds].disablecmd, cp);
+            Q_snprintf(disablecmds[maxdisable_cmds].disablecmd, len, "%s", cp);
 
             if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
                 q_strupr(cp);
