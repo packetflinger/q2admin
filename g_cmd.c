@@ -2617,10 +2617,15 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         sizeof(proxyinfo[client].client_version)-1
                 );
                 proxyinfo[client].version_deadline = 0;
-                if (checkBanList(ent, client)) {
-                    gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
-                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
-                    return false;
+
+                bantype_t res = checkBanList(ent, client, false); // allows first
+                if (res == BT_NOTFOUND) {
+                    res = checkBanList(ent, client, true); // denies next
+                    if (res == BT_DENYLISTED) {
+                        gi.cprintf(ent, PRINT_HIGH, "\n*** %s ***\n\n", currentBanMsg);
+                        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
+                        return false;
+                    }
                 }
                 CA_PlayerConnect(ent);
                 return false;

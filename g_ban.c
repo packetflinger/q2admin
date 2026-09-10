@@ -928,27 +928,31 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- * Check if a particular player is banned. Return 1 to ban, 0 to allow. If a
- * rule matches, processing stops and the client is either allowed or not
- * based on the exclusion field (+/-).
+ * Check if a particular player is allowlisted or denylisted.
+ *
+ * Returns `true` to deny or `false` to allow, only looking at either all the
+ * deny rules or all the allow rules. The idea is to call this function TWICE
+ * for each client, first with the allowlist entries and then again with the
+ * denylist entries. This allows for specific exceptions to larger denies.
  *
  * Bans are loaded from disk top down, however the most recently read ban (at
  * the bottom of the file) is the head of the linked-list of bans. This means
  * when checking a player against the banlist, effectively the rules will be
- * checked from bottom-up. This also means exceptions or exemptions need to be
- * lower down in the config file than the broader rule that would otherwise
- * ban the player.
+ * checked from bottom-up.
  *
  * Called from checkCheckIfBanned()
- *
- * (Why is this not returning a bool?)
  */
-int checkBanList(edict_t *ent, int client) {
+bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
     baninfo_t *checkentry = banhead;
     baninfo_t *prevcheckentry = NULL;
     char strbuffer[256];
 
     while (checkentry) {
+        if (checkentry->exclude != denylisted) {
+            prevcheckentry = checkentry;
+            checkentry = checkentry->next;
+            continue;
+        }
         if (checkentry->type != NOTUSED) {
             if (checkentry->timeout && checkentry->timeout < ltime) {
                 unsigned int clienti;
@@ -1080,7 +1084,7 @@ int checkBanList(edict_t *ent, int client) {
                 if (checkentry->msg) {
                     currentBanMsg = checkentry->msg;
                 }
-                return 1;
+                return BT_DENYLISTED;
             }
 
             if (checkentry->password[0]) {
@@ -1096,7 +1100,7 @@ int checkBanList(edict_t *ent, int client) {
                     if (checkentry->msg) {
                         currentBanMsg = checkentry->msg;
                     }
-                    return 1;
+                    return BT_DENYLISTED;
                 }
             }
 
@@ -1106,7 +1110,7 @@ int checkBanList(edict_t *ent, int client) {
                     if (checkentry->msg) {
                         currentBanMsg = checkentry->msg;
                     }
-                    return 1;
+                    return BT_DENYLISTED;
                 }
                 proxyinfo[client].baninfo = checkentry;
                 checkentry->numberofconnects++;
@@ -1115,22 +1119,25 @@ int checkBanList(edict_t *ent, int client) {
             if (checkentry->floodinfo.chatFloodProtect) {
                 proxyinfo[client].floodinfo = checkentry->floodinfo;
             }
-            return 0; // rule matched but is an allow
+            return BT_ALLOWLISTED; // rule matched but is an allow
         }
 
         prevcheckentry = checkentry;
         checkentry = checkentry->next;
     }
 
-    return 0; // no entries matched, allow player in
+    return BT_NOTFOUND; // no entries matched, allow player in
 }
 
 /**
- * Return 1 if client should be banned, 0 if not
+ * Return 1 if client should be banned, 0 if not. This checks the ban list
+ * twice, first for allow entries, then denies. This makes the list much
+ * less sensitive to placement and order for exceptions.
  *
  * Called from ClientConnect() and checkForNameChange()
  */
 int checkCheckIfBanned(edict_t *ent, int client) {
+    bantype_t res;
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
             proxyinfo[client].baninfo->numberofconnects--;
@@ -1141,7 +1148,15 @@ int checkCheckIfBanned(edict_t *ent, int client) {
         return 0;
     }
     currentBanMsg = defaultBanMsg;
-    return checkBanList(ent, client);
+    res = checkBanList(ent, client, false);  // check allowlists first
+    if (res == BT_ALLOWLISTED) {
+        return 0;
+    }
+    res = checkBanList(ent, client, true);   // check denylists second
+    if (res == BT_DENYLISTED) {
+        return 1;
+    }
+    return 0;
 }
 
 void listbansRun(int startarg, edict_t *ent, int client) {

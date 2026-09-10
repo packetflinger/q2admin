@@ -29,6 +29,12 @@
 #define NICKBLANK   5
 
 typedef enum {
+    BT_NOTFOUND,
+    BT_ALLOWLISTED,
+    BT_DENYLISTED,
+} bantype_t;
+
+typedef enum {
     VERSION_NONE,
     VERSION_ALL,
     VERSION_EQUALS,
@@ -103,7 +109,7 @@ char *ban_parseChatban(char *cp);
 char *ban_parseInclude(char *in);
 void banRun(int startarg, edict_t *ent, int client);
 void chatbanRun(int startarg, edict_t *ent, int client);
-int checkBanList(edict_t *ent, int client);
+bantype_t checkBanList(edict_t *ent, int client, bool denylisted);
 int checkCheckIfBanned(edict_t *ent, int client);
 int checkCheckIfChatBanned(char *txt);
 void delbanRun(int startarg, edict_t *ent, int client);

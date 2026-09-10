@@ -1895,7 +1895,7 @@ void ClientBegin(edict_t *ent) {
     if (proxyinfo[client].clientcommand & CCMD_RECONNECT) {
         addCmdQueue(client, QCMD_RECONNECT, 1, 0, NULL);
     } else if (proxyinfo[client].clientcommand & CCMD_BANNED) {
-        gi.cprintf(ent, PRINT_HIGH, "%s\n", proxyinfo[client].buffer);
+        gi.cprintf(ent, PRINT_HIGH, "\n*****\n%s\n*****\n\n", proxyinfo[client].buffer);
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
     } else if (proxyinfo[client].clientcommand & CCMD_KICKED) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked.");
