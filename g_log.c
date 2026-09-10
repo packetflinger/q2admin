@@ -813,7 +813,7 @@ void logeventRun(int startarg, edict_t *ent, int client) {
             }
             logtypes[i].log = log;
             logtypes[i].logfiles = logfiles;
-            q2a_strcpy(logtypes[i].format, format);
+            Q_snprintf(logtypes[i].format, sizeof(logtypes[i].format), "%s", format);
             displayLogEventListCont(ent, client, i, true);
         } else {
             gi.cprintf(ent, PRINT_HIGH, LOGEVENTCMD);
@@ -830,7 +830,7 @@ void displayLogEventListCont(edict_t *ent, int client, long logevent, bool oneti
 	unsigned long logfile;
     unsigned int i;
 
-    q2a_strcpy(buffer, "  ");
+    Q_snprintf(buffer, sizeof(buffer), "  ");
     for (i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {
         if ((logtypes[logevent].logfiles & logfile)) {
             if (!logFiles[i].inuse) {
