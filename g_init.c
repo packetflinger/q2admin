@@ -875,12 +875,9 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readCheckVarLists();
 
     // exec the map cfg file...
-    q2a_strncpy(gmapname, mapname, sizeof(gmapname)-1);
+    Q_snprintf(gmapname, sizeof(gmapname), "%s", mapname);
     if (mapcfgexec) {
-        q2a_strncpy(gmapname, mapname, sizeof(gmapname)-1);
-        q2a_strcpy(buffer, "exec mapcfg/");
-        q2a_strcat(buffer, mapname);
-        q2a_strcat(buffer, "-post.cfg\n");
+        Q_snprintf(buffer, sizeof(buffer), "exec mapcfg/%s-post.cfg\n", mapname);
         gi.AddCommandString(buffer);
     }
 
@@ -1173,7 +1170,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
             return false;
         } else {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
-            q2a_strcpy(proxyinfo[client].buffer, "Client doesn't have a valid IP address");
+            Q_snprintf(proxyinfo[client].buffer, sizeof(proxyinfo[client].buffer), "Client doesn't have a valid IP address");
         }
     } else if (checkCheckIfBanned(ent, client)) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
@@ -1310,7 +1307,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
     newname[sizeof (newname) - 1] = 0;
 
     if (proxyinfo[client].name[0] == 0) {
-        q2a_strcpy(proxyinfo[client].name, newname);
+        Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", newname);
     } else if (q2a_strcmp(proxyinfo[client].name, newname) != 0) {
         // check if ratbot detect?
         if (q2a_strcmp(newname, RATBOT_CHANGENAMETEST) == 0) {
@@ -1330,18 +1327,15 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                     proxyinfo[client].clientcommand &= ~CCMD_NCSILENCE;
                 } else {
                     int secleft = (int) (proxyinfo[client].userinfo.namechangetimeout - ltime) + 1;
-
-                    //          q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
                     addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
-
                     gi.cprintf(ent, PRINT_HIGH, "%d seconds of name change silence left.\n", secleft);
                     return false;
                 }
             }
         }
 
-        q2a_strcpy(oldname, proxyinfo[client].name);
-        q2a_strcpy(proxyinfo[client].name, newname);
+        Q_snprintf(oldname, sizeof(oldname), "%s", proxyinfo[client].name);
+        Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", newname);
 
         if (whois_active) {
             if (proxyinfo[client].userid == -1) {
@@ -1352,13 +1346,8 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
 
         if (checkCheckIfBanned(ent, client)) {
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
-            q2a_strcpy(proxyinfo[client].name, oldname);
-
-            // display ban msg to user..
-            //      gi.cprintf (ent, PRINT_HIGH, "Can't change name to a banned name\n");
+            Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", oldname);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
-            //      q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
-
             if (kickOnNameChange) {
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
             } else {
@@ -1377,7 +1366,6 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                     proxyinfo[client].userinfo.namechangecount = 0;
                 } else {
                     if (proxyinfo[client].userinfo.namechangecount >= nameChangeFloodProtectNum) {
-                        //            q2a_strcpy(ent->client->pers.netname, proxyinfo[client].name);
                         Q_snprintf(buffer, sizeof(buffer), nameChangeFloodProtectMsg, proxyinfo[client].name);
                         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
@@ -1409,10 +1397,10 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     char *skinname;
 
     q2a_strncpy(newskin, s, sizeof (newskin) - 1);
-    newskin[sizeof (newskin) - 1] = 0;
+    newskin[sizeof(newskin) - 1] = 0;
 
     if (proxyinfo[client].userinfo.skin[0] == 0) {
-        q2a_strcpy(proxyinfo[client].userinfo.skin, newskin);
+        Q_snprintf(proxyinfo[client].userinfo.skin, sizeof(proxyinfo[client].userinfo.skin), "%s", newskin);
     } else if (q2a_strcmp(proxyinfo[client].userinfo.skin, newskin) != 0) {
         // check for flooding..
         if (skinChangeFloodProtect) {
@@ -1421,18 +1409,15 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                     proxyinfo[client].clientcommand &= ~CCMD_SCSILENCE;
                 } else {
                     int secleft = (int) (proxyinfo[client].userinfo.skinchangetimeout - ltime) + 1;
-
-                    // q2a_strcpy(ent->client->pers.netskin, proxyinfo[client].skin);
                     addCmdQueue(client, QCMD_CHANGESKIN, 0, 0, 0);
-
                     gi.cprintf(ent, PRINT_HIGH, "%d seconds of skin change silence left.\n", secleft);
                     return false;
                 }
             }
         }
 
-        q2a_strcpy(oldskin, proxyinfo[client].userinfo.skin);
-        q2a_strcpy(proxyinfo[client].userinfo.skin, newskin);
+        Q_snprintf(oldskin, sizeof(oldskin), "%s", proxyinfo[client].userinfo.skin);
+        Q_snprintf(proxyinfo[client].userinfo.skin, sizeof(proxyinfo[client].userinfo.skin), "%s", newskin);
 
         logEvent(LT_SKINCHANGE, client, ent, oldskin, 0, 0.0, false);
 
@@ -1733,7 +1718,7 @@ void ClientDisconnect(edict_t *ent) {
 
             for (i = 0; i < maxclients->value; i++) {
                 if (!reconnectproxyinfo[i].inuse) {
-                    q2a_strcpy(reconnectproxyinfo[i].name, proxyinfo[client].name);
+                    Q_snprintf(reconnectproxyinfo[i].name, sizeof(reconnectproxyinfo[i].name), "%s", proxyinfo[client].name);
                     reconnectproxyinfo[i].inuse = true;
                     break;
                 }
