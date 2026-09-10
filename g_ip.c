@@ -21,7 +21,7 @@
 ipcontext_t noipcontext = {
         .found = false,
         .asnumber = 0,
-        .prefix = 0,
+        .prefix = {0},
         .vpn = false,
         .datacenter = false,
         .score = 0.0,
