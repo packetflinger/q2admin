@@ -87,7 +87,7 @@ static struct addrinfo *select_addrinfo(struct addrinfo *a) {
 
     // Just in case it's set blank in the config
     if (!cloud_config.dns[0]) {
-        q2a_strcpy(cloud_config.dns, "64");
+        Q_snprintf(cloud_config.dns, sizeof(cloud_config.dns), "64");
     }
 
     // Save the first one of each address family if more than 1. They'll be in
@@ -1391,7 +1391,6 @@ static void secsToTime(char *out, uint32_t secs) {
 void getCloudIP(char *remoteip, int *remoteport, int *localport) {
     char addr[INET6_ADDRSTRLEN];
 
-    // IPv6
     if (cloud.addr->ai_family == AF_INET6) {
         q2a_inet_ntop(
             cloud.addr->ai_family,
@@ -1399,8 +1398,6 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport) {
             addr,
             sizeof(addr)
         );
-
-        q2a_strcpy(remoteip, va("[%s]", addr));
     } else {  // IPv4
         q2a_inet_ntop(
             cloud.addr->ai_family,
@@ -1408,10 +1405,9 @@ void getCloudIP(char *remoteip, int *remoteport, int *localport) {
             addr,
             sizeof(addr)
         );
-
-        q2a_strcpy(remoteip, va("%s", addr));
     }
 
+    Q_snprintf(remoteip, sizeof(remoteip), "[%s]", addr);
     *localport = (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
     remoteport = &cloud_config.port;
 }
