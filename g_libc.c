@@ -335,7 +335,8 @@ static const char *q2a_inet_ntop4 (const u_char *src, char *dst, socklen_t size)
         //__set_errno (ENOSPC);
         return (NULL);
     }
-    return Q_snprintf(dst, sizeof(dst), "%s", tmp);
+    Q_snprintf(dst, size, "%s", tmp);
+    return dst;
 }
 
 /* const char *
@@ -430,5 +431,6 @@ static const char *q2a_inet_ntop6 (const u_char *src, char *dst, socklen_t size)
         //__set_errno (ENOSPC);
         return (NULL);
     }
-    return Q_snprintf(dst, sizeof(dst), "%s", tmp);
+    Q_snprintf(dst, size, "%s", tmp);
+    return dst;
 }
