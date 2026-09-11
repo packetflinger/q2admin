@@ -136,3 +136,108 @@ void vpnUsersRun(int startarg, edict_t *ent, int client) {
         }
     }
 }
+
+/**
+ * A second, independent VPN/proxy check against the IPLogs API
+ * (https://iplogs.com/docs). This is a public endpoint that requires no
+ * API key, so unlike LookupVPNStatus() above there's nothing to configure
+ * beyond enabling it.
+ */
+
+/**
+ * Initiates a lookup for the VPN status of a player edict by POSTing their
+ * IP address to IPLogs using CURL. This is a non-blocking call that will
+ * finish on a later framerun.
+ */
+void IPLogsCheckVPN(edict_t *ent) {
+    download_t *dl;
+    proxyinfo_t *pi;
+    char *addr;
+
+    int i = getEntOffset(ent) - 1;
+    if (!iplogs_enable) {
+        return;
+    }
+    pi = &proxyinfo[i];
+
+    // already checking or already checked
+    if (pi->iplogs.state >= IPLOGS_CHECKING) {
+        return;
+    }
+
+    addr = net_addressToString(&pi->address, false, false, false);
+
+    dl = &pi->iplogs_dl;
+    dl->initiator = ent;
+    dl->type = DL_IPLOGS;
+    dl->onFinish = IPLogsFinishCheck;
+    dl->post = true;
+    Q_strncpy(dl->host, IPLOGS_HOST, sizeof(dl->host)-1);
+    Q_strncpy(dl->path, IPLOGS_PATH, sizeof(dl->path)-1);
+    Q_snprintf(dl->body, sizeof(dl->body), "{\"ip\":\"%s\"}", addr);
+
+    pi->iplogs.state = IPLOGS_CHECKING;
+
+    q2a_printf("checking %s for proxies/vpn at iplog\n", addr);
+    HTTP_QueueDownload(dl);
+}
+
+/**
+ * Callback when CURL finishes the IPLogs download. Parse resulting JSON.
+ */
+void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
+    iplogsvpn_t *v;
+    json_t mem[128];
+    const json_t *root, *prop;
+    const char *verdict;
+    int i = getEntOffset(download->initiator) - 1;
+
+    if (!buff) {
+        proxyinfo[i].iplogs.state = IPLOGS_UNKNOWN;
+        return;
+    }
+
+    v = &proxyinfo[i].iplogs;
+    root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
+    if (!root) {
+        gi.dprintf("iplogs: json parsing error\n");
+        return;
+    }
+
+    prop = json_getProperty(root, "is_vpn");
+    if (prop) {
+        v->is_vpn = json_getBoolean(prop);
+    }
+
+    verdict = json_getPropertyValue(root, "verdict");
+    if (verdict) {
+        q2a_strncpy(v->verdict, verdict, sizeof(v->verdict)-1);
+    }
+
+    prop = json_getProperty(root, "score");
+    if (prop) {
+        v->score = json_getReal(prop);
+    }
+
+    prop = json_getProperty(root, "confidence");
+    if (prop) {
+        v->confidence = json_getReal(prop);
+    }
+
+    v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
+
+    q2a_printf("%s %s: IPLogs verdict=%s%s\n", NAME(i), net_addressToString(&proxyinfo[i].address, false, false, false), v->verdict, (v->is_vpn ? " (VPN)" : ""));
+}
+
+/**
+ * Whether the client is coming from a VPN connection or not, per IPLogs.
+ */
+bool isIPLogsVPN(int clientnum) {
+    if (!VALIDCLIENT(clientnum)) {
+        return false;
+    }
+    if (!iplogs_enable) {
+        return false;
+    }
+    return proxyinfo[clientnum].iplogs.state == IPLOGS_VPN;
+}

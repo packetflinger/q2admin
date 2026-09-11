@@ -29,6 +29,7 @@ static unsigned             handleCount = 0;
 static char                 otdm_api_ip[16];
 static char                 hostHeader[64];
 static struct curl_slist    *http_header_slist;
+static struct curl_slist    *post_header_slist;
 static time_t               last_dns_lookup;
 
 /**
@@ -148,10 +149,18 @@ void HTTP_StartDownload(dlhandle_t *dl) {
         dl->curl = curl_easy_init();
     }
 
-    // format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
-    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", vpn_host, dl->filePath);
+    // GET format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
+    // POST format: https://<dl->handle->host><dl->handle->path>, body = dl->handle->body
+    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", dl->handle->host[0] ? dl->handle->host : vpn_host, dl->filePath);
 
-    curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
+    if (dl->handle->post) {
+        curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, post_header_slist);
+        curl_easy_setopt(dl->curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(dl->curl, CURLOPT_COPYPOSTFIELDS, dl->handle->body);
+    } else {
+        curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
+        curl_easy_setopt(dl->curl, CURLOPT_HTTPGET, 1L);
+    }
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
 
     if (http_debug) {
@@ -197,6 +206,7 @@ void HTTP_Init(void) {
     multi = curl_multi_init();
     snprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
     http_header_slist = curl_slist_append(http_header_slist, hostHeader);
+    post_header_slist = curl_slist_append(post_header_slist, "Content-Type: application/json");
     gi.dprintf("%s initialized.\n", curl_version());
 }
 
@@ -209,6 +219,7 @@ void HTTP_Shutdown(void) {
         multi = NULL;
     }
     curl_slist_free_all(http_header_slist);
+    curl_slist_free_all(post_header_slist);
     curl_global_cleanup();
 }
 

@@ -27,12 +27,16 @@ typedef struct {
 typedef enum {
     DL_NONE,
     DL_VPNAPI,
+    DL_IPLOGS,
 } dltype_t;
 
 typedef struct download_s {
     edict_t     *initiator;
     dltype_t    type;
+    char        host[64];      // target host; empty = default to vpn_host (GET requests)
     char        path[1024];
+    bool        post;          // true = POST "body" as-is, false = GET
+    char        body[1024];    // POST body, used when post == true
     void        (*onFinish)(struct download_s *, int, byte *, int);
 } download_t;
 

@@ -146,6 +146,7 @@ int  hz                                 = 10;
 char ip_database_file[256]              = "baseq2/ips.sqlite";
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
+bool iplogs_enable                      = false;
 char lanip[256]                         = "";
 int lframenum;
 bool lockDownServer                     = false;
@@ -1282,6 +1283,10 @@ bool ClientConnect(edict_t *ent, char *ui) {
         LookupVPNStatus(ent);
     }
 
+    if (iplogs_enable) {
+        IPLogsCheckVPN(ent);
+    }
+
     if (ret) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
 
@@ -1778,6 +1783,7 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].userid = -1;
 
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
+    q2a_memset(&proxyinfo[client].iplogs, 0, sizeof(iplogsvpn_t));
     q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
     q2a_memset(&proxyinfo[client].userinfo, 0, sizeof(userinfo_t));
