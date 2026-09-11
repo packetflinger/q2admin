@@ -38,9 +38,14 @@ void vpnUsersRun(int startarg, edict_t *ent, int client);
  * Independent, second VPN check against the IPLogs API (https://iplogs.com/docs).
  * Unlike the vpnapi.io check above, this is a public, unauthenticated POST
  * endpoint, so there's no API key to configure.
+ *
+ * Also worth noting: It's a best-effort service, so responses are slower. This
+ * means players might be able to join the server and interact for a few seconds
+ * before getting the results.
  */
 #define IPLOGS_HOST "iplogs.com"
 #define IPLOGS_PATH "/v1/check"
+#define IPLOGS_IGNORELIST_MAXRANGES 64   // max parsed entries from iplogs_whitelist
 
 // states of an IPLogs check
 typedef enum {
@@ -60,7 +65,9 @@ typedef struct {
 } iplogsvpn_t;
 
 extern bool iplogs_enable;
+extern char iplogs_ignorelist[1024];    // space/comma separated CIDR ranges exempt from the check
 
+void IPLogsBuildIgnorelist(void);
 void IPLogsCheckVPN(edict_t *ent);
 void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len);
 bool isIPLogsVPN(int clientnum);

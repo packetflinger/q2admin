@@ -205,6 +205,8 @@ Option | Type | Default | What it does
 `ip_limit` | number | 0 | The number of players allowed from the same IP address. Exceeding this limit kicks the player.<br><br>0 = unlimited/no filtering
 `ip_limit_vpn` | number | 0 | The number of players allowed from the same VPN provider. The ASN number of the provider is used here, so players can be on discontiguous netblocks and still be kicked.<br><br>0 = unlimited/no filtering
 `ipbanning_enable` | bool | yes | Enable the functionality of banning players based on their IP address.
+`iplogs_enable` | bool | no | Enable a second, independent VPN/proxy check as players connect using the IPLogs API (https://iplogs.com/docs). This is a public endpoint requiring no signup or API key.<br><br>Requires `http_enable`
+`iplogs_ignorelist` | string | "" | Space or comma separated list of CIDR ranges exempt from the `iplogs_enable` check above (e.g. your own admin IPs or trusted server ranges)
 `kickonnamechange` | bool | no | If a player successfully joins with a password-protected name, kick them if they change names after connecting.
 `lock` | bool | no | lockdown mode, prevent anyone from joining. This is presumablity to allow for some kind of maintenance without player interference.
 `lockoutmsg` | string | "This server is currently locked." | The message to display to clients attempting to connect while the server is locked.

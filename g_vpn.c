@@ -144,6 +144,55 @@ void vpnUsersRun(int startarg, edict_t *ent, int client) {
  * beyond enabling it.
  */
 
+static netadr_t iplogs_ignorelist_ranges[IPLOGS_IGNORELIST_MAXRANGES];
+static int      iplogs_ignorelist_count = 0;
+
+/**
+ * Parses the space/comma separated CIDR ranges in iplogs_ignorelist into
+ * iplogs_ignorelist_ranges, so IPLogsIsIgnorelisted() can compare against
+ * pre-parsed netadr_t's instead of re-parsing the cvar on every connect.
+ * Called from SpawnEntities() so the list is rebuilt on every map change,
+ * picking up any changes to the cvar.
+ */
+void IPLogsBuildIgnorelist(void) {
+    char list[sizeof(iplogs_ignorelist)];
+    char *saveptr, *token;
+
+    iplogs_ignorelist_count = 0;
+
+    if (!iplogs_ignorelist[0]) {
+        return;
+    }
+
+    Q_strncpy(list, iplogs_ignorelist, sizeof(list)-1);
+    list[sizeof(list)-1] = '\0';
+
+    for (token = strtok_r(list, " ,", &saveptr);
+         token && iplogs_ignorelist_count < IPLOGS_IGNORELIST_MAXRANGES;
+         token = strtok_r(NULL, " ,", &saveptr)) {
+        iplogs_ignorelist_ranges[iplogs_ignorelist_count++] = net_parseIPAddressMask(token);
+    }
+
+    if (q2a_developer) {
+        q2a_printf("compiled %d CIDR ranges in VPN ignorelist\n", iplogs_ignorelist_count);
+    }
+}
+
+/**
+ * Whether a network address falls within one of the pre-parsed
+ * iplogs_ignorelist_ranges. Ignorelisted addresses skip the IPLogs check
+ * entirely; these are for IPs we know aren't VPNs or don't care to waste
+ * resources checking (wallfly and friends).
+ */
+static bool IPLogsIsIgnorelisted(netadr_t *addr) {
+    for (int i = 0; i < iplogs_ignorelist_count; i++) {
+        if (net_contains(&iplogs_ignorelist_ranges[i], addr)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Initiates a lookup for the VPN status of a player edict by POSTing their
  * IP address to IPLogs using CURL. This is a non-blocking call that will
@@ -159,12 +208,19 @@ void IPLogsCheckVPN(edict_t *ent) {
         return;
     }
     pi = &proxyinfo[i];
+    addr = net_addressToString(&pi->address, false, false, false);
 
-    if (pi->iplogs.state >= IPLOGS_CHECKING) {
+    if (IPLogsIsIgnorelisted(&pi->address)) {
+        if (q2a_developer) {
+            q2a_printf("skipping VPN check for %s, ignorelisted\n", addr);
+        }
         return;
     }
 
-    addr = net_addressToString(&pi->address, false, false, false);
+    // already checking or already checked
+    if (pi->iplogs.state >= IPLOGS_CHECKING) {
+        return;
+    }
 
     dl = &pi->iplogs_dl;
     dl->initiator = ent;

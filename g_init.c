@@ -147,6 +147,7 @@ char ip_database_file[256]              = "baseq2/ips.sqlite";
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 bool iplogs_enable                      = false;
+char iplogs_ignorelist[1024]            = "";
 char lanip[256]                         = "";
 int lframenum;
 bool lockDownServer                     = false;
@@ -874,6 +875,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readVoteLists();
     readDisableLists();
     readCheckVarLists();
+    IPLogsBuildIgnorelist();
 
     // exec the map cfg file...
     Q_snprintf(gmapname, sizeof(gmapname), "%s", mapname);

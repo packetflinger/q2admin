@@ -670,6 +670,12 @@ q2acmd_t q2aCommands[] = {
         &iplogs_enable
     },
     {
+        "iplogs_ignorelist",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &iplogs_ignorelist
+    },
+    {
         "iplookup",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
