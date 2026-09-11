@@ -1951,7 +1951,6 @@ bool readCfgFile(char *cfgfilename) {
                                     break;
                                 case CMDTYPE_STRING:
                                     q2a_strcpy(q2aCommands[i].datapoint, buff2);
-                                    //Q_snprintf(q2aCommands[i].datapoint, sizeof(q2aCommands[i].datapoint), "%s", buff2);
                                     break;
                             }
                         }
@@ -2121,7 +2120,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                         }
                         break;
                     case 2: // RE
-                        Q_snprintf(strbuffer, sizeof(strbuffer), "%s", proxyinfo[clienti].name);
+                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
                         q_strupr(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             numfound++;
@@ -2260,7 +2259,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                         }
                         break;
                     case 2: // RE
-                        Q_snprintf(strbuffer, sizeof(strbuffer), "%s", proxyinfo[clienti].name);
+                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
                         q_strupr(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             if (foundclienti != -1) {
@@ -2574,9 +2573,10 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     cmd = gi.argv(0);
 
     if (gi.argc() > 1) {
-        Q_snprintf(response, sizeof(response), "%s", gi.args());
+        q2a_strcpy(response, "");
+        q2a_strcat(response, gi.args());
     } else {
-        Q_snprintf(response, sizeof(response), "%s", cmd);
+        q2a_strncpy(response, cmd, sizeof(response)-1);
     }
 
     if (*(rcon_password->string) && q2a_strstr(response, rcon_password->string)) {
@@ -3187,7 +3187,8 @@ void ClientCommand(edict_t *ent) {
 
     profile_start(1);
 
-    Q_snprintf(stemp, sizeof(stemp), "%s", gi.args());
+    q2a_strcpy(stemp, "");
+    q2a_strcat(stemp, gi.args());
 
     //Custom frkq2 check
     if ((do_franck_check) && (
