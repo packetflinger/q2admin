@@ -160,7 +160,6 @@ void IPLogsCheckVPN(edict_t *ent) {
     }
     pi = &proxyinfo[i];
 
-    // already checking or already checked
     if (pi->iplogs.state >= IPLOGS_CHECKING) {
         return;
     }
@@ -178,7 +177,7 @@ void IPLogsCheckVPN(edict_t *ent) {
 
     pi->iplogs.state = IPLOGS_CHECKING;
 
-    q2a_printf("checking %s for proxies/vpn at iplog\n", addr);
+    q2a_printf("checking %s for proxy/vpn\n", addr);
     HTTP_QueueDownload(dl);
 }
 
@@ -200,7 +199,7 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     v = &proxyinfo[i].iplogs;
     root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
     if (!root) {
-        gi.dprintf("iplogs: json parsing error\n");
+        q2a_printf("iplogs: json parsing error\n");
         return;
     }
 
@@ -226,7 +225,7 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
 
     v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
 
-    q2a_printf("%s %s: IPLogs verdict=%s%s\n", NAME(i), net_addressToString(&proxyinfo[i].address, false, false, false), v->verdict, (v->is_vpn ? " (VPN)" : ""));
+    q2a_printf("%s[%s] vpn check: score=%.2f verdict=%s%s\n", NAME(i), IP(i), v->score, v->verdict, (v->is_vpn ? " (VPN)" : ""));
 }
 
 /**
