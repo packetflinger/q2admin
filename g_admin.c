@@ -181,6 +181,9 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
         adm_players(ent, client);
         return;
     }
+    if (!VALIDCLIENT(user)) {
+        return;
+    }
     if (check) {
         if (!proxyinfo[user].inuse) {
             return;
@@ -344,20 +347,20 @@ int doAdminCommand(edict_t *ent, int client) {
                             q2a_strncpy(send_string, gi.argv(2), sizeof(send_string)-1);
                             if (gi.argc() > 3)
                                 for (i = 3; i < gi.argc(); i++) {
-                                    strcat(send_string, " ");
-                                    strcat(send_string, gi.argv(i));
+                                    strncat(send_string, " ", sizeof(send_string) - strlen(send_string) - 1);
+                                    strncat(send_string, gi.argv(i), sizeof(send_string) - strlen(send_string) - 1);
                                 }
                             send_to_ent = getEnt((send_to_client + 1));
                             stuffcmd(send_to_ent, send_string);
                             gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, proxyinfo[send_to_client].name);
                         }
                 } else
-                    if (proxyinfo[send_to_client].inuse) {
+                    if (VALIDCLIENT(send_to_client) && proxyinfo[send_to_client].inuse) {
                     q2a_strncpy(send_string, gi.argv(2), sizeof(send_string)-1);
                     if (gi.argc() > 3)
                         for (i = 3; i < gi.argc(); i++) {
-                            strcat(send_string, " ");
-                            strcat(send_string, gi.argv(i));
+                            strncat(send_string, " ", sizeof(send_string) - strlen(send_string) - 1);
+                            strncat(send_string, gi.argv(i), sizeof(send_string) - strlen(send_string) - 1);
                         }
                     send_to_ent = getEnt((send_to_client + 1));
                     stuffcmd(send_to_ent, send_string);

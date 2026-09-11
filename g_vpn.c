@@ -66,18 +66,28 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
 
         security = json_getProperty(root, "security");
         if (security) {
-            v->is_vpn = Q_stricmp((char *)json_getPropertyValue(security, "vpn"), "true") == 0;
-            v->is_proxy = Q_stricmp((char *)json_getPropertyValue(security, "proxy"), "true") == 0;
-            v->is_tor = Q_stricmp((char *)json_getPropertyValue(security, "tor"), "true") == 0;
-            v->is_relay = Q_stricmp((char *)json_getPropertyValue(security, "relay"), "true") == 0;
+            const char *vpn_val = json_getPropertyValue(security, "vpn");
+            const char *proxy_val = json_getPropertyValue(security, "proxy");
+            const char *tor_val = json_getPropertyValue(security, "tor");
+            const char *relay_val = json_getPropertyValue(security, "relay");
+            v->is_vpn = vpn_val && Q_stricmp((char *)vpn_val, "true") == 0;
+            v->is_proxy = proxy_val && Q_stricmp((char *)proxy_val, "true") == 0;
+            v->is_tor = tor_val && Q_stricmp((char *)tor_val, "true") == 0;
+            v->is_relay = relay_val && Q_stricmp((char *)relay_val, "true") == 0;
             if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
                 v->state = VPN_POSITIVE;
             }
         }
         net = json_getProperty(root, "network");
         if (net) {
-            proxyinfo[i].network = net_parseIPAddressMask(json_getPropertyValue(net, "network"));
-            q2a_strncpy(proxyinfo[i].auton_sys_num, json_getPropertyValue(net, "autonomous_system_number"), sizeof(proxyinfo[i].auton_sys_num)-1);
+            const char *network_val = json_getPropertyValue(net, "network");
+            const char *asn_val = json_getPropertyValue(net, "autonomous_system_number");
+            if (network_val) {
+                proxyinfo[i].network = net_parseIPAddressMask(network_val);
+            }
+            if (asn_val) {
+                q2a_strncpy(proxyinfo[i].auton_sys_num, asn_val, sizeof(proxyinfo[i].auton_sys_num)-1);
+            }
         }
 
         if (v->state == VPN_POSITIVE && vpn_kick) {
