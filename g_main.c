@@ -123,7 +123,35 @@ void G_RunFrame(void) {
     // check if a lrcon password has timed out
     check_lrcon_password();
 
-    shiftReconnects(reconnectlist);
+    if (maxReconnectList) {
+        unsigned int i;
+
+        for (i = 0; i < maxReconnectList; i++) {
+            if (reconnectlist[i].reconnecttimeout < ltime) {
+                unsigned int j;
+
+                // remove the retry list entry if needed...
+                for (j = 0; j < maxReconnectList; j++) {
+                    if ((j != i) && (reconnectlist[j].retrylistidx == reconnectlist[i].retrylistidx)) {
+                        break;
+                    }
+                }
+
+                if (j >= maxReconnectList) {
+                    if ((reconnectlist[i].retrylistidx + 1) < maxretryList) {
+                        q2a_memmove(&(retrylist[reconnectlist[i].retrylistidx]), &(retrylist[reconnectlist[i].retrylistidx + 1]), (maxretryList - (reconnectlist[i].retrylistidx + 1)) * sizeof (retrylist_info));
+                    }
+                    maxretryList--;
+                }
+
+                if ((i + 1) < maxReconnectList) {
+                    q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
+                    i--;
+                }
+                maxReconnectList--;
+            }
+        }
+    }
 
     if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
         ge_mod->RunFrame();
