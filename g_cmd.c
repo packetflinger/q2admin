@@ -1192,6 +1192,19 @@ q2acmd_t q2aCommands[] = {
         motdRun,
     },
     {
+        "signal_score_threshold",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &signal_score_threshold
+    },
+    {
+        "signals",
+        CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        signalsRun
+    },
+    {
         "skinchangefloodprotect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
@@ -2542,6 +2555,7 @@ void hackDetected(edict_t *ent, int client) {
     removeClientCommand(client, QCMD_TESTALIASCMD2);
     pi->clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
     pi->clientcommand |= CCMD_ZBOTDETECTED;
+    raiseSignal(client, signalForHacktype(pi->hack.type));
     q2a_strncpy(buffer, modifiedclientmsg, sizeof(buffer)-1);
     q2a_strcat(buffer, "\n");
     gi.bprintf(PRINT_HIGH, buffer, pi->name);

@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_log.h"
 #include "g_lrcon.h"
 #include "g_queue.h"
+#include "g_signal.h"
 #include "g_spawn.h"
 #include "g_timer.h"
 #include "g_util.h"
@@ -138,6 +139,7 @@ typedef struct {
     char lastcmd[8192];             // the latest command sent including args
     struct chatflood_s floodinfo;
     aimbot_t aim_assist;            // for checking if player has an aimbot
+    unsigned int signalMask;        // bitmask of currently-matching signals, see g_signal.h
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater
 

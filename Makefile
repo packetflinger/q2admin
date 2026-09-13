@@ -135,6 +135,7 @@ HEADERS :=  game.h \
             g_net.h \
             g_queue.h \
             g_regex.h \
+            g_signal.h \
             g_spawn.h \
             g_timer.h \
             g_util.h \
@@ -166,6 +167,7 @@ OBJS :=     g_admin.o \
             g_net.o \
             g_queue.o \
             g_regex.o \
+            g_signal.o \
             g_spawn.o \
             g_timer.o \
             g_util.o \

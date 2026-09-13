@@ -345,6 +345,8 @@ bool AimbotCheck(int client, usercmd_t *ucmd) {
             if (a->jitter++ >= zbc_jittermax) {
                 return true;
             }
+            raiseSignal(client, SIGNAL_AIMBOT_JITTER);
+            evaluateSignalScore(client);
         }
         a->jitter_last = ltime;
     }
@@ -353,6 +355,7 @@ bool AimbotCheck(int client, usercmd_t *ucmd) {
 
     if (ltime > (a->jitter_time + zbc_jittertime)) {
         a->jitter = 0;
+        clearSignal(client, SIGNAL_AIMBOT_JITTER);
     }
     return false;
 }

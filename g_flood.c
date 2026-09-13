@@ -243,18 +243,23 @@ bool checkForFlood(int client) {
     if (proxyinfo[client].chattimeout < ltime) {
         proxyinfo[client].chattimeout = ltime + fi->chatFloodProtectSec;
         proxyinfo[client].chatcount = 0;
+        clearSignal(client, SIGNAL_CHATFLOOD);
     } else {
         if (proxyinfo[client].chatcount >= fi->chatFloodProtectNum) {
             Q_snprintf(buffer, sizeof(buffer), chatFloodProtectMsg, proxyinfo[client].name);
             gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
+            raiseSignal(client, SIGNAL_CHATFLOOD);
+
             if (fi->chatFloodProtectSilence == 0) {
                 addCmdQueue(client, QCMD_DISCONNECT, 0, 0, chatFloodProtectMsg);
             } else if (fi->chatFloodProtectSilence < 0) {
                 proxyinfo[client].clientcommand |= CCMD_PCSILENCE;
+                evaluateSignalScore(client);
             } else {
                 proxyinfo[client].chattimeout = ltime + fi->chatFloodProtectSilence;
                 proxyinfo[client].clientcommand |= CCMD_CSILENCE;
+                evaluateSignalScore(client);
             }
             return true;
         }
