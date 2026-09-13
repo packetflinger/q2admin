@@ -817,3 +817,39 @@ void q2a_printf(char *fmt, ...) {
     // NULL edict sends to the console only
     gi.cprintf(NULL, PRINT_HIGH, "[q2a] %s", cbuffer);
 }
+
+/**
+ * Remove any timed-out entries from the reconnect list, along with their
+ * associated retry list entries.
+ */
+void shiftReconnects(reconnect_info *list) {
+    if (maxReconnectList) {
+        unsigned int i;
+
+        for (i = 0; i < maxReconnectList; i++) {
+            if (list[i].reconnecttimeout < ltime) {
+                unsigned int j;
+
+                // remove the retry list entry if needed...
+                for (j = 0; j < maxReconnectList; j++) {
+                    if ((j != i) && (list[j].retrylistidx == list[i].retrylistidx)) {
+                        break;
+                    }
+                }
+
+                if (j >= maxReconnectList) {
+                    if ((list[i].retrylistidx + 1) < maxretryList) {
+                        q2a_memmove(&(retrylist[list[i].retrylistidx]), &(retrylist[list[i].retrylistidx + 1]), (maxretryList - (list[i].retrylistidx + 1)) * sizeof (retrylist_info));
+                    }
+                    maxretryList--;
+                }
+
+                if ((i + 1) < maxReconnectList) {
+                    q2a_memmove(&(list[i]), &(list[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
+                    i--;
+                }
+                maxReconnectList--;
+            }
+        }
+    }
+}
