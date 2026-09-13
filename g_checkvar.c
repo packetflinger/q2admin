@@ -182,7 +182,7 @@ void checkVariableTest(edict_t *ent, int client, int idx) {
         if (maxcheckvars) {
             proxyinfo[client].checkvar_idx = idx;
             proxyinfo[client].checkvar_deadline[idx] = ltime + 1.0f;
-            generateRandomString(proxyinfo[client].hack_checkvar, RANDOM_STRING_LENGTH);
+            randomString(proxyinfo[client].hack_checkvar, RANDOM_STRING_LENGTH);
             Q_snprintf(
                     buffer,
                     sizeof(buffer),

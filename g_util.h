@@ -22,7 +22,7 @@ typedef enum {
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 bool can_do_new_cmds(int client);
 void G_MergeEdicts(void);
-void generateRandomString(char *buffer, int length);
+void randomString(char *buffer, int length);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 bool getLogicalValue(char *arg);
 void Info_RemoveKey(char *s, const char *key);

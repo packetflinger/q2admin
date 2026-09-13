@@ -289,8 +289,8 @@ void G_RunFrame(void) {
                     q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer)-1);
                     gi.cprintf(ent, PRINT_HIGH, buffer);
 
-                    generateRandomString(ReconnectString, 5);
-                    generateRandomString(rndConnectString, 5);
+                    randomString(ReconnectString, 5);
+                    randomString(rndConnectString, 5);
                     Q_snprintf(
                         buffer,
                         sizeof(buffer),
@@ -301,8 +301,8 @@ void G_RunFrame(void) {
                     );
                     stuffcmd(ent, buffer);
 
-                    generateRandomString(proxyinfo[client].connect_test_str, RANDOM_STRING_LENGTH);
-                    generateRandomString(checkConnectProxy, RANDOM_STRING_LENGTH);
+                    randomString(proxyinfo[client].connect_test_str, RANDOM_STRING_LENGTH);
+                    randomString(checkConnectProxy, RANDOM_STRING_LENGTH);
 
                     Q_snprintf(
                         buffer,
@@ -500,8 +500,8 @@ void G_RunFrame(void) {
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
                 }
             } else if (command == QCMD_TESTALIASCMD1) {
-                generateRandomString(proxyinfo[client].alias_test_str1, RANDOM_STRING_LENGTH);
-                generateRandomString(proxyinfo[client].alias_test_str2, RANDOM_STRING_LENGTH);
+                randomString(proxyinfo[client].alias_test_str1, RANDOM_STRING_LENGTH);
+                randomString(proxyinfo[client].alias_test_str2, RANDOM_STRING_LENGTH);
                 Q_snprintf(buffer, sizeof(buffer), "\nalias %s %s\n", proxyinfo[client].alias_test_str1, proxyinfo[client].alias_test_str2);
                 stuffcmd(ent, buffer);
                 proxyinfo[client].clientcommand |= CCMD_WAITFORALIASREPLY1;
@@ -679,7 +679,7 @@ void G_RunFrame(void) {
                     proxyinfo[client].blocklist = random()*(MAX_BLOCK_MODELS - 1);
                     Q_snprintf(buffer, sizeof(buffer), "p_blocklist %i\n", proxyinfo[client].blocklist);
                     stuffcmd(ent, buffer);
-                    generateRandomString(proxyinfo[client].serverip, 15);
+                    randomString(proxyinfo[client].serverip, 15);
                     Q_snprintf(buffer, sizeof(buffer), "p_server %s\n", proxyinfo[client].serverip);
                     stuffcmd(ent, buffer);
                     //q2ace responds with blahblah %i %s
@@ -724,7 +724,7 @@ void G_RunFrame(void) {
                 gi.AddCommandString(cmdpassedvote);
             } else if (command == QCMD_TESTTIMESCALE) {
                 if (timescaledetect) {
-                    generateRandomString(proxyinfo[client].timescale_test_str, RANDOM_STRING_LENGTH);
+                    randomString(proxyinfo[client].timescale_test_str, RANDOM_STRING_LENGTH);
                     Q_snprintf(buffer, sizeof(buffer), "%s $timescale\n", proxyinfo[client].timescale_test_str);
                     stuffcmd(ent, buffer);
                     proxyinfo[client].timescale_deadline = ltime + 1.0f;
@@ -751,7 +751,7 @@ void G_RunFrame(void) {
                 gi.cprintf(ent, PRINT_HIGH, buffer);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
             } else if (command == QCMD_CLIENTVERSION) {
-                generateRandomString(proxyinfo[client].version_test, sizeof(proxyinfo[client].version_test));
+                randomString(proxyinfo[client].version_test, sizeof(proxyinfo[client].version_test));
                 Q_snprintf(buffer, sizeof(buffer), "%s $version\n", proxyinfo[client].version_test);
                 proxyinfo[client].version_deadline = ltime + 1.0f;
                 proxyinfo[client].clientcommand |= CCMD_WAITFORVERSION;

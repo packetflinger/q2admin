@@ -247,7 +247,7 @@ void run_lrcon(edict_t *ent, int client) {
                             return;
                         }
 
-                        generateRandomString(cbuffer, RANDOM_STRING_LENGTH);
+                        randomString(cbuffer, RANDOM_STRING_LENGTH);
 
                         //r1ch: fix for oversized rcon passwords
                         q2a_strncpy(orginal_rcon_password, rconpassword->string, sizeof (orginal_rcon_password) - 1);

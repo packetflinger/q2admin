@@ -770,12 +770,12 @@ bool can_do_new_cmds(int client) {
 /**
  * Random characters of whatever length
  */
-void generateRandomString(char *buffer, int length) {
-    unsigned int index;
-    for (index = 0; index < length; index++) {
-        buffer[index] = RANDCHAR();
+void randomString(char *buffer, int length) {
+    unsigned int i;
+    for (i = 0; i < length; i++) {
+        buffer[i] = RANDCHAR();
     }
-    buffer[index] = 0;
+    buffer[i] = 0;
 }
 
 /**
