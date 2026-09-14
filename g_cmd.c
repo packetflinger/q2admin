@@ -1225,6 +1225,24 @@ q2acmd_t q2aCommands[] = {
         skincrashmsg
     },
     {
+        "snapfire_enable",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &snapfire_enable
+    },
+    {
+        "snapfire_min_snap_deg",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &snapfire_min_snap_deg
+    },
+    {
+        "snapfire_off_crosshair_deg",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &snapfire_off_crosshair_deg
+    },
+    {
         "soloadlazy",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,

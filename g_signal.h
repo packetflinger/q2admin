@@ -31,6 +31,7 @@
 #define SIGNAL_HACK_STUFF          BIT(11) // HT_STUFF
 #define SIGNAL_HACK_USERINFO       BIT(12) // HT_USERINFO
 #define SIGNAL_HACK_UNKNOWN        BIT(13) // HT_UNKNOWN
+#define SIGNAL_SNAP_FIRE           BIT(14) // view snapped onto a player that wasn't near the crosshair, firing immediately
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 

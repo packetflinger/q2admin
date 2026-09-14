@@ -38,6 +38,10 @@ bool timescaledetect = true;
 bool swap_attack_use = false;
 bool dopversion = true;
 
+bool snapfire_enable = true;
+int snapfire_min_snap_deg = 30;      // minimum 1-frame view change to consider a "snap"
+int snapfire_off_crosshair_deg = 40; // how far off-crosshair the target had to be beforehand
+
 
 byte impulsesToKickOn[MAXIMPULSESTOTEST];
 byte maxImpulses = 0;
@@ -266,6 +270,10 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             }
         }
 
+        if (snapfire_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
+            SnapFireCheck(client, ent, ucmd);
+        }
+
         profile_start(2);
         ge_mod->ClientThink(ent, ucmd);
         profile_stop_2(2, "mod->ClientThink", 0, NULL);
@@ -358,6 +366,85 @@ bool AimbotCheck(int client, usercmd_t *ucmd) {
         clearSignal(client, SIGNAL_AIMBOT_JITTER);
     }
     return false;
+}
+
+// a point trace against MASK_SHOT is what actual hitscan weapons use to
+// find their target, so this mirrors that rather than inventing a new mask
+#define SNAPFIRE_EYE_HEIGHT     22    // approx standing viewheight; crouch state isn't visible to q2admin
+#define SNAPFIRE_RANGE          8192  // effectively the whole map
+#define SNAPFIRE_SIGNAL_DECAY   3     // seconds a detected snap-fire stays visible as a signal
+
+/**
+ * Looks for a player's view snapping onto another player who wasn't
+ * anywhere near their crosshair the previous frame, exactly as they open
+ * fire. A human tracking a target they can see doesn't produce this: their
+ * crosshair is already somewhere near the target before they shoot. A
+ * silent-aim/aimbot lock-on does: nothing, then instantly on-target and
+ * firing in the same frame.
+ *
+ * Called from ClientThink()
+ */
+bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd) {
+    aimsnap_t *s = &proxyinfo[client].aimsnap;
+    vec3_t oldangles, newangles, oldfwd, newfwd, eye, end, toTarget, zero = {0, 0, 0};
+    bool attacking, attackPressed;
+    trace_t tr;
+
+    attacking = (ucmd->buttons & BUTTON_ATTACK) != 0;
+    attackPressed = attacking && !s->wasattacking;
+    s->wasattacking = attacking;
+
+    if ((proxyinfo[client].signalMask & SIGNAL_SNAP_FIRE) && ltime > s->last_snap + SNAPFIRE_SIGNAL_DECAY) {
+        clearSignal(client, SIGNAL_SNAP_FIRE);
+    }
+
+    if (!s->haslast) {
+        s->lastangles[PITCH] = ucmd->angles[PITCH];
+        s->lastangles[YAW] = ucmd->angles[YAW];
+        s->haslast = true;
+        return false;
+    }
+
+    oldangles[PITCH] = SHORT2ANGLE(s->lastangles[PITCH]);
+    oldangles[YAW] = SHORT2ANGLE(s->lastangles[YAW]);
+    oldangles[ROLL] = 0;
+    newangles[PITCH] = SHORT2ANGLE(ucmd->angles[PITCH]);
+    newangles[YAW] = SHORT2ANGLE(ucmd->angles[YAW]);
+    newangles[ROLL] = 0;
+
+    s->lastangles[PITCH] = ucmd->angles[PITCH];
+    s->lastangles[YAW] = ucmd->angles[YAW];
+
+    if (!attackPressed) {
+        return false;
+    }
+
+    AngleVectorsForward(oldangles, oldfwd);
+    AngleVectorsForward(newangles, newfwd);
+
+    if (AngleBetweenVectors(oldfwd, newfwd) < snapfire_min_snap_deg) {
+        return false;
+    }
+
+    VectorCopy(ent->s.origin, eye);
+    eye[2] += SNAPFIRE_EYE_HEIGHT;
+    VectorMA(eye, SNAPFIRE_RANGE, newfwd, end);
+
+    tr = gi.trace(eye, zero, zero, end, ent, MASK_SHOT);
+    if (!tr.ent || tr.ent == ent || !tr.ent->client) {
+        return false;
+    }
+
+    // was the target already roughly where they were looking?
+    VectorSubtract(tr.ent->s.origin, eye, toTarget);
+    if (AngleBetweenVectors(oldfwd, toTarget) < snapfire_off_crosshair_deg) {
+        return false;
+    }
+
+    s->last_snap = ltime;
+    raiseSignal(client, SIGNAL_SNAP_FIRE);
+    evaluateSignalScore(client);
+    return true;
 }
 
 /**

@@ -73,6 +73,10 @@ do { \
 #define YAW     1  // left / right
 #define ROLL    2  // fall over
 
+// usercmd_t/entity_state_t angles are transmitted as shorts, a full circle
+// mapping to the entire short range
+#define SHORT2ANGLE(x)  ((x) * (360.0 / 65536))
+
 #define MAX_STRING_CHARS    1024    // max length of a string passed to Cmd_TokenizeString
 #define MAX_STRING_TOKENS   80      // max tokens resulting from Cmd_TokenizeString
 #define MAX_TOKEN_CHARS     128     // max length of an individual token
@@ -130,6 +134,7 @@ struct cplane_s;
 #define DotProduct(x,y)   (x[0]*y[0]+x[1]*y[1]+x[2]*y[2])
 #define VectorSubtract(a,b,c) (c[0]=a[0]-b[0],c[1]=a[1]-b[1],c[2]=a[2]-b[2])
 #define VectorAdd(a,b,c)  (c[0]=a[0]+b[0],c[1]=a[1]+b[1],c[2]=a[2]+b[2])
+#define VectorMA(a,scale,b,c) (c[0]=a[0]+(scale)*b[0],c[1]=a[1]+(scale)*b[1],c[2]=a[2]+(scale)*b[2])
 #define VectorCopy(a,b)   (b[0]=a[0],b[1]=a[1],b[2]=a[2])
 #define VectorClear(a)   (a[0]=a[1]=a[2]=0)
 #define VectorNegate(a,b)  (b[0]=-a[0],b[1]=-a[1],b[2]=-a[2])

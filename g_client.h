@@ -63,6 +63,15 @@ typedef struct {
     float jitter_last;  // ltime of most recent violation
 } aimbot_t;
 
+// Tracks whether a player's view just snapped onto another player who
+// wasn't near their crosshair the frame before, right as they opened fire.
+typedef struct {
+    short lastangles[2];   // PITCH/YAW view angles from the previous frame
+    bool haslast;          // false until lastangles holds a real sample
+    bool wasattacking;     // BUTTON_ATTACK state on the previous frame
+    float last_snap;       // ltime a snap-fire was last detected, for decay
+} aimsnap_t;
+
 // Needed for tracking player freezing. When a player is frozen their msec
 // value is set to 0.
 typedef struct {
@@ -134,10 +143,15 @@ extern int max_pmod_noreply;
 extern msec_limits_t msec;
 extern char *required_ui_keys[];
 
+extern bool snapfire_enable;
+extern int snapfire_min_snap_deg;
+extern int snapfire_off_crosshair_deg;
+
 void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 bool AimbotCheck(int client, usercmd_t *ucmd);
+bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd);
 void checkClientDeadlines(int c);
 char *hacktypeToString(hacktype_t h);

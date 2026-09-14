@@ -19,6 +19,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
 #include "g_local.h"
+#include <math.h>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // required for proxy testing
 
@@ -753,6 +758,44 @@ int q2a_ceil(float x) {
  */
 int q2a_floor(float x) {
    return (int)x;
+}
+
+/**
+ * Converts pitch/yaw angles (degrees) into a normalized forward direction
+ * vector. Roll is ignored, it doesn't affect where a player is looking.
+ */
+void AngleVectorsForward(vec3_t angles, vec3_t forward) {
+    float yaw = (float)(angles[YAW] * (M_PI / 180.0));
+    float pitch = (float)(angles[PITCH] * (M_PI / 180.0));
+    float sy = sinf(yaw), cy = cosf(yaw);
+    float sp = sinf(pitch), cp = cosf(pitch);
+
+    forward[0] = cp * cy;
+    forward[1] = cp * sy;
+    forward[2] = -sp;
+}
+
+/**
+ * Angle in degrees between two vectors, order doesn't matter, vectors need
+ * not be normalized or the same length.
+ */
+float AngleBetweenVectors(vec3_t a, vec3_t b) {
+    float lena = sqrtf(DotProduct(a, a));
+    float lenb = sqrtf(DotProduct(b, b));
+    float cosangle;
+
+    if (lena < 0.0001f || lenb < 0.0001f) {
+        return 0;
+    }
+
+    cosangle = DotProduct(a, b) / (lena * lenb);
+    if (cosangle > 1.0f) {
+        cosangle = 1.0f;
+    } else if (cosangle < -1.0f) {
+        cosangle = -1.0f;
+    }
+
+    return acosf(cosangle) * (float)(180.0 / M_PI);
 }
 
 /**

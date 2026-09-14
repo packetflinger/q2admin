@@ -139,6 +139,7 @@ typedef struct {
     char lastcmd[8192];             // the latest command sent including args
     struct chatflood_s floodinfo;
     aimbot_t aim_assist;            // for checking if player has an aimbot
+    aimsnap_t aimsnap;              // for checking snap-onto-target-and-fire behavior
     unsigned int signalMask;        // bitmask of currently-matching signals, see g_signal.h
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater

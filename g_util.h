@@ -23,6 +23,8 @@ int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
 bool can_do_new_cmds(int client);
 void G_MergeEdicts(void);
 void randomString(char *buffer, int length);
+void AngleVectorsForward(vec3_t angles, vec3_t forward);
+float AngleBetweenVectors(vec3_t a, vec3_t b);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 bool getLogicalValue(char *arg);
 void Info_RemoveKey(char *s, const char *key);
