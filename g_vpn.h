@@ -62,6 +62,7 @@ typedef struct {
     char            verdict[16];    // "clean", "suspicious", "vpn_likely", "vpn_detected"
     double          score;          // 0.0-1.0 confidence value
     double          confidence;     // 0.0-1.0 certainty measure
+    char            asn[16];        // e.g. "AS15169", from ip_info.asn
 } iplogsvpn_t;
 
 extern bool iplogs_enable;

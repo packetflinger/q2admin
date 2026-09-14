@@ -255,8 +255,8 @@ void IPLogsCheckVPN(edict_t *ent) {
 void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     iplogsvpn_t *v;
     json_t mem[128];
-    const json_t *root, *prop;
-    const char *verdict;
+    const json_t *root, *prop, *ip_info;
+    const char *verdict, *asn;
     int i = getEntOffset(download->initiator) - 1;
 
     if (!buff) {
@@ -291,9 +291,17 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
         v->confidence = json_getReal(prop);
     }
 
+    ip_info = json_getProperty(root, "ip_info");
+    if (ip_info) {
+        asn = json_getPropertyValue(ip_info, "asn");
+        if (asn) {
+            q2a_strncpy(v->asn, asn, sizeof(v->asn)-1);
+        }
+    }
+
     v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
 
-    q2a_printf("%s[%s] vpn check: score=%.2f verdict=%s%s\n", NAME(i), IP(i), v->score, v->verdict, (v->is_vpn ? " (VPN)" : ""));
+    q2a_printf("%s[%s] vpn check: score=%.2f verdict=%s asn=%s%s\n", NAME(i), IP(i), v->score, v->verdict, v->asn, (v->is_vpn ? " (VPN)" : ""));
 }
 
 /**
