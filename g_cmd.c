@@ -640,12 +640,6 @@ q2acmd_t q2aCommands[] = {
         ipRun
     },
     {
-        "ip_database_file",
-        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &ip_database_file,
-    },
-    {
         "ip_limit",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
@@ -664,6 +658,12 @@ q2acmd_t q2aCommands[] = {
         &IPBanning_Enable
     },
     {
+        "iplogs_cache_ttl",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &iplogs_cache_ttl
+    },
+    {
         "iplogs_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -674,13 +674,6 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         &iplogs_ignorelist
-    },
-    {
-        "iplookup",
-        CMDCTX_SERVERCONSOLE,
-        CMDTYPE_COMMAND,
-        NULL,
-        iplookupRun
     },
     {
         "kick",

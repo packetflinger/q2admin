@@ -234,6 +234,12 @@ void IPLogsCheckVPN(edict_t *ent) {
         return;
     }
 
+    if (IPLogsCacheGet(&pi->address, &pi->iplogs)) {
+        q2a_printf("%s[%s] vpn check (cached): score=%.2f verdict=%s asn=%s%s\n",
+            NAME(i), addr, pi->iplogs.score, pi->iplogs.verdict, pi->iplogs.asn, (pi->iplogs.is_vpn ? " (VPN)" : ""));
+        return;
+    }
+
     dl = &pi->iplogs_dl;
     dl->initiator = ent;
     dl->type = DL_IPLOGS;
@@ -300,6 +306,7 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     }
 
     v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
+    IPLogsCacheSet(&proxyinfo[i].address, v);
 
     q2a_printf("%s[%s] vpn check: score=%.2f verdict=%s asn=%s%s\n", NAME(i), IP(i), v->score, v->verdict, v->asn, (v->is_vpn ? " (VPN)" : ""));
 }

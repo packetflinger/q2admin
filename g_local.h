@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_flood.h"
 #include "g_http.h"
 #include "g_init.h"
+#include "g_vpn.h"
 #include "g_ip.h"
 #include "g_log.h"
 #include "g_lrcon.h"
@@ -48,7 +49,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_timer.h"
 #include "g_util.h"
 #include "g_vote.h"
-#include "g_vpn.h"
 #include "g_whois.h"
 #include "profile.h"
 
@@ -494,8 +494,6 @@ extern proxyinfo_t *proxyinfo;
 extern proxyinfo_t *proxyinfoBase;
 extern proxyreconnectinfo_t *reconnectproxyinfo;
 
-extern sqlite3 *ipdb;
-
 extern int clientsidetimeout;
 extern int zbotdetectactivetimeout;
 extern int lframenum;
@@ -543,8 +541,6 @@ extern reconnect_info* reconnectlist;
 extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;
-
-extern char ip_database_file[256];
 
 // zb_clib.c
 #ifdef Q2ADMINCLIB

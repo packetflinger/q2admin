@@ -1,107 +1,76 @@
-// This file provides functionality around the context of an IP address that a
-// player connects from. Is it a residential address directly assigned by an
-// ISP? Is it used in a datacenter? Is it a VPN? What autonomous system number
-// is it associated with? What's the parent prefix?
-//
-// With the rise of VPN accessibility and decreasing costs, players with
-// malicious intent often mask their identity and true point of origin using
-// VPNs. This provides them with an effectively limitless amount of unique IP
-// addresses to use that can be swapped and changed at will. This makes keeping
-// these players off your servers difficult. The easiest way to filter these
-// players out is to not allow VPN connections at all. The problem becomes
-// identifying which players are using VPNs.
-//
-// There are legitimate use-cases for VPN access. Some players report vastly
-// different (and superior) routing when using a VPN resulting in a more stable
-// connection with a lower ping. If all VPNs are disallowed, exceptions need to
-// be possible for these situations like this.
+// Cache of IPLogs VPN-check results, keyed by client IP address. See g_ip.h.
 
 #include "g_local.h"
 
-ipcontext_t noipcontext = {
-        .found = false,
-        .asnumber = 0,
-        .prefix = {0},
-        .vpn = false,
-        .datacenter = false,
-        .score = 0.0,
-};
+int iplogs_cache_ttl = 86400; // 1 day, overridden via q2admin.cfg
+
+static iplogs_cache_entry_t iplogs_cache[IPLOGS_CACHE_SIZE]; // zero-initialized (all unused) by the loader
 
 /**
- * Query the database for the given IP.
+ * Fast FNV-1a hash over an address' raw bytes. Only the base address
+ * (not port) is hashed, since that's all IPLogsCacheGet/Set key on.
  */
-ipcontext_t IP_Lookup(sqlite3 *db, netadr_t addr) {
-    int ret;
-    sqlite3_stmt *st;
-    ipcontext_t out;
-    int len;
+static unsigned int IPLogsCacheHash(netadr_t *addr) {
+    unsigned int h = 2166136261u;
+    int len = (addr->type == NA_IP6) ? IP6_LEN : IP4_LEN;
 
-    if (!db) {
-        return noipcontext;
+    for (int i = 0; i < len; i++) {
+        h ^= addr->ip.u8[i];
+        h *= 16777619u;
     }
-    q2a_memset(&out, 0, sizeof(ipcontext_t));
-    out.source = addr;
-
-    const char *sql = "SELECT asn, cidr FROM vpn_prefix WHERE first <= ? AND last > ? LIMIT 1;";
-    ret = sqlite3_prepare_v2(db, sql, -1, &st, NULL);
-    if (ret != SQLITE_OK) {
-        gi.cprintf(NULL, PRINT_HIGH, "Error looking up IP %s: %s\n", IPSTRMASK(&addr), sqlite3_errmsg(db));
-        return out;
-    }
-
-    len = (addr.type == NA_IP6) ? IP6_LEN : IP4_LEN;
-    sqlite3_bind_blob(st, 1, &addr.ip.u8, len, SQLITE_TRANSIENT);
-    sqlite3_bind_blob(st, 2, &addr.ip.u8, len, SQLITE_TRANSIENT);
-
-    while ((ret = sqlite3_step(st)) == SQLITE_ROW) {
-       out.asnumber = sqlite3_column_int(st, 0);
-       q2a_strncpy(out.prefix, sqlite3_column_text(st, 1), sizeof(out.prefix)-1);
-       out.found = true;
-       out.vpn = true;
-    }
-    sqlite3_finalize(st);
-    return out;
+    return h;
 }
 
 /**
- * Open the database file and return the handle
+ * Looks up the cached IPLogs result for an address. Returns false if
+ * there's no entry within the probe window, or the entry has expired
+ * (freeing the slot for reuse in that case).
  */
-sqlite3 *IP_OpenDatabase(const char *dbfile) {
-    sqlite3 *db;
-    int ret;
+bool IPLogsCacheGet(netadr_t *addr, iplogsvpn_t *out) {
+    unsigned int idx = IPLogsCacheHash(addr) & (IPLOGS_CACHE_SIZE - 1);
 
-    if (dbfile == NULL) {
-        return NULL;
-    }
+    for (int probe = 0; probe < IPLOGS_CACHE_PROBE; probe++) {
+        iplogs_cache_entry_t *e = &iplogs_cache[(idx + probe) & (IPLOGS_CACHE_SIZE - 1)];
 
-    ret = sqlite3_open(dbfile, &db);
-    if (ret != SQLITE_OK) {
-        gi.cprintf(NULL, PRINT_HIGH, "[q2admin] Unable to open IP database \"%s\": %s\n", dbfile, sqlite3_errmsg(db));
-        return NULL;
-    }
-    return db;
-}
-
-/**
- * Server console command to manually look up an IP's context in the database.
- */
-void iplookupRun(int startarg, edict_t *ent, int client) {
-    ipcontext_t ctx;
-    netadr_t addr;
-
-    q2a_memset(&addr, 0, sizeof(netadr_t));
-    addr = net_parseIPAddressBase(gi.argv(startarg));
-    if (addr.ip.u8[0] != 0) {
-        ctx = IP_Lookup(ipdb, addr);
-        if (!ctx.found) {
-            gi.cprintf(ent, PRINT_HIGH, "  %s not found in database\n", CLIENTIP(&addr));
-            return;
+        if (!e->used) {
+            return false; // empty slot ends the chain, nothing further was ever inserted here
         }
-        gi.cprintf(ent, PRINT_HIGH, "  Prefix: %s\n", ctx.prefix);
-        gi.cprintf(ent, PRINT_HIGH, "  ASN::   %d\n", ctx.asnumber);
-        gi.cprintf(ent, PRINT_HIGH, "  VPN:    %s\n", ctx.vpn ? "yes" : "no");
-    } else {
-        gi.cprintf(ent, PRINT_HIGH, "[sv] !iplookup x.x.x.x\n");
+        if (NET_IsEqualBaseAdr(&e->addr, addr)) {
+            if (time(NULL) >= e->expires) {
+                e->used = false;
+                return false;
+            }
+            *out = e->result;
+            return true;
+        }
     }
+    return false;
 }
 
+/**
+ * Stores/updates the cached IPLogs result for an address, valid for
+ * iplogs_cache_ttl seconds. Reuses a matching, empty, or expired slot
+ * within the probe window if one is found; otherwise evicts whichever
+ * slot in that window expires soonest.
+ */
+void IPLogsCacheSet(netadr_t *addr, const iplogsvpn_t *result) {
+    unsigned int idx = IPLogsCacheHash(addr) & (IPLOGS_CACHE_SIZE - 1);
+    iplogs_cache_entry_t *victim = NULL;
+
+    for (int probe = 0; probe < IPLOGS_CACHE_PROBE; probe++) {
+        iplogs_cache_entry_t *e = &iplogs_cache[(idx + probe) & (IPLOGS_CACHE_SIZE - 1)];
+
+        if (!e->used || time(NULL) >= e->expires || NET_IsEqualBaseAdr(&e->addr, addr)) {
+            victim = e;
+            break;
+        }
+        if (!victim || e->expires < victim->expires) {
+            victim = e;
+        }
+    }
+
+    victim->used = true;
+    victim->addr = *addr;
+    victim->expires = time(NULL) + iplogs_cache_ttl;
+    victim->result = *result;
+}

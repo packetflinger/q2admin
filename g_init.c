@@ -143,7 +143,6 @@ bool http_debug                         = false;
 bool http_enable                        = true;
 bool http_verifyssl                     = true;
 int  hz                                 = 10;
-char ip_database_file[256]              = "baseq2/ips.sqlite";
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 bool iplogs_enable                      = false;
@@ -183,7 +182,6 @@ bool printmessageonplaycmds             = true;
 bool private_command_kick               = false;
 proxyinfo_t *proxyinfo;
 proxyinfo_t *proxyinfoBase;
-sqlite3 *ipdb;
 int proxy_bwproxy                       = 1;
 int proxy_nitro2                        = 1;
 bool q2a_command_check                  = false;
@@ -551,8 +549,6 @@ void InitGame(void) {
     }
 
     profile_stop(1, "q2admin->InitGame", 0, NULL);
-    gi.cprintf(NULL, PRINT_HIGH, "opening IP database\n");
-    //ipdb = IP_OpenDatabase(ip_database_file);
     HTTP_Init();
     CA_Init();
 }
