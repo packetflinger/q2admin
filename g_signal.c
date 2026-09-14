@@ -38,6 +38,7 @@ static const signal_def_t signalDefs[] = {
     { SIGNAL_VPN,               25,                 "vpn" },
     { SIGNAL_CHATFLOOD,         15,                 "chatflood" },
     { SIGNAL_SNAP_FIRE,         40,                 "snap-fire" },
+    { SIGNAL_AIM_TRACK,         30,                 "aim-track" },
     { SIGNAL_HACK_PROXY,        SIGNAL_SCORE_KICK,  "hack-proxy" },
     { SIGNAL_HACK_AIMBOT,       SIGNAL_SCORE_KICK,  "hack-aimbot" },
     { SIGNAL_HACK_ZBOT,         SIGNAL_SCORE_KICK,  "hack-zbot" },

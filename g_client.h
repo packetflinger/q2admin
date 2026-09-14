@@ -72,6 +72,19 @@ typedef struct {
     float last_snap;       // ltime a snap-fire was last detected, for decay
 } aimsnap_t;
 
+// Tracks a player's crosshair error against the nearest visible enemy,
+// looking for a streak where it stays implausibly tight while that enemy
+// is actually moving across their view - the signature of a smoothed
+// silent aim rather than a one-frame snap.
+typedef struct {
+    int targetnum;             // client currently being tracked tight, -1 if none
+    int tight_samples;         // consecutive ClientThink samples error has stayed under track_tight_deg
+    float target_motion_accum; // sum of the target's apparent angular movement (deg) during the streak
+    vec3_t last_totarget;      // previous sample's eye->target vector, to measure the target's angular speed
+    bool has_last_totarget;
+    float last_match;          // ltime the tracking signal last matched, for decay
+} aimtrack_t;
+
 // Needed for tracking player freezing. When a player is frozen their msec
 // value is set to 0.
 typedef struct {
@@ -147,11 +160,16 @@ extern bool snapfire_enable;
 extern int snapfire_min_snap_deg;
 extern int snapfire_off_crosshair_deg;
 
+extern bool track_enable;
+extern int track_tight_deg;
+extern int track_min_motion_deg;
+
 void serverLogZBot(edict_t *ent, int client);
 void ClientThink(edict_t *ent, usercmd_t *ucmd);
 void G_RunFrame(void);
 void Pmove_internal(pmove_t *pmove);
 bool AimbotCheck(int client, usercmd_t *ucmd);
 bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd);
+bool TrackingCheck(int client, edict_t *ent, usercmd_t *ucmd);
 void checkClientDeadlines(int c);
 char *hacktypeToString(hacktype_t h);

@@ -140,6 +140,7 @@ typedef struct {
     struct chatflood_s floodinfo;
     aimbot_t aim_assist;            // for checking if player has an aimbot
     aimsnap_t aimsnap;              // for checking snap-onto-target-and-fire behavior
+    aimtrack_t aimtrack;            // for checking sustained too-tight tracking on a moving target
     unsigned int signalMask;        // bitmask of currently-matching signals, see g_signal.h
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater

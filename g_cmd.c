@@ -1338,6 +1338,24 @@ q2acmd_t q2aCommands[] = {
         timescaleuserdisplay
     },
     {
+        "track_enable",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_LOGICAL,
+        &track_enable
+    },
+    {
+        "track_min_motion_deg",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &track_min_motion_deg
+    },
+    {
+        "track_tight_deg",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &track_tight_deg
+    },
+    {
         "unfreeze",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,

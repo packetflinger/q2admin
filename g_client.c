@@ -42,6 +42,10 @@ bool snapfire_enable = true;
 int snapfire_min_snap_deg = 30;      // minimum 1-frame view change to consider a "snap"
 int snapfire_off_crosshair_deg = 40; // how far off-crosshair the target had to be beforehand
 
+bool track_enable = true;
+int track_tight_deg = 4;        // crosshair error (degrees) counted as "on target"
+int track_min_motion_deg = 15;  // total target angular movement (degrees) required during a tight streak
+
 
 byte impulsesToKickOn[MAXIMPULSESTOTEST];
 byte maxImpulses = 0;
@@ -274,6 +278,10 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             SnapFireCheck(client, ent, ucmd);
         }
 
+        if (track_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
+            TrackingCheck(client, ent, ucmd);
+        }
+
         profile_start(2);
         ge_mod->ClientThink(ent, ucmd);
         profile_stop_2(2, "mod->ClientThink", 0, NULL);
@@ -443,6 +451,122 @@ bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd) {
 
     s->last_snap = ltime;
     raiseSignal(client, SIGNAL_SNAP_FIRE);
+    evaluateSignalScore(client);
+    return true;
+}
+
+#define TRACK_EYE_HEIGHT         22   // approx standing viewheight; crouch state isn't visible to q2admin
+#define TRACK_RANGE              8192 // effectively the whole map
+#define TRACK_ENGAGE_FOV_DEG     15   // only bother evaluating a target already within this many degrees of the crosshair
+#define TRACK_MIN_SAMPLES        15   // consecutive tight-tracking ClientThink samples required before raising the signal
+#define TRACK_SIGNAL_DECAY       2    // seconds a detected tracking streak stays visible as a signal
+
+/**
+ * Looks for a player's crosshair staying implausibly close to a visible
+ * enemy for a sustained streak while that enemy is actually moving across
+ * their view. A human tracking a moving target is noisy - small over/
+ * under-corrections keep breaking a "dead on target" streak. A smoothed
+ * silent aim glues the crosshair to the target and keeps it there, so the
+ * streak survives real target movement instead of getting interrupted by
+ * human correction jitter.
+ *
+ * Unlike SnapFireCheck, this doesn't require the attack button at all -
+ * it's meant to catch the tracking itself, not just the shot.
+ *
+ * Called from ClientThink()
+ */
+bool TrackingCheck(int client, edict_t *ent, usercmd_t *ucmd) {
+    aimtrack_t *t = &proxyinfo[client].aimtrack;
+    vec3_t angles, fwd, eye, end, toTarget, zero = {0, 0, 0};
+    edict_t *cand;
+    int candnum, i;
+    float err, besterr;
+    trace_t tr;
+
+    if ((proxyinfo[client].signalMask & SIGNAL_AIM_TRACK) && ltime > t->last_match + TRACK_SIGNAL_DECAY) {
+        clearSignal(client, SIGNAL_AIM_TRACK);
+    }
+
+    angles[PITCH] = SHORT2ANGLE(ucmd->angles[PITCH]);
+    angles[YAW] = SHORT2ANGLE(ucmd->angles[YAW]);
+    angles[ROLL] = 0;
+    AngleVectorsForward(angles, fwd);
+
+    VectorCopy(ent->s.origin, eye);
+    eye[2] += TRACK_EYE_HEIGHT;
+
+    // nearest other player already close to the crosshair
+    cand = NULL;
+    besterr = TRACK_ENGAGE_FOV_DEG;
+    for (i = 0; i < (int)maxclients->value; i++) {
+        edict_t *other;
+
+        if (i == client || !proxyinfo[i].inuse) {
+            continue;
+        }
+        other = getEnt(i + 1);
+        if (!other->inuse || !other->client) {
+            continue;
+        }
+        VectorSubtract(other->s.origin, eye, toTarget);
+        err = AngleBetweenVectors(fwd, toTarget);
+        if (err < besterr) {
+            besterr = err;
+            cand = other;
+        }
+    }
+
+    if (!cand) {
+        t->targetnum = -1;
+        t->tight_samples = 0;
+        t->target_motion_accum = 0;
+        t->has_last_totarget = false;
+        return false;
+    }
+
+    // confirm it's actually a clean shot, not e.g. someone through a wall
+    VectorMA(eye, TRACK_RANGE, fwd, end);
+    tr = gi.trace(eye, zero, zero, end, ent, MASK_SHOT);
+    if (tr.ent != cand) {
+        t->targetnum = -1;
+        t->tight_samples = 0;
+        t->target_motion_accum = 0;
+        t->has_last_totarget = false;
+        return false;
+    }
+
+    candnum = getEntOffset(cand) - 1;
+    if (t->targetnum != candnum) {
+        t->targetnum = candnum;
+        t->tight_samples = 0;
+        t->target_motion_accum = 0;
+        t->has_last_totarget = false;
+    }
+
+    VectorSubtract(cand->s.origin, eye, toTarget);
+    err = AngleBetweenVectors(fwd, toTarget);
+
+    if (err >= track_tight_deg) {
+        t->tight_samples = 0;
+        t->target_motion_accum = 0;
+        VectorCopy(toTarget, t->last_totarget);
+        t->has_last_totarget = true;
+        return false;
+    }
+
+    if (t->has_last_totarget) {
+        t->target_motion_accum += AngleBetweenVectors(t->last_totarget, toTarget);
+    }
+    VectorCopy(toTarget, t->last_totarget);
+    t->has_last_totarget = true;
+    t->tight_samples++;
+
+    if (t->tight_samples < TRACK_MIN_SAMPLES || t->target_motion_accum < track_min_motion_deg) {
+        return false;
+    }
+
+    t->last_match = ltime;
+    raiseSignal(client, SIGNAL_AIM_TRACK);
     evaluateSignalScore(client);
     return true;
 }
