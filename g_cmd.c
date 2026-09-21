@@ -2758,6 +2758,13 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     if (q2a_strcmp(cmd, proxyinfo[client].timescale_test_str) == 0) {
         if (!proxyinfo[client].inuse) {
+            // The reply is in hand, so the probe was answered; it is only the
+            // value check below that needs a set-up record.  Clear the
+            // deadline before returning, or checkClientDeadlines() later kicks
+            // this client for "no response to timescale request" when it did
+            // respond.  QCMD_TESTTIMESCALE re-queues every 15s, so the value
+            // check still runs once inuse is set.
+            proxyinfo[client].timescale_deadline = 0;
             return false;
         }
         proxyinfo[client].timescale_deadline = 0;
@@ -2773,6 +2780,13 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     if (q2a_strcmp(cmd, proxyinfo[client].hack_checkvar) == 0) {
         if (!proxyinfo[client].inuse) {
+            // Same as the timescale reply above: the answer is in hand, so
+            // clear the deadline or checkClientDeadlines() kicks this client
+            // for "no response to checkvar request" when it did respond.
+            // checkVariableTest() clamps checkvar_idx below maxcheckvars, so
+            // the index is in range.  Only checkVariableValid() below needs a
+            // set-up record, and the next test re-arms its own deadline.
+            proxyinfo[client].checkvar_deadline[proxyinfo[client].checkvar_idx] = 0;
             return false;
         }
         int idx = proxyinfo[client].checkvar_idx;
@@ -2866,7 +2880,16 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
 
         // client doesn't send "rate" with userinfo
-        if (proxyinfo[client].checked_hacked_exe == 0) {
+        //
+        // Only meaningful while a userinfo record is actually held.  A level
+        // change zeroes userinfo for every client not yet marked inuse (see
+        // SpawnEntities), so a client that connects shortly before one is left
+        // with an empty raw[] through no fault of its own, and testing that
+        // empty string reads as "no rate key" -- kicking a legitimate player
+        // as a hacked executable.  checked_hacked_exe is deliberately left
+        // clear here so the test still runs once ClientUserinfoChanged
+        // repopulates the record.
+        if (proxyinfo[client].checked_hacked_exe == 0 && proxyinfo[client].userinfo.raw[0]) {
             char *ratte = Info_ValueForKey(proxyinfo[client].userinfo.raw, "rate");
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
