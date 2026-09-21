@@ -2720,6 +2720,13 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     if (q2a_strcmp(cmd, proxyinfo[client].hack_checkvar) == 0) {
         if (!proxyinfo[client].inuse) {
+            // Same as the timescale reply above: the answer is in hand, so
+            // clear the deadline or checkClientDeadlines() kicks this client
+            // for "no response to checkvar request" when it did respond.
+            // checkVariableTest() clamps checkvar_idx below maxcheckvars, so
+            // the index is in range.  Only checkVariableValid() below needs a
+            // set-up record, and the next test re-arms its own deadline.
+            proxyinfo[client].checkvar_deadline[proxyinfo[client].checkvar_idx] = 0;
             return false;
         }
         int idx = proxyinfo[client].checkvar_idx;
