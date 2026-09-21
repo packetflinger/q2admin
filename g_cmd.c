@@ -2698,6 +2698,13 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     if (q2a_strcmp(cmd, proxyinfo[client].timescale_test_str) == 0) {
         if (!proxyinfo[client].inuse) {
+            // The reply is in hand, so the probe was answered; it is only the
+            // value check below that needs a set-up record.  Clear the
+            // deadline before returning, or checkClientDeadlines() later kicks
+            // this client for "no response to timescale request" when it did
+            // respond.  QCMD_TESTTIMESCALE re-queues every 15s, so the value
+            // check still runs once inuse is set.
+            proxyinfo[client].timescale_deadline = 0;
             return false;
         }
         proxyinfo[client].timescale_deadline = 0;
