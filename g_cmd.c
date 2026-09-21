@@ -2806,7 +2806,16 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
 
         // client doesn't send "rate" with userinfo
-        if (proxyinfo[client].checked_hacked_exe == 0) {
+        //
+        // Only meaningful while a userinfo record is actually held.  A level
+        // change zeroes userinfo for every client not yet marked inuse (see
+        // SpawnEntities), so a client that connects shortly before one is left
+        // with an empty raw[] through no fault of its own, and testing that
+        // empty string reads as "no rate key" -- kicking a legitimate player
+        // as a hacked executable.  checked_hacked_exe is deliberately left
+        // clear here so the test still runs once ClientUserinfoChanged
+        // repopulates the record.
+        if (proxyinfo[client].checked_hacked_exe == 0 && proxyinfo[client].userinfo.raw[0]) {
             char *ratte = Info_ValueForKey(proxyinfo[client].userinfo.raw, "rate");
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
