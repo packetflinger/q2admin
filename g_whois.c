@@ -321,5 +321,5 @@ void whois_read_file(void) {
  */
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client) {
     whois_read_file();
-    q2a_printf(ent, PRINT_HIGH, "whois file reloaded.\n");
+    gi.cprintf(ent, PRINT_HIGH, "whois file reloaded.\n");
 }
