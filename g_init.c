@@ -846,7 +846,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         bool entremoved;
 
         // parse out all the turned off entities...
-        while (1) {
+        while (true) {
             char *com_tok = 0;
             char *classnamepos = 0;
             char *teampos = 0;
@@ -866,7 +866,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
             entremoved = false;
 
             // go through all the dictionary pairs
-            while (1) {
+            while (true) {
                 // parse key
                 com_tok = COM_Parse(&entities, &classnamepos);
                 if (com_tok[0] == '}') {
