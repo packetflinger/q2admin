@@ -209,6 +209,8 @@ void Pmove_internal(pmove_t *pmove) {
  * 1000/cl_maxfps. For an fps of 120, that equals roughly 8-9ms.
  *
  * The ucmd arg is movement/state data sent from the player's client.
+ * 
+ * TODO: remove/fix speedbot_check_type magic numbers
  */
 void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     int client;
@@ -255,9 +257,8 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
                 cl->msec.violations++;
                 if (cl->msec.violations >= msec.max_violations) {
                     if (msec.action != MVA_NOTHING) {
-                        gi.bprintf(PRINT_HIGH, "Excessive msec consumption from %s\n", cl->name);
-                        Q_snprintf(buffer, sizeof(buffer), "exceeded msec limit %d/%d in %d secs", cl->msec.total, msec.max_allowed, msec.timespan);
-                        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+                        q2a_printf("%s[%s] msec limit exceeded: %d/%d in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.max_allowed, msec.timespan);
+                        raiseSignal(client, SIGNAL_MSEC_OVERRUN);
                     }
                 }
             } else {
@@ -271,9 +272,8 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             cl->msec.violations++;
             if (cl->msec.violations >= msec.max_violations) {
                 if (msec.action != MVA_NOTHING) {
-                    gi.bprintf(PRINT_HIGH, "msec underflow from %s\n", cl->name);
-                    Q_snprintf(buffer, sizeof(buffer), "something is fishy, didn't meet msec requirement - %d/%d in %d secs", cl->msec.total, msec.min_required, msec.timespan);
-                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+                    q2a_printf("%s[%s] msec underrun: %d used, %d required in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.min_required, msec.timespan);
+                    raiseSignal(client, SIGNAL_MSEC_UNDERRUN);
                 }
             }
         }

@@ -44,6 +44,8 @@ static const signal_def_t signalDefs[] = {
     { SIGNAL_TIMESCALE_DEADLINE, 20,                 "timescale-probe" },
     { SIGNAL_ALIAS_DEADLINE,     20,                 "alias-probe" },
     { SIGNAL_CHECKVAR_DEADLINE,  20,                 "checkvar-probe" },
+    { SIGNAL_MSEC_OVERRUN,       20,                 "msec-overrun" },
+    { SIGNAL_MSEC_UNDERRUN,      20,                 "msec-underrun" },
     { SIGNAL_HACK_PROXY,         SIGNAL_SCORE_KICK,  "hack-proxy" },
     { SIGNAL_HACK_AIMBOT,        SIGNAL_SCORE_KICK,  "hack-aimbot" },
     { SIGNAL_HACK_ZBOT,          SIGNAL_SCORE_KICK,  "hack-zbot" },
