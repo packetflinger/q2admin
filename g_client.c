@@ -731,48 +731,75 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
 }
 
 /**
- * Many checks require issuing commands to clients and checking for appropriate
- * responses. These deadlines ensure the client actually does respond in a
- * timely manner and assumes shenanigans if responses are delayed or never
- * arrive.
+ * Several of q2admin's checks work by stuffing a command to the client
+ * and expecting a specific scripted response back within a short window
+ * (the client-version probe, the alias check, the timescale probe, and
+ * each configured checkvar probe) - this is what actually enforces those
+ * windows. A well-behaved client responds almost immediately; networks
+ * are reliable enough in the mid 2020s to expect delivery in well under
+ * a second no matter where in the world you are, so a response that's
+ * late or never arrives is itself the signal that something's off (a
+ * modified client not running the expected script, a proxy not
+ * forwarding it, etc).
  *
- * Networks are reliable enough in the mid 2020s to expect delivery in less
- * than a second no matter where in the world you are.
+ * Rather than disconnecting outright on a missed deadline, each one
+ * raises its own weighted signal (SIGNAL_VERSION_DEADLINE,
+ * SIGNAL_ALIAS_DEADLINE, SIGNAL_TIMESCALE_DEADLINE,
+ * SIGNAL_CHECKVAR_DEADLINE - see g_signal.h) into the same signal/score
+ * system used elsewhere, so a single missed probe (which can have
+ * innocent causes, like a genuinely slow connection) doesn't remove a
+ * client on its own; it only does so once it combines with enough other
+ * signals to cross signal_score_threshold.
+ *
+ * Checks each deadline type in turn and, on the first one found both
+ * armed (> 0) and expired (< ltime), raises the corresponding signal,
+ * clears that one deadline, and returns immediately without checking the
+ * rest - any other deadline still pending just gets caught on a later
+ * call.
+ *
+ * c: the client index to check.
+ *
+ * Called from G_RunFrame()'s per-client command-queue loop (g_main.c),
+ * once per client per frame that had a queued command processed, and
+ * only when enforce_deadlines is set.
  */
 void checkClientDeadlines(int c) {
+    proxyinfo_t *cl;
+
     if (c < 0 || c > (int)maxclients->value) {
         return;
     }
-    if (proxyinfo[c].version_deadline > 0 && proxyinfo[c].version_deadline < ltime) {
-        gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
-        addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to version request");
-        proxyinfo[c].version_deadline = 0;
+    cl = &proxyinfo[c];
+    if (!cl->inuse) {
         return;
     }
-    if (proxyinfo[c].alias_deadline > 0 && proxyinfo[c].alias_deadline < ltime) {
-        gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
-        addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to alias request");
-        proxyinfo[c].alias_deadline = 0;
-        return;
+    if (cl->version_deadline > 0 && cl->version_deadline < ltime) {
+        raiseSignal(c, SIGNAL_VERSION_DEADLINE);
+        cl->version_deadline = 0;
+        q2a_printf("%s[%s] version probe unanswered\n", NAME(c), IP(c));
+    }
+    if (cl->alias_deadline > 0 && cl->alias_deadline < ltime) {
+        raiseSignal(c, SIGNAL_ALIAS_DEADLINE);
+        cl->alias_deadline = 0;
+        q2a_printf("%s[%s] alias probe unanswered\n", NAME(c), IP(c));
     }
     if (timescaledetect) {
-        if (proxyinfo[c].timescale_deadline > 0 && proxyinfo[c].timescale_deadline < ltime) {
-            gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
-            addCmdQueue(c, QCMD_DISCONNECT, 1, 0, "no response to timescale request");
-            proxyinfo[c].timescale_deadline = 0;
-            return;
+        if (cl->timescale_deadline > 0 && cl->timescale_deadline < ltime) {
+            raiseSignal(c, SIGNAL_TIMESCALE_DEADLINE);
+            cl->timescale_deadline = 0;
+            q2a_printf("%s[%s] timescale probe unanswered\n", NAME(c), IP(c));
         }
     }
     if (checkvarcmds_enable) {
         for (int i = 0; i < CHECKVAR_MAX; i++) {
-            if (proxyinfo[c].checkvar_deadline[i] > 0 && proxyinfo[c].checkvar_deadline[i] < ltime) {
-                gi.cprintf(proxyinfo[c].ent, PRINT_HIGH, "Client failed to respond as expected\n");
-                addCmdQueue(c, QCMD_DISCONNECT, 1, 0, va("no response to checkvar request [%s]", checkvarList[i].variablename));
-                proxyinfo[c].checkvar_deadline[i] = 0;
-                return;
+            if (cl->checkvar_deadline[i] > 0 && cl->checkvar_deadline[i] < ltime) {
+                raiseSignal(c, SIGNAL_CHECKVAR_DEADLINE);
+                cl->checkvar_deadline[i] = 0;
+                q2a_printf("%s[%s] checkvar probe unanswered (%s)\n", NAME(c), IP(c), checkvarList[i].variablename);
             }
         }
     }
+    evaluateSignalScore(c);
 }
 
 /**

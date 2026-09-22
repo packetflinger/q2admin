@@ -34,6 +34,10 @@
 #define SIGNAL_SNAP_FIRE           BIT(14) // view snapped onto a player that wasn't near the crosshair, firing immediately
 #define SIGNAL_AIM_TRACK           BIT(15) // crosshair stayed implausibly tight on a moving target for a sustained streak
 #define SIGNAL_SKIN_OVERFLOW       BIT(16) // Attempted to use an oversized skin
+#define SIGNAL_VERSION_DEADLINE    BIT(17) // Client version probe unanswered
+#define SIGNAL_ALIAS_DEADLINE      BIT(18) // Alias probe unanswered
+#define SIGNAL_TIMESCALE_DEADLINE  BIT(19) // Timescale probe unanwered
+#define SIGNAL_CHECKVAR_DEADLINE   BIT(20) // Checkvar probe unanswered 
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 
