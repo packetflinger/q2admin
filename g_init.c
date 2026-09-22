@@ -930,7 +930,26 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
 }
 
 /**
+ * When q2admin redirects a connecting client elsewhere (reconnect_address
+ * set - see ClientConnect()), it records their userinfo in reconnectlist
+ * and waits for them to show back up. This decides whether a later
+ * incoming connection's userinfo (userinfo1) is that same player
+ * reconnecting rather than an unrelated new connection (userinfo2, the
+ * stored reconnectlist entry) - so q2admin can recognize the completed
+ * reconnect, dequeue it, and let the connection through without treating
+ * it as a fresh connect.
  *
+ * A literal string compare of the full userinfo would rarely match across
+ * two separate connections, since incidental fields (challenge, protocol,
+ * rate, etc) can legitimately differ even for the same player reconnecting.
+ * When reconnect_checklevel is set, this instead does a looser match on
+ * just the fields that actually identify the player - base IP (port
+ * stripped, since it changes per connection), name, and skin - accepting
+ * that as "the same player". When it's not set, it falls back to requiring
+ * an exact match of the whole userinfo string.
+ *
+ * Called from ClientConnect() while walking reconnectlist to find a match
+ * for an incoming connection.
  */
 bool checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
     if (reconnect_checklevel) {
