@@ -1986,7 +1986,16 @@ void ClientBegin(edict_t *ent) {
 }
 
 /**
+ * q2admin's intercept of the engine's WriteGame callback, called every
+ * time a level is exited to persist cross-level game/client state (player
+ * inventory, scores, etc - see game.h) to disk, either as part of a
+ * normal level change (autosave true) or a manual save game (false).
  *
+ * q2admin itself has no persistent state that belongs in a save game, so
+ * this is a pure pass-through to the real game mod's WriteGame - it's
+ * only intercepted at all so it can apply the same dllloaded/runmode
+ * gating and edict bookkeeping (G_MergeEdicts) as every other forwarded
+ * callback.
  */
 void WriteGame(char *filename, bool autosave) {
     profile_init(1);
@@ -2005,7 +2014,13 @@ void WriteGame(char *filename, bool autosave) {
 }
 
 /**
- * Currently just a pass-through
+ * q2admin's intercept of the engine's ReadGame callback, the counterpart
+ * to WriteGame() above - called on a loadgame to restore the persisted
+ * cross-level game/client state from disk before any level is loaded.
+ *
+ * Like WriteGame(), q2admin has no state of its own to restore here, so
+ * this just forwards to the real game mod's ReadGame under the usual
+ * dllloaded/runmode gating and edict bookkeeping (G_MergeEdicts).
  */
 void ReadGame(char *filename) {
     profile_init(1);
