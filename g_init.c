@@ -390,7 +390,38 @@ skipwhite:
 }
 
 /**
- * Get the IPv4/IPv6 address from the userinfo string
+ * Extracts the client's IPv4/IPv6 address (and port) out of a userinfo
+ * string. The normal case is a plain Info_ValueForKey(userinfo, "ip")
+ * lookup, which is all that's needed for a userinfo string that's already
+ * been merged into one continuous string (see the GMF_EXTRA_USERINFO
+ * explanation on ClientConnect() above) - which is true of every current
+ * caller, since ClientConnect() merges the two segments up front before
+ * userinfo is passed anywhere else.
+ *
+ * If that lookup comes up empty, this falls back to scanning backward
+ * from the end of the (first, NUL-terminated) segment for a trailing,
+ * empty-valued "ip" key immediately before that embedded NUL - the
+ * marker some GMF_EXTRA_USERINFO clients leave behind when the real ip
+ * value has been relocated into the second, appended segment. If found,
+ * it flags userInfoOverflow and returns a pointer positioned right past
+ * that embedded NUL, at the start of the extra segment, rather than
+ * giving up with an empty result. This exists defensively for a
+ * not-yet-merged/raw userinfo buffer; given the exact reason
+ * GMF_EXTRA_USERINFO relocates the ip key this way isn't fully understood
+ * (see ClientConnect()'s comment), this fallback is kept as a safety net.
+ *
+ * userinfo:         the userinfo string to search.
+ * userInfoOverflow: optional (may be NULL) out-param, set true only when
+ *                   the fallback path above was taken.
+ *
+ * Returns a pointer into userinfo at the ip value (empty string if not
+ * found at all); the caller is responsible for stripping off the ":port"
+ * suffix if present.
+ *
+ * Called from UpdateInternalClientInfo() (during ClientConnect()),
+ * checkReconnectUserInfoSame(), and directly within ClientConnect()'s
+ * reconnect_address handling - anywhere q2admin needs to recover a
+ * client's real address from a live or previously stored userinfo string.
  */
 char *FindIpAddressInUserInfo(char *userinfo, bool *userInfoOverflow) {
     char *ip = Info_ValueForKey(userinfo, "ip");
