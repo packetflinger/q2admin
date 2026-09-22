@@ -92,6 +92,26 @@ bool checkImpulse(byte impulse) {
     return false;
 }
 
+/**
+ * Shared "a zbot/proxy was just detected for this client" hook, so every
+ * detection path does the same two things rather than each duplicating
+ * this logic: queues the LT_ZBOT log entry (via QCMD_LOGZBOT, so it goes
+ * through the same deferred command-queue-driven logging as everything
+ * else instead of logging synchronously here) and, if an admin has
+ * configured customservercmd, runs it immediately as a server console
+ * command (with any "%c" in it substituted for the client number) - a
+ * hook for admins to trigger their own notification/script/whatever on
+ * a detection.
+ *
+ * ent:    the detected client's edict; currently unused here (the later
+ *         QCMD_LOGZBOT handler looks its own edict back up), kept for
+ *         signature consistency with callers that already have it handy.
+ * client: the detected client's index.
+ *
+ * Called from every zbot/proxy detection path: the QCMD_* detection
+ * state machine in G_RunFrame() (g_main.c) and the admin-triggered zbot
+ * checks in g_cmd.c.
+ */
 void serverLogZBot(edict_t *ent, int client) {
     addCmdQueue(client, QCMD_LOGZBOT, 0, 0, 0);
 
@@ -109,21 +129,36 @@ void serverLogZBot(edict_t *ent, int client) {
                 *dp++ = *cp++;
             }
         }
-
         *dp = 0x0;
-
         gi.AddCommandString(buffer);
     }
 }
 
 /**
+ * Player movement prediction (collision/physics resolution for one
+ * usercmd_t) has to match exactly what a non-proxied server would
+ * produce, or movement/hit registration would feel wrong and any
+ * move-validation the wrapped mod does would be working off different
+ * numbers than the real server. So rather than reimplement or otherwise
+ * touch it, q2admin just forwards the call straight through to the real
+ * engine's Pmove (gi.Pmove) and hands back whatever it computes,
+ * unchanged - both branches below do the same forward regardless of
+ * runmode, since there's currently no q2admin-specific behavior here.
+ *
+ * q2admin still has to sit in this call path, though: per the MITM setup
+ * described in g_main.c above GetGameAPI() (server <-> q2admin <-> q2mod),
+ * the wrapped mod never talks to the real engine directly - it was handed a
+ * game_import_t built by q2admin, and this function is installed as that
+ * table's Pmove slot (import->Pmove = Pmove_internal, in GetGameAPI()).
+ * Every Pmove call the mod's own ClientThink() implementation makes,
+ * thinking it's calling the engine, actually lands here first. Since
+ * every client movement update already passes through q2admin at this
+ * point, this would be the place to add any movement-based checks later.
+ *
  * Called for each update packet from client to server. The frequency of each
  * run depends on the client's cl_maxfps CVAR; it will be called 1000/cl_maxfps
  * times each second. Pmove is called from the forward game library's
  * ClientThink() function.
- *
- * Currently q2admin will just pass the pmove call along to the forward game
- * library to process.
  *
  * Flow:
  *   server -> (q2a) ClientThink()
