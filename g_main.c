@@ -107,7 +107,46 @@ void ShutdownGame(void) {
 }
 
 /**
- * Run from server every FPS
+ * q2admin's intercept of the engine's RunFrame callback, ticked once
+ * every server frame. Most of q2admin's own checks (ClientThink,
+ * ClientConnect, etc) react to something the client just did, but a lot
+ * of q2admin's detection relies on stuffing a console command to a
+ * client and checking back later for the expected response - that
+ * multi-step, delayed follow-up has to be driven by something, and this
+ * is it:
+ *
+ *  - advances q2admin's own clock (lframenum/ltime) that every
+ *    ltime-based deadline/timeout elsewhere in the codebase is measured
+ *    against
+ *  - times out lrcon passwords and expired reconnect_address redirect
+ *    entries (reconnectlist/retrylist)
+ *  - walks a rotating window of client slots (maxclientsperframe at a
+ *    time, resuming where it left off last call via the static `client`
+ *    cursor, so a large player count doesn't spike a single frame) and,
+ *    for whichever of them have a command due in their proxy command
+ *    queue, dispatches it through the large QCMD_* handler chain that
+ *    drives every one of those async, stuffcmd-based state machines
+ *    forward one step: the startup/zbot/ratbot proxy-detection
+ *    handshakes, userinfo tamper probes (cl_pitchspeed/cl_anglespeedkey),
+ *    the client-version and timescale probes, freeze/unfreeze, map cfg
+ *    exec, MOTD, pending vote command execution, and kick/disconnect
+ *    handling - then enforces that client's response deadlines
+ *    (checkClientDeadlines) if enforce_deadlines is set
+ *  - drives non-blocking HTTP downloads forward (HTTP_RunDownloads),
+ *    which is what actually makes progress on the VPN/IPLogs API checks
+ *    queued elsewhere
+ *  - as an optimization, framesperprocess can skip q2admin's own
+ *    per-client work entirely on most frames, forwarding straight to the
+ *    real mod
+ *
+ * Finally calls the wrapped game mod's own RunFrame() and the cloud
+ * admin service's per-frame tick (CA_RunFrame), so both still advance
+ * normally underneath q2admin.
+ *
+ * Takes no parameters - it's a bare engine entry point.
+ *
+ * Called by the engine itself, via the exported game API (ge.RunFrame,
+ * wired up in GetGameAPI() below), once per server frame.
  */
 void G_RunFrame(void) {
     unsigned int j, required_cmdlist;
