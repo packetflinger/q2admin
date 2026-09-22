@@ -60,19 +60,35 @@ char *impulsemessages[] ={
     "175 (zbot toggles scanner display command)"
 };
 
+/**
+ * Whether an impulse number should count toward the disconnectuserimpulse
+ * kick threshold. Players send all sorts of harmless impulses constantly
+ * (weapon switching, etc), so admins can scope detection down to just the
+ * ones that actually matter - by default the zbot menu toggle impulses
+ * (169-175, see impulsemessages[] above) - via the impulsestokickon
+ * config command, rather than treating every single impulse as
+ * suspicious. Per that command's documented behavior, leaving it
+ * unconfigured (maxImpulses == 0) matches every impulse.
+ *
+ * impulse: the impulse number from the client's usercmd_t this frame.
+ *
+ * Returns true if this impulse is one that should count (either it's in
+ * impulsesToKickOn, or nothing was configured so everything counts).
+ *
+ * Called from ClientThink(), to gate the disconnectuserimpulse
+ * impulse-counting/kick logic.
+ */
 bool checkImpulse(byte impulse) {
     unsigned int i;
 
     if (!maxImpulses) {
         return true;
     }
-
     for (i = 0; i < maxImpulses; i++) {
         if (impulsesToKickOn[i] == impulse) {
             return true;
         }
     }
-
     return false;
 }
 
