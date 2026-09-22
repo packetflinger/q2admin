@@ -1822,7 +1822,26 @@ void ClientDisconnect(edict_t *ent) {
 }
 
 /**
- * Called when a client is actually spawned into the game
+ * q2admin's intercept of the engine's ClientBegin callback: fired every
+ * time a connected client actually enters the game world, not just once
+ * per connection. That includes the initial spawn right after
+ * ClientConnect() succeeds, but also every subsequent map change the
+ * client rides out without disconnecting.
+ *
+ * This is the first point a client is fully in-game and able to reliably
+ * respond to the stuffcmd-based probes q2admin relies on, so it's where
+ * the per-session anti-cheat/admin bookkeeping in proxyinfo gets
+ * (re)armed and the whole battery of connect-time checks gets queued:
+ * client version probe, admin/bypass password auth, timescale/checkvar
+ * tests, the MOTD, etc. Fields that should only ever be set once per
+ * physical connection (not reset on every map change) are guarded behind
+ * proxyinfo[client].inuse.
+ *
+ * If a ban check is still pending, the real game mod's ClientBegin is
+ * skipped in favor of just enough entity setup (fov) to keep the ent
+ * valid, since the client shouldn't be allowed to actually spawn in
+ * until that resolves. Also enforces the same-IP connection limit here,
+ * since that's only meaningful once a client is actually in the game.
  */
 void ClientBegin(edict_t *ent) {
     int client;
