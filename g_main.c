@@ -496,7 +496,7 @@ void G_RunFrame(void) {
             else if (command == QCMD_TESTSTANDARDPROXY) {
                 if (private_commands[0].command[0]) {
                     addCmdQueue(client, QCMD_PRIVATECOMMAND, 10, 0, 0);
-                    stuff_private_commands(client, ent);
+                    stuffPrivateCommands(client, ent);
                 }
 
                 if (!proxyinfo[client].bypass_level) {

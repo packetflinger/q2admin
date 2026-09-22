@@ -418,9 +418,34 @@ priv_t private_commands[PRIVATE_COMMANDS];
 int private_command_count;
 
 /**
- * Send private_command[1-4] and inverted_command[1-4] to a players
+ * Stuffs the 8 admin-configured private_command1-4/inverted_command1-4
+ * strings to a client (private_commands[0-3] and [4-7] respectively) and
+ * opens a 10 second window (proxyinfo[client].private_command) during
+ * which g_cmd.c's ClientCommand handling watches for the client to
+ * actually run each one back at the server, recording it in
+ * private_command_got[i].
+ *
+ * The two halves are opposite tests, hence "inverted": a private_command
+ * is something a normal, unmodified client is expected to run/echo back
+ * on its own (e.g. via an alias or cvar a real client config would
+ * define), so NOT seeing it come back is the suspicious signal - a proxy
+ * or bot that doesn't process client config the same way might simply
+ * never trigger it. An inverted_command is the opposite: something a
+ * normal client should never run on its own, so it coming back at all is
+ * the suspicious signal - evidence of something echoing commands back
+ * indiscriminately. QCMD_PRIVATECOMMAND (G_RunFrame(), g_main.c) checks
+ * private_command_got[] 10 seconds later against exactly that rule (j<4
+ * expects true, j>3 expects false) and logs/kicks on a mismatch.
+ *
+ * client: the target client's index, used to arm their deadline/reset
+ *         their per-slot private_command_got flags.
+ * ent:    the client's edict, used to actually stuff the commands to them.
+ *
+ * Called from QCMD_TESTSTANDARDPROXY's handler in G_RunFrame()
+ * (g_main.c), as part of the broader proxy-detection sequence, only if
+ * at least private_command1 is configured.
  */
-void stuff_private_commands(int client, edict_t *ent) {
+void stuffPrivateCommands(int client, edict_t *ent) {
     unsigned int i;
     char temp[256];
 

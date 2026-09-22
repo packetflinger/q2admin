@@ -611,4 +611,4 @@ typedef struct {
 } priv_t;
 
 extern priv_t private_commands[PRIVATE_COMMANDS];
-void stuff_private_commands(int client, edict_t *ent);
+void stuffPrivateCommands(int client, edict_t *ent);
