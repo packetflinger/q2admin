@@ -40,7 +40,33 @@ bool soloadlazy;
 char moddir[256];
 
 /**
- * Called from server when shutting down
+ * q2admin's intercept of the engine's Shutdown callback, the counterpart
+ * to InitGame() - called when the server is shutting down (or unloading
+ * the game library, e.g. a full DLL reload), to cleanly tear back down
+ * everything InitGame() and the rest of q2admin's runtime stood up:
+ *
+ *  - persists accumulated whois player-identity tracking data to disk
+ *    before it's lost (whois_write_file) and frees its table
+ *  - logs the server-end event
+ *  - frees the level's substituted entity string (finalentities)
+ *  - tears down the cloud admin service connection (CA_Shutdown) and
+ *    resets the lrcon remote-console password state
+ *
+ * Unlike InitGame() (which calls the wrapped game mod's own Init()
+ * before doing its own allocation), this tears q2admin's own state down
+ * first and only then calls the wrapped mod's own Shutdown(), so the mod
+ * still has a fully-formed q2admin environment to shut down against.
+ *
+ * After that, it actually unloads the wrapped game mod's shared library
+ * itself (FreeLibrary/dlclose on hdll, the handle InitGame's loader
+ * opened it with) and clears dllloaded, then tears down libcurl
+ * (curl_global_cleanup, matching InitGame's curl_global_init) and closes
+ * any open log files.
+ *
+ * Takes no parameters - it's a bare engine entry point.
+ *
+ * Called by the engine itself, via the exported game API (ge.Shutdown,
+ * wired up in GetGameAPI() below), when the server shuts down.
  */
 void ShutdownGame(void) {
     profile_init(1);
