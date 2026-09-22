@@ -1397,15 +1397,25 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
 }
 
 /**
+ * Detects a player changing skins mid-game (via the "skin" userinfo key)
+ * and handles everything that should happen as a result: enforcing
+ * skin-change flood protection, logging the change, and rejecting an
+ * oversized skin name outright since long skin strings have historically
+ * been used to crash vulnerable clients/servers.
  *
+ * Returns false if the userinfo change should NOT be passed on to the
+ * underlying game mod (flood-silenced, still within a flood window, or
+ * the oversized-skin kick), true otherwise.
+ *
+ * Called from ClientUserinfoChanged()
  */
 bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "skin");
-    char oldskin[sizeof (proxyinfo[client].userinfo.skin)];
-    char newskin[sizeof (proxyinfo[client].userinfo.skin)];
+    char oldskin[sizeof(proxyinfo[client].userinfo.skin)];
+    char newskin[sizeof(proxyinfo[client].userinfo.skin)];
     char *skinname;
 
-    q2a_strncpy(newskin, s, sizeof (newskin) - 1);
+    q2a_strncpy(newskin, s, sizeof(newskin) - 1);
     newskin[sizeof(newskin) - 1] = 0;
 
     if (proxyinfo[client].userinfo.skin[0] == 0) {
@@ -1447,7 +1457,6 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                     }
                     return false;
                 }
-
                 proxyinfo[client].userinfo.skinchangecount++;
             }
         }
@@ -1460,7 +1469,6 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
         addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skincrashmsg);
         return false;
     }
-
     return true;
 }
 
