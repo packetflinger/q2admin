@@ -2039,7 +2039,14 @@ void ReadGame(char *filename) {
 }
 
 /**
+ * q2admin's intercept of the engine's WriteLevel callback, called just
+ * before moving to a new level to save the state of the current level
+ * (entity states, etc) - the level-scoped counterpart to WriteGame()'s
+ * cross-level state above.
  *
+ * q2admin has no level state of its own to persist, so this just forwards
+ * to the real game mod's WriteLevel under the usual dllloaded/runmode
+ * gating and edict bookkeeping (G_MergeEdicts).
  */
 void WriteLevel(char *filename) {
     profile_init(1);
@@ -2058,7 +2065,14 @@ void WriteLevel(char *filename) {
 }
 
 /**
+ * q2admin's intercept of the engine's ReadLevel callback, the counterpart
+ * to WriteLevel() above - called after the new map's default state has
+ * already been loaded via SpawnEntities, to fill back in the saved level
+ * state written by WriteLevel().
  *
+ * Like WriteLevel(), q2admin has nothing of its own to restore here, so
+ * this just forwards to the real game mod's ReadLevel under the usual
+ * dllloaded/runmode gating and edict bookkeeping (G_MergeEdicts).
  */
 void ReadLevel(char *filename) {
     profile_init(1);
