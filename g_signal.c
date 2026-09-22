@@ -47,6 +47,8 @@ static const signal_def_t signalDefs[] = {
     { SIGNAL_MSEC_OVERRUN,       20,                 "msec-overrun" },
     { SIGNAL_MSEC_UNDERRUN,      20,                 "msec-underrun" },
     { SIGNAL_IMPULSE,            10,                 "impulse-sent" },
+    { SIGNAL_ZBOT_DETECTED,      SIGNAL_SCORE_KICK,  "zbot-detected" },
+    { SIGNAL_RATBOT_DETECTED,    SIGNAL_SCORE_KICK,  "ratbot-detected" },
     { SIGNAL_HACK_PROXY,         SIGNAL_SCORE_KICK,  "hack-proxy" },
     { SIGNAL_HACK_AIMBOT,        SIGNAL_SCORE_KICK,  "hack-aimbot" },
     { SIGNAL_HACK_ZBOT,          SIGNAL_SCORE_KICK,  "hack-zbot" },

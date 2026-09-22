@@ -41,6 +41,8 @@
 #define SIGNAL_MSEC_OVERRUN        BIT(21) // Client command used too much msec
 #define SIGNAL_MSEC_UNDERRUN       BIT(22) // Client banking msec for later burst
 #define SIGNAL_IMPULSE             BIT(23) // Player issued a bad impulse
+#define SIGNAL_ZBOT_DETECTED       BIT(24) // Pretty sure player is using a zbot
+#define SIGNAL_RATBOT_DETECTED     BIT(25) // Pretty sure player is using a ratbot
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 

@@ -490,7 +490,7 @@ void G_RunFrame(void) {
                 }
 
                 if (disconnectuser) {
-                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
+                    raiseSignal(client, SIGNAL_ZBOT_DETECTED);
                 }
             }
             else if (command == QCMD_TESTSTANDARDPROXY) {
@@ -562,7 +562,7 @@ void G_RunFrame(void) {
                 }
 
                 if (disconnectuser) {
-                    addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
+                    raiseSignal(client, SIGNAL_RATBOT_DETECTED);
                 }
             } else if (command == QCMD_TESTALIASCMD1) {
                 randomString(proxyinfo[client].alias_test_str1, RANDOM_STRING_LENGTH);
