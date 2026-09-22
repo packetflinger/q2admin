@@ -974,7 +974,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
  * this returns true so the caller treats it as a bot/proxy signature
  * match and rejects/bans the connection.
  *
- * client:            the connecting client's index into proxyinfo.
+ * client:             the connecting client's index into proxyinfo.
  * ent:                the client's edict; currently unused here, kept for
  *                     signature consistency with sibling connect-time
  *                     checks.
@@ -1830,7 +1830,32 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 }
 
 /**
- * Called when a client is disconnected or quits
+ * q2admin's intercept of the engine's ClientDisconnect callback, fired
+ * whenever a client leaves - quitting, timing out, getting kicked, or
+ * moving to a new level in a way that drops them. This is the
+ * counterpart to ClientBegin()/ClientConnect(): where those (re)arm a
+ * client's per-connection proxyinfo state, this is where it all gets torn
+ * back down so the slot is a clean slate for whoever connects next -
+ * admin/bypass levels, queued proxy commands, VPN/IPLogs results,
+ * address, userinfo, msec tracking, ban usage count, and any open
+ * !stuff file handle.
+ *
+ * If the server is currently locked down (lockDownServer), this also
+ * records the disconnecting player's name into reconnectproxyinfo so
+ * checkReconnectList() can let them straight back in despite the
+ * lockdown when they reconnect, rather than treating them as a new,
+ * unwelcome connection.
+ *
+ * The real game mod's ClientDisconnect (and the lockdown reconnect
+ * recording above) are both skipped while the client is still pending a
+ * ban check (BANCHECK), since in that state the mod was never told about
+ * this client in the first place.
+ *
+ * ent: the disconnecting client's edict; its client index is derived
+ *      internally via getEntOffset().
+ *
+ * Called by the engine itself (via the exported game API) any time a
+ * client disconnects.
  */
 void ClientDisconnect(edict_t *ent) {
     int client;
