@@ -1299,15 +1299,26 @@ bool ClientConnect(edict_t *ent, char *ui) {
 }
 
 /**
+ * Detects a player renaming mid-game (via the "name" userinfo key) and
+ * handles everything that should happen as a result: clearing ratbot name
+ * detection when the change matches the expected test string, enforcing
+ * name-change flood protection, logging/announcing the change, and
+ * re-running the ban check against the new name in case it matches a
+ * name-based ban (reverting the name and kicking/re-prompting if so).
  *
+ * Returns false if the userinfo change should NOT be passed on to the
+ * underlying game mod (flood-silenced or still within a flood window),
+ * true otherwise.
+ *
+ * Called from ClientUserinfoChanged()
  */
 bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "name");
-    char oldname[sizeof (proxyinfo[client].name)];
-    char newname[sizeof (proxyinfo[client].name)];
+    char oldname[sizeof(proxyinfo[client].name)];
+    char newname[sizeof(proxyinfo[client].name)];
 
-    q2a_strncpy(newname, s, sizeof (newname) - 1);
-    newname[sizeof (newname) - 1] = 0;
+    q2a_strncpy(newname, s, sizeof(newname) - 1);
+    newname[sizeof(newname) - 1] = 0;
 
     if (proxyinfo[client].name[0] == 0) {
         Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", newname);
@@ -1317,9 +1328,6 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             removeClientCommand(client, QCMD_TESTRATBOT4);
             proxyinfo[client].clientcommand &= ~CCMD_RATBOTDETECTNAME;
             proxyinfo[client].clientcommand |= CCMD_RBOTCLEAR;
-
-            // ok not a ratbot.. turn off detection
-            //      addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
             return false;
         }
 
@@ -1380,13 +1388,11 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                         }
                         return false;
                     }
-
                     proxyinfo[client].userinfo.namechangecount++;
                 }
             }
         }
     }
-
     return true;
 }
 
