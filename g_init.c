@@ -448,7 +448,36 @@ char *FindIpAddressInUserInfo(char *userinfo, bool *userInfoOverflow) {
 }
 
 /**
- * Called when the server is initialized
+ * q2admin's intercept of the engine's Init callback - the very first
+ * game-side entry point the engine calls, before any level loads or
+ * client connects. This is where every piece of q2admin's own
+ * server-lifetime state gets allocated and prepared:
+ *
+ *  - brings up libcurl globally (curl_global_init), since the various
+ *    HTTP-backed features (VPN/IPLogs checks, cloud reporting) all
+ *    depend on it and it must only be done once
+ *  - detects which optional engine features are available (g_features/
+ *    sv_features), and if the engine supports a variable server tick
+ *    rate, reads the real sv_fps so q2admin's own frametime/ltime-based
+ *    timeouts stay in sync with it instead of assuming the default
+ *  - allocates and zeroes the core proxyinfo array (sized maxclients+1,
+ *    the extra slot being the "-1" global slot used throughout q2admin)
+ *    along with the lockdown-reconnect and redirect-reconnect tracking
+ *    arrays (reconnectproxyinfo, reconnectlist, retrylist)
+ *  - loads the admin config (readAdminConfig()), which is what actually
+ *    puts q2admin's own tunables into effect
+ *  - optionally sets up the whois tracking table, then brings up the
+ *    HTTP subsystem and the cloud admin service connection
+ *
+ * The real game mod's own Init() is called deliberately early, before
+ * proxyinfo is allocated - anything reachable from the mod's Init (per
+ * the inline warning below) must not touch proxyinfo, since it doesn't
+ * exist yet at that point.
+ *
+ * Takes no parameters - it's a bare engine entry point.
+ *
+ * Called by the engine itself (via the exported game API) once, at
+ * server startup.
  */
 void InitGame(void) {
     int i;
