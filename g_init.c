@@ -580,8 +580,32 @@ void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, boo
 }
 
 /**
- * Make a new null-terminated entity string making any needed substitutions
- * based on the `tune_spawn_*` CVARS.
+ * Rebuilds the level's entity string, letting admins swap specific item
+ * and weapon spawns (quad, invulnerability, power shield, mega health,
+ * bfg, railgun, rocket launcher, hyperblaster, grenade launcher,
+ * chaingun, machinegun, supershotgun, shotgun, grenades) for a different
+ * classname at runtime via the `tune_spawn_*` CVARs, without having to
+ * edit the map itself. This is how an admin can, say, disable quad damage
+ * spawns or replace a railgun spawn with something else map-wide.
+ *
+ * Re-reads the current `tune_spawn_*` CVAR values, then walks oldents
+ * token by token (brace/key/value, using the same tokenizer the engine
+ * uses to parse entity strings) and copies each token into newents
+ * unchanged, except that a value token matching a configured `tune_spawn_*`
+ * classname is replaced via SubstituteEntity() with the configured
+ * substitute (subject to the entity allow-list there).
+ *
+ * newents: destination buffer for the rebuilt entity string. Must already
+ *          be allocated large enough by the caller (see the sizing TODO
+ *          on SubstituteEntity() above).
+ * oldents: the source entity string to read from (already run through
+ *          checkDisabledEntities()'s classname stripping by the caller).
+ *          Consumed locally as it's tokenized; the caller's own copy of
+ *          the pointer is untouched.
+ *
+ * Called from SpawnEntities() every time a new level is entered, right
+ * before the rebuilt entity string is handed to the real game mod's
+ * SpawnEntities.
  */
 void SubstituteEntities(char *newents, char *oldents) {
     bool replaced;
