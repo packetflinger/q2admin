@@ -372,7 +372,30 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     profile_stop_2(1, "q2admin->ClientThink", 0, NULL);
 }
 
-// unused
+/**
+ * Meant to arm a ~10 second "p_modified Standard Proxy Test" window for a
+ * client suspected of running a modified/hacked client build - the same
+ * issue-a-probe-then-verify-the-response pattern used elsewhere in this
+ * file (version, timescale, cl_pitchspeed/cl_anglespeedkey probes), just
+ * for GL driver identity and command-queue/alias state instead: resets
+ * the client's pmod/pver tracking, sets the pmodver deadline (ltime + 10)
+ * that gates the response handling in g_cmd.c's ClientCommand dispatch,
+ * and conditionally issues two client-side probes - a GL driver echo
+ * (stuffcmd asking for $gl_driver/$vid_ref/$gl_mode, if gl_driver_check
+ * is set) and a full command-queue dump request (QCMD_GETCMDQUEUE, if
+ * q2a_command_check is set).
+ *
+ * client: the target client's index.
+ *
+ * Currently unreachable: nothing in the codebase calls this (no header
+ * declaration, no call site), so despite the response-handling machinery
+ * still existing (the pmodver-gated block in g_cmd.c, and the
+ * QCMD_PMODVERTIMEOUT_INGAME follow-up it queues, which is itself an
+ * empty no-op handler in G_RunFrame()), this test is never actually
+ * armed for anyone right now. Kept here as apparently-orphaned legacy
+ * code, consistent with the "seemingly unused" pmod/pver fields it
+ * touches (see proxyinfo_t in g_local.h).
+ */
 void PMOD_TimerCheck(int client) {
     edict_t *ent;
     ent = getEnt((client + 1));
@@ -383,9 +406,9 @@ void PMOD_TimerCheck(int client) {
     addCmdQueue(client, QCMD_PMODVERTIMEOUT_INGAME, 10, 0, 0);
     gi.cprintf(ent, PRINT_HIGH, "q2admin: p_modified Standard Proxy Test\r\n");
 
-    if (gl_driver_check & 1)
+    if (gl_driver_check & 1) {
         stuffcmd(ent, "say Q2ADMIN_GL_DRIVER_CHECK $gl_driver / $vid_ref / $gl_mode\n");
-
+    }
     if (q2a_command_check) {
         addCmdQueue(client, QCMD_GETCMDQUEUE, 5, 0, 0);
     }
