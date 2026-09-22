@@ -346,7 +346,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     if (!(cl->clientcommand & BANCHECK)) {
         if (zbc_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
-            if (AimbotCheck(client, ucmd)) {
+            if (checkForAimbot(client, ucmd)) {
                 cl->clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                 removeClientCommand(client, QCMD_ZPROXYCHECK1);
                 addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_ZBCHECK, 0);
@@ -461,14 +461,43 @@ void stuffPrivateCommands(int client, edict_t *ent) {
 }
 
 /**
- * Check if a player is using some kind of aim assist. Checks client angles
- * for a large jump between ClientThinks.
+ * Looks for a specific "spike and revert" signature in a client's view
+ * angles: the angle jumps by a large amount for exactly one frame, then
+ * immediately snaps back to what it was right before the jump. That's
+ * not what a human turning quickly looks like (a fast turn keeps going,
+ * it doesn't reverse on the very next frame) - it's the signature of an
+ * old-school aimbot/triggerbot that briefly overrides the view angle for
+ * a single usercmd_t to land a shot, then restores the player's real
+ * aim. This predates and is narrower in what it looks for than
+ * SnapFireCheck()/TrackingCheck() above, which target more modern
+ * silent-aim/tracking behavior instead.
+ *
+ * Detecting "spike and revert" needs three samples, not two - this
+ * frame's angle, last frame's, and the frame before that - to tell a
+ * revert apart from an ordinary fast turn (which only ever differs from
+ * the previous frame, it doesn't return to an older one). aim_assist
+ * keeps that history in a 2-slot toggle buffer rather than a plain
+ * previous-frame value for exactly this reason. When a revert big enough
+ * to matter (zbc_jittermove) is seen on consecutive frames, it counts as
+ * a jitter streak: past zbc_jittermax consecutive hits this returns true
+ * (a hard, immediate positive - the caller in ClientThink() treats this
+ * as a confirmed aimbot and kicks off the zbot-detected flow) and below
+ * that threshold it raises the softer SIGNAL_AIMBOT_JITTER signal
+ * instead, feeding the weighted score system. The streak resets (and the
+ * signal clears) once zbc_jittertime seconds pass without another hit.
+ *
+ * client: the client's index, used to look up their per-client jitter
+ *         tracking state (proxyinfo[client].aim_assist).
+ * ucmd:   this frame's usercmd_t; only its view angles are examined.
+ *
+ * Returns true only on a hard, confirmed-aimbot positive (see above);
+ * false otherwise, even if a soft signal was raised this call.
  *
  * Originally ZbotCheck v1.01 by Matt "WhiteFang" Ayres (matt@lithium.com)
  *
- * Called from ClientThink()
+ * Called from ClientThink(), alongside SnapFireCheck()/TrackingCheck().
  */
-bool AimbotCheck(int client, usercmd_t *ucmd) {
+bool checkForAimbot(int client, usercmd_t *ucmd) {
     int prev, cur;
     aimbot_t *a = &proxyinfo[client].aim_assist;
 
