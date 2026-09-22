@@ -40,6 +40,7 @@
 #define SIGNAL_CHECKVAR_DEADLINE   BIT(20) // Checkvar probe unanswered
 #define SIGNAL_MSEC_OVERRUN        BIT(21) // Client command used too much msec
 #define SIGNAL_MSEC_UNDERRUN       BIT(22) // Client banking msec for later burst
+#define SIGNAL_IMPULSE             BIT(23) // Player issued a bad impulse
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 

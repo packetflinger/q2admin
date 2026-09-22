@@ -46,6 +46,7 @@ static const signal_def_t signalDefs[] = {
     { SIGNAL_CHECKVAR_DEADLINE,  20,                 "checkvar-probe" },
     { SIGNAL_MSEC_OVERRUN,       20,                 "msec-overrun" },
     { SIGNAL_MSEC_UNDERRUN,      20,                 "msec-underrun" },
+    { SIGNAL_IMPULSE,            10,                 "impulse-sent" },
     { SIGNAL_HACK_PROXY,         SIGNAL_SCORE_KICK,  "hack-proxy" },
     { SIGNAL_HACK_AIMBOT,        SIGNAL_SCORE_KICK,  "hack-aimbot" },
     { SIGNAL_HACK_ZBOT,          SIGNAL_SCORE_KICK,  "hack-zbot" },
@@ -95,7 +96,11 @@ int signalScore(int client) {
     mask = proxyinfo[client].signalMask;
     for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
         if (mask & signalDefs[i].bit) {
-            score += signalDefs[i].weight;
+            if (signalDefs[i].bit == SIGNAL_IMPULSE) {
+                score += (signalDefs[i].weight * proxyinfo[client].impulsesgenerated);
+            } else {
+                score += signalDefs[i].weight;
+            }
         }
     }
     return score;

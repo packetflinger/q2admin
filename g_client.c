@@ -321,10 +321,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
         if (disconnectuserimpulse && checkImpulse(ucmd->impulse)) {
             cl->impulsesgenerated++;
-
-            if (cl->impulsesgenerated >= maximpulses) {
-                addCmdQueue(client, QCMD_DISCONNECT, 1, 0, msg);
-            }
+            raiseSignal(client, SIGNAL_IMPULSE);
         }
     }
 
@@ -368,7 +365,6 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
         G_MergeEdicts();
     }
-
     profile_stop_2(1, "q2admin->ClientThink", 0, NULL);
 }
 
