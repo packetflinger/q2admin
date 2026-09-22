@@ -197,7 +197,7 @@ void Pmove_internal(pmove_t *pmove) {
  *  - if swap_attack_use is set, swaps the ATTACK/USE button bits for
  *    accessibility
  *  - runs the per-frame aim-cheat detectors - AimbotCheck(),
- *    checkForSnapFire(), TrackingCheck() - since they all need to see every
+ *    checkForSnapFire(), checkForTracking() - since they all need to see every
  *    single angle/button update, not just a periodic sample
  *
  * before finally forwarding to the wrapped game mod's own ClientThink()
@@ -359,7 +359,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
 
         if (track_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
-            TrackingCheck(client, ent, ucmd);
+            checkForTracking(client, ent, ucmd);
         }
 
         profile_start(2);
@@ -469,7 +469,7 @@ void stuffPrivateCommands(int client, edict_t *ent) {
  * old-school aimbot/triggerbot that briefly overrides the view angle for
  * a single usercmd_t to land a shot, then restores the player's real
  * aim. This predates and is narrower in what it looks for than
- * checkForSnapFire()/TrackingCheck() above, which target more modern
+ * checkForSnapFire()/checkForTracking() above, which target more modern
  * silent-aim/tracking behavior instead.
  *
  * Detecting "spike and revert" needs three samples, not two - this
@@ -495,7 +495,7 @@ void stuffPrivateCommands(int client, edict_t *ent) {
  *
  * Originally ZbotCheck v1.01 by Matt "WhiteFang" Ayres (matt@lithium.com)
  *
- * Called from ClientThink(), alongside checkForSnapFire()/TrackingCheck().
+ * Called from ClientThink(), alongside checkForSnapFire()/checkForTracking().
  */
 bool checkForAimbot(int client, usercmd_t *ucmd) {
     int prev, cur;
@@ -631,8 +631,10 @@ bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd) {
  * it's meant to catch the tracking itself, not just the shot.
  *
  * Called from ClientThink()
+ * 
+ * TODO: profile this!
  */
-bool TrackingCheck(int client, edict_t *ent, usercmd_t *ucmd) {
+bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
     aimtrack_t *t = &proxyinfo[client].aimtrack;
     vec3_t angles, fwd, eye, end, toTarget, zero = {0, 0, 0};
     edict_t *cand;
