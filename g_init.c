@@ -1678,12 +1678,6 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         }
     }
 
-    proxyinfo[client].userinfo.msg = q2a_atoi(Info_ValueForKey(userinfo, "msg"));
-
-    if (proxyinfo[client].userinfo.msg > maxMsgLevel) {
-        addCmdQueue(client, QCMD_MSGDISCONNECT, 2, 0, 0);
-    }
-
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw)-1);
 
     proxyinfo[client].next_report = 0;
