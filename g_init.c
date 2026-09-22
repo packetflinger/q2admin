@@ -1143,12 +1143,14 @@ bool ClientConnect(edict_t *ent, char *ui) {
     skinname = Info_ValueForKey(userinfo, "skin");
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
         q2a_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
-        Info_SetValueForKey(ui, "rejmsg", "rejected: invalid skin");
-        return false;
+        raiseSignal(client, SIGNAL_SKIN_OVERFLOW);
+        Info_SetValueForKey(ui, "skin", "female/jezebel");
+        q2a_strcpy(skinname, "female/jezebel");
+
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof (proxyinfo[client].userinfo.skin) - 1);
-    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof (proxyinfo[client].userinfo.raw) - 1);
+    q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof(proxyinfo[client].userinfo.skin) - 1);
+    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw) - 1);
 
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;
@@ -1463,11 +1465,10 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
     }
 
     skinname = Info_ValueForKey(userinfo, "skin");
-    if (strlen(skinname) > 38) {
-        Q_snprintf(buffer, sizeof(buffer), skincrashmsg, proxyinfo[client].name);
-        gi.bprintf(PRINT_HIGH, "%s\n", buffer);
-        addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skincrashmsg);
-        return false;
+    if (strlen(skinname) > MAX_SKIN_CHARS) {
+        q2a_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
+        raiseSignal(client, SIGNAL_SKIN_OVERFLOW);
+        Info_SetValueForKey(userinfo, "skin", "female/jezebel");
     }
     return true;
 }

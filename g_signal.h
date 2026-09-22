@@ -33,6 +33,7 @@
 #define SIGNAL_HACK_UNKNOWN        BIT(13) // HT_UNKNOWN
 #define SIGNAL_SNAP_FIRE           BIT(14) // view snapped onto a player that wasn't near the crosshair, firing immediately
 #define SIGNAL_AIM_TRACK           BIT(15) // crosshair stayed implausibly tight on a moving target for a sustained streak
+#define SIGNAL_SKIN_OVERFLOW       BIT(16) // Attempted to use an oversized skin
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 
