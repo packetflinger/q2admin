@@ -693,7 +693,45 @@ void SubstituteEntities(char *newents, char *oldents) {
 }
 
 /**
+ * q2admin's intercept of the engine's SpawnEntities callback, fired every
+ * time a new level is entered (including level changes for a server that
+ * stays up, not just once at boot). This is the natural point to do all
+ * of q2admin's own per-level setup before handing off to the real game
+ * mod, since a level change is q2admin's equivalent of a clean slate:
  *
+ *  - resets the per-level portion of each client slot's proxyinfo (plus
+ *    the -1 "global" slot), and more thoroughly for slots not currently
+ *    in use, since state like admin/bypass level or flood counters
+ *    shouldn't carry over stale
+ *  - frees and reloads every admin-config list that can vary per level
+ *    (bans, lrcon, flood, votes, disabled entities, checkvars, the MOTD,
+ *    the IPLogs ignorelist), since maps can have their own overrides
+ *  - re-randomizes the zbot-detection test strings/chars for this level,
+ *    so a cheat client can't hardcode a fixed value across level changes
+ *  - if spawnentities_enable, loads this map's optional
+ *    q2adminmaps/<mapname>.q2aspawn file and walks the entity string,
+ *    disabling (renaming classname so the engine's spawn code ignores
+ *    it, and unlinking any "team" reference to it) any entity whose
+ *    classname matches the disabled-entities list
+ *  - rebuilds the entity string via SubstituteEntities() for the
+ *    tune_spawn_* item/weapon swaps, and passes that rebuilt string
+ *    (not the original) to the real game mod's SpawnEntities
+ *  - afterward, reloads the remaining runtime lists, execs an optional
+ *    per-map mapcfg/<mapname>-post.cfg, and updates/reports the new map
+ *    to the cloud admin service
+ *
+ * mapname:    name of the map being loaded (used for the spawnlist
+ *             filename, the mapcfg exec, and cloud reporting).
+ * entities:   the level's raw entity string as decoded from the map. Note
+ *             this is walked/consumed locally while scanning for disabled
+ *             entities; a separate copy of the original pointer
+ *             (backupentities) is kept so SubstituteEntities() can still
+ *             read it from the start afterward.
+ * spawnpoint: the player spawnpoint string; q2admin doesn't touch this,
+ *             it's passed straight through to the real game mod.
+ *
+ * Called by the engine itself (via the exported game API) on every level
+ * load.
  */
 void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     int len, currentlen;
