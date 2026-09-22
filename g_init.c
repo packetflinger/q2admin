@@ -959,7 +959,35 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
 }
 
 /**
+ * Populates the connecting client's proxyinfo from their userinfo string
+ * (the parts derivable straight from userinfo, before the rest of
+ * ClientConnect()'s ban/flood checks run) and checks for the userinfo
+ * signature of a couple of known third-party client-side proxy tools
+ * (Nitro2 and bwproxy) that admins may want to disallow, since those are
+ * a known way to mask a client's real behavior/identity from the server.
  *
+ * Parses the client's real IP out of userinfo into proxyinfo[client].address
+ * (special-cased for "loopback"), then checks for the "Nitro2"/"bwproxy"
+ * userinfo keys those proxies add. If found and the corresponding
+ * proxy_nitro2/proxy_bwproxy CVAR allows it, the connection is just
+ * flagged (CCMD_NITRO2PROXY) and allowed to continue; if not allowed,
+ * this returns true so the caller treats it as a bot/proxy signature
+ * match and rejects/bans the connection.
+ *
+ * client:            the connecting client's index into proxyinfo.
+ * ent:                the client's edict; currently unused here, kept for
+ *                     signature consistency with sibling connect-time
+ *                     checks.
+ * userinfo:           the connecting client's raw userinfo string.
+ * userInfoOverflow:   out-param, forwarded to FindIpAddressInUserInfo();
+ *                     set if parsing the IP found the client's userinfo
+ *                     had overflowed.
+ *
+ * Returns true if a disallowed proxy signature was found (caller should
+ * reject/ban), false otherwise.
+ *
+ * Called from ClientConnect(), right after the client's proxyinfo slot is
+ * reset for the new connection, before the remaining connect-time checks.
  */
 bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* userInfoOverflow) {
     char *ip = FindIpAddressInUserInfo(userinfo, userInfoOverflow);
