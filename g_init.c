@@ -1473,7 +1473,27 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
 }
 
 /**
- * Client changed something (name, skin, rate, hand, etc)
+ * q2admin's intercept of the engine's ClientUserinfoChanged callback, fired
+ * any time a client's userinfo string changes (name, skin, rate, hand,
+ * cl_maxfps, cl_pitchspeed, timescale, etc). Since this covers most of the
+ * settings a cheat client would tamper with to gain an advantage or evade
+ * detection, this is where q2admin inspects and enforces policy on each of
+ * those fields before optionally forwarding the change to the real game
+ * mod:
+ *
+ *  - logs the change and kicks on a known cheat-client signature string
+ *  - flood-protects against excessive userinfo changes (with an exemption
+ *    for cl_maxfps, since jump mods toggle it legitimately)
+ *  - delegates name/skin changes to checkForNameChange()/checkForSkinChange(),
+ *    whose results (plus any pending ban check) decide whether the change
+ *    is passed on to the underlying mod at all
+ *  - clips rate to the configured min/max
+ *  - detects and corrects/kicks over timescale, cl_maxfps, cl_pitchspeed
+ *    and cl_anglespeedkey tampering, each a known way to speed up
+ *    movement/turning or otherwise cheat
+ *
+ * Finally stores the raw userinfo string for the next comparison and
+ * reports the update to the cloud admin service.
  */
 void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     int client;
