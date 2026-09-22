@@ -1762,7 +1762,6 @@ void ClientDisconnect(edict_t *ent) {
 
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
-            // this seems stupid, remove?
             proxyinfo[client].baninfo->numberofconnects--;
         }
         proxyinfo[client].baninfo = NULL;
@@ -1807,6 +1806,8 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].admin_level = 0;
     proxyinfo[client].bypass_level = 0;
     proxyinfo[client].vid_restart = false;
+    proxyinfo[client].version_deadline = 0;
+    proxyinfo[client].alias_deadline = 0;
     proxyinfo[client].userid = -1;
 
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
