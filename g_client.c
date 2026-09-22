@@ -197,7 +197,7 @@ void Pmove_internal(pmove_t *pmove) {
  *  - if swap_attack_use is set, swaps the ATTACK/USE button bits for
  *    accessibility
  *  - runs the per-frame aim-cheat detectors - AimbotCheck(),
- *    SnapFireCheck(), TrackingCheck() - since they all need to see every
+ *    checkForSnapFire(), TrackingCheck() - since they all need to see every
  *    single angle/button update, not just a periodic sample
  *
  * before finally forwarding to the wrapped game mod's own ClientThink()
@@ -355,7 +355,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         }
 
         if (snapfire_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
-            SnapFireCheck(client, ent, ucmd);
+            checkForSnapFire(client, ent, ucmd);
         }
 
         if (track_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
@@ -469,7 +469,7 @@ void stuffPrivateCommands(int client, edict_t *ent) {
  * old-school aimbot/triggerbot that briefly overrides the view angle for
  * a single usercmd_t to land a shot, then restores the player's real
  * aim. This predates and is narrower in what it looks for than
- * SnapFireCheck()/TrackingCheck() above, which target more modern
+ * checkForSnapFire()/TrackingCheck() above, which target more modern
  * silent-aim/tracking behavior instead.
  *
  * Detecting "spike and revert" needs three samples, not two - this
@@ -495,7 +495,7 @@ void stuffPrivateCommands(int client, edict_t *ent) {
  *
  * Originally ZbotCheck v1.01 by Matt "WhiteFang" Ayres (matt@lithium.com)
  *
- * Called from ClientThink(), alongside SnapFireCheck()/TrackingCheck().
+ * Called from ClientThink(), alongside checkForSnapFire()/TrackingCheck().
  */
 bool checkForAimbot(int client, usercmd_t *ucmd) {
     int prev, cur;
@@ -549,7 +549,7 @@ bool checkForAimbot(int client, usercmd_t *ucmd) {
  *
  * Called from ClientThink()
  */
-bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd) {
+bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd) {
     aimsnap_t *s = &proxyinfo[client].aimsnap;
     vec3_t oldangles, newangles, oldfwd, newfwd, eye, end, toTarget, zero = {0, 0, 0};
     bool attacking, attackPressed;
@@ -627,7 +627,7 @@ bool SnapFireCheck(int client, edict_t *ent, usercmd_t *ucmd) {
  * streak survives real target movement instead of getting interrupted by
  * human correction jitter.
  *
- * Unlike SnapFireCheck, this doesn't require the attack button at all -
+ * Unlike checkForSnapFire, this doesn't require the attack button at all -
  * it's meant to catch the tracking itself, not just the shot.
  *
  * Called from ClientThink()
