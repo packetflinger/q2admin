@@ -977,7 +977,19 @@ bool checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
 }
 
 /**
+ * While the server is locked down (lockDownServer), ClientDisconnect()
+ * records the name of anyone who disconnects into reconnectproxyinfo so
+ * they can rejoin despite the lockdown - otherwise a lockdown would also
+ * strand players who simply drop and reconnect (a brief network blip, a
+ * map change, etc) along with the new connections it's meant to keep out.
  *
+ * Called from ClientConnect() whenever lockDownServer is active, to
+ * decide whether an incoming connection is one of those returning
+ * players or a genuinely new one that should be rejected. Consumes the
+ * matching entry (one-time use, so it doesn't grant a standing bypass)
+ * and returns false if found - meaning this connection is allowed
+ * through despite the lockdown. Returns true (blocked) if no match is
+ * found.
  */
 bool checkReconnectList(char *username) {
     unsigned int i;
