@@ -175,6 +175,35 @@ void Pmove_internal(pmove_t *pmove) {
 }
 
 /**
+ * q2admin's intercept of the engine's ClientThink callback - installed as
+ * ge.ClientThink in GetGameAPI() (g_main.c) and called by the engine
+ * itself, once for each client update packet. This is the highest
+ * frequency, most input-granular hook q2admin has into a client (view
+ * angles, buttons, msec, impulses, every single update rather than just
+ * once per connect or per level), which is why most of q2admin's
+ * real-time anti-cheat/anti-speedhack detection runs here rather than
+ * elsewhere:
+ *
+ *  - tracks each client's msec budget over a rolling window against the
+ *    configured min/max (msec), applying a temporary speedfreeze (msec
+ *    zeroed for a few seconds) or kicking outright depending on
+ *    msec.action - this is the speedhack detection, since a client
+ *    reporting more simulated time than it should have for the real time
+ *    elapsed is a classic speedhack signature; also honors an
+ *    admin-triggered freeze (cl->freeze) by zeroing msec the same way
+ *  - logs/counts impulses and, if disconnectuserimpulse is set, kicks
+ *    once a client crosses maximpulses worth of impulses that
+ *    checkImpulse() says should count (see checkImpulse() above)
+ *  - if swap_attack_use is set, swaps the ATTACK/USE button bits for
+ *    accessibility
+ *  - runs the per-frame aim-cheat detectors - AimbotCheck(),
+ *    SnapFireCheck(), TrackingCheck() - since they all need to see every
+ *    single angle/button update, not just a periodic sample
+ *
+ * before finally forwarding to the wrapped game mod's own ClientThink()
+ * (ge_mod->ClientThink), whose own Pmove call is what then routes
+ * through Pmove_internal() above.
+ *
  * Called for each client frame. This will called once per cl_maxfps value per
  * second. The msec value in the usercmd_t arg should be approximately
  * 1000/cl_maxfps. For an fps of 120, that equals roughly 8-9ms.
