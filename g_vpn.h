@@ -51,6 +51,8 @@ void vpnUsersRun(int startarg, edict_t *ent, int client);
 typedef enum {
     IPLOGS_UNKNOWN,     // unchecked, not known
     IPLOGS_CHECKING,    // mid-lookup
+    IPLOGS_SUSPICIOUS,  // eh?
+    IPLOGS_LIKEY,       // EH?!
     IPLOGS_VPN,         // confirmed, vpn/proxy address
     IPLOGS_CLEAN,       // confirmed, clean address
 } iplogs_state_t;

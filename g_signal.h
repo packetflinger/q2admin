@@ -44,7 +44,10 @@
 #define SIGNAL_ZBOT_DETECTED       BIT(24) // Pretty sure player is using a zbot
 #define SIGNAL_RATBOT_DETECTED     BIT(25) // Pretty sure player is using a ratbot
 #define SIGNAL_BAN_ADJUSTMENT      BIT(26) // Ban entry has a "SCORE" property
-#define SIGNAL_MANUAL              BIT(27) // Human admin manually added score 
+#define SIGNAL_MANUAL              BIT(27) // Human admin manually added score
+#define SIGNAL_VPN_SUSPICIOUS      BIT(28) // 25-50% sure on VPN usage
+#define SIGNAL_VPN_LIKEY           BIT(29) // 50-75% sure on VPN usage
+#define SIGNAL_VPN_DETECTED        BIT(30) // 75-100% sure on VPN usage
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 

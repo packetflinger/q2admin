@@ -235,6 +235,15 @@ void IPLogsCheckVPN(edict_t *ent) {
     }
 
     if (IPLogsCacheGet(&pi->address, &pi->iplogs)) {
+        if (pi->iplogs.verdict[0]) {
+            if (Q_stricmp(pi->iplogs.verdict, "suspicious")) {
+                raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
+            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_likely")) {
+                raiseSignal(i, SIGNAL_VPN_LIKEY);
+            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_detected")) {
+                raiseSignal(i, SIGNAL_VPN_DETECTED);
+            }
+        }
         q2a_printf("%s[%s] vpn check (cached): score=%.2f verdict=%s asn=%s%s\n",
             NAME(i), addr, pi->iplogs.score, pi->iplogs.verdict, pi->iplogs.asn, (pi->iplogs.is_vpn ? " (VPN)" : ""));
         return;
@@ -285,6 +294,13 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     verdict = json_getPropertyValue(root, "verdict");
     if (verdict) {
         q2a_strncpy(v->verdict, verdict, sizeof(v->verdict)-1);
+        if (Q_stricmp(v->verdict, "suspicious")) {
+            raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
+        } else if (Q_stricmp(v->verdict, "vpn_likely")) {
+            raiseSignal(i, SIGNAL_VPN_LIKEY);
+        } else if (Q_stricmp(v->verdict, "vpn_detected")) {
+            raiseSignal(i, SIGNAL_VPN_DETECTED);
+        }
     }
 
     prop = json_getProperty(root, "score");
