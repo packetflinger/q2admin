@@ -213,6 +213,7 @@ typedef struct {
     int qport;                      // for UDP connection tracking
     bool zlib;                      // is client using zlib compression?
     int manual_signal_score;        // admin score override
+    int ban_signal_score;           // score override from ban entry
 } proxyinfo_t;
 
 typedef struct {

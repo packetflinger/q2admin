@@ -624,10 +624,8 @@ void G_RunFrame(void) {
                     stuffcmd(ent, buffer);
                 }
             } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
-                //stuffcmd(ent, "disconnect\n");
                 proxyinfo[client].clientcommand |= CCMD_KICKED;
                 logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0, true);
-                gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
                 Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                 gi.AddCommandString(buffer);
             } else if (command == QCMD_RECONNECT) {

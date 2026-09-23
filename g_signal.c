@@ -92,20 +92,22 @@ void clearSignal(int client, unsigned int signal) {
 int signalScore(int client) {
     int score = 0;
     unsigned int mask;
+    proxyinfo_t *cl;
 
     if (!VALIDCLIENT(client)) {
         return 0;
     }
 
-    mask = proxyinfo[client].signalMask;
+    cl = &proxyinfo[client];
+    mask = cl->signalMask;
     for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
         if (mask & signalDefs[i].bit) {
             if (signalDefs[i].bit == SIGNAL_IMPULSE) {
-                score += (signalDefs[i].weight * proxyinfo[client].impulsesgenerated);
+                score += (signalDefs[i].weight * cl->impulsesgenerated);
             } else if (signalDefs[i].bit == SIGNAL_BAN_ADJUSTMENT) {
-                score += proxyinfo[client].baninfo->signalscore;
+                score += cl->ban_signal_score;
             } else if (signalDefs[i].bit == SIGNAL_MANUAL) {
-                score += proxyinfo[client].manual_signal_score;
+                score += cl->manual_signal_score;
             } else {
                 score += signalDefs[i].weight;
             }
@@ -135,7 +137,15 @@ char *signalListString(int client) {
             if (!first) {
                 q2a_strcat(list, ", ");
             }
-            q2a_strcat(list, signalDefs[i].name);
+            if (signalDefs[i].bit == SIGNAL_BAN_ADJUSTMENT) {
+                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, proxyinfo[client].ban_signal_score));
+            } else if (signalDefs[i].bit == SIGNAL_MANUAL) {
+                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, proxyinfo[client].manual_signal_score));
+            } else if (signalDefs[i].bit == SIGNAL_IMPULSE) {
+                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].impulsesgenerated));
+            } else {
+                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, signalDefs[i].weight));
+            }
             first = false;
         }
     }
@@ -188,12 +198,10 @@ void evaluateSignalScore(int client) {
 
     score = signalScore(client);
     if (score >= signal_score_threshold) {
-        addCmdQueue(
-            client,
-            QCMD_DISCONNECT,
-            1,
-            0,
-            va("%s tripped the signal threshold (score %d): %s", proxyinfo[client].name, score, signalListString(client))
+        proxyinfo[client].clientcommand |= CCMD_KICKED;
+        gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "You exceeded the server's signal threshold (%d/%d)\n", score, signal_score_threshold);
+        addCmdQueue(client, QCMD_DISCONNECT, 1, 0,
+            va("%s tripped the signal threshold (score %d/%d): %s", NAME(client), score, signal_score_threshold, signalListString(client))
         );
     }
 }

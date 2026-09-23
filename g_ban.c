@@ -1130,6 +1130,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
 
             // check for signal score
             if (checkentry->signalscore != 0) {
+                proxyinfo[client].ban_signal_score = checkentry->signalscore;
                 raiseSignal(client, SIGNAL_BAN_ADJUSTMENT);
             }
 
