@@ -43,6 +43,8 @@
 #define SIGNAL_IMPULSE             BIT(23) // Player issued a bad impulse
 #define SIGNAL_ZBOT_DETECTED       BIT(24) // Pretty sure player is using a zbot
 #define SIGNAL_RATBOT_DETECTED     BIT(25) // Pretty sure player is using a ratbot
+#define SIGNAL_BAN_ADJUSTMENT      BIT(26) // Ban entry has a "SCORE" property
+#define SIGNAL_MANUAL              BIT(27) // Human admin manually added score 
 
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 

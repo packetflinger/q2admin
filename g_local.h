@@ -55,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define CFGFILE         "q2admin.cfg"
 
 #define NAME(x)         (proxyinfo[x].name)
-#define VALIDCLIENT(i)  (i >= 0 && i < (int)maxclients->value) // proxyinfo index
+#define VALIDCLIENT(i)  (i >= 0 && i < (int)maxclients->value && proxyinfo[i].inuse)
 
 extern game_import_t gi;        // server access from inside game lib
 extern game_export_t ge;        // game access from inside server
@@ -212,6 +212,7 @@ typedef struct {
     int mtu;                        // packet length set for client
     int qport;                      // for UDP connection tracking
     bool zlib;                      // is client using zlib compression?
+    int manual_signal_score;        // admin score override
 } proxyinfo_t;
 
 typedef struct {

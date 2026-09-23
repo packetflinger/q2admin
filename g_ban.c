@@ -22,17 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 baninfo_t *banhead;
 chatbaninfo_t *chatbanhead;
-
 bool ChatBanning_Enable = true;
 bool IPBanning_Enable = true;
 bool NickBanning_Enable = true;
 bool VersionBanning_Enable = true;
-
 bool kickOnNameChange = false;
-
 char defaultBanMsg[256];
 char *currentBanMsg;
-
 long banNumUpto = 0;
 long chatBanNumUpto = 0;
 char defaultChatBanMsg[256];
@@ -679,6 +675,34 @@ void banRun(int startarg, edict_t *ent, int client) {
 
     newentry->numberofconnects = 0;
 
+    // get SCORE
+    if (!newentry->exclude && startContains(cp, "SCORE")) {
+        if (gi.argc() <= startarg) {
+            gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+            gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+            G_Free(newentry);
+            return;
+        }
+
+        cp = gi.argv(startarg);
+        startarg++;
+
+        q2a_strcat(savecmd, "SCORE ");
+        q2a_strcat(savecmd, cp);
+        q2a_strcat(savecmd, " ");
+
+        newentry->signalscore = q2a_atoi(cp);
+
+        if (gi.argc() <= startarg){
+            cp = "";
+        } else {
+            cp = gi.argv(startarg);
+            startarg++;
+        }
+    } else {
+        newentry->signalscore = 0;
+    }
+
     // get FLOOD
     if (!newentry->exclude && startContains(cp, "FLOOD")) {
         if (gi.argc() <= startarg + 2) {
@@ -1104,6 +1128,11 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                 }
             }
 
+            // check for signal score
+            if (checkentry->signalscore != 0) {
+                raiseSignal(client, SIGNAL_BAN_ADJUSTMENT);
+            }
+
             // check max connections..
             if (checkentry->maxnumberofconnects) {
                 if (checkentry->numberofconnects >= checkentry->maxnumberofconnects) {
@@ -1150,10 +1179,16 @@ int checkCheckIfBanned(edict_t *ent, int client) {
     currentBanMsg = defaultBanMsg;
     res = checkBanList(ent, client, false);  // check allowlists first
     if (res == BT_ALLOWLISTED) {
+        if (q2a_developer) {
+            q2a_printf("%s[%s] is allowlisted\n", NAME(client), IP(client));
+        }
         return 0;
     }
     res = checkBanList(ent, client, true);   // check denylists second
     if (res == BT_DENYLISTED) {
+        if (q2a_developer) {
+            q2a_printf("%s[%s] is denylisted\n", NAME(client), IP(client));
+        }
         return 1;
     }
     return 0;
@@ -1264,6 +1299,15 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
                     sizeof(buffer) - q2a_strlen(buffer),
                     " MAX %d",
                     findentry->maxnumberofconnects
+            );
+        }
+
+        if (!findentry->exclude && findentry->signalscore) {
+            Q_snprintf(
+                buffer + q2a_strlen(buffer),
+                sizeof(buffer) - q2a_strlen(buffer),
+                " SCORE %d",
+                findentry->signalscore
             );
         }
 
@@ -1928,7 +1972,19 @@ char *ban_parseBan(char *cp) {
     } else {
         newentry->maxnumberofconnects = 0;
     }
-    newentry->numberofconnects = 0;
+
+    // get SCORE
+    if (!newentry->exclude && startContains(cp, "SCORE")) {
+        cp += 5;
+        SKIPBLANK(cp);
+        newentry->signalscore = q2a_atoi(cp);
+        while (isdigit(*cp)) {
+            cp++;
+        }
+        SKIPBLANK(cp);
+    } else {
+        newentry->signalscore = 0;
+    }
 
     // get FLOOD
     if (!newentry->exclude && startContains(cp, "FLOOD")) {

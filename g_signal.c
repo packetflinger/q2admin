@@ -47,6 +47,8 @@ static const signal_def_t signalDefs[] = {
     { SIGNAL_MSEC_OVERRUN,       20,                 "msec-overrun" },
     { SIGNAL_MSEC_UNDERRUN,      20,                 "msec-underrun" },
     { SIGNAL_IMPULSE,            10,                 "impulse-sent" },
+    { SIGNAL_MANUAL,              0,                 "admin-adjustment" },
+    { SIGNAL_BAN_ADJUSTMENT,      0,                 "ban-entry" },
     { SIGNAL_ZBOT_DETECTED,      SIGNAL_SCORE_KICK,  "zbot-detected" },
     { SIGNAL_RATBOT_DETECTED,    SIGNAL_SCORE_KICK,  "ratbot-detected" },
     { SIGNAL_HACK_PROXY,         SIGNAL_SCORE_KICK,  "hack-proxy" },
@@ -100,6 +102,10 @@ int signalScore(int client) {
         if (mask & signalDefs[i].bit) {
             if (signalDefs[i].bit == SIGNAL_IMPULSE) {
                 score += (signalDefs[i].weight * proxyinfo[client].impulsesgenerated);
+            } else if (signalDefs[i].bit == SIGNAL_BAN_ADJUSTMENT) {
+                score += proxyinfo[client].baninfo->signalscore;
+            } else if (signalDefs[i].bit == SIGNAL_MANUAL) {
+                score += proxyinfo[client].manual_signal_score;
             } else {
                 score += signalDefs[i].weight;
             }
