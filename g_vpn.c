@@ -234,13 +234,15 @@ void IPLogsCheckVPN(edict_t *ent) {
         return;
     }
 
+    // Network is cached, use that entry instead of doing a live lookup
     if (IPLogsCacheGet(&pi->address, &pi->iplogs)) {
         if (pi->iplogs.verdict[0]) {
-            if (Q_stricmp(pi->iplogs.verdict, "suspicious")) {
+            if (Q_stricmp(pi->iplogs.verdict, "suspicious") == 0) {
+                q2a_printf("verdict: %s\n", pi->iplogs.verdict);
                 raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
-            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_likely")) {
+            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_likely") == 0) {
                 raiseSignal(i, SIGNAL_VPN_LIKEY);
-            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_detected")) {
+            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_detected") == 0) {
                 raiseSignal(i, SIGNAL_VPN_DETECTED);
             }
         }
@@ -294,11 +296,11 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     verdict = json_getPropertyValue(root, "verdict");
     if (verdict) {
         q2a_strncpy(v->verdict, verdict, sizeof(v->verdict)-1);
-        if (Q_stricmp(v->verdict, "suspicious")) {
+        if (Q_stricmp(v->verdict, "suspicious") == 0) {
             raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
-        } else if (Q_stricmp(v->verdict, "vpn_likely")) {
+        } else if (Q_stricmp(v->verdict, "vpn_likely") == 0) {
             raiseSignal(i, SIGNAL_VPN_LIKEY);
-        } else if (Q_stricmp(v->verdict, "vpn_detected")) {
+        } else if (Q_stricmp(v->verdict, "vpn_detected") == 0) {
             raiseSignal(i, SIGNAL_VPN_DETECTED);
         }
     }
