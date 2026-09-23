@@ -207,6 +207,51 @@ void evaluateSignalScore(int client) {
 }
 
 /**
+ * !signaladd <player> <+/-integer> - manually adjust a player's signal
+ * score by an admin-chosen amount, for evidence the automated detectors
+ * don't catch (e.g. an admin spotting cheating in a demo) or to correct
+ * a false positive with a negative adjustment. Accumulates into
+ * manual_signal_score (repeated uses add up rather than replace) and
+ * raises SIGNAL_MANUAL so the adjustment shows up in !signals and counts
+ * in signalScore(); like any other signal it can push a client straight
+ * over signal_score_threshold.
+ */
+void signaladdRun(int startarg, edict_t *ent, int client) {
+    char *text;
+    edict_t *enti;
+    int clienti;
+    int amount;
+
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+    SKIPBLANK(text);
+    enti = getClientFromArg(client, ent, &clienti, text, &text);
+
+    if (!enti || !(*text == '-' || *text == '+' || isdigit((unsigned char) *text))) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !signaladd %s <+/-integer>\n", PLAYERSPEC);
+        return;
+    }
+
+    amount = q2a_atoi(text);
+
+    proxyinfo[clienti].manual_signal_score += amount;
+    raiseSignal(clienti, SIGNAL_MANUAL);
+
+    q2a_printf(
+        "%s manual signal adjusted by %d (now %d, score %d/%d)\n",
+        proxyinfo[clienti].name,
+        amount,
+        proxyinfo[clienti].manual_signal_score,
+        signalScore(clienti),
+        signal_score_threshold
+    );
+}
+
+/**
  * !signals <player> - show which signals currently match a player and
  * their resulting score, even if that score is below the removal
  * threshold.

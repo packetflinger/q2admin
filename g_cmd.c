@@ -1191,6 +1191,13 @@ q2acmd_t q2aCommands[] = {
         &signal_score_threshold
     },
     {
+        "signaladd",
+        CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        signaladdRun
+    },
+    {
         "signals",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,

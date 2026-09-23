@@ -54,4 +54,5 @@ int signalScore(int client);
 char *signalListString(int client);
 unsigned int signalForHacktype(hacktype_t h);
 void evaluateSignalScore(int client);
+void signaladdRun(int startarg, edict_t *ent, int client);
 void signalsRun(int startarg, edict_t *ent, int client);
