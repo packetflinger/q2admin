@@ -68,9 +68,9 @@ static const signal_def_t signalDefs[] = {
 };
 
 /**
- * Marks a signal as currently matching for a client. Does not by itself
- * remove the client, callers that care about crossing the removal
- * threshold should follow up with evaluateSignalScore().
+ * Marks a signal as currently matching for a client. Does not by itself remove
+ * the client, callers that care about crossing the removal threshold should
+ * follow up with evaluateSignalScore().
  */
 void raiseSignal(int client, unsigned int signal) {
     if (!VALIDCLIENT(client)) {
