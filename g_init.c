@@ -1535,7 +1535,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             if (proxyinfo[client].userid == -1) {
                 whoisAddUser(client, ent);
             }
-            whois_newname(client, ent);
+            whoisNewName(client, ent);
         }
 
         if (checkIfBanned(ent, client)) {

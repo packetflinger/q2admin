@@ -156,7 +156,7 @@ void whois_dumpdetails(int client, edict_t *ent, int userid) {
  * Starts a brand new whois record for a client who didn't match an
  * existing one: stores their IP as the record's key, seeds the first
  * alias slot with the name they're using now, and points
- * proxyinfo[client].userid at it so later renames (whois_newname()) and
+ * proxyinfo[client].userid at it so later renames (whoisNewName()) and
  * lookups know which record is theirs.
  *
  * Once the table is full (WHOIS_COUNT >= whois_active, the cfg-set size
@@ -208,7 +208,7 @@ void whoisAddUser(int client, edict_t *ent) {
  * mid-game, and from whoisGetID() when a returning player's record is
  * matched, to catch the name they came back under.
  */
-void whois_newname(int client, edict_t *ent) {
+void whoisNewName(int client, edict_t *ent) {
     //called when a client changes name
     unsigned int i;
 
@@ -240,7 +240,7 @@ void whois_newname(int client, edict_t *ent) {
  * is an address that's never been seen. Scans the stored records for one
  * whose IP matches theirs and, on a hit, adopts that record's index as
  * proxyinfo[client].userid and records whatever name they've turned up
- * under this time (whois_newname()); otherwise hands off to
+ * under this time (whoisNewName()); otherwise hands off to
  * whoisAddUser() to start a fresh record.
  *
  * The IP is the identity here - that's what makes the whole feature
@@ -250,10 +250,10 @@ void whois_newname(int client, edict_t *ent) {
  *
  * client: the connecting client, whose IP is matched and whose userid is
  *         set.
- * ent:    only passed through to whois_newname()/whoisAddUser().
+ * ent:    only passed through to whoisNewName()/whoisAddUser().
  *
  * Called from ClientConnect() (g_init.c) when whois_active is set, and
- * from whois_newname() for a client that somehow has no record yet.
+ * from whoisNewName() for a client that somehow has no record yet.
  */
 void whoisGetID(int client, edict_t *ent) {
     //called when a client connects
@@ -262,7 +262,7 @@ void whoisGetID(int client, edict_t *ent) {
         if (q2a_strcmp(whois_details[i].ip, IP(client)) == 0) {
             //got a match, store new id
             proxyinfo[client].userid = i;
-            whois_newname(client, ent);
+            whoisNewName(client, ent);
             return;
         }
     }

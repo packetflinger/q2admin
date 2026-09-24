@@ -28,7 +28,7 @@ void whoisReloadFileRun(int startarg, edict_t *ent, int client);
 void whoisGetID(int client, edict_t *ent);
 void whois(int client, edict_t *ent);
 void whoisAddUser(int client, edict_t *ent);
-void whois_newname(int client, edict_t *ent);
+void whoisNewName(int client, edict_t *ent);
 void whois_update_seen(int client, edict_t *ent);
 void whois_dumpdetails(int client, edict_t *ent, int userid);
 void whois_write_file(void);
