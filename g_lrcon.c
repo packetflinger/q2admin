@@ -114,7 +114,7 @@ bool ReadLRconFile(char *lrcname) {
             Q_snprintf(lrconcmds[maxlrcon_cmds].lrconcmd, sizeof(lrconcmds[maxlrcon_cmds].lrconcmd), "%s", cp);
 
             if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
-                q_strupr(cp);
+                upperCase(cp);
                 lrconcmds[maxlrcon_cmds].r = re_compile(cp);
                 if (!lrconcmds[maxlrcon_cmds].r) {
                     // malformed re... skip this lrcon
@@ -191,7 +191,7 @@ bool checklrcon(char *cp, int lrcon) {
         case LRC_RE:
             //r1ch: overflow fix
             q2a_strncpy(strbuffer, cp, sizeof (strbuffer) - 1);
-            q_strupr(strbuffer);
+            upperCase(strbuffer);
             int len;
             return (re_matchp(lrconcmds[lrcon].r, strbuffer, &len) == 0);
     }
@@ -389,7 +389,7 @@ void lrconRun(int startarg, edict_t *ent, int client) {
     processString(lrconcmds[maxlrcon_cmds].lrconcmd, cmd, len - 1, 0);
 
     if (lrconcmds[maxlrcon_cmds].type == LRC_RE) {
-        q_strupr(cmd);
+        upperCase(cmd);
         lrconcmds[maxlrcon_cmds].r = re_compile(cmd);
         if (!lrconcmds[maxlrcon_cmds].r) {
             G_Free(lrconcmds[maxlrcon_cmds].password);

@@ -363,7 +363,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
                 if (newentry->type == NICKRE) { // compile RE
                     q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer)-1);
-                    q_strupr(strbuffer);
+                    upperCase(strbuffer);
 
                     newentry->r = re_compile(strbuffer);
                     if (!newentry->r) {
@@ -392,7 +392,7 @@ void banRun(int startarg, edict_t *ent, int client) {
 
             if (newentry->type == NICKRE) { // compile RE
                 q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer)-1);
-                q_strupr(strbuffer);
+                upperCase(strbuffer);
 
                 newentry->r = re_compile(strbuffer);
                 if (!newentry->r) {
@@ -600,7 +600,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             allver = false;
             if (newentry->vtype == VERSION_REGEX) {
                 q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer)-1);
-                q_strupr(strbuffer);
+                upperCase(strbuffer);
                 newentry->vr = re_compile(strbuffer);
                 if (!newentry->vr) {
                     gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1035,7 +1035,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
 
                     case NICKRE:
                         q2a_strncpy(strbuffer, proxyinfo[client].name, sizeof(strbuffer)-1);
-                        q_strupr(strbuffer);
+                        upperCase(strbuffer);
 
                         int len;
                         if (re_matchp(checkentry->r, strbuffer, &len) != 0) {
@@ -1094,7 +1094,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                     }
                 } else if (checkentry->vtype == VERSION_REGEX) {
                     q2a_strncpy(strbuffer, proxyinfo[client].client_version, sizeof(strbuffer)-1);
-                    q_strupr(strbuffer);
+                    upperCase(strbuffer);
                     int len;
                     if (re_matchp(checkentry->vr, strbuffer, &len) != 0) {
                         prevcheckentry = checkentry;
@@ -1472,7 +1472,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
 
     if (cnewentry->type == CHATRE) { // compile RE
         q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer)-1);
-        q_strupr(strbuffer);
+        upperCase(strbuffer);
         cnewentry->r = re_compile(strbuffer);
         if (!cnewentry->r) {
             gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
@@ -1630,7 +1630,7 @@ int checkIfChatBanned(char *txt) {
 
             case CHATRE:
                 q2a_strncpy(strbuffer, txt, sizeof(strbuffer)-1);
-                q_strupr(strbuffer);
+                upperCase(strbuffer);
                 int len;
                 if (re_matchp(checkentry->r, strbuffer, &len) != 0) {
                     checkentry = checkentry->next;
@@ -1892,7 +1892,7 @@ char *parseBanLine(char *cp) {
 
             if (newentry->type == NICKRE) { // compile RE
                 q2a_strncpy(strbuffer, newentry->nick, sizeof(strbuffer)-1);
-                q_strupr(strbuffer);
+                upperCase(strbuffer);
                 newentry->r = re_compile(strbuffer);
                 if (!newentry->r) {
                     newentry->type = NICKEQ;
@@ -1968,7 +1968,7 @@ char *parseBanLine(char *cp) {
             allver = false;
             if (newentry->vtype == VERSION_REGEX) {
                 q2a_strncpy(strbuffer, newentry->version, sizeof(strbuffer)-1);
-                q_strupr(strbuffer);
+                upperCase(strbuffer);
                 newentry->vr = re_compile(strbuffer);
                 if (!newentry->vr) {
                     G_Free(newentry);
@@ -2173,7 +2173,7 @@ char *parseChatbanLine(char *cp) {
 
         if (cnewentry->type == CHATRE) { // compile RE
             q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer)-1);
-            q_strupr(strbuffer);
+            upperCase(strbuffer);
             cnewentry->r = re_compile(strbuffer);
             if (!cnewentry->r) {
                 cnewentry->type = CHATLIKE;

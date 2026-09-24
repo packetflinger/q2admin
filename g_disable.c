@@ -85,7 +85,7 @@ bool ReadDisableFile(char *disablename) {
             Q_snprintf(disablecmds[maxdisable_cmds].disablecmd, len, "%s", cp);
 
             if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
-                q_strupr(cp);
+                upperCase(cp);
                 disablecmds[maxdisable_cmds].r = re_compile(cp);
                 if (!disablecmds[maxdisable_cmds].r) {
                     // malformed re... skip this disable command
@@ -168,7 +168,7 @@ bool checkDisabledCommand(char *cmd) {
     unsigned int i;
 
     q2a_strncpy(buffer, cmd, sizeof(buffer)-1);
-    q_strupr(buffer);
+    upperCase(buffer);
     for (i = 0; i < maxdisable_cmds; i++) {
         if (checkfordisablecmd(buffer, i)) {
             return true;
@@ -247,7 +247,7 @@ void disablecmdRun(int startarg, edict_t *ent, int client) {
     processString(disablecmds[maxdisable_cmds].disablecmd, cmd, len - 1, 0);
 
     if (disablecmds[maxdisable_cmds].type == DISABLE_RE) {
-        q_strupr(cmd);
+        upperCase(cmd);
         disablecmds[maxdisable_cmds].r = re_compile(cmd);
         if (!disablecmds[maxdisable_cmds].r) {
             G_Free(disablecmds[maxdisable_cmds].disablecmd);

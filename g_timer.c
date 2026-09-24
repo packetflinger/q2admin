@@ -20,7 +20,7 @@ void timer_start(int client, edict_t *ent) {
         return;
     }
 
-    if (!can_do_new_cmds(client)) {
+    if (!newCommandAllowed(client)) {
         gi.cprintf(ent, PRINT_HIGH, "Please wait 5 seconds\n");
         return; //wait 5 secs before starting the timer again
     }

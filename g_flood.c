@@ -83,7 +83,7 @@ bool ReadFloodFile(char *floodname) {
             Q_snprintf(floodcmds[maxflood_cmds].floodcmd, len, "%s", cp);
 
             if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
-                q_strupr(cp);
+                upperCase(cp);
                 floodcmds[maxflood_cmds].r = re_compile(cp);
                 if (!floodcmds[maxflood_cmds].r) {
                     // malformed re... skip this flood command
@@ -166,7 +166,7 @@ bool checkforfloodcmds(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer)-1);
-    q_strupr(buffer);
+    upperCase(buffer);
     for (i = 0; i < maxflood_cmds; i++) {
         if (checkforfloodcmd(buffer, i)) {
             return true;
@@ -705,7 +705,7 @@ void floodcmdRun(int startarg, edict_t *ent, int client) {
     processString(floodcmds[maxflood_cmds].floodcmd, cmd, len - 1, 0);
 
     if (floodcmds[maxflood_cmds].type == FLOOD_RE) {
-        q_strupr(cmd);
+        upperCase(cmd);
         floodcmds[maxflood_cmds].r = re_compile(cmd);
         if (!floodcmds[maxflood_cmds].r) {
             G_Free(floodcmds[maxflood_cmds].floodcmd);

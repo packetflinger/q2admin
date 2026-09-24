@@ -1841,7 +1841,7 @@ void AddCommandString_internal(char *text) {
     if (gamemaptomap) {
         // check for gamemap in string.
         q2a_strncpy(buffer, text, sizeof(buffer)-1);
-        q_strupr(buffer);
+        upperCase(buffer);
 
         str = q2a_strstr(buffer, "GAMEMAP");
 
@@ -1857,7 +1857,7 @@ void AddCommandString_internal(char *text) {
     }
 
     q2a_strncpy(buffer, text, sizeof(buffer)-1);
-    q_strupr(buffer);
+    upperCase(buffer);
 
     str = q2a_strstr(buffer, "GAMEMAP");
     if (str && (str == buffer || *(str - 1) == ' ') && *(str + 7) == ' ') {
@@ -2110,7 +2110,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
             cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
-        q_strupr(strbuffer);
+        upperCase(strbuffer);
         r = re_compile(strbuffer);
         if (r == NULL) {
             gi.cprintf(ent, PRINT_HIGH, "invalid regex pattern\n");
@@ -2173,7 +2173,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                 switch (like) {
                     case 0: // name
                         q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
-                        if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+                        if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
@@ -2190,7 +2190,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                         break;
                     case 2: // RE
                         q2a_strcpy(strbuffer, proxyinfo[clienti].name);
-                        q_strupr(strbuffer);
+                        upperCase(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
@@ -2264,7 +2264,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
             cp = processString(strbuffer, cp, sizeof(strbuffer), ' ');
         }
         SKIPBLANK(cp);
-        q_strupr(strbuffer);
+        upperCase(strbuffer);
         r = re_compile(strbuffer);
         if (r == NULL) {
             gi.cprintf(ent, PRINT_HIGH, "invalid regex pattern\n");
@@ -2303,7 +2303,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                 switch (like) {
                     case 0: // name
                         q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
-                        if (wildcard_match(strbuffer2, proxyinfo[clienti].name)) {
+                        if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
                             foundclienti = clienti;
                             matchcount++;
                             if (matchcount > 1) {
@@ -2329,7 +2329,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                         break;
                     case 2: // RE
                         q2a_strcpy(strbuffer, proxyinfo[clienti].name);
-                        q_strupr(strbuffer);
+                        upperCase(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched regex pattern\n");

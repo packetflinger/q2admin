@@ -112,7 +112,7 @@ bool readVoteFile(char *votename) {
             votecmds[maxvote_cmds].votecmd = G_Malloc(len);
             q2a_strcpy(votecmds[maxvote_cmds].votecmd, cp);
             if (votecmds[maxvote_cmds].type == VOTE_RE) {
-                q_strupr(cp);
+                upperCase(cp);
                 votecmds[maxvote_cmds].r = re_compile(cp);
                 if (!votecmds[maxvote_cmds].r) {
                     // malformed re... skip this vote command
@@ -266,7 +266,7 @@ bool checkVoteCommand(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer)-1);
-    q_strupr(buffer);
+    upperCase(buffer);
     for (i = 0; i < maxvote_cmds; i++) {
         if (checkForVoteCmd(buffer, i)) {
             return true;
@@ -393,7 +393,7 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
     processString(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
 
     if (votecmds[maxvote_cmds].type == VOTE_RE) {
-        q_strupr(cmd);
+        upperCase(cmd);
         votecmds[maxvote_cmds].r = re_compile(cmd);
         if (!votecmds[maxvote_cmds].r) {
             G_Free(votecmds[maxvote_cmds].votecmd);

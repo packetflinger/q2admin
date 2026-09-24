@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define M_PI 3.14159265358979323846
 #endif
 
-// required for proxy testing
-
 /**
  * Force entity to do a command
  */
@@ -63,34 +61,28 @@ char *va(const char *format, ...) {
     static uint16_t index;
 
     char *string = strings[index++ % 8];
-
     va_list args;
-
     va_start(args, format);
     vsnprintf(string, MAX_STRING_CHARS, format, args);
     va_end(args);
-
     return string;
 }
 
 /**
  * Recursively compare strings with wildcards.
  */
-bool wildcard_match(char *pattern, char *haystack) {
+bool wildcardMatch(char *pattern, char *haystack) {
     if (*pattern == '\0' && *haystack == '\0') {
         return true;
     }
-
     if (*pattern == '*' && *(pattern+1) != '\0' && *haystack == '\0') {
         return false;
     }
-
     if (*pattern == '?' || *pattern == *haystack) {
-        return wildcard_match(pattern+1, haystack+1);
+        return wildcardMatch(pattern+1, haystack+1);
     }
-
     if (*pattern == '*') {
-        return wildcard_match(pattern+1, haystack) || wildcard_match(pattern, haystack+1);
+        return wildcardMatch(pattern+1, haystack) || wildcardMatch(pattern, haystack+1);
     }
     return false;
 }
@@ -402,9 +394,9 @@ int stringContains(char *buff1, char *buff2) {
     char strbuffer2[4096];
 
     q2a_strncpy(strbuffer1, buff1, sizeof(strbuffer1)-1);
-    q_strupr(strbuffer1);
+    upperCase(strbuffer1);
     q2a_strncpy(strbuffer2, buff2, sizeof(strbuffer2)-1);
-    q_strupr(strbuffer2);
+    upperCase(strbuffer2);
     return (q2a_strstr(strbuffer1, strbuffer2) != NULL);
 }
 
@@ -514,28 +506,22 @@ int getLastLine(char *buffer, FILE *dumpfile, long *fpos) {
     while (length && *fpos >= 0) {
         fseek(dumpfile, *fpos, SEEK_SET);
         (*fpos)--;
-
         if (fread(bp, 1, 1, dumpfile) != 1) {
             break;
         }
-
         if (*bp == '\n') {
             break;
         }
-
         bp++;
         length--;
     }
-
     if (bp != buffer2) {
         bp--;
-
         // reverse string
         while (bp >= buffer2) {
             *buffer++ = *bp--;
         }
     }
-
     *buffer = 0;
     return 1;
 }
@@ -543,7 +529,7 @@ int getLastLine(char *buffer, FILE *dumpfile, long *fpos) {
 /**
  * Change string to all upper case
  */
-void q_strupr(char *c) {
+void upperCase(char *c) {
     while (*c) {
         if (islower((*c))) {
             *c = toupper((*c));
@@ -681,7 +667,6 @@ size_t Q_strlcpy(char *dst, const char *src, size_t size) {
         q2a_memcpy(dst, src, len);
         dst[len] = 0;
     }
-
     return ret;
 }
 
@@ -691,16 +676,14 @@ size_t Q_strlcpy(char *dst, const char *src, size_t size) {
  * Stolen from Q2Pro
  */
 int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
-    int        c1, c2;
+    int c1, c2;
 
     do {
         c1 = *s1++;
         c2 = *s2++;
-
         if (!n--) {
-            return 0;        /* strings are equal until end point */
+            return 0;
         }
-
         if (c1 != c2) {
             c1 = Q_tolower(c1);
             c2 = Q_tolower(c2);
@@ -708,11 +691,11 @@ int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
                 return -1;
             }
             if (c1 > c2) {
-                return 1;        /* strings not equal */
+                return 1;
             }
         }
     } while (c1);
-    return 0;        /* strings are equal */
+    return 0;
 }
 
 
@@ -742,7 +725,7 @@ char *Q_strcasestr(const char *s1, const char *s2) {
 /**
  * The version in math.h was weird with values between 0-1
  */
-int q2a_ceil(float x) {
+int Q_ceil(float x) {
     float temp;
 
     temp = x - (int)x;
@@ -754,9 +737,9 @@ int q2a_ceil(float x) {
 }
 
 /**
- * Just to complement q2a_ceil
+ * Just to complement Q_ceil
  */
-int q2a_floor(float x) {
+int Q_floor(float x) {
    return (int)x;
 }
 
@@ -764,7 +747,7 @@ int q2a_floor(float x) {
  * Converts pitch/yaw angles (degrees) into a normalized forward direction
  * vector. Roll is ignored, it doesn't affect where a player is looking.
  */
-void AngleVectorsForward(vec3_t angles, vec3_t forward) {
+void angleVectorsForward(vec3_t angles, vec3_t forward) {
     float yaw = (float)(angles[YAW] * (M_PI / 180.0));
     float pitch = (float)(angles[PITCH] * (M_PI / 180.0));
     float sy = sinf(yaw), cy = cosf(yaw);
@@ -779,7 +762,7 @@ void AngleVectorsForward(vec3_t angles, vec3_t forward) {
  * Angle in degrees between two vectors, order doesn't matter, vectors need
  * not be normalized or the same length.
  */
-float AngleBetweenVectors(vec3_t a, vec3_t b) {
+float angleBetweenVectors(vec3_t a, vec3_t b) {
     float lena = sqrtf(DotProduct(a, a));
     float lenb = sqrtf(DotProduct(b, b));
     float cosangle;
@@ -801,7 +784,7 @@ float AngleBetweenVectors(vec3_t a, vec3_t b) {
 /**
  * Throttle command usage
  */
-bool can_do_new_cmds(int client) {
+bool newCommandAllowed(int client) {
     if (proxyinfo[client].newcmd_timeout <= ltime) {
         proxyinfo[client].newcmd_timeout = ltime + 3;
         return true;

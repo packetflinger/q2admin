@@ -87,7 +87,7 @@ bool ReadSpawnFile(char *spawnname, bool onelevelflag) {
             q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, cp);
 
             if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {
-                q_strupr(cp);
+                upperCase(cp);
                 spawncmds[maxspawn_cmds].r = re_compile(cp);
                 if (!spawncmds[maxspawn_cmds].r) {
                     // malformed re... skip this spawn command
@@ -205,7 +205,7 @@ bool checkDisabledEntities(char *cp) {
     unsigned int i;
 
     q2a_strncpy(buffer, cp, sizeof(buffer)-1);
-    q_strupr(buffer);
+    upperCase(buffer);
     for (i = 0; i < maxspawn_cmds; i++) {
         if (checkforspawncmd(buffer, i)) {
             return true;
@@ -291,7 +291,7 @@ void spawncmdRun(int startarg, edict_t *ent, int client) {
     //  q2a_strcpy(spawncmds[maxspawn_cmds].spawncmd, cmd);
 
     if (spawncmds[maxspawn_cmds].type == SPAWN_RE) {
-        q_strupr(cmd);
+        upperCase(cmd);
         spawncmds[maxspawn_cmds].r = re_compile(cmd);
         if (!spawncmds[maxspawn_cmds].r) {
             G_Free(spawncmds[maxspawn_cmds].spawncmd);

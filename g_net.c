@@ -88,9 +88,9 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t)
             cidr = 128;
         }
 
-        sixteenth = q2a_ceil((float)cidr/8);
+        sixteenth = Q_ceil((float)cidr/8);
         sixteenth--;
-        quarter = q2a_ceil((float)cidr/32);
+        quarter = Q_ceil((float)cidr/32);
         quarter--;
         quarterbits = cidr - (quarter * 32);
         qstart = quarter * 4;

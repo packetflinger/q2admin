@@ -580,10 +580,10 @@ bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd) {
         return false;
     }
 
-    AngleVectorsForward(oldangles, oldfwd);
-    AngleVectorsForward(newangles, newfwd);
+    angleVectorsForward(oldangles, oldfwd);
+    angleVectorsForward(newangles, newfwd);
 
-    if (AngleBetweenVectors(oldfwd, newfwd) < snapfire_min_snap_deg) {
+    if (angleBetweenVectors(oldfwd, newfwd) < snapfire_min_snap_deg) {
         return false;
     }
 
@@ -598,7 +598,7 @@ bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd) {
 
     // was the target already roughly where they were looking?
     VectorSubtract(tr.ent->s.origin, eye, toTarget);
-    if (AngleBetweenVectors(oldfwd, toTarget) < snapfire_off_crosshair_deg) {
+    if (angleBetweenVectors(oldfwd, toTarget) < snapfire_off_crosshair_deg) {
         return false;
     }
 
@@ -645,7 +645,7 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
     angles[PITCH] = SHORT2ANGLE(ucmd->angles[PITCH]);
     angles[YAW] = SHORT2ANGLE(ucmd->angles[YAW]);
     angles[ROLL] = 0;
-    AngleVectorsForward(angles, fwd);
+    angleVectorsForward(angles, fwd);
 
     VectorCopy(ent->s.origin, eye);
     eye[2] += TRACK_EYE_HEIGHT;
@@ -664,7 +664,7 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
             continue;
         }
         VectorSubtract(other->s.origin, eye, toTarget);
-        err = AngleBetweenVectors(fwd, toTarget);
+        err = angleBetweenVectors(fwd, toTarget);
         if (err < besterr) {
             besterr = err;
             cand = other;
@@ -699,7 +699,7 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
     }
 
     VectorSubtract(cand->s.origin, eye, toTarget);
-    err = AngleBetweenVectors(fwd, toTarget);
+    err = angleBetweenVectors(fwd, toTarget);
 
     if (err >= track_tight_deg) {
         t->tight_samples = 0;
@@ -710,7 +710,7 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
     }
 
     if (t->has_last_totarget) {
-        t->target_motion_accum += AngleBetweenVectors(t->last_totarget, toTarget);
+        t->target_motion_accum += angleBetweenVectors(t->last_totarget, toTarget);
     }
     VectorCopy(toTarget, t->last_totarget);
     t->has_last_totarget = true;
