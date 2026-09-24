@@ -174,7 +174,7 @@ void whois_dumpdetails(int client, edict_t *ent, int userid) {
  * connecting IP, and from checkForNameChange() (g_init.c) for a client
  * who renames while still having no record.
  */
-void whois_adduser(int client, edict_t *ent) {
+void whoisAddUser(int client, edict_t *ent) {
     if (WHOIS_COUNT >= whois_active) {
         WHOIS_COUNT = WHOIS_COUNT - 1; //If max reached, replace latest entry with new client
     }
@@ -241,7 +241,7 @@ void whois_newname(int client, edict_t *ent) {
  * whose IP matches theirs and, on a hit, adopts that record's index as
  * proxyinfo[client].userid and records whatever name they've turned up
  * under this time (whois_newname()); otherwise hands off to
- * whois_adduser() to start a fresh record.
+ * whoisAddUser() to start a fresh record.
  *
  * The IP is the identity here - that's what makes the whole feature
  * work, since it's the one thing a player can't trivially change between
@@ -250,7 +250,7 @@ void whois_newname(int client, edict_t *ent) {
  *
  * client: the connecting client, whose IP is matched and whose userid is
  *         set.
- * ent:    only passed through to whois_newname()/whois_adduser().
+ * ent:    only passed through to whois_newname()/whoisAddUser().
  *
  * Called from ClientConnect() (g_init.c) when whois_active is set, and
  * from whois_newname() for a client that somehow has no record yet.
@@ -266,7 +266,7 @@ void whoisGetID(int client, edict_t *ent) {
             return;
         }
     }
-    whois_adduser(client, ent);
+    whoisAddUser(client, ent);
 }
 
 /**

@@ -1533,7 +1533,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
 
         if (whois_active) {
             if (proxyinfo[client].userid == -1) {
-                whois_adduser(client, ent);
+                whoisAddUser(client, ent);
             }
             whois_newname(client, ent);
         }
