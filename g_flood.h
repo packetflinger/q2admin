@@ -71,7 +71,7 @@ void listfloodsRun(int startarg, edict_t *ent, int client);
 void muteRun(int startarg, edict_t *ent, int client);
 void nameChangeFloodProtectInit(char *arg);
 void nameChangeFloodProtectRun(int startarg, edict_t *ent, int client);
-bool ReadFloodFile(char *floodname);
+bool readFloodFile(char *floodname);
 void readFloodLists(void);
 void reloadFloodFileRun(int startarg, edict_t *ent, int client);
 void skinChangeFloodProtectInit(char *arg);
