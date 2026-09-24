@@ -30,7 +30,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /**
  * Force entity to do a command
  */
-void stuffcmd(edict_t *e, char *s) {
+void stuffPlayer(edict_t *e, char *s) {
     if (q2a_developer) {
         q2a_printf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
     }

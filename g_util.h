@@ -50,7 +50,7 @@ int q2a_floor(float x);
 bool startContains(char *src, char *cmp);
 bool startswith(char *needle, char *haystack);
 int stringContains(char *buff1, char *buff2);
-void stuffcmd(edict_t *e, char *s);
+void stuffPlayer(edict_t *e, char *s);
 char *trim(char *s);
 char *va(const char *format, ...);
 pathtype_t validatePath(const char *s);

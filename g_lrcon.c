@@ -255,7 +255,7 @@ void run_lrcon(edict_t *ent, int client) {
 
                         password_timeout = ltime + lrcon_timeout;
                         Q_snprintf(buffer, sizeof(buffer), "rcon %s %s\n", cbuffer, cp);
-                        stuffcmd(ent, buffer);
+                        stuffPlayer(ent, buffer);
 
                         Q_snprintf(buffer, sizeof(buffer), "rcon %s sv !resetrcon\n", cbuffer, cp);
 
@@ -264,7 +264,7 @@ void run_lrcon(edict_t *ent, int client) {
                     }
 
                     // found a good command to run..
-                    stuffcmd(ent, buffer);
+                    stuffPlayer(ent, buffer);
                 } else {
                     //we don't let the client execute arbitrary commands, we write the allowed
                     //command directly to the server. downside is client never sees output of cmd.

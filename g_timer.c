@@ -68,7 +68,7 @@ void timer_action(int client, edict_t *ent) {
         if (proxyinfo[client].timers[num].start) {
             if (proxyinfo[client].timers[num].start <= ltime) {
                 proxyinfo[client].timers[num].start = 0;
-                stuffcmd(ent, proxyinfo[client].timers[num].action);
+                stuffPlayer(ent, proxyinfo[client].timers[num].action);
             }
         }
     }

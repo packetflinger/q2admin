@@ -334,7 +334,7 @@ void adm_dumpuser(edict_t *ent, int client, int user, bool check) {
 void adm_auth(edict_t *ent) {
     for (int i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
-            stuffcmd(getEnt((i + 1)), "say I'm using $version\n");
+            stuffPlayer(getEnt((i + 1)), "say I'm using $version\n");
         }
     }
 }
@@ -346,7 +346,7 @@ void adm_gfx(edict_t *ent) {
     unsigned int i;
     for (i = 0; i < maxclients->value; i++) {
         if (proxyinfo[i].inuse) {
-            stuffcmd(getEnt((i + 1)), "say I'm using $gl_driver ( $vid_ref ) / $gl_mode\n");
+            stuffPlayer(getEnt((i + 1)), "say I'm using $gl_driver ( $vid_ref ) / $gl_mode\n");
         }
     }
 }
@@ -455,7 +455,7 @@ int doAdminCommand(edict_t *ent, int client) {
                                     strncat(send_string, gi.argv(i), sizeof(send_string) - strlen(send_string) - 1);
                                 }
                             send_to_ent = getEnt((send_to_client + 1));
-                            stuffcmd(send_to_ent, send_string);
+                            stuffPlayer(send_to_ent, send_string);
                             gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, proxyinfo[send_to_client].name);
                         }
                 } else
@@ -467,7 +467,7 @@ int doAdminCommand(edict_t *ent, int client) {
                             strncat(send_string, gi.argv(i), sizeof(send_string) - strlen(send_string) - 1);
                         }
                     send_to_ent = getEnt((send_to_client + 1));
-                    stuffcmd(send_to_ent, send_string);
+                    stuffPlayer(send_to_ent, send_string);
                     gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, proxyinfo[send_to_client].name);
                 }
             }

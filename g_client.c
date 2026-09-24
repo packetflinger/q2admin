@@ -377,7 +377,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
  * the client's pmod/pver tracking, sets the pmodver deadline (ltime + 10)
  * that gates the response handling in g_cmd.c's ClientCommand dispatch,
  * and conditionally issues two client-side probes - a GL driver echo
- * (stuffcmd asking for $gl_driver/$vid_ref/$gl_mode, if gl_driver_check
+ * (stuffPlayer asking for $gl_driver/$vid_ref/$gl_mode, if gl_driver_check
  * is set) and a full command-queue dump request (QCMD_GETCMDQUEUE, if
  * q2a_command_check is set).
  *
@@ -403,7 +403,7 @@ void PMOD_TimerCheck(int client) {
     gi.cprintf(ent, PRINT_HIGH, "q2admin: p_modified Standard Proxy Test\r\n");
 
     if (gl_driver_check & 1) {
-        stuffcmd(ent, "say Q2ADMIN_GL_DRIVER_CHECK $gl_driver / $vid_ref / $gl_mode\n");
+        stuffPlayer(ent, "say Q2ADMIN_GL_DRIVER_CHECK $gl_driver / $vid_ref / $gl_mode\n");
     }
     if (q2a_command_check) {
         addCmdQueue(client, QCMD_GETCMDQUEUE, 5, 0, 0);
@@ -450,7 +450,7 @@ void stuffPrivateCommands(int client, edict_t *ent) {
     for (i = 0; i < PRIVATE_COMMANDS; i++) {
         if (private_commands[i].command[0]) {
             Q_snprintf(temp, sizeof(temp), "%s\n", private_commands[i].command);
-            stuffcmd(ent, temp);
+            stuffPlayer(ent, temp);
         }
         proxyinfo[client].private_command_got[i] = false;
     }

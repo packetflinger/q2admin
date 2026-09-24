@@ -3698,7 +3698,7 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
                 processString(buffer, text, sizeof (buffer) - 2, 0);
             }
             q2a_strcat(buffer, "\n");
-            stuffcmd(enti, buffer);
+            stuffPlayer(enti, buffer);
             gi.cprintf(ent, PRINT_HIGH, "Command sent to client!\n");
         }
     } else {
@@ -3716,7 +3716,7 @@ void stuffNextLine(edict_t *ent, int client) {
 
     if (fgets(buffer, sizeof (buffer), proxyinfo[client].stuffFile)) {
         q2a_strcat(buffer, "\n");
-        stuffcmd(ent, buffer);
+        stuffPlayer(ent, buffer);
         addCmdQueue(client, QCMD_STUFFCLIENT, 0, 0, 0);
     } else {
         fclose(proxyinfo[client].stuffFile);

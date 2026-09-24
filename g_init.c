@@ -2035,7 +2035,7 @@ void ClientDisconnect(edict_t *ent) {
  * client rides out without disconnecting.
  *
  * This is the first point a client is fully in-game and able to reliably
- * respond to the stuffcmd-based probes q2admin relies on, so it's where
+ * respond to the stuffPlayer-based probes q2admin relies on, so it's where
  * the per-session anti-cheat/admin bookkeeping in proxyinfo gets
  * (re)armed and the whole battery of connect-time checks gets queued:
  * client version probe, admin/bypass password auth, timescale/checkvar

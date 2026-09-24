@@ -190,7 +190,7 @@ void checkVariableTest(edict_t *ent, int client, int idx) {
                     proxyinfo[client].hack_checkvar,
                     checkvarList[idx].variablename
             );
-            stuffcmd(ent, buffer);
+            stuffPlayer(ent, buffer);
             idx++;
         }
     } else {
@@ -214,7 +214,7 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
                         checkvarList[proxyinfo[client].checkvar_idx].variablename,
                         checkvarList[proxyinfo[client].checkvar_idx].value
                 );
-                stuffcmd(ent, buffer);
+                stuffPlayer(ent, buffer);
             }
             break;
         case CV_RANGE:
@@ -229,7 +229,7 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
                         checkvarList[proxyinfo[client].checkvar_idx].variablename,
                         checkvarList[proxyinfo[client].checkvar_idx].lower
                 );
-                stuffcmd(ent, buffer);
+                stuffPlayer(ent, buffer);
             } else if (fvalue > checkvarList[proxyinfo[client].checkvar_idx].upper) {
                 Q_snprintf(
                         buffer,
@@ -238,7 +238,7 @@ void checkVariableValid(edict_t *ent, int client, char *value) {
                         checkvarList[proxyinfo[client].checkvar_idx].variablename,
                         checkvarList[proxyinfo[client].checkvar_idx].upper
                 );
-                stuffcmd(ent, buffer);
+                stuffPlayer(ent, buffer);
             }
             break;
         }
