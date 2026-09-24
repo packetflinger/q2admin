@@ -21,6 +21,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
+/**
+ * All functions in this file are meant to be local replacements for ones in
+ * the standard C library. The original intention was to be able to
+ * statically link this library with zero dependencies on libc. 
+ */
+
 #ifdef Q2ADMINCLIB
 
 
