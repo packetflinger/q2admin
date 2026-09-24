@@ -1354,7 +1354,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
             proxyinfo[client].clientcommand |= CCMD_BANNED;
             Q_snprintf(proxyinfo[client].buffer, sizeof(proxyinfo[client].buffer), "Client doesn't have a valid IP address");
         }
-    } else if (checkCheckIfBanned(ent, client)) {
+    } else if (checkIfBanned(ent, client)) {
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
             // ret = 0;
@@ -1538,7 +1538,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             whois_newname(client, ent);
         }
 
-        if (checkCheckIfBanned(ent, client)) {
+        if (checkIfBanned(ent, client)) {
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
             Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", oldname);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);

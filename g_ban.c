@@ -38,7 +38,7 @@ char defaultChatBanMsg[256];
  *
  * Reads the remove file in to a blob of bytes, parse the entire blob.
  */
-bool ReadRemoteBanFile(char *bfname) {
+bool readRemoteBanFile(char *bfname) {
     generic_file_t file;
 
     file.size = 0xffff;
@@ -57,7 +57,7 @@ bool ReadRemoteBanFile(char *bfname) {
  *
  * Process each ban file line by line
  */
-bool ReadBanFile(char *bfname) {
+bool readBanFile(char *bfname) {
     FILE *banfile;
     unsigned int uptoLine = 0;
 
@@ -75,11 +75,11 @@ bool ReadBanFile(char *bfname) {
 
         if (!(data[0] == ';' || data[0] == '\n' || isBlank(data))) {
             if (startContains(data, "BAN:")) {
-                data = ban_parseBan(data);
+                data = parseBanLine(data);
             } else if (startContains(data, "CHATBAN:")) {
-                data = ban_parseChatban(data);
+                data = parseChatbanLine(data);
             } else if (startContains(data, "INCLUDE:")) {
-                data = ban_parseInclude(data);
+                data = parseBanIncludeLine(data);
             } else {
                 q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 continue;
@@ -136,9 +136,9 @@ void readBanLists(void) {
 
     freeBanLists();
 
-    ret = ReadBanFile(configfile_ban->string);  // q2-folder first
+    ret = readBanFile(configfile_ban->string);  // q2-folder first
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_ban->string);
-    if (ReadBanFile(buffer)) {  // mod-folder next
+    if (readBanFile(buffer)) {  // mod-folder next
         ret = true;
     }
 
@@ -158,10 +158,10 @@ void readBanLists(void) {
             q2a_strncpy(cfgRemoteFile, q2adminbanremotetxt->string, sizeof(cfgRemoteFile)-1);
         }
 
-        ret = ReadRemoteBanFile(cfgRemoteFile);
+        ret = readRemoteBanFile(cfgRemoteFile);
 
         Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, cfgRemoteFile);
-        if (ReadBanFile(buffer)) {
+        if (readBanFile(buffer)) {
             ret = true;
         }
 
@@ -931,7 +931,7 @@ void banRun(int startarg, edict_t *ent, int client) {
             for (clienti = 0; clienti < maxclients->value; clienti++) {
                 if (proxyinfo[clienti].inuse) {
                     edict_t *enti = getEnt((clienti + 1));
-                    if (checkCheckIfBanned(enti, clienti)) {
+                    if (checkIfBanned(enti, clienti)) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0, true);
                         // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
@@ -964,7 +964,7 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
  * when checking a player against the banlist, effectively the rules will be
  * checked from bottom-up.
  *
- * Called from checkCheckIfBanned()
+ * Called from checkIfBanned()
  */
 bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
     baninfo_t *checkentry = banhead;
@@ -1151,11 +1151,9 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
             }
             return BT_ALLOWLISTED; // rule matched but is an allow
         }
-
         prevcheckentry = checkentry;
         checkentry = checkentry->next;
     }
-
     return BT_NOTFOUND; // no entries matched, allow player in
 }
 
@@ -1166,7 +1164,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
  *
  * Called from ClientConnect() and checkForNameChange()
  */
-int checkCheckIfBanned(edict_t *ent, int client) {
+int checkIfBanned(edict_t *ent, int client) {
     bantype_t res;
     if (proxyinfo[client].baninfo) {
         if (proxyinfo[client].baninfo->numberofconnects) {
@@ -1199,6 +1197,30 @@ void listbansRun(int startarg, edict_t *ent, int client) {
     addCmdQueue(client, QCMD_DISPBANS, 0, 0, 0);
 }
 
+/**
+ * Prints one entry from the banhead list (the bannum'th still-live one,
+ * 0-based from the head - expired temporary bans are walked past rather
+ * than shown), reconstructed back into the same "BAN: ..." textual
+ * format parseBanLine() parses, so what's printed is both readable and
+ * could be pasted straight into a ban file. If there's another entry
+ * after it, re-queues itself (QCMD_DISPBANS) with bannum+1 to show the
+ * next one on a later frame; otherwise prints "End of ban list." and
+ * stops.
+ *
+ * This exists because a ban list can be long, and printing the whole
+ * thing in one burst would flood the requesting client - like
+ * displayNextLRCon() (a sibling doing the same thing for LRCON entries),
+ * pacing it one entry per queued-command tick avoids that.
+ *
+ * ent:    who to print to.
+ * client: their client index, used to requeue the next tick for them.
+ * bannum: 0-based index (from banhead) of which live entry to show this
+ *         call.
+ *
+ * Called from G_RunFrame()'s QCMD_DISPBANS handling (g_main.c), first
+ * queued by listbansRun() ("!listbans", starting at bannum 0) and then
+ * kept going by this function re-queuing itself until the list runs out.
+ */
 void displayNextBan(edict_t *ent, int client, long bannum) {
     long upto = bannum;
     baninfo_t *findentry = banhead;
@@ -1433,7 +1455,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
         cp = gi.argv(startarg);
         startarg++;
 
-
         q2a_strcat(savecmd, "RE ");
 
         cnewentry->type = CHATRE;
@@ -1525,7 +1546,6 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
                 cp = gi.argv(startarg);
                 startarg++;
             }
-
             save = 2;
         } else {
             save = 1;
@@ -1577,7 +1597,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     }
 }
 
-int checkCheckIfChatBanned(char *txt) {
+int checkIfChatBanned(char *txt) {
     chatbaninfo_t *checkentry = chatbanhead;
     char strbuffer[4096];
 
@@ -1592,7 +1612,6 @@ int checkCheckIfChatBanned(char *txt) {
             cp++;
         }
     }
-
 
     if (!ChatBanning_Enable) {
         return 0;
@@ -1620,15 +1639,12 @@ int checkCheckIfChatBanned(char *txt) {
                 break;
         }
 
-
         // ok, a ban situation..
         if (checkentry->msg) {
             currentBanMsg = checkentry->msg;
         }
-
         return 1;
     }
-
     return 0;
 }
 
@@ -1731,11 +1747,11 @@ bool parseBanFileContents(char *data) {
 
         if (!(data[0] == ';' || data[0] == '\n' || isBlank(data))) {
             if (startContains(data, "BAN:")) {
-                data = ban_parseBan(data);
+                data = parseBanLine(data);
             } else if (startContains(data, "CHATBAN:")) {
-                data = ban_parseChatban(data);
+                data = parseChatbanLine(data);
             } else if (startContains(data, "INCLUDE:")) {
-                data = ban_parseInclude(data);
+                data = parseBanIncludeLine(data);
             } else {
                 q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 // just jump to the next line and try again
@@ -1751,11 +1767,35 @@ bool parseBanFileContents(char *data) {
 }
 
 /**
- * Parse a line starting with "BAN:..."
+ * Parses one ban definition starting at "BAN:" (see BANCMD_LAYOUT in
+ * g_ban.h for the full grammar - exclude/include flag, ALL or
+ * NAME [LIKE/RE]/BLANK matching, IP/VPN/CIDR, ASN, VERSION, PASSWORD,
+ * MAX connects, FLOOD limits, MSG, TIME, SAVE/NOCHECK), builds a new
+ * baninfo_t from those fields, and - if it's not a no-op/broken entry
+ * (an unconstrained ban with nothing actually limiting it, or a regex
+ * ban whose pattern failed to compile) - assigns it a sequential
+ * bannum and prepends it to the global banhead list.
  *
- * Returns a pointer to the end of the current line
+ * This is the one parser behind every path that loads BAN: entries -
+ * both the local ban list (readBanFile(), one fgets() line at a time)
+ * and an entire HTTP-fetched remote ban list (parseBanFileContents(),
+ * over one in-memory blob) - so the textual ban-file grammar only has
+ * to be implemented once.
+ *
+ * cp: pointer into the buffer positioned at "BAN:", the start of this
+ *     entry's fields.
+ *
+ * Returns a pointer to just past what this entry consumed, so the
+ * caller can resume scanning the same buffer for the next entry. This
+ * only actually matters for parseBanFileContents(), which parses a
+ * whole blob in one pass; readBanFile() re-reads a fresh line via
+ * fgets() every iteration regardless, so it doesn't use the returned
+ * pointer for anything.
+ *
+ * Called from readBanFile() and parseBanFileContents() (both in this
+ * file) whenever a line starts with "BAN:".
  */
-char *ban_parseBan(char *cp) {
+char *parseBanLine(char *cp) {
     baninfo_t *newentry;
     bool all;
     bool like, re;
@@ -2065,9 +2105,37 @@ char *ban_parseBan(char *cp) {
 }
 
 /**
- * Parse a CHATBAN: message in a ban file.
+ * Parses one chat filter definition starting at "CHATBAN:" (see
+ * CHATBANFILE_LAYOUT in g_ban.h for the grammar - a LIKE or RE match
+ * type, the quoted pattern to match against, and an optional MSG).
+ * Unlike parseBanLine() above, which decides whether a player is
+ * allowed to connect at all, this is the sibling for chat filtering: a
+ * player's chat message matching the compiled pattern gets muted/
+ * blocked rather than the player being refused a connection. Builds a
+ * new chatbaninfo_t from those fields and - if it's not a no-op/broken
+ * entry (no pattern given, or a regex that failed to compile) - assigns
+ * it a sequential bannum and prepends it to the global chatbanhead list.
+ *
+ * This is the one parser behind every path that loads CHATBAN: entries
+ * - both the local ban list (readBanFile(), one fgets() line at a time)
+ * and an entire HTTP-fetched remote ban list (parseBanFileContents(),
+ * over one in-memory blob) - so the textual chatban grammar only has to
+ * be implemented once.
+ *
+ * cp: pointer into the buffer positioned at "CHATBAN:", the start of
+ *     this entry's fields.
+ *
+ * Returns a pointer to just past what this entry consumed, so the
+ * caller can resume scanning the same buffer for the next entry. This
+ * only actually matters for parseBanFileContents(), which parses a
+ * whole blob in one pass; readBanFile() re-reads a fresh line via
+ * fgets() every iteration regardless, so it doesn't use the returned
+ * pointer for anything.
+ *
+ * Called from readBanFile() and parseBanFileContents() (both in this
+ * file) whenever a line starts with "CHATBAN:".
  */
-char *ban_parseChatban(char *cp) {
+char *parseChatbanLine(char *cp) {
     chatbaninfo_t *cnewentry;
     char strbuffer[256];
     int num;
@@ -2163,7 +2231,7 @@ char *ban_parseChatban(char *cp) {
 /**
  * Parse an INCLUDE: message in a ban file.
  */
-char *ban_parseInclude(char *in) {
+char *parseBanIncludeLine(char *in) {
     char strbuffer[256];
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
@@ -2175,13 +2243,13 @@ char *ban_parseInclude(char *in) {
         if (strbuffer[0]) {
             if (startContains(strbuffer, "http")) {
                 q2a_printf("reading remote ban file: %s\n", strbuffer);
-                ReadRemoteBanFile(strbuffer);
+                readRemoteBanFile(strbuffer);
             } else {
                 if (validatePath(strbuffer) == PATH_INVALID) {
                     q2a_printf("invalid path in ban config: %s\n", strbuffer);
                 } else {
                     q2a_printf("reading included ban file: %s\n", strbuffer);
-                    ReadBanFile(strbuffer);
+                    readBanFile(strbuffer);
                 }
             }
         } else {

@@ -2371,7 +2371,7 @@ bool sayPersonCmd(edict_t *ent, int client, char *args) {
         }
 
         // check for banned chat words
-        if (checkCheckIfChatBanned(text)) {
+        if (checkIfChatBanned(text)) {
             gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, false);
@@ -2458,7 +2458,7 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
         }
 
         // check for banned chat words
-        if (checkCheckIfChatBanned(text)) {
+        if (checkIfChatBanned(text)) {
             // gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, true);
@@ -3221,7 +3221,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         return false;
     }
 
-    if (checkCheckIfChatBanned(proxyinfo[client].lastcmd)) {
+    if (checkIfChatBanned(proxyinfo[client].lastcmd)) {
         gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
         logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0, true);
         return false;
