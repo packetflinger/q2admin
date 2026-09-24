@@ -288,7 +288,7 @@ void whoisGetID(int client, edict_t *ent) {
  * the connect half is actually wired up - so "last seen" really means
  * "last connected", not when they left.
  */
-void whois_update_seen(int client, edict_t *ent) {
+void whoisUpdateSeen(int client, edict_t *ent) {
     //to be called on client connect and disconnect
     time_t ltimetemp;
     time(&ltimetemp);

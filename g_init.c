@@ -1457,7 +1457,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     if (whois_active) {
         whoisGetID(client, ent);
-        whois_update_seen(client, ent);
+        whoisUpdateSeen(client, ent);
     }
 
     if (vpn_enable) {
