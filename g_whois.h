@@ -24,7 +24,7 @@ extern int WHOIS_COUNT;
 extern int whois_active;
 extern user_details *whois_details;
 
-void reloadWhoisFileRun(int startarg, edict_t *ent, int client);
+void whoisReloadFileRun(int startarg, edict_t *ent, int client);
 void whois_getid(int client, edict_t *ent);
 void whois(int client, edict_t *ent);
 void whois_adduser(int client, edict_t *ent);

@@ -411,7 +411,7 @@ void whois_write_file(void) {
  * Takes no parameters; fills the global whois_details table.
  *
  * Called from InitGame() (g_init.c) right after the table is allocated,
- * and from reloadWhoisFileRun() below.
+ * and from whoisReloadFileRun() below.
  */
 void whoisReadFile(void) {
     FILE *f;
@@ -496,7 +496,7 @@ void whoisReadFile(void) {
  * Called via the "reloadwhoisfile" entry in q2aCommands[] (g_cmd.c),
  * from an in-game admin console or rcon.
  */
-void reloadWhoisFileRun(int startarg, edict_t *ent, int client) {
+void whoisReloadFileRun(int startarg, edict_t *ent, int client) {
     whoisReadFile();
     gi.cprintf(ent, PRINT_HIGH, "whois file reloaded.\n");
 }
