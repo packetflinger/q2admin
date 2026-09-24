@@ -900,7 +900,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         q2a_strcat(buffer, "/q2adminmaps/");
         q2a_strcat(buffer, mapname);
         q2a_strcat(buffer, ".q2aspawn");
-        ReadSpawnFile(buffer, true);
+        readSpawnFile(buffer, true);
 
         bool replaceteam;
         bool entremoved;

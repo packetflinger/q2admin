@@ -22,13 +22,13 @@ typedef struct {
 } spawncmd_t;
 
 bool checkDisabledEntities(char *classname);
-bool checkforspawncmd(char *cp, int spawncmd);
+bool checkForSpawnCmd(char *cp, int spawncmd);
 void displayNextSpawn(edict_t *ent, int client, long floodcmd);
 void freeOneLevelSpawnLists(void);
 void freeSpawnLists(void);
 void linkentity_internal(edict_t *ent);
 void listspawnsRun(int startarg, edict_t *ent, int client);
-bool ReadSpawnFile(char *spawnname, bool onelevelflag);
+bool readSpawnFile(char *spawnname, bool onelevelflag);
 void readSpawnLists(void);
 void reloadSpawnFileRun(int startarg, edict_t *ent, int client);
 void spawncmdRun(int startarg, edict_t *ent, int client);
