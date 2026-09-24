@@ -5,7 +5,7 @@
 
 #include "g_local.h"
 
-user_details *whois_details;
+user_details_t *whois_details;
 int WHOIS_COUNT = 0;
 int whois_active = 0;
 

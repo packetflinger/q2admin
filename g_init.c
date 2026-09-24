@@ -603,8 +603,8 @@ void InitGame(void) {
     readAdminConfig();
 
     if (whois_active) {
-        whois_details = G_Malloc(whois_active * sizeof(user_details));
-        q2a_memset(whois_details, 0, whois_active * sizeof(user_details));
+        whois_details = G_Malloc(whois_active * sizeof(user_details_t));
+        q2a_memset(whois_details, 0, whois_active * sizeof(user_details_t));
         whoisReadFile();
     }
 
