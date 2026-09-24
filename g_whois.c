@@ -13,7 +13,7 @@ int whois_active = 0;
  * The "whois <name|id>" player command - looks up the alias history
  * q2admin has been quietly accumulating for a player, so anyone can see
  * what other names a given player has connected under. Records are keyed
- * by IP (see whois_getid()), which is what lets a player who renames, or
+ * by IP (see whoisGetID()), which is what lets a player who renames, or
  * who left and came back, still be tied back to their earlier names.
  *
  * Resolves the argument in three passes, stopping at the first hit:
@@ -170,7 +170,7 @@ void whois_dumpdetails(int client, edict_t *ent, int userid) {
  *         name) and to assign the resulting userid to.
  * ent:    unused here.
  *
- * Called from whois_getid() below when no stored record matches the
+ * Called from whoisGetID() below when no stored record matches the
  * connecting IP, and from checkForNameChange() (g_init.c) for a client
  * who renames while still having no record.
  */
@@ -197,15 +197,15 @@ void whois_adduser(int client, edict_t *ent) {
  * new name at slot 9, making the alias list a 10-deep FIFO of the most
  * recent distinct names.
  *
- * A client with no record yet (userid == -1) is handed to whois_getid()
+ * A client with no record yet (userid == -1) is handed to whoisGetID()
  * to get one; that in turn calls back here once it has, which is safe
  * because it only does so after a userid has been assigned.
  *
  * client: the client whose current proxyinfo name is being recorded.
- * ent:    only passed through to whois_getid().
+ * ent:    only passed through to whoisGetID().
  *
  * Called from checkForNameChange() (g_init.c) whenever a client renames
- * mid-game, and from whois_getid() when a returning player's record is
+ * mid-game, and from whoisGetID() when a returning player's record is
  * matched, to catch the name they came back under.
  */
 void whois_newname(int client, edict_t *ent) {
@@ -213,7 +213,7 @@ void whois_newname(int client, edict_t *ent) {
     unsigned int i;
 
     if (proxyinfo[client].userid == -1) {
-        whois_getid(client, ent);
+        whoisGetID(client, ent);
         return;
     } else {
         for (i = 0; i < 10; i++) {
@@ -255,7 +255,7 @@ void whois_newname(int client, edict_t *ent) {
  * Called from ClientConnect() (g_init.c) when whois_active is set, and
  * from whois_newname() for a client that somehow has no record yet.
  */
-void whois_getid(int client, edict_t *ent) {
+void whoisGetID(int client, edict_t *ent) {
     //called when a client connects
     unsigned int i;
     for (i = 0; i < WHOIS_COUNT; i++) {
@@ -278,12 +278,12 @@ void whois_getid(int client, edict_t *ent) {
  * string that gets written to whois.dat verbatim.
  *
  * Does nothing for a client with no record yet (userid < 0), so it's
- * safe to call before whois_getid() has assigned one.
+ * safe to call before whoisGetID() has assigned one.
  *
  * client: whose record to stamp.
  * ent:    unused here.
  *
- * Called from ClientConnect() (g_init.c), right after whois_getid().
+ * Called from ClientConnect() (g_init.c), right after whoisGetID().
  * Note the inline comment below says connect *and* disconnect, but only
  * the connect half is actually wired up - so "last seen" really means
  * "last connected", not when they left.

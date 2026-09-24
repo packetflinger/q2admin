@@ -25,7 +25,7 @@ extern int whois_active;
 extern user_details *whois_details;
 
 void whoisReloadFileRun(int startarg, edict_t *ent, int client);
-void whois_getid(int client, edict_t *ent);
+void whoisGetID(int client, edict_t *ent);
 void whois(int client, edict_t *ent);
 void whois_adduser(int client, edict_t *ent);
 void whois_newname(int client, edict_t *ent);

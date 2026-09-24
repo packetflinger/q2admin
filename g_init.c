@@ -1456,7 +1456,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     if (whois_active) {
-        whois_getid(client, ent);
+        whoisGetID(client, ent);
         whois_update_seen(client, ent);
     }
 
