@@ -305,7 +305,7 @@ void whois_update_seen(int client, edict_t *ent) {
  * tracking identities over time.
  *
  * One record per line, whitespace separated: id, ip, last-seen, then all
- * 10 alias slots. Because whois_read_file() parses that back with
+ * 10 alias slots. Because whoisReadFile() parses that back with
  * fscanf("%s"), any embedded space would split one field into two and
  * knock the whole line's columns out of alignment - so every space is
  * written as '?' and turned back on read. The last-seen field is the
@@ -413,7 +413,7 @@ void whois_write_file(void) {
  * Called from InitGame() (g_init.c) right after the table is allocated,
  * and from reloadWhoisFileRun() below.
  */
-void whois_read_file(void) {
+void whoisReadFile(void) {
     FILE *f;
     char name[256];
     unsigned int i, j;
@@ -483,7 +483,7 @@ void whois_read_file(void) {
  * file that was edited or replaced outside the server without having to
  * restart it.
  *
- * Two things worth knowing before using it: whois_read_file() replaces
+ * Two things worth knowing before using it: whoisReadFile() replaces
  * the in-memory table outright, so any names recorded since the last
  * whois_write_file() are discarded; and connected players keep the
  * proxyinfo[].userid they were already assigned, which after a reload
@@ -497,6 +497,6 @@ void whois_read_file(void) {
  * from an in-game admin console or rcon.
  */
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client) {
-    whois_read_file();
+    whoisReadFile();
     gi.cprintf(ent, PRINT_HIGH, "whois file reloaded.\n");
 }

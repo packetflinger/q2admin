@@ -32,4 +32,4 @@ void whois_newname(int client, edict_t *ent);
 void whois_update_seen(int client, edict_t *ent);
 void whois_dumpdetails(int client, edict_t *ent, int userid);
 void whois_write_file(void);
-void whois_read_file(void);
+void whoisReadFile(void);
