@@ -477,7 +477,7 @@ int doAdminCommand(edict_t *ent, int client) {
 
     if (proxyinfo[client].admin_level & ADMIN_LEVEL8) {
         if ((strcmp(gi.argv(0), "!writewhois") == 0) && (whois_active)) {
-            whois_write_file();
+            whoisWriteFile();
             done = 1;
             gi.cprintf(ent, PRINT_HIGH, "Whois file written.\n");
         }

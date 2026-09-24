@@ -31,5 +31,5 @@ void whoisAddUser(int client, edict_t *ent);
 void whoisNewName(int client, edict_t *ent);
 void whoisUpdateSeen(int client, edict_t *ent);
 void whoisDumpDetails(int client, edict_t *ent, int userid);
-void whois_write_file(void);
+void whoisWriteFile(void);
 void whoisReadFile(void);

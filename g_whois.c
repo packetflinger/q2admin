@@ -326,7 +326,7 @@ void whoisUpdateSeen(int client, edict_t *ent) {
  * doAdminCommand() (g_admin.c) to checkpoint it on demand without
  * restarting.
  */
-void whois_write_file(void) {
+void whoisWriteFile(void) {
     //file format...?
     //id ip seen names
     //when do we want to write this file? it might be processor hungry
@@ -393,7 +393,7 @@ void whois_write_file(void) {
 
 /**
  * Loads moddir/whois.dat back into the table, reversing what
- * whois_write_file() encoded: '?' characters become spaces again, and an
+ * whoisWriteFile() encoded: '?' characters become spaces again, and an
  * alias slot that's just the placeholder becomes an empty slot rather
  * than a literal "?" name.
  *
@@ -485,7 +485,7 @@ void whoisReadFile(void) {
  *
  * Two things worth knowing before using it: whoisReadFile() replaces
  * the in-memory table outright, so any names recorded since the last
- * whois_write_file() are discarded; and connected players keep the
+ * whoisWriteFile() are discarded; and connected players keep the
  * proxyinfo[].userid they were already assigned, which after a reload
  * may index a different record than it did before.
  *

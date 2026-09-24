@@ -46,7 +46,7 @@ char moddir[256];
  * everything InitGame() and the rest of q2admin's runtime stood up:
  *
  *  - persists accumulated whois player-identity tracking data to disk
- *    before it's lost (whois_write_file) and frees its table
+ *    before it's lost (whoisWriteFile) and frees its table
  *  - logs the server-end event
  *  - frees the level's substituted entity string (finalentities)
  *  - tears down the cloud admin service connection (CA_Shutdown) and
@@ -76,7 +76,7 @@ void ShutdownGame(void) {
         return;
     }
     if (whois_active) {
-        whois_write_file();
+        whoisWriteFile();
         G_Free(whois_details);
     }
     if (runmode) {
