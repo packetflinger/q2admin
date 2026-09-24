@@ -3208,12 +3208,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
     } else if (Q_stricmp(cmd, "timer_start") == 0) {
         if (timers_active) {
-            timer_start(client, ent);
+            timerStart(client, ent);
             return false;
         }
     } else if (Q_stricmp(cmd, "timer_stop") == 0) {
         if (timers_active) {
-            timer_stop(client, ent);
+            timerStop(client, ent);
             return false;
         }
     } else if (motdFilename[0] && Q_stricmp(cmd, "motd") == 0) {

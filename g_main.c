@@ -239,7 +239,7 @@ void G_RunFrame(void) {
         }
 
         if (timers_active) {
-            timer_action(client, ent);
+            timerAction(client, ent);
         }
 
         if (getCommandFromQueue(client, &command, &data, &str)) {

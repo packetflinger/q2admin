@@ -16,6 +16,6 @@ extern bool timers_active;
 extern int timers_min_seconds;
 extern int timers_max_seconds;
 
-void timer_action(int client, edict_t *ent);
-void timer_start(int client, edict_t *ent);
-void timer_stop(int client, edict_t *ent);
+void timerAction(int client, edict_t *ent);
+void timerStart(int client, edict_t *ent);
+void timerStop(int client, edict_t *ent);
