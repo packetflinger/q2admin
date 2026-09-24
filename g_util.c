@@ -40,7 +40,7 @@ void stuffPlayer(edict_t *e, char *s) {
 /**
  * Remove whitespace (space/tab/newline) from the beginning and end of a string
  */
-char *trim(char *s) {
+char *Q_trim(char *s) {
     char *ptr;
     if (!s) {
         return NULL;   // handle NULL string
