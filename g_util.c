@@ -538,6 +538,17 @@ void upperCase(char *c) {
     }
 }
 
+/**
+ * Change string to all lower case
+ */
+void lowerCase(char *c) {
+    while (*c) {
+        if (isupper((*c))) {
+            *c = tolower((*c));
+        }
+        c++;
+    }
+}
 
 /**
  * Returns number of characters that would be written into the buffer,

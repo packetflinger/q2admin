@@ -55,3 +55,4 @@ char *Q_trim(char *s);
 char *va(const char *format, ...);
 pathtype_t validatePath(const char *s);
 bool wildcardMatch(char *pattern, char *haystack);
+void lowerCase(char *c);
