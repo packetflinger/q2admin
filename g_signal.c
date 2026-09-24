@@ -20,11 +20,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "g_local.h"
 
-// Weight large enough that a single one of these signals always reaches
-// signal_score_threshold on its own, so hacktype_t-derived signals keep
-// removing a client immediately, same as before this system existed.
-#define SIGNAL_SCORE_KICK   1000000
-
 int signal_score_threshold = 50; // 0 disables score-based removal
 
 typedef struct {
@@ -37,37 +32,37 @@ typedef struct {
 // findSignalDef()/signalWeightRun()/signalWeightInit() below. The values
 // here are just the defaults.
 static signal_def_t signalDefs[] = {
-    { SIGNAL_AIMBOT_JITTER,      25,                 "aimbot-jitter" },
-    { SIGNAL_VPN,                25,                 "vpn" },
-    { SIGNAL_CHATFLOOD,          15,                 "chatflood" },
-    { SIGNAL_SNAP_FIRE,          40,                 "snap-fire" },
-    { SIGNAL_AIM_TRACK,          30,                 "aim-track" },
-    { SIGNAL_SKIN_OVERFLOW,      25,                 "skin-overflow" },
-    { SIGNAL_VERSION_DEADLINE,   20,                 "version-probe" },
-    { SIGNAL_TIMESCALE_DEADLINE, 20,                 "timescale-probe" },
-    { SIGNAL_ALIAS_DEADLINE,     20,                 "alias-probe" },
-    { SIGNAL_CHECKVAR_DEADLINE,  20,                 "checkvar-probe" },
-    { SIGNAL_MSEC_OVERRUN,       20,                 "msec-overrun" },
-    { SIGNAL_MSEC_UNDERRUN,      20,                 "msec-underrun" },
-    { SIGNAL_IMPULSE,            10,                 "impulse-sent" },
-    { SIGNAL_MANUAL,              0,                 "admin-adjustment" },
-    { SIGNAL_BAN_ADJUSTMENT,      0,                 "ban-entry" },
-    { SIGNAL_VPN_SUSPICIOUS,     20,                 "vpn-suspicious" },
-    { SIGNAL_VPN_LIKEY,          30,                 "vpn-likely" },
-    { SIGNAL_VPN_DETECTED,       40,                 "vpn-found" },
-    { SIGNAL_ZBOT_DETECTED,      SIGNAL_SCORE_KICK,  "zbot-detected" },
-    { SIGNAL_RATBOT_DETECTED,    SIGNAL_SCORE_KICK,  "ratbot-detected" },
-    { SIGNAL_HACK_PROXY,         SIGNAL_SCORE_KICK,  "hack-proxy" },
-    { SIGNAL_HACK_AIMBOT,        SIGNAL_SCORE_KICK,  "hack-aimbot" },
-    { SIGNAL_HACK_ZBOT,          SIGNAL_SCORE_KICK,  "hack-zbot" },
-    { SIGNAL_HACK_RATBOT,        SIGNAL_SCORE_KICK,  "hack-ratbot" },
-    { SIGNAL_HACK_CUSTOMCLIENT,  SIGNAL_SCORE_KICK,  "hack-customclient" },
-    { SIGNAL_HACK_MSEC,          SIGNAL_SCORE_KICK,  "hack-msec" },
-    { SIGNAL_HACK_TIMESCALE,     SIGNAL_SCORE_KICK,  "hack-timescale" },
-    { SIGNAL_HACK_ALIAS,         SIGNAL_SCORE_KICK,  "hack-alias" },
-    { SIGNAL_HACK_STUFF,         SIGNAL_SCORE_KICK,  "hack-stuff" },
-    { SIGNAL_HACK_USERINFO,      SIGNAL_SCORE_KICK,  "hack-userinfo" },
-    { SIGNAL_HACK_UNKNOWN,       SIGNAL_SCORE_KICK,  "hack-unknown" },
+    { SIGNAL_AIMBOT_JITTER,             25,  "aimbot-jitter" },
+    { SIGNAL_VPN,                       25,  "vpn" },
+    { SIGNAL_CHATFLOOD,                 15,  "chatflood" },
+    { SIGNAL_SNAP_FIRE,                 40,  "snap-fire" },
+    { SIGNAL_AIM_TRACK,                 30,  "aim-track" },
+    { SIGNAL_SKIN_OVERFLOW,             25,  "skin-overflow" },
+    { SIGNAL_VERSION_DEADLINE,          20,  "version-probe" },
+    { SIGNAL_TIMESCALE_DEADLINE,        20,  "timescale-probe" },
+    { SIGNAL_ALIAS_DEADLINE,            20,  "alias-probe" },
+    { SIGNAL_CHECKVAR_DEADLINE,         20,  "checkvar-probe" },
+    { SIGNAL_MSEC_OVERRUN,              20,  "msec-overrun" },
+    { SIGNAL_MSEC_UNDERRUN,             20,  "msec-underrun" },
+    { SIGNAL_IMPULSE,                   10,  "impulse-sent" },
+    { SIGNAL_MANUAL,                     0,  "admin-adjustment" },
+    { SIGNAL_BAN_ADJUSTMENT,             0,  "ban-entry" },
+    { SIGNAL_VPN_SUSPICIOUS,            20,  "vpn-suspicious" },
+    { SIGNAL_VPN_LIKEY,                 30,  "vpn-likely" },
+    { SIGNAL_VPN_DETECTED,              40,  "vpn-found" },
+    { SIGNAL_WONKY_USERINFO,            15,  "wonky-userinfo" },
+    { SIGNAL_TIMESCALE_MODIFIED,   1000000,  "timescale-modified" },
+    { SIGNAL_ZBOT_DETECTED,        1000000,  "zbot-detected" },
+    { SIGNAL_RATBOT_DETECTED,      1000000,  "ratbot-detected" },
+    { SIGNAL_HACK_PROXY,           1000000,  "hack-proxy" },
+    { SIGNAL_HACK_AIMBOT,          1000000,  "hack-aimbot" },
+    { SIGNAL_HACK_ZBOT,            1000000,  "hack-zbot" },
+    { SIGNAL_HACK_RATBOT,          1000000,  "hack-ratbot" },
+    { SIGNAL_HACK_CUSTOMCLIENT,    1000000,  "hack-customclient" },
+    { SIGNAL_HACK_MSEC,            1000000,  "hack-msec" },
+    { SIGNAL_ALIAS_UNSUPPORTED,    1000000,  "alias-unsupported" },
+    { SIGNAL_HACK_STUFF,           1000000,  "hack-stuff" },
+    { SIGNAL_HACK_UNKNOWN,         1000000,  "hack-unknown" },
 };
 
 /**
@@ -175,10 +170,9 @@ unsigned int signalForHacktype(hacktype_t h) {
         case HT_RATBOT:          return SIGNAL_HACK_RATBOT;
         case HT_CUSTOM_CLIENT:   return SIGNAL_HACK_CUSTOMCLIENT;
         case HT_MSEC:            return SIGNAL_HACK_MSEC;
-        case HT_TIMESCALE:       return SIGNAL_HACK_TIMESCALE;
-        case HT_ALIAS:           return SIGNAL_HACK_ALIAS;
+        //case HT_ALIAS:           return SIGNAL_ALIAS_UNSUPPORTED;
         case HT_STUFF:           return SIGNAL_HACK_STUFF;
-        case HT_USERINFO:        return SIGNAL_HACK_USERINFO;
+        case HT_USERINFO:        return SIGNAL_WONKY_USERINFO;
         default:                 return SIGNAL_HACK_UNKNOWN;
     }
 }

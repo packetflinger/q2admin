@@ -26,10 +26,10 @@
 #define SIGNAL_HACK_RATBOT         BIT(6)  // HT_RATBOT
 #define SIGNAL_HACK_CUSTOMCLIENT   BIT(7)  // HT_CUSTOM_CLIENT
 #define SIGNAL_HACK_MSEC           BIT(8)  // HT_MSEC
-#define SIGNAL_HACK_TIMESCALE      BIT(9)  // HT_TIMESCALE
-#define SIGNAL_HACK_ALIAS          BIT(10) // HT_ALIAS
+#define SIGNAL_TIMESCALE_MODIFIED  BIT(9)  // Client's timescale is more than 1.0
+#define SIGNAL_ALIAS_UNSUPPORTED   BIT(10) // HT_ALIAS
 #define SIGNAL_HACK_STUFF          BIT(11) // HT_STUFF
-#define SIGNAL_HACK_USERINFO       BIT(12) // HT_USERINFO
+#define SIGNAL_WONKY_USERINFO      BIT(12) // A standard key is missing from userinfo
 #define SIGNAL_HACK_UNKNOWN        BIT(13) // HT_UNKNOWN
 #define SIGNAL_SNAP_FIRE           BIT(14) // view snapped onto a player that wasn't near the crosshair, firing immediately
 #define SIGNAL_AIM_TRACK           BIT(15) // crosshair stayed implausibly tight on a moving target for a sustained streak

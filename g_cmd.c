@@ -1918,9 +1918,6 @@ void AddCommandString_internal(char *text) {
     gi.AddCommandString(text);
 }
 
-
-//===================================================================
-
 char argtext[2048];
 
 /**
@@ -2200,14 +2197,12 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
             }
         }
     }
-
     if (numfound) {
         *text = cp;
         return numfound;
     } else {
         gi.cprintf(ent, PRINT_HIGH, "no player name matches found.\n");
     }
-
     return 0;
 }
 
@@ -2440,7 +2435,48 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
+ * Sends a private message from one player to several at once - the
+ * multi-recipient counterpart to sayPersonCmd(). Quake 2 itself only
+ * offers "say" to everyone and "say_team" to your team, so this fills
+ * the gap when the people you want to talk to aren't a team: a couple of
+ * specific players, or everyone whose name matches a pattern.
  *
+ * Recipients are resolved by getClientsFromArg(), which accepts the
+ * PLAYERSPECMULTI forms - "CL 3 + 5 + 7", or a LIKE/RE name pattern -
+ * and flags each match with CCMD_SELECTED; this then walks the client
+ * list sending to whoever carries that flag, so one message can go to an
+ * arbitrary set of players.
+ *
+ * Each recipient is told only that it's a private message, while the
+ * sender and the server console see who it actually went to. That
+ * asymmetry is deliberate: the sender needs confirmation of who received
+ * it, and an admin reading the console needs the full picture, but a
+ * recipient has no business knowing who else was included.
+ *
+ * Message text is truncated at 2000 characters to fit the local buffer,
+ * and is run through the chat-ban filter first, so a private message
+ * can't be used to get banned wording past the filter that covers public
+ * chat.
+ *
+ * ent:    the sending player's edict, used for replies and the sender's
+ *         own copy of the message.
+ * client: the sender's client index, used for their name and to resolve
+ *         the recipient list.
+ * args:   the argument text - the recipient spec followed by the
+ *         message. Callers reaching this via the "!g" shorthand pass the
+ *         text already advanced past that prefix.
+ *
+ * Returns true if no recipients could be resolved, which the callers
+ * treat as a syntax error and answer with the usage line. Returns false
+ * when the message was handled - including when the chat-ban filter
+ * rejected it, since that's a refusal rather than a malformed command
+ * and shouldn't print usage.
+ *
+ * Called from doClientCommand() (below) on two paths, both gated on
+ * say_group_enable: the "say_group" command, and the "!g" prefix inside
+ * a normal say when extendedsay_enable is set - the latter being how a
+ * player uses it without their client needing to know the command
+ * exists.
  */
 bool sayGroupCmd(edict_t *ent, int client, char *args) {
     char *cp = args, *text;
@@ -2496,7 +2532,43 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
 }
 
 /**
+ * Marks a client as running a client-side proxy and does everything that
+ * follows from that: records the reason, abandons any detection probes
+ * still in flight, logs it, announces it, and raises the corresponding
+ * signal.
  *
+ * Client-side proxies sit between the player's client and the server and
+ * can feed the player information they shouldn't have, so q2admin treats
+ * one as a cheat. Some announce themselves in chat, which is the cheap
+ * detection this serves - no probing needed, the proxy gives itself away.
+ *
+ * The pending QCMD_TESTRATBOT2/QCMD_ZPROXYCHECK2 commands are dropped
+ * and their flags cleared because those probes exist to answer a
+ * question that's now settled; leaving them queued would later fire as
+ * "client failed to respond" against a client already judged. charindex
+ * is set to -6, which is this module's convention of reusing that field
+ * as a detection-reason code for the log (see its comment in
+ * proxyinfo_t) - the sibling detectors use their own distinct negative
+ * values.
+ *
+ * The announcement is repeated numofdisplays times deliberately: it's
+ * meant to stay visible in players' consoles rather than scroll away
+ * unnoticed.
+ *
+ * ent:    the detected client's edict, passed through to the logging.
+ * client: the detected client's index, whose proxyinfo is updated.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (below) when a player's say/say_team
+ * text carries the tell-tale string a Nitro2/XANIA proxy emits, and only
+ * when proxy_nitro2 is off - with it on, those clients are merely
+ * flagged CCMD_NITRO2PROXY and allowed.
+ *
+ * Note this doesn't disconnect anyone itself. It raises
+ * SIGNAL_HACK_PROXY, which carries the kick-level weight, but doesn't
+ * call evaluateSignalScore(), so removal waits until something else
+ * evaluates that client's score.
  */
 void proxyDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -6;
@@ -2506,27 +2578,57 @@ void proxyDetected(edict_t *ent, int client) {
 
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
-
     if (displayzbotuser) {
-        unsigned int i;
-
         q2a_strncpy(buffer, zbotuserdisplay, sizeof(buffer)-1);
         q2a_strcat(buffer, "\n");
-
-        for (i = 0; i < numofdisplays; i++) {
-            gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+        for (unsigned int i = 0; i < numofdisplays; i++) {
+            gi.bprintf(PRINT_HIGH, buffer, NAME(client));
         }
     }
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-    if (disconnectuser) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
-    }
+    raiseSignal(client, SIGNAL_HACK_PROXY);
 }
 
 /**
+ * Marks a client as a confirmed ratbot and does everything that follows:
+ * records the reason, abandons any detection probes still in flight,
+ * logs it, announces it, and raises the corresponding signal. The
+ * ratbot counterpart to proxyDetected() above, and identical in shape -
+ * only the reason code and the signal differ.
  *
+ * A ratbot is a client-side bot that watches chat and auto-replies to
+ * certain phrases, which is exactly what gives it away: q2admin prints
+ * bait text at the client (the QCMD_TESTRATBOT probe in G_RunFrame) and
+ * a bot answers it with one of a couple of canned responses no human
+ * would ever type. By the time this is called that answer has arrived,
+ * so there's nothing left to establish.
+ *
+ * The pending QCMD_TESTRATBOT2/QCMD_ZPROXYCHECK2 commands are dropped
+ * and their flags cleared because those probes exist to answer a
+ * question that's now settled; leaving them queued would later fire as
+ * "client failed to respond" against a client already judged. charindex
+ * is set to -3, this module's convention of reusing that field as a
+ * detection-reason code for the log (see its comment in proxyinfo_t),
+ * distinct from the values the sibling detectors use.
+ *
+ * The announcement is repeated numofdisplays times deliberately, so it
+ * stays visible in players' consoles rather than scrolling away.
+ *
+ * ent:    the detected client's edict, passed through to the logging.
+ * client: the detected client's index, whose proxyinfo is updated.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (below) from two places, both guarded on
+ * CCMD_RATBOTDETECT being set - i.e. only while a probe is outstanding -
+ * one for each of the two canned replies a ratbot gives.
+ *
+ * Note this doesn't disconnect anyone itself. It raises
+ * SIGNAL_RATBOT_DETECTED, which carries the kick-level weight, but
+ * doesn't call evaluateSignalScore(), so removal waits until something
+ * else evaluates that client's score.
  */
 void ratbotDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -3;
@@ -2536,27 +2638,61 @@ void ratbotDetected(edict_t *ent, int client) {
 
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
-
     if (displayzbotuser) {
-        unsigned int i;
-
         q2a_strncpy(buffer, zbotuserdisplay, sizeof(buffer)-1);
         q2a_strcat(buffer, "\n");
-
-        for (i = 0; i < numofdisplays; i++) {
-            gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+        for (unsigned int i = 0; i < numofdisplays; i++) {
+            gi.bprintf(PRINT_HIGH, buffer, NAME(client));
         }
     }
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-    if (disconnectuser) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, zbotuserdisplay);
-    }
+    raiseSignal(client, SIGNAL_RATBOT_DETECTED);
 }
 
 /**
+ * Marks a client as running a modified timescale and does everything
+ * that follows: records the reason, abandons any detection probes still
+ * in flight, logs it, announces it, and raises the corresponding signal.
+ * Structurally the same as proxyDetected()/ratbotDetected() above, with
+ * its own reason code, its own announcement text and its own signal.
  *
+ * timescale is a speed cheat: raising it above 1 makes the client's
+ * whole game run faster, so the player moves, fires and reloads quicker
+ * than everyone else. It can't be detected from movement alone reliably,
+ * so q2admin asks instead - the QCMD_TESTTIMESCALE probe in G_RunFrame
+ * stuffs a command that makes the client echo back its own timescale
+ * cvar, and the reply is checked by the caller. By the time this is
+ * called that check has already failed.
+ *
+ * The pending QCMD_TESTRATBOT2/QCMD_ZPROXYCHECK2 commands are dropped
+ * and their flags cleared because those probes exist to answer a
+ * question that's now settled; leaving them queued would later fire as
+ * "client failed to respond" against a client already judged. charindex
+ * is set to -5, this module's convention of reusing that field as a
+ * detection-reason code for the log (see its comment in proxyinfo_t),
+ * distinct from the values the sibling detectors use.
+ *
+ * Unlike its siblings this announces with timescaleuserdisplay rather
+ * than the generic zbot text, so players are told what was actually
+ * caught - though it's still gated on the same displayzbotuser setting.
+ *
+ * ent:    the detected client's edict, passed through to the logging.
+ * client: the detected client's index, whose proxyinfo is updated.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (below) from two places, both on the
+ * client's reply to the timescale probe: once when the value isn't 1 at
+ * all, and once for a value that begins "1." - the second check existing
+ * because atoi() truncates, so something like "1.5" would otherwise pass
+ * the first test.
+ *
+ * Note this doesn't disconnect anyone itself. It raises
+ * SIGNAL_TIMESCALE_MODIFIED, which carries the kick-level weight, but
+ * doesn't call evaluateSignalScore(), so removal waits until something
+ * else evaluates that client's score.
  */
 void timescaleDetected(edict_t *ent, int client) {
     proxyinfo[client].charindex = -5;
@@ -2566,50 +2702,38 @@ void timescaleDetected(edict_t *ent, int client) {
 
     proxyinfo[client].clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2);
     proxyinfo[client].clientcommand |= CCMD_ZBOTDETECTED;
-
     if (displayzbotuser) {
-        unsigned int i;
-
         q2a_strncpy(buffer, timescaleuserdisplay, sizeof(buffer)-1);
         q2a_strcat(buffer, "\n");
 
-        for (i = 0; i < numofdisplays; i++) {
-            gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+        for (unsigned int i = 0; i < numofdisplays; i++){
+            gi.bprintf(PRINT_HIGH, buffer, NAME(client));
         }
     }
-
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-
-    if (disconnectuser) {
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, timescaleuserdisplay);
-    }
+    raiseSignal(client, SIGNAL_TIMESCALE_MODIFIED);
 }
 
 /**
  * A client has been determined to be illegitimate.
  */
-void hackDetected(edict_t *ent, int client) {
+void hackDetected(edict_t *ent, int client, unsigned int signal) {
     proxyinfo_t *pi = &proxyinfo[client];
 
     pi->charindex = -8;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     removeClientCommand(client, QCMD_TESTALIASCMD2);
+
     pi->clientcommand &= ~(CCMD_RATBOTDETECT | CCMD_ZPROXYCHECK2 | CCMD_WAITFORALIASREPLY1 | CCMD_WAITFORALIASREPLY2 | CCMD_WAITFORCONNECTREPLY);
     pi->clientcommand |= CCMD_ZBOTDETECTED;
-    raiseSignal(client, signalForHacktype(pi->hack.type));
-    q2a_strncpy(buffer, modifiedclientmsg, sizeof(buffer)-1);
-    q2a_strcat(buffer, "\n");
-    gi.bprintf(PRINT_HIGH, buffer, pi->name);
+
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-    if (disconnectuser) {
-        char *msg = va("%s [%s] attempted using %s", pi->name, IP(client), hacktypeToString(pi->hack.type));
-        addCmdQueue(client, QCMD_DISCONNECT, 1, 0, msg);
-    }
+    raiseSignal(client, signal);
 }
 
 /**
@@ -2873,10 +2997,11 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
-        if (Q_stricmp(cmd, "alias") == 0) { // client doesn't support "alias" command, it just printed
+        // client doesn't support "alias" command, it just printed
+        if (Q_stricmp(cmd, "alias") == 0) {
             proxyinfo[client].clientcommand |= CCMD_ALIASCHECKSTARTED;
             proxyinfo[client].hack.type = HT_ALIAS;
-            hackDetected(ent, client);
+            hackDetected(ent, client, SIGNAL_ALIAS_UNSUPPORTED);
             return false;
         }
 
@@ -2888,7 +3013,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             if (sameip == 1) {
                 proxyinfo[client].hack.disconnect = false;
                 proxyinfo[client].hack.type = HT_UNKNOWN;
-                hackDetected(ent, client);
+                hackDetected(ent, client, SIGNAL_HACK_UNKNOWN);
                 return false;
             }
             proxyinfo[client].hack.disconnect = false;
@@ -2909,7 +3034,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             proxyinfo[client].checked_hacked_exe = 1;
             if (*ratte == 0) {
                 proxyinfo[client].hack.type = HT_USERINFO;
-                hackDetected(ent, client);
+                hackDetected(ent, client, SIGNAL_WONKY_USERINFO);
                 return false;
             }
         }
@@ -2920,7 +3045,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         // alias cmd unsupported, it just printed the alias
         if (Q_stricmp(cmd, proxyinfo[client].alias_test_str1) == 0) {
             proxyinfo[client].hack.type = HT_ALIAS;
-            hackDetected(ent, client);
+            hackDetected(ent, client, SIGNAL_ALIAS_UNSUPPORTED);
             return false;
         }
         // client sent back the value of the alias, normal behavior.
