@@ -21,12 +21,12 @@ typedef struct {
 } disablecmd_t;
 
 bool checkDisabledCommand(char *cmd);
-bool checkfordisablecmd(char *cp, int disablecmd);
+bool checkForDisableCmd(char *cp, int disablecmd);
 void disablecmdRun(int startarg, edict_t *ent, int client);
 void disableDelRun(int startarg, edict_t *ent, int client);
 void displayNextDisable(edict_t *ent, int client, long floodcmd);
 void freeDisableLists(void);
 void listdisablesRun(int startarg, edict_t *ent, int client);
-bool ReadDisableFile(char *disablename);
+bool readDisableFile(char *disablename);
 void readDisableLists(void);
 void reloadDisableFileRun(int startarg, edict_t *ent, int client);
