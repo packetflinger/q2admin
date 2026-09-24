@@ -33,7 +33,10 @@ typedef struct {
     const char *name;
 } signal_def_t;
 
-static const signal_def_t signalDefs[] = {
+// Not const: weights are overridable at runtime/via cfg, see
+// findSignalDef()/signalWeightRun()/signalWeightInit() below. The values
+// here are just the defaults.
+static signal_def_t signalDefs[] = {
     { SIGNAL_AIMBOT_JITTER,      25,                 "aimbot-jitter" },
     { SIGNAL_VPN,                25,                 "vpn" },
     { SIGNAL_CHATFLOOD,          15,                 "chatflood" },
@@ -207,6 +210,99 @@ void evaluateSignalScore(int client) {
             va("%s tripped the signal threshold (score %d/%d): %s", NAME(client), score, signal_score_threshold, signalListString(client))
         );
     }
+}
+
+/**
+ * Looks up a signal_def_t by its display name (case insensitive, as
+ * shown in !signals/signalListString()), for signalWeightRun()/
+ * signalWeightInit() below. NULL if nothing matches.
+ */
+static signal_def_t *findSignalDef(const char *name) {
+    for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
+        if (Q_stricmp((char *) signalDefs[i].name, (char *) name) == 0) {
+            return &signalDefs[i];
+        }
+    }
+    return NULL;
+}
+
+/**
+ * !signal_weight <name> [weight] - with both args, overrides how much
+ * one signal contributes to signalScore(), so an admin can retune
+ * detection sensitivity (including softening/hardening a hack-type
+ * signal's instant-kick weight) without a rebuild. With just <name>,
+ * reports that signal's current weight instead of changing anything -
+ * handy for checking what's currently in effect after a q2admin.cfg
+ * override. <name> is whatever's shown in !signals for that signal (e.g.
+ * "aimbot-jitter", "snap-fire"); the values baked into signalDefs[]
+ * above are just the defaults, overridden here or, more usually, once at
+ * startup from q2admin.cfg (see signalWeightInit() below, which shares
+ * this same lookup).
+ *
+ * SIGNAL_MANUAL and SIGNAL_BAN_ADJUSTMENT are rejected either way: their
+ * contribution comes from a per-client score (manual_signal_score /
+ * ban_signal_score, see signalScore()) rather than this table, so their
+ * table weight is meaningless to set or view.
+ */
+void signalWeightRun(int startarg, edict_t *ent, int client) {
+    char *name;
+    signal_def_t *def;
+    int weight;
+
+    if (gi.argc() < startarg + 1) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] !signal_weight <name> [weight]\n");
+        return;
+    }
+
+    name = gi.argv(startarg);
+    def = findSignalDef(name);
+    if (!def) {
+        gi.cprintf(ent, PRINT_HIGH, "unknown signal \"%s\", see !signals for valid names\n", name);
+        return;
+    }
+    if (def->bit == SIGNAL_MANUAL || def->bit == SIGNAL_BAN_ADJUSTMENT) {
+        gi.cprintf(ent, PRINT_HIGH, "%s's score doesn't come from a fixed weight, can't set/view it here\n", def->name);
+        return;
+    }
+
+    if (gi.argc() < startarg + 2) {
+        gi.cprintf(ent, PRINT_HIGH, "%s weight = %d\n", def->name, def->weight);
+        return;
+    }
+
+    weight = q2a_atoi(gi.argv(startarg + 1));
+    def->weight = weight;
+    gi.cprintf(ent, PRINT_HIGH, "%s weight = %d\n", def->name, weight);
+}
+
+/**
+ * CFGFILE counterpart to signalWeightRun() above: one
+ * "signal_weight <name> <weight>" line per signal to override, read at startup
+ * (readAdminConfig() -> readCfgFile()) so admins can retune signalDefs[]'s
+ * default weights from q2admin.cfg instead of only at runtime via the
+ * console/rcon.
+ */
+void signalWeightInit(char *arg) {
+    char name[32];
+    char *cp = arg;
+    unsigned int i;
+
+    SKIPBLANK(cp);
+    for (i = 0; i < sizeof(name) - 1 && *cp && *cp != ' '; i++, cp++) {
+        name[i] = *cp;
+    }
+    name[i] = 0;
+    SKIPBLANK(cp);
+
+    if (!name[0] || !(*cp == '-' || *cp == '+' || isdigit((unsigned char) *cp))) {
+        return;
+    }
+
+    signal_def_t *def = findSignalDef(name);
+    if (!def || def->bit == SIGNAL_MANUAL || def->bit == SIGNAL_BAN_ADJUSTMENT) {
+        return;
+    }
+    def->weight = q2a_atoi(cp);
 }
 
 /**

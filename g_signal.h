@@ -59,3 +59,5 @@ unsigned int signalForHacktype(hacktype_t h);
 void evaluateSignalScore(int client);
 void signaladdRun(int startarg, edict_t *ent, int client);
 void signalsRun(int startarg, edict_t *ent, int client);
+void signalWeightRun(int startarg, edict_t *ent, int client);
+void signalWeightInit(char *arg);
