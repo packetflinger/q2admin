@@ -38,7 +38,7 @@ int clientMaxVotes = 0;
 /**
  *
  */
-bool ReadVoteFile(char *votename) {
+bool readVoteFile(char *votename) {
     FILE *votefile;
     unsigned int uptoLine = 0;
 
@@ -60,11 +60,8 @@ bool ReadVoteFile(char *votename) {
         if (buffer[len] == '\n') {
             buffer[len] = 0x0;
         }
-
         SKIPBLANK(cp);
-
         uptoLine++;
-
         if (startContains(cp, "SW:") || startContains(cp, "EX:") || startContains(cp, "RE:")) {
             // looks ok, add...
             switch (*cp) {
@@ -78,10 +75,8 @@ bool ReadVoteFile(char *votename) {
                     votecmds[maxvote_cmds].type = VOTE_RE;
                     break;
             }
-
             cp += 3;
             SKIPBLANK(cp);
-
             len = q2a_strlen(cp) + 1;
 
             // zero length command
@@ -89,10 +84,8 @@ bool ReadVoteFile(char *votename) {
                 gi.dprintf("Error loading VOTE from line %d in file %s\n", uptoLine, votename);
                 continue;
             }
-
             votecmds[maxvote_cmds].votecmd = G_Malloc(len);
             q2a_strcpy(votecmds[maxvote_cmds].votecmd, cp);
-
             if (votecmds[maxvote_cmds].type == VOTE_RE) {
                 q_strupr(cp);
                 votecmds[maxvote_cmds].r = re_compile(cp);
@@ -104,9 +97,7 @@ bool ReadVoteFile(char *votename) {
             } else {
                 votecmds[maxvote_cmds].r = 0;
             }
-
             maxvote_cmds++;
-
             if (maxvote_cmds >= VOTE_MAXCMDS) {
                 break;
             }
@@ -135,13 +126,12 @@ void readVoteLists(void) {
     bool ret;
 
     freeVoteLists();
-    ret = ReadVoteFile(configfile_vote->string);
+    ret = readVoteFile(configfile_vote->string);
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_vote->string);
-    if (ReadVoteFile(buffer)) {
+    if (readVoteFile(buffer)) {
         ret = true;
     }
     if (!ret) {
-        // gi.dprintf("WARNING: %s could not be found\n", configfile_vote->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_vote->string), IW_VOTESETUPLOAD, 0.0, true);
     }
 }
@@ -157,7 +147,7 @@ void reloadVoteFileRun(int startarg, edict_t *ent, int client) {
 /**
  *
  */
-bool checkforvotecmd(char *cp, int votecmd) {
+bool checkForVoteCmd(char *cp, int votecmd) {
     int len;
     switch (votecmds[votecmd].type) {
         case VOTE_SW:
@@ -179,7 +169,7 @@ bool checkVoteCommand(char *cp) {
     q2a_strncpy(buffer, cp, sizeof(buffer)-1);
     q_strupr(buffer);
     for (i = 0; i < maxvote_cmds; i++) {
-        if (checkforvotecmd(buffer, i)) {
+        if (checkForVoteCmd(buffer, i)) {
             return true;
         }
     }
@@ -248,14 +238,12 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
     }
 
     cmd = gi.argv(startarg + 1);
-
     if (isBlank(cmd)) {
         gi.cprintf(ent, PRINT_HIGH, VOTECMD);
         return;
     }
 
     len = q2a_strlen(cmd) + 20;
-
     votecmds[maxvote_cmds].votecmd = G_Malloc(len);
     processString(votecmds[maxvote_cmds].votecmd, cmd, len - 1, 0);
 
@@ -277,16 +265,13 @@ void votecmdRun(int startarg, edict_t *ent, int client) {
         case VOTE_SW:
             gi.cprintf(ent, PRINT_HIGH, "%4d SW:\"%s\" added\n", maxvote_cmds + 1, votecmds[maxvote_cmds].votecmd);
             break;
-
         case VOTE_EX:
             gi.cprintf(ent, PRINT_HIGH, "%4d EX:\"%s\" added\n", maxvote_cmds + 1, votecmds[maxvote_cmds].votecmd);
             break;
-
         case VOTE_RE:
             gi.cprintf(ent, PRINT_HIGH, "%4d RE:\"%s\" added\n", maxvote_cmds + 1, votecmds[maxvote_cmds].votecmd);
             break;
     }
-
     maxvote_cmds++;
 }
 
@@ -300,18 +285,13 @@ void voteDelRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, VOTEDELCMD);
         return;
     }
-
     vote = q2a_atoi(gi.argv(startarg));
-
     if (vote < 1 || vote > maxvote_cmds) {
         gi.cprintf(ent, PRINT_HIGH, VOTEDELCMD);
         return;
     }
-
     vote--;
-
     G_Free(votecmds[vote].votecmd);
-
     if (vote + 1 < maxvote_cmds) {
         q2a_memmove((votecmds + vote), (votecmds + vote + 1), sizeof (votecmd_t) * (maxvote_cmds - vote));
     }
@@ -330,7 +310,6 @@ void displayVote(void) {
     for (client = 0; client < maxclients->value; client++) {
         if (proxyinfo[client].inuse) {
             maxclientsused++;
-
             if (proxyinfo[client].clientcommand & CCMD_VOTED) {
                 if (proxyinfo[client].clientcommand & CCMD_VOTEYES) {
                     voteyes++;
@@ -369,7 +348,7 @@ void displayVote(void) {
 /**
  *
  */
-void run_vote(edict_t *ent, int client) {
+void runVote(edict_t *ent, int client) {
     char *votecmd;
 
     if (gi.argc() <= 1) {
@@ -417,16 +396,12 @@ void run_vote(edict_t *ent, int client) {
         }
         return;
     }
-
     votecmd = gi.args();
-
     if (q2a_strchr(votecmd, ';')) {
         gi.cprintf(ent, PRINT_HIGH, "Invalid vote command!\n");
         return;
     }
-
     SKIPBLANK(votecmd);
-
     if (startContains(votecmd, "YES")) {
         if (voteinprogress) {
             proxyinfo[client].clientcommand |= (CCMD_VOTEYES | CCMD_VOTED);
@@ -445,12 +420,10 @@ void run_vote(edict_t *ent, int client) {
         }
         return;
     }
-
     if (voteinprogress) {
         gi.cprintf(ent, PRINT_HIGH, "There is already a vote in progress!\n");
         return;
     }
-
     if (checkVoteCommand(votecmd)) {
         if (voteminclients) {
             int client;
@@ -462,28 +435,23 @@ void run_vote(edict_t *ent, int client) {
                     maxclientsingame++;
                 }
             }
-
             if (voteminclients > maxclientsingame) {
                 gi.cprintf(ent, PRINT_HIGH, "Not enough people to vote.\n");
                 return;
             }
         }
 
-
         // check if allowed to vote at this time...
         if (clientMaxVotes) {
-      
             if (ltime <= 45) {
                 gi.cprintf(ent, PRINT_HIGH, "Recent map change - too soon to vote (please wait).\n");
                 return;
             }
-
             if (proxyinfo[client].votescast == -1) {
                 // not allowed to vote again..
                 gi.cprintf(ent, PRINT_HIGH, "You can't propose any more votes until the next level.\n");
                 return;
             }
-
             // started counting votes?
             if (proxyinfo[client].votetimeout > ltime || clientMaxVoteTimeout == 0) {
                 // exceeded maximum votes allowed?
@@ -506,7 +474,6 @@ void run_vote(edict_t *ent, int client) {
                 proxyinfo[client].votetimeout = ltime + clientMaxVoteTimeout;
             }
         }
-
         voteinprogress = 1;
         votetimeout = ltime + clientVoteTimeout;
         voteremindtimeout = ltime + clientRemindTimeout;
@@ -515,7 +482,6 @@ void run_vote(edict_t *ent, int client) {
         q2a_strcat(cmdvote, "\n");
         q2a_strncpy(votecaller, proxyinfo[client].name, sizeof(votecaller)-1);
         q2a_strcat(votecaller, "\n");
-
         displayVote();
     } else {
         gi.cprintf(ent, PRINT_HIGH, "Invalid vote command specified.\n");
@@ -540,15 +506,12 @@ void checkOnVoting(void) {
                 }
             }
         }
-
         if (votetimeout < ltime || client >= maxclients->value) {
             voteinprogress = 0;
-
             // count votes and run vote command if successful
             for (client = 0; client < maxclients->value; client++) {
                 if (proxyinfo[client].inuse) {
                     maxclientsused++;
-
                     if (proxyinfo[client].clientcommand & CCMD_VOTED) {
                         if (proxyinfo[client].clientcommand & CCMD_VOTEYES) {
                             voteyes++;
@@ -561,9 +524,7 @@ void checkOnVoting(void) {
                 }
                 proxyinfo[client].clientcommand &= ~(CCMD_VOTEYES | CCMD_VOTED);
             }
-
             percent = ((double) voteyes / ((double) maxclientsused - ((double) votecountnovotes ? 0.0 : novote)));
-
             if (percent >= ((double) votepasspercent / 100)) {
                 q2a_strcpy(printstr, "Vote PASSED!");
                 q2a_strncpy(cmdpassedvote, cmdvote, sizeof(cmdpassedvote)-1);
@@ -571,7 +532,6 @@ void checkOnVoting(void) {
             } else {
                 q2a_strcpy(printstr, "Vote FAILED!");
             }
-
             for (client = 0; client < maxclients->value; client++) {
                 if (proxyinfo[client].inuse) {
                     gi.centerprintf(getEnt((client + 1)), "%s\n"

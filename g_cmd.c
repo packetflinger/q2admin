@@ -3195,7 +3195,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         run_lrcon(ent, client);
         return false;
     } else if (vote_enable && Q_stricmp(cmd, clientVoteCommand) == 0) {
-        run_vote(ent, client);
+        runVote(ent, client);
         return false;
     } else if (Q_stricmp(cmd, "showfps") == 0) {
         proxyinfo[client].show_fps = !proxyinfo[client].show_fps;
