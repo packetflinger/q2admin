@@ -11,7 +11,32 @@ int num_admins = 0;
 int num_bypasses = 0;
 
 /**
- * Load admin and bypass users from the config files on disk.
+ * Loads the two separate credential tables q2admin grants elevated
+ * access from: admin_pass[] (q2a_loginfile, default q2a_login.cfg) and
+ * bypass_pass[] (q2a_bypassfile, default q2a_bypass.cfg). They're kept
+ * as two distinct files/tables because they grant two different things -
+ * admin_pass entries carry an ADMIN_LEVEL1-9 bitmask that gates which
+ * in-game moderation commands a player can use once authenticated (see
+ * listAdminCommands()), while bypass_pass entries (per BYPASSFILE's own
+ * "anticheat requirement bypass" comment) exempt a trusted player from
+ * some of q2admin's proxy/bot detection probes rather than granting any
+ * moderation power - conflating the two would mean either every admin
+ * has to also be anticheat-exempt or vice versa.
+ *
+ * Each file is just whitespace-separated "name password level" lines,
+ * read up to MAX_ADMINS entries or EOF. Any table slots beyond what was
+ * actually read are explicitly zeroed out (level = 0) rather than left
+ * as-is, since this isn't only called once at startup - it can be
+ * re-read later via reloadLoginFileRun() without a restart, and without
+ * this a user removed from the file would otherwise keep their old
+ * level from a previous load.
+ *
+ * Takes no parameters; reads moddir plus the two cvars above to find the
+ * files.
+ *
+ * Called from InitGame() (g_init.c) at startup, and from
+ * reloadLoginFileRun() (below) so an admin can reload the credential
+ * files live via console/rcon without restarting the server.
  */
 void readAdminConfig(void) {
     FILE *f;
@@ -71,7 +96,24 @@ file2:
 }
 
 /**
- * Show an admin what commands they are permitted to use
+ * Prints the specific in-game admin commands a player has just unlocked.
+ * ADMIN_LEVEL1-9 (g_admin.h) is a bitmask, and a player's granted level
+ * (proxyinfo[client].admin_level, set from the entry getAdminLevel()
+ * matched in admin_pass[]) can be any combination of those bits -
+ * without this, a freshly authenticated admin would have no way to know
+ * which of the level-gated commands they actually have access to. Each
+ * command is only printed if its level bit is set, and !writewhois
+ * (ADMIN_LEVEL8) is additionally gated on whois_active, since that
+ * command is meaningless if the whois tracking feature itself is off.
+ * ADMIN_LEVEL7 and ADMIN_LEVEL9 currently have no command mapped here to
+ * list (see the "???" against them in g_admin.h).
+ *
+ * ent:    who to print the list to.
+ * client: their client index, used to read proxyinfo[client].admin_level.
+ *
+ * Called from doClientCommand()'s "!admin" handling (g_cmd.c),
+ * immediately after a successful admin login, to show the player what
+ * they just gained access to.
  */
 void listAdminCommands(edict_t *ent, int client) {
     if (proxyinfo[client].admin_level & ADMIN_LEVEL1) {
@@ -110,7 +152,31 @@ void reloadLoginFileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- * Get the bypass level associated with a particular user entry
+ * Checks a name+password pair a player typed via "!bypass <name>
+ * <password>" against the bypass_pass[] table loaded by
+ * readAdminConfig(), and returns the level to grant if it matches - the
+ * credential check behind bypass_pass entries' "anticheat requirement
+ * bypass" purpose (see BYPASSFILE), letting a trusted player be exempted
+ * from some of q2admin's proxy/bot detection probes. Mirrors
+ * getAdminLevel() below, just for the bypass table instead of the admin
+ * one.
+ *
+ * Stops at the first bypass_pass[i].level == 0 entry as a defensive
+ * check, though that shouldn't actually trigger in normal operation -
+ * readAdminConfig() only ever fills bypass_pass[0..num_bypasses) with
+ * entries that already have level > 0.
+ *
+ * givenpass: the password the player typed. Note the parameter order -
+ *            password first, then name - matches how the caller passes
+ *            gi.argv(2)/gi.argv(1) (the command is "!bypass name pass"),
+ *            so don't swap them when calling this.
+ * givenname: the name the player typed.
+ *
+ * Returns the matched entry's level (> 0) on a match, 0 if nothing in
+ * bypass_pass[] matches both the name and password exactly.
+ *
+ * Called from doClientCommand()'s "!bypass" handling (g_cmd.c) to decide
+ * what to set proxyinfo[client].bypass_level to.
  */
 int getBypassLevel(char *givenpass, char *givenname) {
     int got_level = 0;
@@ -128,13 +194,35 @@ int getBypassLevel(char *givenpass, char *givenname) {
 }
 
 /**
- * Get the admin level associated with a particular user entry
+ * Checks a name+password pair a player typed via "!admin <name>
+ * <password>" against the admin_pass[] table loaded by
+ * readAdminConfig(), and returns the ADMIN_LEVEL1-9 bitmask to grant if
+ * it matches - the credential check behind in-game admin access.
+ * Mirrors getBypassLevel() above, just against the admin table instead
+ * of the bypass one.
+ *
+ * Stops at the first admin_pass[i].level == 0 entry as a defensive
+ * check, though that shouldn't actually trigger in normal operation -
+ * readAdminConfig() only ever fills admin_pass[0..num_admins) with
+ * entries that already have level > 0.
+ *
+ * givenpass: the password the player typed. Note the parameter order -
+ *            password first, then name - matches how the caller passes
+ *            gi.argv(2)/gi.argv(1) (the command is "!admin name pass"),
+ *            so don't swap them when calling this.
+ * givenname: the name the player typed.
+ *
+ * Returns the matched entry's level bitmask (> 0) on a match, 0 if
+ * nothing in admin_pass[] matches both the name and password exactly.
+ *
+ * Called from doClientCommand()'s "!admin" handling (g_cmd.c) to decide
+ * what to set proxyinfo[client].admin_level to before calling
+ * listAdminCommands() to show the player what they just gained access to.
  */
 int getAdminLevel(char *givenpass, char *givenname) {
     int got_level = 0;
-    unsigned int i;
 
-    for (i = 0; i < num_admins; i++) {
+    for (unsigned int i = 0; i < num_admins; i++) {
         if (!admin_pass[i].level)
             break;
         if ((strcmp(givenpass, admin_pass[i].password) == 0) && (strcmp(givenname, admin_pass[i].name) == 0)) {
@@ -160,8 +248,24 @@ void adm_players(edict_t *ent, int client) {
 }
 
 /**
- * Admin command to display the current (from the previous ClientThink run)
- * msec value for each player connected.
+ * !dumpmsec - prints every currently-active client's msec total from
+ * their last completed msec-tracking window (proxyinfo[i].msec.previous)
+ * - not a live, per-frame value. ClientThink() (g_client.c) accumulates
+ * ucmd->msec into msec.total continuously and only snapshots it into
+ * msec.previous once every msec.timespan seconds when that window rolls
+ * over, so this shows however that window last closed out, which could
+ * be up to msec.timespan seconds stale.
+ *
+ * This exists so an admin can manually eyeball the same msec numbers
+ * ClientThink()'s automatic speedhack detection (msec.max_allowed/
+ * min_required) is comparing against, independent of whatever action
+ * (freeze, kick) that detection already took.
+ *
+ * ent:    who to print the results to.
+ * client: the invoking admin's client index; unused here.
+ *
+ * Called from doAdminCommand() (g_admin.c), gated on ADMIN_LEVEL2, when
+ * an authenticated admin issues "!dumpmsec".
  */
 void adm_dumpmsec(edict_t *ent, int client) {
     gi.cprintf(ent, PRINT_HIGH, "Player MSEC Values:\n");
