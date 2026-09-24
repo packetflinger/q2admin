@@ -34,7 +34,7 @@ int whois_active = 0;
  * players, so pass 3 can still surface those names from the stored list.
  *
  * client: the invoking player's index. Not used for the lookup itself -
- *         it's passed to whois_dumpdetails(), which decides from their
+ *         it's passed to whoisDumpDetails(), which decides from their
  *         admin level whether IPs are included in the output.
  * ent:    who to print the results to.
  *
@@ -70,7 +70,7 @@ void whois(int client, edict_t *ent) {
                 return;
             }
             gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for client %i\n", temp);
-            whois_dumpdetails(client, ent, proxyinfo[temp].userid);
+            whoisDumpDetails(client, ent, proxyinfo[temp].userid);
             return;
         }
 
@@ -85,7 +85,7 @@ void whois(int client, edict_t *ent) {
                     return;
                 }
                 gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for %s\n", proxyinfo[i].name);
-                whois_dumpdetails(client, ent, proxyinfo[i].userid);
+                whoisDumpDetails(client, ent, proxyinfo[i].userid);
                 //got match, dump details
                 return;
             }
@@ -109,7 +109,7 @@ void whois(int client, edict_t *ent) {
                     ((q2a_strcmp(whois_details[i].dyn[8].name, a1) == 0)) ||
                     ((q2a_strcmp(whois_details[i].dyn[9].name, a1) == 0))) {
                 gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for %s\n", a1);
-                whois_dumpdetails(client, ent, i);
+                whoisDumpDetails(client, ent, i);
                 //got a match, dump details
                 return;
             }
@@ -138,7 +138,7 @@ void whois(int client, edict_t *ent) {
  *
  * Called from whois() above, from each of its three lookup passes.
  */
-void whois_dumpdetails(int client, edict_t *ent, int userid) {
+void whoisDumpDetails(int client, edict_t *ent, int userid) {
     unsigned int i;
     for (i = 0; i < 10; i++) {
         if (whois_details[userid].dyn[i].name[0]) {
@@ -271,7 +271,7 @@ void whoisGetID(int client, edict_t *ent) {
 
 /**
  * Stamps a client's whois record with the current wall clock time, so
- * whois_dumpdetails() can report how long ago that identity was last
+ * whoisDumpDetails() can report how long ago that identity was last
  * around - useful context when an admin is looking at a name and trying
  * to work out whether it's a regular or someone who turned up once. Uses
  * ctime() and trims the newline it tacks on, leaving a human-readable
