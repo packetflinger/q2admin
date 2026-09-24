@@ -10,7 +10,37 @@ int WHOIS_COUNT = 0;
 int whois_active = 0;
 
 /**
+ * The "whois <name|id>" player command - looks up the alias history
+ * q2admin has been quietly accumulating for a player, so anyone can see
+ * what other names a given player has connected under. Records are keyed
+ * by IP (see whois_getid()), which is what lets a player who renames, or
+ * who left and came back, still be tied back to their earlier names.
  *
+ * Resolves the argument in three passes, stopping at the first hit:
+ *   1. as a client slot number, if it parses as one in range (so
+ *      "whois 3" works straight off the !players / adm_players list),
+ *   2. as an exact name match against currently connected players
+ *      (despite the inline comment below claiming partial matching, this
+ *      is a plain strcmp),
+ *   3. as an exact match against any of the 10 remembered aliases of
+ *      every stored record - this pass is what finds players who aren't
+ *      connected right now.
+ *
+ * A target carrying ADMIN_LEVEL7 is refused at passes 1 and 2 ("Unable
+ * to fetch info"). That's the one and only thing that level bit does
+ * anywhere in q2admin (it's marked "???" in g_admin.h): it's not a
+ * command grant, it's a privacy flag that keeps an admin's own identity
+ * history from being looked up. Note it's only checked against connected
+ * players, so pass 3 can still surface those names from the stored list.
+ *
+ * client: the invoking player's index. Not used for the lookup itself -
+ *         it's passed to whois_dumpdetails(), which decides from their
+ *         admin level whether IPs are included in the output.
+ * ent:    who to print the results to.
+ *
+ * Called from doClientCommand() (g_cmd.c) when a player types "whois",
+ * gated on whois_active. Unlike the "!" commands this needs no admin
+ * level - any player can run it.
  */
 void whois(int client, edict_t *ent) {
     char a1[256];
@@ -90,7 +120,23 @@ void whois(int client, edict_t *ent) {
 }
 
 /**
+ * Prints one stored whois record: its remembered aliases (up to 10,
+ * numbered, skipping empty slots) followed by when that record was last
+ * seen connecting.
  *
+ * The record's IP is appended to each line only if the *requesting*
+ * player has any admin level at all - that's the privacy split here.
+ * Ordinary players can see that a set of names belong to one person,
+ * which is the point of the feature, without being handed the address
+ * tying those names to a real machine; admins get the address too, since
+ * that's what they'd need to act on it (bans are IP-based).
+ *
+ * client: the requesting player's index, used only for that admin_level
+ *         check - not the player being looked up.
+ * ent:    who to print to.
+ * userid: index into whois_details of the record to print.
+ *
+ * Called from whois() above, from each of its three lookup passes.
  */
 void whois_dumpdetails(int client, edict_t *ent, int userid) {
     unsigned int i;
@@ -107,7 +153,26 @@ void whois_dumpdetails(int client, edict_t *ent, int userid) {
 }
 
 /**
+ * Starts a brand new whois record for a client who didn't match an
+ * existing one: stores their IP as the record's key, seeds the first
+ * alias slot with the name they're using now, and points
+ * proxyinfo[client].userid at it so later renames (whois_newname()) and
+ * lookups know which record is theirs.
  *
+ * Once the table is full (WHOIS_COUNT >= whois_active, the cfg-set size
+ * whois_details was allocated with) this steps WHOIS_COUNT back one and
+ * writes over that slot, so it's always the most recently added record
+ * that gets clobbered - older history is kept indefinitely and never
+ * ages out, and the table effectively stops growing rather than cycling.
+ * Raising whois_active is the only way to keep more records.
+ *
+ * client: the client index to build the record from (its IP and current
+ *         name) and to assign the resulting userid to.
+ * ent:    unused here.
+ *
+ * Called from whois_getid() below when no stored record matches the
+ * connecting IP, and from checkForNameChange() (g_init.c) for a client
+ * who renames while still having no record.
  */
 void whois_adduser(int client, edict_t *ent) {
     if (WHOIS_COUNT >= whois_active) {
@@ -121,7 +186,27 @@ void whois_adduser(int client, edict_t *ent) {
 }
 
 /**
+ * Files the client's current name into their whois record's alias list -
+ * the actual act of "remembering" a name, and so the thing that builds
+ * up the history whois() later reports.
  *
+ * Fills the first empty one of the 10 slots, and bails out early if the
+ * name is already recorded, so repeatedly reconnecting under the same
+ * name doesn't consume the whole list. Once all 10 are full it shifts
+ * every entry down one - dropping the oldest, slot 0 - and appends the
+ * new name at slot 9, making the alias list a 10-deep FIFO of the most
+ * recent distinct names.
+ *
+ * A client with no record yet (userid == -1) is handed to whois_getid()
+ * to get one; that in turn calls back here once it has, which is safe
+ * because it only does so after a userid has been assigned.
+ *
+ * client: the client whose current proxyinfo name is being recorded.
+ * ent:    only passed through to whois_getid().
+ *
+ * Called from checkForNameChange() (g_init.c) whenever a client renames
+ * mid-game, and from whois_getid() when a returning player's record is
+ * matched, to catch the name they came back under.
  */
 void whois_newname(int client, edict_t *ent) {
     //called when a client changes name
@@ -151,7 +236,24 @@ void whois_newname(int client, edict_t *ent) {
 }
 
 /**
+ * Ties a connecting client to their whois record, creating one if this
+ * is an address that's never been seen. Scans the stored records for one
+ * whose IP matches theirs and, on a hit, adopts that record's index as
+ * proxyinfo[client].userid and records whatever name they've turned up
+ * under this time (whois_newname()); otherwise hands off to
+ * whois_adduser() to start a fresh record.
  *
+ * The IP is the identity here - that's what makes the whole feature
+ * work, since it's the one thing a player can't trivially change between
+ * sessions the way they can a name, so it's what lets a rename or a
+ * reconnect still be linked to the same alias history.
+ *
+ * client: the connecting client, whose IP is matched and whose userid is
+ *         set.
+ * ent:    only passed through to whois_newname()/whois_adduser().
+ *
+ * Called from ClientConnect() (g_init.c) when whois_active is set, and
+ * from whois_newname() for a client that somehow has no record yet.
  */
 void whois_getid(int client, edict_t *ent) {
     //called when a client connects
@@ -168,7 +270,23 @@ void whois_getid(int client, edict_t *ent) {
 }
 
 /**
+ * Stamps a client's whois record with the current wall clock time, so
+ * whois_dumpdetails() can report how long ago that identity was last
+ * around - useful context when an admin is looking at a name and trying
+ * to work out whether it's a regular or someone who turned up once. Uses
+ * ctime() and trims the newline it tacks on, leaving a human-readable
+ * string that gets written to whois.dat verbatim.
  *
+ * Does nothing for a client with no record yet (userid < 0), so it's
+ * safe to call before whois_getid() has assigned one.
+ *
+ * client: whose record to stamp.
+ * ent:    unused here.
+ *
+ * Called from ClientConnect() (g_init.c), right after whois_getid().
+ * Note the inline comment below says connect *and* disconnect, but only
+ * the connect half is actually wired up - so "last seen" really means
+ * "last connected", not when they left.
  */
 void whois_update_seen(int client, edict_t *ent) {
     //to be called on client connect and disconnect
@@ -181,7 +299,32 @@ void whois_update_seen(int client, edict_t *ent) {
 }
 
 /**
+ * Serializes the whole whois table to moddir/whois.dat so the alias
+ * history survives a server restart - without this the table would only
+ * ever be as good as the current uptime, which would defeat the point of
+ * tracking identities over time.
  *
+ * One record per line, whitespace separated: id, ip, last-seen, then all
+ * 10 alias slots. Because whois_read_file() parses that back with
+ * fscanf("%s"), any embedded space would split one field into two and
+ * knock the whole line's columns out of alignment - so every space is
+ * written as '?' and turned back on read. The last-seen field is the
+ * reason this matters at all: ctime() strings are full of spaces. Empty
+ * alias slots are written as a lone '?' so all 10 columns are always
+ * present and positional.
+ *
+ * That encoding is lossy in one direction: a name that genuinely
+ * contains '?' comes back with spaces in place of them.
+ *
+ * Records with no IP are skipped, since the IP is the record's key and
+ * one without it could never be matched again anyway.
+ *
+ * Takes no parameters; writes the global whois_details table.
+ *
+ * Called from ShutdownGame() (g_main.c) so the table is flushed on the
+ * way down, and from the ADMIN_LEVEL8 "!writewhois" command in
+ * doAdminCommand() (g_admin.c) to checkpoint it on demand without
+ * restarting.
  */
 void whois_write_file(void) {
     //file format...?
@@ -249,7 +392,26 @@ void whois_write_file(void) {
 }
 
 /**
+ * Loads moddir/whois.dat back into the table, reversing what
+ * whois_write_file() encoded: '?' characters become spaces again, and an
+ * alias slot that's just the placeholder becomes an empty slot rather
+ * than a literal "?" name.
  *
+ * The placeholder test also accepts a leading byte of 255/-1 (the same
+ * value either way, depending on whether char is signed on this
+ * platform) - that's an older whois.dat format that used a raw 0xFF byte
+ * where '?' is used now, so pre-existing files still load.
+ *
+ * Reads at most whois_active records, which is exactly how many
+ * whois_details was allocated for in InitGame(), so a file grown larger
+ * than the current setting is truncated rather than overrunning the
+ * table. WHOIS_COUNT is reset first, so this replaces the in-memory
+ * table outright rather than merging into it.
+ *
+ * Takes no parameters; fills the global whois_details table.
+ *
+ * Called from InitGame() (g_init.c) right after the table is allocated,
+ * and from reloadWhoisFileRun() below.
  */
 void whois_read_file(void) {
     FILE *f;
@@ -317,7 +479,22 @@ void whois_read_file(void) {
 }
 
 /**
- * A human instructed q2admin to reload the whois data file
+ * "!reloadwhoisfile" - re-reads whois.dat from disk, for picking up a
+ * file that was edited or replaced outside the server without having to
+ * restart it.
+ *
+ * Two things worth knowing before using it: whois_read_file() replaces
+ * the in-memory table outright, so any names recorded since the last
+ * whois_write_file() are discarded; and connected players keep the
+ * proxyinfo[].userid they were already assigned, which after a reload
+ * may index a different record than it did before.
+ *
+ * startarg: unused, this command takes no arguments.
+ * ent:      who to confirm to.
+ * client:   unused here.
+ *
+ * Called via the "reloadwhoisfile" entry in q2aCommands[] (g_cmd.c),
+ * from an in-game admin console or rcon.
  */
 void reloadWhoisFileRun(int startarg, edict_t *ent, int client) {
     whois_read_file();
