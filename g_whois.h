@@ -8,6 +8,10 @@
 #define WHOISFILE   "whois.dat"
 #define WHOISIPLEN  50
 #define WHOISNAMELEN 16
+// Aliases remembered per record, oldest dropped first. Changing this also
+// means reworking the fixed 13-field fscanf() in whoisReadFile(), which is
+// the one place the slot count can't be driven from here.
+#define WHOISNAMES  10
 
 typedef struct {
     char name[WHOISNAMELEN];
@@ -17,7 +21,7 @@ typedef struct {
     int id;
     char ip[WHOISIPLEN]; // allow for ipv6
     char seen[32];
-    user_dyn_t dyn[10];
+    user_dyn_t dyn[WHOISNAMES];
 } user_details_t;
 
 extern int WHOIS_COUNT;

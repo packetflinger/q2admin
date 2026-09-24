@@ -9,6 +9,25 @@ user_details_t *whois_details;
 int WHOIS_COUNT = 0;
 int whois_active = 0;
 
+// whois.dat is whitespace separated and read back with fscanf("%s"), so an
+// embedded space would split one field into two and knock the rest of the
+// line's columns out of alignment. Spaces are written as this placeholder
+// instead and swapped back on read.
+#define WHOIS_SPACE '?'
+
+/**
+ * Replaces every `from` character in a string with `to`, in place. Used
+ * either side of the whois.dat round trip to apply and undo the
+ * WHOIS_SPACE encoding above.
+ */
+static void swapChars(char *s, char from, char to) {
+    for (; *s; s++) {
+        if (*s == from) {
+            *s = to;
+        }
+    }
+}
+
 /**
  * The "whois <name|id>" player command - looks up the alias history
  * q2admin has been quietly accumulating for a player, so anyone can see
@@ -22,9 +41,9 @@ int whois_active = 0;
  *   2. as an exact name match against currently connected players
  *      (despite the inline comment below claiming partial matching, this
  *      is a plain strcmp),
- *   3. as an exact match against any of the 10 remembered aliases of
- *      every stored record - this pass is what finds players who aren't
- *      connected right now.
+ *   3. as an exact match against any of the WHOISNAMES remembered
+ *      aliases of every stored record - this pass is what finds players
+ *      who aren't connected right now.
  *
  * A target carrying ADMIN_LEVEL7 is refused at passes 1 and 2 ("Unable
  * to fetch info"). That's the one and only thing that level bit does
@@ -44,7 +63,7 @@ int whois_active = 0;
  */
 void whois(int client, edict_t *ent) {
     char a1[256];
-    unsigned int i;
+    unsigned int i, j;
     int temp;
 
     if (gi.argc() < 2) {
@@ -93,36 +112,24 @@ void whois(int client, edict_t *ent) {
     }
     //then if still no match process our stored list
     for (i = 0; i < WHOIS_COUNT; i++) {
-        if ((whois_details[i].dyn[0].name[0]) || (whois_details[i].dyn[1].name[0]) || (whois_details[i].dyn[2].name[0]) ||
-                (whois_details[i].dyn[3].name[0]) || (whois_details[i].dyn[4].name[0]) || (whois_details[i].dyn[5].name[0]) ||
-                (whois_details[i].dyn[6].name[0]) || (whois_details[i].dyn[7].name[0]) || (whois_details[i].dyn[8].name[0]) ||
-                (whois_details[i].dyn[9].name[0])) {
-            //r1ch: wtf?
-            if (((q2a_strcmp(whois_details[i].dyn[0].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[1].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[2].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[3].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[4].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[5].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[6].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[7].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[8].name, a1) == 0)) ||
-                    ((q2a_strcmp(whois_details[i].dyn[9].name, a1) == 0))) {
+        for (j = 0; j < WHOISNAMES; j++) {
+            if (!whois_details[i].dyn[j].name[0]) {
+                continue;
+            }
+            if (q2a_strcmp(whois_details[i].dyn[j].name, a1) == 0) {
                 gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for %s\n", a1);
                 whoisDumpDetails(client, ent, i);
-                //got a match, dump details
                 return;
             }
-
         }
     }
     gi.cprintf(ent, PRINT_HIGH, "  No entry found for %s\n", a1);
 }
 
 /**
- * Prints one stored whois record: its remembered aliases (up to 10,
- * numbered, skipping empty slots) followed by when that record was last
- * seen connecting.
+ * Prints one stored whois record: its remembered aliases (up to
+ * WHOISNAMES of them, numbered, skipping empty slots) followed by when
+ * that record was last seen connecting.
  *
  * The record's IP is appended to each line only if the *requesting*
  * player has any admin level at all - that's the privacy split here.
@@ -140,7 +147,7 @@ void whois(int client, edict_t *ent) {
  */
 void whoisDumpDetails(int client, edict_t *ent, int userid) {
     unsigned int i;
-    for (i = 0; i < 10; i++) {
+    for (i = 0; i < WHOISNAMES; i++) {
         if (whois_details[userid].dyn[i].name[0]) {
             if (!proxyinfo[client].admin_level) {
                 gi.cprintf(ent, PRINT_HIGH, "    %02i. %s\n", i + 1, whois_details[userid].dyn[i].name);
@@ -190,12 +197,12 @@ void whoisAddUser(int client, edict_t *ent) {
  * the actual act of "remembering" a name, and so the thing that builds
  * up the history whois() later reports.
  *
- * Fills the first empty one of the 10 slots, and bails out early if the
- * name is already recorded, so repeatedly reconnecting under the same
- * name doesn't consume the whole list. Once all 10 are full it shifts
- * every entry down one - dropping the oldest, slot 0 - and appends the
- * new name at slot 9, making the alias list a 10-deep FIFO of the most
- * recent distinct names.
+ * Fills the first empty one of the WHOISNAMES slots, and bails out early
+ * if the name is already recorded, so repeatedly reconnecting under the
+ * same name doesn't consume the whole list. Once they're all full it
+ * shifts every entry down one - dropping the oldest, slot 0 - and
+ * appends the new name at the end, making the alias list a FIFO of the
+ * most recent distinct names.
  *
  * A client with no record yet (userid == -1) is handed to whoisGetID()
  * to get one; that in turn calls back here once it has, which is safe
@@ -210,29 +217,34 @@ void whoisAddUser(int client, edict_t *ent) {
  */
 void whoisNewName(int client, edict_t *ent) {
     //called when a client changes name
+    user_dyn_t *names;
+    char *newname = proxyinfo[client].name;
     unsigned int i;
 
     if (proxyinfo[client].userid == -1) {
         whoisGetID(client, ent);
         return;
-    } else {
-        for (i = 0; i < 10; i++) {
-            if (!whois_details[proxyinfo[client].userid].dyn[i].name[0]) {
-                //this is empty, so add here
-                q2a_strcpy(whois_details[proxyinfo[client].userid].dyn[i].name, proxyinfo[client].name);
-                return;
-            }
-            if (q2a_strcmp(whois_details[proxyinfo[client].userid].dyn[i].name, proxyinfo[client].name) == 0) {
-                //the name already exists, return
-                return;
-            }
+    }
+
+    names = whois_details[proxyinfo[client].userid].dyn;
+
+    for (i = 0; i < WHOISNAMES; i++) {
+        if (!names[i].name[0]) {
+            //this is empty, so add here
+            q2a_strcpy(names[i].name, newname);
+            return;
+        }
+        if (q2a_strcmp(names[i].name, newname) == 0) {
+            //the name already exists, return
+            return;
         }
     }
+
     //if we got here we have a new name but no free slots, so remove 1 for insertion
-    for (i = 0; i < 9; i++) {
-        q2a_strcpy(whois_details[proxyinfo[client].userid].dyn[i].name, whois_details[proxyinfo[client].userid].dyn[i + 1].name);
+    for (i = 0; i < WHOISNAMES - 1; i++) {
+        q2a_strcpy(names[i].name, names[i + 1].name);
     }
-    q2a_strcpy(whois_details[proxyinfo[client].userid].dyn[9].name, proxyinfo[client].name);
+    q2a_strcpy(names[WHOISNAMES - 1].name, newname);
 }
 
 /**
@@ -305,16 +317,15 @@ void whoisUpdateSeen(int client, edict_t *ent) {
  * tracking identities over time.
  *
  * One record per line, whitespace separated: id, ip, last-seen, then all
- * 10 alias slots. Because whoisReadFile() parses that back with
- * fscanf("%s"), any embedded space would split one field into two and
- * knock the whole line's columns out of alignment - so every space is
- * written as '?' and turned back on read. The last-seen field is the
- * reason this matters at all: ctime() strings are full of spaces. Empty
- * alias slots are written as a lone '?' so all 10 columns are always
- * present and positional.
+ * WHOISNAMES alias slots. Spaces are swapped for WHOIS_SPACE on the way
+ * out (see the note on that define above for why), and an empty alias
+ * slot is written as a lone placeholder so the columns stay positional.
+ * The last-seen field is the reason the encoding is needed at all:
+ * ctime() strings are full of spaces.
  *
  * That encoding is lossy in one direction: a name that genuinely
- * contains '?' comes back with spaces in place of them.
+ * contains the placeholder character comes back with spaces in place of
+ * it.
  *
  * Records with no IP are skipped, since the IP is the record's key and
  * one without it could never be matched again anyway.
@@ -335,8 +346,7 @@ void whoisWriteFile(void) {
     FILE *f;
     char name[256];
     char temp[256];
-    int temp_len;
-    unsigned int i, j, k;
+    unsigned int i, j;
 
     Q_snprintf(name, sizeof(name), "%s/%s", moddir, WHOISFILE);
 
@@ -351,40 +361,22 @@ void whoisWriteFile(void) {
         }
 
         q2a_strncpy(temp, whois_details[i].ip, sizeof(temp)-1);
-        temp_len = strlen(temp);
-
-        //convert spaces to �
-        for (j = 0; j < temp_len; j++) {
-            if (temp[j] == ' ') {
-                temp[j] = '?';
-            }
-        }
+        swapChars(temp, ' ', WHOIS_SPACE);
         fprintf(f, "%i %s ", whois_details[i].id, temp);
 
         q2a_strncpy(temp, whois_details[i].seen, sizeof(temp)-1);
-        temp_len = strlen(temp);
-
-        for (j = 0; j < temp_len; j++) {
-            if (temp[j] == ' ') {
-                temp[j] = '?';
-            }
-        }
+        swapChars(temp, ' ', WHOIS_SPACE);
         fprintf(f, "%s ", temp);
 
-        for (j = 0; j < 10; j++) {
-            if (whois_details[i].dyn[j].name[0]) {
-                q2a_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp)-1);
-                temp_len = strlen(temp);
-
-                for (k = 0; k < temp_len; k++) {
-                    if (temp[k] == ' ') {
-                        temp[k] = '?';
-                    }
-                }
-                fprintf(f, "%s ", temp);
-            } else {
-                fprintf(f, "? ");
+        for (j = 0; j < WHOISNAMES; j++) {
+            if (!whois_details[i].dyn[j].name[0]) {
+                //keep the column count fixed, an empty slot is a lone placeholder
+                fprintf(f, "%c ", WHOIS_SPACE);
+                continue;
             }
+            q2a_strncpy(temp, whois_details[i].dyn[j].name, sizeof(temp)-1);
+            swapChars(temp, ' ', WHOIS_SPACE);
+            fprintf(f, "%s ", temp);
         }
         fprintf(f, "\n");
     }
@@ -393,14 +385,14 @@ void whoisWriteFile(void) {
 
 /**
  * Loads moddir/whois.dat back into the table, reversing what
- * whoisWriteFile() encoded: '?' characters become spaces again, and an
- * alias slot that's just the placeholder becomes an empty slot rather
- * than a literal "?" name.
+ * whoisWriteFile() encoded: WHOIS_SPACE characters become spaces again,
+ * and an alias slot that's just the placeholder becomes an empty slot
+ * rather than a one-character name.
  *
  * The placeholder test also accepts a leading byte of 255/-1 (the same
  * value either way, depending on whether char is signed on this
  * platform) - that's an older whois.dat format that used a raw 0xFF byte
- * where '?' is used now, so pre-existing files still load.
+ * where WHOIS_SPACE is used now, so pre-existing files still load.
  *
  * Reads at most whois_active records, which is exactly how many
  * whois_details was allocated for in InitGame(), so a file grown larger
@@ -416,8 +408,7 @@ void whoisWriteFile(void) {
 void whoisReadFile(void) {
     FILE *f;
     char name[256];
-    unsigned int i, j;
-    int temp_len, name_len;
+    unsigned int i;
 
     Q_snprintf(name, sizeof(name), "%s/%s", moddir, WHOISFILE);
     q2a_printf("reading whois file: %s\n", name);
@@ -444,33 +435,18 @@ void whoisReadFile(void) {
                 whois_details[WHOIS_COUNT].dyn[8].name,
                 whois_details[WHOIS_COUNT].dyn[9].name);
 
-        //convert all � back to spaces
-        temp_len = strlen(whois_details[WHOIS_COUNT].ip);
-        for (i = 0; i < temp_len; i++) {
-            if (whois_details[WHOIS_COUNT].ip[i] == '?') {
-                whois_details[WHOIS_COUNT].ip[i] = ' ';
-            }
-        }
+        //convert all placeholders back to spaces
+        swapChars(whois_details[WHOIS_COUNT].ip, WHOIS_SPACE, ' ');
+        swapChars(whois_details[WHOIS_COUNT].seen, WHOIS_SPACE, ' ');
 
-        temp_len = strlen(whois_details[WHOIS_COUNT].seen);
-        for (i = 0; i < temp_len; i++) {
-            if (whois_details[WHOIS_COUNT].seen[i] == '?') {
-                whois_details[WHOIS_COUNT].seen[i] = ' ';
-            }
-        }
+        for (i = 0; i < WHOISNAMES; i++) {
+            char *slot = whois_details[WHOIS_COUNT].dyn[i].name;
 
-        for (i = 0; i < 10; i++) {
-            if ((whois_details[WHOIS_COUNT].dyn[i].name[0] == 255)
-                    || (whois_details[WHOIS_COUNT].dyn[i].name[0] == -1)
-                    || (whois_details[WHOIS_COUNT].dyn[i].name[0] == '?')) {
-                whois_details[WHOIS_COUNT].dyn[i].name[0] = 0;
+            // 255/-1 is the raw byte an older whois.dat used for an empty slot
+            if (slot[0] == 255 || slot[0] == -1 || slot[0] == WHOIS_SPACE) {
+                slot[0] = 0;
             } else {
-                name_len = strlen(whois_details[WHOIS_COUNT].dyn[i].name);
-                for (j = 0; j < name_len; j++) {
-                    if (whois_details[WHOIS_COUNT].dyn[i].name[j] == '?') {
-                        whois_details[WHOIS_COUNT].dyn[i].name[j] = ' ';
-                    }
-                }
+                swapChars(slot, WHOIS_SPACE, ' ');
             }
         }
         WHOIS_COUNT++;
