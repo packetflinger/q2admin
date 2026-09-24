@@ -44,7 +44,7 @@ void LookupVPNStatus(edict_t *ent) {
     proxyinfo[i].dl.onFinish = FinishVPNLookup;
     Q_strncpy(pi->dl.path, request, sizeof(pi->dl.path)-1);
 
-    HTTP_QueueDownload(&proxyinfo[i].dl);
+    httpQueueDownload(&proxyinfo[i].dl);
 }
 
 /**
@@ -263,7 +263,7 @@ void IPLogsCheckVPN(edict_t *ent) {
     pi->iplogs.state = IPLOGS_CHECKING;
 
     q2a_printf("checking %s for proxy/vpn\n", addr);
-    HTTP_QueueDownload(dl);
+    httpQueueDownload(dl);
 }
 
 /**

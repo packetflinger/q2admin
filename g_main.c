@@ -132,7 +132,7 @@ void ShutdownGame(void) {
  *    exec, MOTD, pending vote command execution, and kick/disconnect
  *    handling - then enforces that client's response deadlines
  *    (checkClientDeadlines) if enforce_deadlines is set
- *  - drives non-blocking HTTP downloads forward (HTTP_RunDownloads),
+ *  - drives non-blocking HTTP downloads forward (httpRunDownloads),
  *    which is what actually makes progress on the VPN/IPLogs API checks
  *    queued elsewhere
  *  - as an optimization, framesperprocess can skip q2admin's own
@@ -843,7 +843,7 @@ void G_RunFrame(void) {
         client = -1;
     }
     checkOnVoting();
-    HTTP_RunDownloads();
+    httpRunDownloads();
 
     profile_start(2);
     ge_mod->RunFrame();

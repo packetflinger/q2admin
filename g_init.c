@@ -609,7 +609,7 @@ void InitGame(void) {
     }
 
     profile_stop(1, "q2admin->InitGame", 0, NULL);
-    HTTP_Init();
+    httpInit();
     CA_Init();
 }
 

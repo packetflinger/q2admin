@@ -108,7 +108,7 @@ bool acReadRemoteHashListFile(char *bfname, char *blname) {
     file.data = G_Malloc(file.size);
     file.index = 0;
 
-    HTTP_GetFile(&file, bfname);
+    httpGetFile(&file, bfname);
     len = fwrite(file.data, file.index, 1, outf);
     fclose(outf);
     G_Free(file.data);

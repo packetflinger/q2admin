@@ -33,19 +33,64 @@ static struct curl_slist    *post_header_slist;
 static time_t               last_dns_lookup;
 
 /**
+ * Hands a finished request back to whoever asked for it, by invoking the
+ * onFinish callback stored on the download_t. That indirection is what
+ * keeps this module generic: it knows how to move bytes but nothing
+ * about VPN lookups or ban lists, and each caller supplies its own
+ * handler when queuing (see httpQueueDownload()).
  *
+ * download: the request being completed, carrying the callback and the
+ *           edict that initiated it.
+ * buff:     the response body, or NULL if the request failed or returned
+ *           anything other than 200.
+ * len:      length of buff, 0 when buff is NULL.
+ * code:     the HTTP status, or 0 for a transport-level failure.
+ *
+ * Returns nothing.
+ *
+ * Called from httpFinishDownload() below, on every outcome - success,
+ * HTTP error and transport error alike - so a caller's handler always
+ * runs exactly once per request and can clean up its own state.
+ *
+ * Note the NULL-initiator check only logs; it still calls onFinish, and
+ * the handlers in g_vpn.c dereference that edict immediately, so the
+ * warning doesn't actually prevent the crash it's warning about.
  */
-void HandleDownload(download_t *download, char *buff, int len, int code) {
+void httpHandleDownload(download_t *download, char *buff, int len, int code) {
     if (!download->initiator) {
-        gi.dprintf("HandleDownload: NULL initiator");
+        gi.dprintf("httpHandleDownload: NULL initiator");
     }
     download->onFinish(download, code, (byte *)buff, len);
 }
 
 /**
- * libcurl callback
+ * libcurl write callback for the asynchronous download path - curl calls
+ * this repeatedly with chunks of the response as they arrive, and this
+ * accumulates them into one buffer for the caller.
+ *
+ * Because the final size isn't known up front, the buffer is grown on
+ * demand in MIN_DLSIZE steps (rounded to that boundary so a trickle of
+ * small chunks doesn't reallocate constantly) and always kept NUL
+ * terminated, so the assembled body can be handed straight to the string
+ * and JSON parsers that consume it.
+ *
+ * The size guards matter because the response comes from a remote server
+ * that could hand back anything: the multiply is checked for overflow
+ * and the total is capped at MAX_DLSIZE, so a hostile or broken endpoint
+ * can't make the server allocate without bound.
+ *
+ * ptr:    chunk of received data.
+ * size:   size of each element, per the libcurl callback signature.
+ * nmemb:  number of elements; the chunk is size * nmemb bytes.
+ * stream: the dlhandle_t this data belongs to, set via CURLOPT_WRITEDATA.
+ *
+ * Returns the number of bytes consumed. Returning anything less than the
+ * chunk size - 0 here - is how a libcurl write callback aborts the
+ * transfer, which is what the oversize path relies on.
+ *
+ * Called by libcurl itself, wired up in httpStartDownload() below.
  */
-static size_t HTTP_Recv(void *ptr, size_t size, size_t nmemb, void *stream) {
+static size_t httpRecv(void *ptr, size_t size, size_t nmemb, void *stream) {
     dlhandle_t  *dl;
     size_t      new_size, bytes;
 
@@ -94,9 +139,28 @@ oversize:
 }
 
 /**
- * Troubleshooting
+ * libcurl debug callback, for troubleshooting why a request isn't
+ * working - TLS negotiation, redirects, connection reuse and so on -
+ * routed to the server console rather than curl's default stderr, which
+ * a dedicated server generally isn't watching.
+ *
+ * Only CURLINFO_TEXT (curl's own commentary) is printed; the raw header
+ * and body payloads are ignored, which keeps credentials such as the
+ * vpnapi.io API key out of the log.
+ *
+ * c:    the curl handle, unused here.
+ * type: what kind of information this is; anything but CURLINFO_TEXT is
+ *       ignored.
+ * data: the text, which is not NUL terminated - hence the bounded copy.
+ * size: length of data; truncated to the local buffer.
+ * ptr:  user pointer, unused here.
+ *
+ * Returns 0, which libcurl requires from a debug callback.
+ *
+ * Called by libcurl itself, wired up in httpStartDownload() below only
+ * when the http_debug setting is on.
  */
-int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr) {
+int curlDebug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr) {
     if (type == CURLINFO_TEXT) {
         char    buff[4096];
         if (size > sizeof(buff)-1) {
@@ -112,9 +176,21 @@ int CURL_Debug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr)
 }
 
 /**
+ * Resolves the VPN API hostname to an address and caches it, re-resolving
+ * only if the last lookup was over a day ago. gethostbyname() blocks, so
+ * the point of caching was to keep a DNS round trip off the server frame
+ * on every lookup while still picking up DNS changes eventually.
  *
+ * Takes no parameters; reads the vpn_host setting and updates the
+ * module's cached address and timestamp. Returns nothing - failure is
+ * reported to the console and leaves the cached address empty.
+ *
+ * Currently unreachable: nothing calls it, and nothing reads the address
+ * it caches either. Requests are built from the hostname directly (see
+ * httpStartDownload()) and libcurl does its own resolution and caching,
+ * so this is a leftover from before that was the case.
  */
-void HTTP_ResolveVPNServer(void) {
+void httpResolveVPNServer(void) {
     if (!http_enable) {
         return;
     }
@@ -138,8 +214,31 @@ void HTTP_ResolveVPNServer(void) {
 
 /**
  * Actually starts a download by adding it to the curl multi handle.
+ *
+ * Builds the URL, applies every curl option the request needs and hands
+ * the easy handle to the multi interface. Adding it to the multi handle
+ * rather than calling curl_easy_perform() is the crux of the whole
+ * module: perform() would block the server for the length of the
+ * request, freezing every player, whereas the multi interface just
+ * registers the transfer and lets httpRunDownloads() advance it a
+ * little each frame.
+ *
+ * Both request shapes go through here. A GET targets vpn_host with the
+ * path as-is; a POST overrides the host from the download_t and sends
+ * its body as JSON. The easy handle is reused across requests when the
+ * slot already has one, since curl handles are relatively expensive to
+ * create and hold connection state worth keeping.
+ *
+ * dl: the download slot to start, already populated by
+ *     httpQueueDownload() with the request and its target path.
+ *
+ * Returns nothing; a failure to register is logged and leaves the slot
+ * marked in use, so a slot lost this way isn't reclaimed until the
+ * module is torn down.
+ *
+ * Called from httpQueueDownload() below, once a free slot is found.
  */
-void HTTP_StartDownload(dlhandle_t *dl) {
+void httpStartDownload(dlhandle_t *dl) {
     dl->tempBuffer = NULL;
     dl->speed = 0;
     dl->fileSize = 0;
@@ -164,7 +263,7 @@ void HTTP_StartDownload(dlhandle_t *dl) {
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
 
     if (http_debug) {
-        curl_easy_setopt(dl->curl, CURLOPT_DEBUGFUNCTION, CURL_Debug);
+        curl_easy_setopt(dl->curl, CURLOPT_DEBUGFUNCTION, curlDebug);
         curl_easy_setopt(dl->curl, CURLOPT_VERBOSE, 1);
     } else {
         curl_easy_setopt(dl->curl, CURLOPT_DEBUGFUNCTION, NULL);
@@ -174,7 +273,7 @@ void HTTP_StartDownload(dlhandle_t *dl) {
     curl_easy_setopt(dl->curl, CURLOPT_NOPROGRESS, 1);
     curl_easy_setopt(dl->curl, CURLOPT_WRITEDATA, dl);
     curl_easy_setopt(dl->curl, CURLOPT_INTERFACE, NULL);
-    curl_easy_setopt(dl->curl, CURLOPT_WRITEFUNCTION, HTTP_Recv);
+    curl_easy_setopt(dl->curl, CURLOPT_WRITEFUNCTION, httpRecv);
     curl_easy_setopt(dl->curl, CURLOPT_PROXY, NULL);
     curl_easy_setopt(dl->curl, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(dl->curl, CURLOPT_MAXREDIRS, 5);
@@ -191,7 +290,7 @@ void HTTP_StartDownload(dlhandle_t *dl) {
 
 
     if (curl_multi_add_handle(multi, dl->curl) != CURLM_OK) {
-        gi.dprintf("HTTP_StartDownload: curl_multi_add_handle: error\n");
+        gi.dprintf("httpStartDownload: curl_multi_add_handle: error\n");
         return;
     }
 
@@ -199,9 +298,25 @@ void HTTP_StartDownload(dlhandle_t *dl) {
 }
 
 /**
+ * Brings up the HTTP layer: initialises libcurl, creates the multi
+ * handle every asynchronous transfer is registered against, and
+ * pre-builds the two header lists requests reuse - a Host header for the
+ * VPN API and a JSON content type for POSTs. Building those once here
+ * rather than per request avoids rebuilding an identical list on every
+ * lookup.
  *
+ * Takes no parameters. Returns nothing; reports the libcurl version to
+ * the console so the log records which one is actually in use.
+ *
+ * Called from InitGame() (g_init.c) at server startup.
+ *
+ * Note InitGame() has already called curl_global_init() itself by this
+ * point, so the call here is a second, redundant one - harmless, since
+ * libcurl reference counts it, but it means the flags differ between the
+ * two (CURL_GLOBAL_ALL there, CURL_GLOBAL_NOTHING here) and the first
+ * call is the one that decides.
  */
-void HTTP_Init(void) {
+void httpInit(void) {
     curl_global_init(CURL_GLOBAL_NOTHING);
     multi = curl_multi_init();
     snprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
@@ -211,9 +326,19 @@ void HTTP_Init(void) {
 }
 
 /**
+ * Tears down everything httpInit() set up - the multi handle, both
+ * header lists and libcurl itself - and is written to be safe to call
+ * more than once, clearing the multi handle as it goes.
  *
+ * Takes no parameters. Returns nothing.
+ *
+ * Currently unreachable: nothing calls it. ShutdownGame() (g_main.c)
+ * calls curl_global_cleanup() directly instead, so on the way down the
+ * multi handle and the two header lists are never freed. Harmless in
+ * practice, since the process is exiting anyway, but it does mean this
+ * is the intended teardown path and isn't wired up.
  */
-void HTTP_Shutdown(void) {
+void httpShutdown(void) {
     if (multi) {
         curl_multi_cleanup(multi);
         multi = NULL;
@@ -226,8 +351,28 @@ void HTTP_Shutdown(void) {
 /**
  * A download finished, find out what it was, whether there were any errors and
  * if so, how severe. If none, rename file and other such stuff.
+ *
+ * Drains libcurl's completion queue, matching each finished easy handle
+ * back to its download slot, reporting the outcome to the requester via
+ * httpHandleDownload() and releasing the slot for reuse. Every path calls
+ * httpHandleDownload() exactly once - 200, 404, other statuses and transport
+ * failures alike - so a caller's handler always runs and can't be left
+ * waiting on a reply that never comes.
+ *
+ * The response buffer is freed here on every outcome, which means a
+ * handler must copy anything it needs to keep rather than holding the
+ * pointer it was given.
+ *
+ * Takes no parameters; works on the module's download slots and multi
+ * handle. Returns nothing.
+ *
+ * Called from httpRunDownloads() below, when curl reports that the
+ * number of active transfers has dropped.
+ *
+ * Note the "Handle not found" case logs but doesn't bail, so it goes on
+ * to index downloads[] one past the end.
  */
-static void HTTP_FinishDownload(void) {
+static void httpFinishDownload(void) {
     int         msgs_in_queue;
     CURLMsg     *msg;
     CURLcode    result;
@@ -242,12 +387,12 @@ static void HTTP_FinishDownload(void) {
         msg = curl_multi_info_read(multi, &msgs_in_queue);
 
         if (!msg) {
-            gi.dprintf("HTTP_FinishDownload: Odd, no message for us...\n");
+            gi.dprintf("httpFinishDownload: Odd, no message for us...\n");
             return;
         }
 
         if (msg->msg != CURLMSG_DONE) {
-            gi.dprintf("HTTP_FinishDownload: Got some weird message...\n");
+            gi.dprintf("httpFinishDownload: Got some weird message...\n");
             continue;
         }
 
@@ -260,7 +405,7 @@ static void HTTP_FinishDownload(void) {
         }
 
         if (i == MAX_DOWNLOADS) {
-            gi.dprintf("HTTP_FinishDownload: Handle not found!\n");
+            gi.dprintf("httpFinishDownload: Handle not found!\n");
         }
 
         dl = &downloads[i];
@@ -274,17 +419,17 @@ static void HTTP_FinishDownload(void) {
 
                 curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &responseCode);
                 if (responseCode == 404) {
-                    HandleDownload(dl->handle, NULL, 0, responseCode);
+                    httpHandleDownload(dl->handle, NULL, 0, responseCode);
                     //FinishVPNLookup(dl->handle, NULL, 0, responseCode, )
                     gi.dprintf ("HTTP: %s: 404 File Not Found\n", dl->URL);
                     curl_multi_remove_handle (multi, dl->curl);
                     dl->inuse = false;
                     continue;
                 } else if (responseCode == 200) {
-                    HandleDownload(dl->handle, dl->tempBuffer, dl->position, responseCode);
+                    httpHandleDownload(dl->handle, dl->tempBuffer, dl->position, responseCode);
                     gi.TagFree(dl->tempBuffer);
                 } else {
-                    HandleDownload(dl->handle, NULL, 0, responseCode);
+                    httpHandleDownload(dl->handle, NULL, 0, responseCode);
                     if (dl->tempBuffer) {
                         gi.TagFree (dl->tempBuffer);
                     }
@@ -293,7 +438,7 @@ static void HTTP_FinishDownload(void) {
 
             //fatal error
             default:
-                HandleDownload(dl->handle, NULL, 0, 0);
+                httpHandleDownload(dl->handle, NULL, 0, 0);
                 gi.dprintf("HTTP Error: %s: %s\n", dl->URL, curl_easy_strerror (result));
                 curl_multi_remove_handle(multi, dl->curl);
                 dl->inuse = false;
@@ -316,9 +461,29 @@ static void HTTP_FinishDownload(void) {
 }
 
 /**
+ * Submits a request to be fetched in the background: finds a free
+ * download slot, attaches the caller's request to it and starts it.
  *
+ * This is the module's entry point for asynchronous work, and the reason
+ * it's asynchronous is that the callers are on the connect path - a
+ * player joining triggers a VPN lookup against a third-party API, and
+ * blocking the server on that round trip would stall everyone. Instead
+ * this returns immediately and the caller's onFinish runs a few frames
+ * later once the reply lands.
+ *
+ * d: the request to run - target host and path, GET or POST plus body,
+ *    and the onFinish callback. The caller retains ownership and it must
+ *    stay valid until that callback fires, which is why callers keep it
+ *    in their own proxyinfo slot rather than on the stack.
+ *
+ * Returns true if the request was accepted, false if HTTP is disabled or
+ * all MAX_DOWNLOADS slots are busy. A false return means onFinish will
+ * never be called, so callers that track pending state need to undo it.
+ *
+ * Called from the VPN lookup paths in g_vpn.c - the vpnapi.io GET and
+ * the IPLogs POST - as a player connects.
  */
-bool HTTP_QueueDownload(download_t *d) {
+bool httpQueueDownload(download_t *d) {
     unsigned    i;
 
     if (handleCount == MAX_DOWNLOADS) {
@@ -348,7 +513,7 @@ bool HTTP_QueueDownload(download_t *d) {
 #pragma GCC diagnostic ignored "-Wstringop-truncation"
     Q_strncpy(downloads[i].filePath, d->path, sizeof(downloads[i].filePath)-1);
 #pragma GCC diagnostic pop
-    HTTP_StartDownload(&downloads[i]);
+    httpStartDownload(&downloads[i]);
 
     return true;
 }
@@ -356,8 +521,24 @@ bool HTTP_QueueDownload(download_t *d) {
 /**
  * This calls curl_multi_perform to actually do stuff. Called every frame to
  * process downloads.
+ *
+ * Gives libcurl a slice of time to advance any in-flight transfers and
+ * returns straight away - it never waits on the network. That's what
+ * makes the whole asynchronous scheme work: progress happens a frame at
+ * a time alongside normal server work, rather than the server stopping
+ * to wait for a remote API.
+ *
+ * When curl reports fewer active transfers than last time, at least one
+ * has finished, so httpFinishDownload() is called to collect the
+ * results. Returns immediately when nothing is pending, which is the
+ * usual case.
+ *
+ * Takes no parameters; works on the module's multi handle. Returns
+ * nothing.
+ *
+ * Called from G_RunFrame() (g_main.c) every server frame.
  */
-void HTTP_RunDownloads(void) {
+void httpRunDownloads(void) {
     int         newHandleCount;
     CURLMcode   ret;
 
@@ -369,17 +550,42 @@ void HTTP_RunDownloads(void) {
     do {
         ret = curl_multi_perform(multi, &newHandleCount);
         if (newHandleCount < handleCount) {
-            HTTP_FinishDownload();
+            httpFinishDownload();
             handleCount = newHandleCount;
         }
     } while (ret == CURLM_CALL_MULTI_PERFORM);
 
     if (ret != CURLM_OK) {
-        gi.dprintf("HTTP_RunDownloads: curl_multi_perform error.\n");
+        gi.dprintf("httpRunDownloads: curl_multi_perform error.\n");
     }
 }
 
-static size_t http_GetFile_callback(void *ptr, size_t size, size_t nmemb, void *out) {
+/**
+ * libcurl write callback for the synchronous httpGetFile() path,
+ * copying received data into the caller's fixed buffer. The counterpart
+ * to httpRecv() above, but for a caller that has already decided how
+ * much room to provide.
+ *
+ * ptr:   chunk of received data.
+ * size:  size of each element, per the libcurl callback signature.
+ * nmemb: number of elements; the chunk is size * nmemb bytes.
+ * out:   the generic_file_t to fill, set via CURLOPT_WRITEDATA.
+ *
+ * Returns the number of bytes consumed, which libcurl compares against
+ * the chunk size to decide whether to continue.
+ *
+ * Called by libcurl itself, wired up in httpGetFile() below.
+ *
+ * Two things to be aware of, since libcurl delivers a response in as
+ * many chunks as it likes rather than one: every chunk is copied to the
+ * *start* of the buffer rather than appended at the running index, so
+ * for a multi-chunk response only the final chunk survives while index
+ * still reports the full length; and nothing checks the incoming size
+ * against the buffer's, so a response larger than the caller allocated
+ * overruns it. Both matter here because the bodies come from a remote
+ * server whose size and chunking aren't under q2admin's control.
+ */
+static size_t httpGetFileCallback(void *ptr, size_t size, size_t nmemb, void *out) {
     generic_file_t *gf = (generic_file_t *)out;
     size_t total = size * nmemb;
     q2a_memcpy(gf->data, ptr, total);
@@ -390,9 +596,38 @@ static size_t http_GetFile_callback(void *ptr, size_t size, size_t nmemb, void *
 /**
  * Download any file.
  *
- * Returned char pointer needs to be free'd!
+ * The synchronous counterpart to httpQueueDownload(): this uses
+ * curl_easy_perform() and so blocks the whole server until the transfer
+ * finishes or times out. That's tolerable only because its callers run
+ * at map load, where a pause is expected anyway and the fetched data is
+ * needed before play starts - it would not be acceptable on the connect
+ * path, which is exactly why the asynchronous machinery above exists.
+ *
+ * Uses its own one-off easy handle rather than the shared multi handle,
+ * so it's independent of the download slots and can't be blocked by
+ * them being busy.
+ *
+ * output: caller-provided buffer to fill. data and size must be set
+ *         before the call, and index reset to 0; on return index holds
+ *         how many bytes arrived.
+ * url:    full URL to fetch, including scheme.
+ *
+ * Returns the number of bytes received, i.e. output->index. Note there's
+ * no way to tell a genuine empty response from a failed request - the
+ * curl result is discarded - so 0 should be treated as "no usable data"
+ * rather than proof the server replied.
+ *
+ * Also note SSL peer verification is disabled here, unlike the
+ * asynchronous path which honours the http_verifyssl setting.
+ *
+ * Called from readRemoteBanFile() (g_ban.c) for a remote ban list and
+ * from the anticheat hash list loader (g_anticheat.c), both at map load.
+ *
+ * The "returned char pointer needs to be free'd" note above refers to
+ * output->data, which the caller allocated and still owns - this
+ * function neither allocates nor frees it.
  */
-size_t HTTP_GetFile(generic_file_t *output, const char *url) {
+size_t httpGetFile(generic_file_t *output, const char *url) {
     CURL *curl_handle;
 
     q2a_memset(output->data, 0, output->size);
@@ -401,7 +636,7 @@ size_t HTTP_GetFile(generic_file_t *output, const char *url) {
     curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 0L);
     curl_easy_setopt(curl_handle, CURLOPT_NOPROGRESS, 1L);
     curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
-    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, http_GetFile_callback);
+    curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, httpGetFileCallback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, output);
     curl_easy_perform(curl_handle);
     curl_easy_cleanup(curl_handle);

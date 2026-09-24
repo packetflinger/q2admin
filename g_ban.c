@@ -45,7 +45,7 @@ bool readRemoteBanFile(char *bfname) {
     file.data = G_Malloc(file.size);
     file.index = 0;
 
-    HTTP_GetFile(&file, bfname);
+    httpGetFile(&file, bfname);
     parseBanFileContents(file.data);
 
     G_Free(file.data);
