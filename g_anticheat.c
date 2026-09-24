@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 /**
  * Fetch an Anticheat exception file from an HTTP server
  */
-bool AC_GetRemoteFile(char *bfname) {
+bool acGetRemoteFile(char *bfname) {
     FILE *outf;
     char localfilename[MAX_QPATH];
 
@@ -47,7 +47,7 @@ bool AC_GetRemoteFile(char *bfname) {
 /**
  *
  */
-void AC_UpdateList(void) {
+void acUpdateList(void) {
     if ((int) q2adminanticheat_enable->value) {
         bool ret;
         char cfgAnticheatRemoteList[100];
@@ -57,7 +57,7 @@ void AC_UpdateList(void) {
         } else {
             q2a_strncpy(cfgAnticheatRemoteList, q2adminanticheat_file->string, sizeof(cfgAnticheatRemoteList)-1);
         }
-        ret = AC_GetRemoteFile(cfgAnticheatRemoteList);
+        ret = acGetRemoteFile(cfgAnticheatRemoteList);
         if (!ret) {
             //gi.dprintf("WARNING: " ANTICHEATEXCEPTIONREMOTEFILE " could not be found\n");
             logEvent(LT_INTERNALWARN, 0, NULL, ANTICHEATEXCEPTIONREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0, true);
@@ -73,9 +73,9 @@ void AC_UpdateList(void) {
  * Execute exception list even if the download was not succeeded, since there
  * is probably an old version available.
  */
-void AC_LoadExceptions(void) {	
+void acLoadExceptions(void) {	
     if ((int) q2adminanticheat_enable->value) {
-        AC_UpdateList();
+        acUpdateList();
         q2a_strncpy(buffer, "exec " ANTICHEATEXCEPTIONLOCALFILE "\n", sizeof(buffer)-1);
         gi.AddCommandString(buffer);
     }
@@ -84,15 +84,15 @@ void AC_LoadExceptions(void) {
 /**
  * This seems redundant
  */
-void AC_ReloadExceptions(int startarg, edict_t *ent, int client) {
-    AC_LoadExceptions();
+void acReloadExceptions(int startarg, edict_t *ent, int client) {
+    acLoadExceptions();
     gi.cprintf(ent, PRINT_HIGH, "Exceptionlist loaded.\n");
 }
 
 /**
  *
  */
-bool ReadRemoteHashListFile(char *bfname, char *blname) {
+bool acReadRemoteHashListFile(char *bfname, char *blname) {
     FILE *outf;
     generic_file_t file;
     size_t len;
@@ -136,10 +136,9 @@ void getR1chHashList(char *hashname) {
         } else {
             q2a_strcat(q2a_strcat(q2a_strncpy(cfgHashRemoteList, q2adminhashlist_dir->string, sizeof(cfgHashRemoteList)-1), "/"), hashname);
         }
-        ret = ReadRemoteHashListFile(cfgHashRemoteList, hashname);
+        ret = acReadRemoteHashListFile(cfgHashRemoteList, hashname);
 
         if (!ret) {
-            // gi.dprintf("WARNING: " HASHLISTREMOTEDIR " could not be found\n");
             logEvent(LT_INTERNALWARN, 0, NULL, HASHLISTREMOTEDIR " could not be found", IW_BANSETUPLOAD, 0.0, true);
         }
     }
@@ -148,7 +147,7 @@ void getR1chHashList(char *hashname) {
 /**
  * Load the cvar, hash and tokens hash lists
  */
-void loadhashlist(void) {
+void acLoadHashList(void) {
     char cfgHashList_enabled[100];
     q2a_strncpy(cfgHashList_enabled, q2adminhashlist_enable->string, sizeof(cfgHashList_enabled)-1);
     if (cfgHashList_enabled[0] == '1') {
@@ -162,6 +161,6 @@ void loadhashlist(void) {
  * Called for the reloadhashlist command
  */
 void reloadhashlistRun(int startarg, edict_t *ent, int client) {
-    loadhashlist();
+    acLoadHashList();
     gi.cprintf(ent, PRINT_HIGH, "Remote hashlist loaded.\n");
 }

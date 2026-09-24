@@ -9,11 +9,11 @@
 #define ANTICHEATEXCEPTIONLOCALFILE     "ac.cfg"
 #define HASHLISTREMOTEDIR               "https://q2admin.net/server"
 
-bool AC_GetRemoteFile(char *bfname);
-void AC_LoadExceptions(void);
-void AC_ReloadExceptions(int startarg, edict_t *ent, int client);
-void AC_UpdateList(void);
+bool acGetRemoteFile(char *bfname);
+void acLoadExceptions(void);
+void acReloadExceptions(int startarg, edict_t *ent, int client);
+void acUpdateList(void);
 void getR1chHashList(char *hashname);
-void loadhashlist(void);
-bool ReadRemoteHashListFile(char *bfname, char *blname);
+void acLoadHashList(void);
+bool acReadRemoteHashListFile(char *bfname, char *blname);
 void reloadhashlistRun(int startarg, edict_t *ent, int client);

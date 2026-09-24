@@ -986,8 +986,8 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     G_MergeEdicts();
 
     readBanLists();
-    AC_LoadExceptions();
-    loadhashlist();
+    acLoadExceptions();
+    acLoadHashList();
     readLRconLists();
     readFloodLists();
     readVoteLists();
