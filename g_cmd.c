@@ -2718,6 +2718,56 @@ void timescaleDetected(edict_t *ent, int client) {
 
 /**
  * A client has been determined to be illegitimate.
+ *
+ * The shared "we've caught this one" handler for the checks that don't
+ * have a detector of their own, the way proxyDetected()/ratbotDetected()/
+ * timescaleDetected() above do. It settles the client's detection state:
+ * records the reason code, abandons every probe still in flight, marks
+ * them detected, optionally runs the configured client command, and
+ * raises whichever signal the caller decided fits.
+ *
+ * Cancelling the outstanding probes is the important part. All four
+ * callers fire while at least one handshake is mid-flight, and those
+ * probes have deadlines attached - left queued they'd later fire as
+ * "client failed to respond" against a client already judged for
+ * something else, muddying both the log and the signal list. The same
+ * goes for the CCMD_WAITFOR* flags, which would otherwise keep matching
+ * replies to tests that no longer matter.
+ *
+ * Unlike its three siblings the severity isn't fixed here - it's
+ * whatever the caller passes. That's deliberate, since the four
+ * situations aren't equally damning: a client that can't do aliases at
+ * all, or one that tripped the connect-proxy trap, gets a kick-weight
+ * signal, while a client merely missing a userinfo key gets a soft one
+ * that only contributes towards the threshold.
+ *
+ * ent:    the detected client's edict. Currently unused - the body works
+ *         entirely from the client index - but kept for symmetry with
+ *         the sibling detectors.
+ * client: the detected client's index, whose proxyinfo is updated.
+ * signal: which signal to raise, chosen by the caller to match what was
+ *         actually caught.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (below) in four places, all inside the
+ * alias-probe windows:
+ *   - the client echoed back the literal "alias" command, so it has no
+ *     alias support at all (CCMD_WAITFORALIASREPLY1),
+ *   - the client echoed back the alias *name* rather than its expansion,
+ *     so the definition never took (CCMD_WAITFORALIASREPLY2),
+ *   - a deferred hit from the connect-proxy trap is being cashed in,
+ *     once its recorded address has been confirmed still to match,
+ *   - the client's userinfo has no "rate" key, which a stock executable
+ *     always sends.
+ *
+ * Two asymmetries with the sibling detectors are worth knowing: this one
+ * doesn't call serverLogZBot(), so a detection here produces no LT_ZBOT
+ * log entry and doesn't fire the customservercmd hook; and it doesn't
+ * call evaluateSignalScore(), so even a kick-weight signal doesn't
+ * remove the client until something else evaluates their score. Callers
+ * also still set pi->hack.type before calling, but nothing reads it any
+ * more now that the signal is passed in directly.
  */
 void hackDetected(edict_t *ent, int client, unsigned int signal) {
     proxyinfo_t *pi = &proxyinfo[client];
@@ -3063,9 +3113,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         }
     }
 
+    // only if reconnect_address is set
     if ((proxyinfo[client].clientcommand & CCMD_WAITFORCONNECTREPLY) &&
             Q_stricmp(cmd, proxyinfo[client].connect_test_str) == 0) {
         proxyinfo[client].clientcommand &= ~CCMD_WAITFORCONNECTREPLY;
+        
+        // save info for when the reconnect, then you raise the signal
         proxyinfo[client].hack.disconnect = true;
         proxyinfo[client].hack.addr = proxyinfo[client].address;
         return false;
