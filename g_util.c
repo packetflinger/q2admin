@@ -26,7 +26,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 /**
- * Force entity to do a command
+ * Makes a player's own console run a command, by writing a raw
+ * SVC_STUFFTEXT message straight into their network stream.
+ *
+ * This is the mechanism nearly all of q2admin's client probing is built
+ * on: there's no way to ask a client what its cvars or aliases are, so
+ * instead it's told to run something that reports back (echo a cvar,
+ * define an alias, reconnect), and the reply is watched for. It's also
+ * how settings get enforced client-side, e.g. clamping cl_maxfps.
+ *
+ * e: the player to send to.
+ * s: the console command text. Generally needs a trailing '\n' - without
+ *    one it only lands in their console input line rather than running.
  */
 void stuffPlayer(edict_t *e, char *s) {
     if (q2a_developer) {
@@ -38,7 +49,19 @@ void stuffPlayer(edict_t *e, char *s) {
 }
 
 /**
- * Remove whitespace (space/tab/newline) from the beginning and end of a string
+ * Strips trailing whitespace (space/tab/newline) from a string in place,
+ * mainly for cleaning up lines read from config files where a stray
+ * trailing space or the line's '\n' would otherwise end up inside a
+ * parsed value.
+ *
+ * Despite what this comment used to claim, only the *end* is trimmed -
+ * leading whitespace is left alone and the returned pointer is always
+ * the one passed in. Callers wanting to skip leading blanks use the
+ * SKIPBLANK macro instead.
+ *
+ * s: string to trim in place; NULL and empty are handled.
+ *
+ * Returns s.
  */
 char *Q_trim(char *s) {
     char *ptr;
@@ -54,7 +77,21 @@ char *Q_trim(char *s) {
 }
 
 /**
- * Variable assignment. Build a string printf style inline
+ * Formats a string printf style and returns it, so a formatted string
+ * can be built inline as an argument to something else rather than
+ * needing a caller-declared buffer for every one-off message. Used
+ * heavily for log lines, kick reasons and console output.
+ *
+ * Results live in a rotating set of 8 static buffers. That rotation is
+ * what makes it safe to use more than one va() in a single expression -
+ * the second call doesn't stomp the first. Two consequences: the 9th
+ * live result overwrites the 1st, so don't hold onto a returned pointer
+ * across other va() calls or store it long term (copy it instead), and
+ * output longer than MAX_STRING_CHARS is truncated.
+ *
+ * format: printf style format string, followed by its arguments.
+ *
+ * Returns a pointer to one of the static buffers.
  */
 char *va(const char *format, ...) {
     static char strings[8][MAX_STRING_CHARS];
@@ -69,7 +106,22 @@ char *va(const char *format, ...) {
 }
 
 /**
- * Recursively compare strings with wildcards.
+ * Matches a string against a glob style pattern, so admins can write
+ * things like "clan*" in a ban or name rule instead of needing a full
+ * regex for simple cases:
+ *   * - matches any run of characters, including none
+ *   ? - matches exactly one character
+ *
+ * Recurses to backtrack: on '*' it tries both consuming a haystack
+ * character and moving past the '*'. Note this is case *sensitive*,
+ * unlike startContains()/stringContains(), and a pattern with several
+ * '*'s against a long string can get expensive, so it's not for
+ * hot paths.
+ *
+ * pattern:  the glob pattern.
+ * haystack: the string to test against it.
+ *
+ * Returns true only on a whole-string match, not a partial one.
  */
 bool wildcardMatch(char *pattern, char *haystack) {
     if (*pattern == '\0' && *haystack == '\0') {
@@ -88,14 +140,37 @@ bool wildcardMatch(char *pattern, char *haystack) {
 }
 
 /**
- * Maybe not needed? Use startContains instead?
+ * Whether haystack begins with needle, comparing case *sensitively* -
+ * which is the one thing that distinguishes it from startContains()
+ * below, which does the same test while ignoring case. Use this when the
+ * exact casing matters (protocol tokens, literal markers), that one for
+ * anything a human typed.
+ *
+ * needle:   the prefix to look for.
+ * haystack: the string that may start with it.
+ *
+ * Note the argument order is the reverse of startContains(), which takes
+ * the string being searched first - easy to get backwards.
+ *
+ * Returns true if haystack starts with needle.
  */
 bool startswith(char *needle, char *haystack) {
     return (strncmp(needle, haystack, q2a_strlen(needle)) == 0);
 }
 
 /**
- * Case insensitive string compare
+ * Case insensitive string comparison, for the many places q2admin has to
+ * match something a human typed (command names, config keywords, player
+ * supplied values) where casing shouldn't matter.
+ *
+ * string1, string2: the strings to compare.
+ *
+ * Returns 0 if equal ignoring case, -1 if string1 sorts first, 1 if
+ * string2 does - so `Q_stricmp(a, b) == 0` is the "are these the same"
+ * test, and it's easy to misread as a boolean.
+ *
+ * Takes non-const char* (unlike Q_strncasecmp() below), so comparing
+ * against a const string needs a cast at the call site.
  */
 int Q_stricmp(char *string1, char *string2) {
     while (*string1 && *string2) {
@@ -121,8 +196,28 @@ int Q_stricmp(char *string1, char *string2) {
 }
 
 /**
- * Searches the string for the given key and returns the associated value, or
- * an empty string.
+ * Pulls one value out of a userinfo string - the "\key\value\key\value"
+ * format Quake 2 packs a client's settings into (name, skin, rate,
+ * cl_maxfps, ip and so on). Reading those is how q2admin learns almost
+ * everything about a connecting client, so this is one of the most used
+ * functions here.
+ *
+ * Results alternate between two static buffers, which is what lets two
+ * calls be compared against each other in one expression without the
+ * second overwriting the first. A third live result wraps around, so
+ * copy anything that needs to outlast the next couple of calls.
+ *
+ * s:   the userinfo string to search.
+ * key: the key to look up, matched case sensitively.
+ *
+ * Returns the value, or an empty string if the key isn't present. Never
+ * NULL, so the result is always safe to pass straight to string
+ * functions.
+ *
+ * Assumes a well-formed info string no longer than MAX_INFO_STRING - the
+ * key/value scratch buffers are sized for that and the parse loop has no
+ * length checks of its own, so run untrusted input through
+ * Info_Validate() first.
  */
 char *Info_ValueForKey(char *s, char *key) {
     char pkey[512];
@@ -168,9 +263,22 @@ char *Info_ValueForKey(char *s, char *key) {
 }
 
 /**
- * Ensure the FORMAT of the userinfo string is valid, not necessarily the
- * values. Check for overall length, length of keys and values, illegal
- * characters, etc.
+ * Checks that a userinfo string is structurally sound before anything
+ * tries to parse it: alternating backslash separated key/value pairs,
+ * nothing over MAX_INFO_KEY / MAX_INFO_VALUE / MAX_INFO_STRING, and only
+ * printable characters.
+ *
+ * '"' and ';' are rejected outright wherever they appear. That's the
+ * security-relevant part: userinfo values get interpolated into console
+ * commands and config output elsewhere, where a quote or semicolon would
+ * let a client break out of the intended command and append its own.
+ *
+ * This validates shape only - whether the individual values are sensible
+ * is each caller's problem.
+ *
+ * s: the userinfo string to check.
+ *
+ * Returns true if the string is well formed.
  */
 bool Info_Validate(char *s) {
     size_t len, total;
@@ -234,7 +342,16 @@ bool Info_Validate(char *s) {
 }
 
 /**
- * Remove a key/value pair from a userinfo string
+ * Deletes a key and its value from a userinfo string, shifting the rest
+ * of the string down over the gap so the result stays a valid info
+ * string. Used both to strip keys a client shouldn't be setting and, by
+ * Info_SetValueForKey() below, as the first half of replacing a value.
+ *
+ * s:   the userinfo string, modified in place.
+ * key: the key to remove; a key containing a backslash is refused, since
+ *      that can't be a real key and would corrupt the string.
+ *
+ * Does nothing if the key isn't there.
  */
 void Info_RemoveKey(char *s, const char *key) {
     char *start;
@@ -280,9 +397,28 @@ void Info_RemoveKey(char *s, const char *key) {
 }
 
 /**
- * Set a key/value pair in a userinfo string. This will remove an existing
- * key/value and append the new pair at the end. Setting a non-existing
- * key will just add it to the end.
+ * Sets a key in a userinfo string, by removing any existing copy and
+ * appending the pair at the end - so the value is replaced rather than
+ * duplicated, and ordering isn't preserved. This is how q2admin rewrites
+ * what the real game mod will see, e.g. replacing an oversized skin or
+ * stuffing in a rejection message.
+ *
+ * Refuses anything that would corrupt the string or let a value escape
+ * into a console command: empty key or value, a backslash/semicolon/
+ * double quote in either, a key or value at the length limit, or a
+ * result that wouldn't fit in MAX_INFO_STRING. Characters outside
+ * printable ASCII are dropped as it appends.
+ *
+ * s:     the userinfo string, modified in place. Must have room for
+ *        MAX_INFO_STRING.
+ * key:   key to set.
+ * value: value to set it to.
+ *
+ * Silently does nothing if any of those checks fail - there's no way to
+ * tell success from refusal, so callers that care have to re-read the
+ * key afterwards. Note the length check on the value compares against
+ * MAX_INFO_KEY rather than MAX_INFO_VALUE; harmless while the two are
+ * equal, but wrong if they ever diverge.
  */
 void Info_SetValueForKey(char *s, const char *key, const char *value) {
     char newi[MAX_INFO_STRING], *v;
@@ -318,8 +454,18 @@ void Info_SetValueForKey(char *s, const char *key, const char *value) {
 }
 
 /**
- * Copy all edicts and states from the forward game library. This is called
- * all over the place and is the heart of how q2admin works.
+ * Re-syncs q2admin's own game_export_t with the real game mod's, and is
+ * the heart of how the MITM setup stays consistent.
+ *
+ * The server was handed q2admin's `ge` struct and reads the entity array
+ * straight out of it, but the actual entities belong to the wrapped mod,
+ * whose `edicts` pointer and counts move as it spawns and frees things.
+ * Any forwarded call can change them, so this is called immediately
+ * after each one - without it the server would keep reading a stale
+ * pointer or an out of date num_edicts and see the wrong entities.
+ *
+ * Takes no parameters; copies the array pointer, counts and sizes from
+ * ge_mod into ge.
  */
 void G_MergeEdicts(void) {
     ge.apiversion = ge_mod->apiversion;
@@ -343,6 +489,16 @@ void G_MergeEdicts(void) {
  *
  * Note: There can be any number of spaces or tabs at the beginning of the line
  * or (and only) between the variable and the value. The value MUST be quoted.
+ *
+ * buffer:    the whole input line (not modified).
+ * buff1:     receives the variable name. Sized by the caller, and not
+ *            length checked here, so it needs to be able to hold the
+ *            longest name a line could contain.
+ * buff2:     receives the value with the quotes stripped.
+ * buff2size: capacity of buff2, which is honoured.
+ *
+ * The value is run through processString(), so escapes like \n and \m
+ * are expanded as part of parsing.
  */
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
     char *cp, *dp;
@@ -371,9 +527,18 @@ int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
 }
 
 /**
- * Is cmp at the beginning of src?
+ * Whether src begins with cmp, ignoring case. This is the workhorse for
+ * recognising keywords at the front of a line or command - config file
+ * prefixes like "BAN:"/"SW:", argument keywords like "LIKE"/"RE" - where
+ * what follows the keyword still needs parsing, so a full compare won't
+ * do.
  *
- * Why does this not return a bool?
+ * src: the string being examined.
+ * cmp: the prefix to look for.
+ *
+ * Returns true if src starts with cmp; an empty cmp always matches. For
+ * a case sensitive version, and the opposite argument order, see
+ * startswith() above.
  */
 bool startContains(char *src, char *cmp) {
     while (*cmp) {
@@ -387,7 +552,20 @@ bool startContains(char *src, char *cmp) {
 }
 
 /**
- * Is buff2 inside buff1?
+ * Whether buff2 appears anywhere inside buff1, ignoring case - the
+ * substring counterpart to startContains(), for "does this contain that"
+ * checks like matching part of a player name or spotting a marker in a
+ * command.
+ *
+ * Works by upper-casing copies of both into local scratch buffers rather
+ * than comparing in place, so neither input is modified.
+ *
+ * buff1: the string to search.
+ * buff2: the substring to look for.
+ *
+ * Returns non-zero if found. Inputs longer than the 4KB scratch buffers
+ * are silently truncated before comparing, so it can't be relied on for
+ * arbitrarily long strings.
  */
 int stringContains(char *buff1, char *buff2) {
     char strbuffer1[4096];
@@ -401,7 +579,15 @@ int stringContains(char *buff1, char *buff2) {
 }
 
 /**
- * Check if a buffer is made up of only space characters
+ * Whether a string is empty or nothing but spaces, used by the config
+ * and ban file readers to skip over blank lines.
+ *
+ * buff1: the string to check.
+ *
+ * Returns non-zero if there's nothing but spaces. Note it only treats
+ * ' ' as blank - a line of tabs, or one that still has its trailing
+ * '\n', is *not* considered blank here, which is why callers tend to
+ * test for '\n' separately.
  */
 int isBlank(char *buff1) {
     while (*buff1 == ' ') {
@@ -411,16 +597,31 @@ int isBlank(char *buff1) {
 }
 
 /**
- * Resolve special tokens in input string and render output
+ * Copies input to output, expanding backslash escapes as it goes, and
+ * stops at a caller-chosen terminator. This is what lets config values
+ * and admin messages contain things that either can't be typed inside a
+ * quoted config value or aren't known until runtime:
  *
  *  \n = newline
  *  \d = dollar sign $
  *  \q = double quote "
- *  \s = single quote '
+ *  \s = space (despite older comments here saying single quote)
  *  \m = mod directory name
  *  \t = current timestamp
  *
- *  (case insensitive)
+ * (case insensitive). An unrecognised escape emits the character that
+ * followed the backslash, so "\\" yields a literal backslash.
+ *
+ * output: destination buffer, always NUL terminated.
+ * input:  source string.
+ * max:    space available in output. The \m and \t expansions are
+ *         skipped rather than truncated when they wouldn't fit.
+ * end:    character to stop at (e.g. '"' when reading a quoted config
+ *         value); pass 0 to run to the end of input.
+ *
+ * Returns a pointer to where it stopped in *input* - at the terminator
+ * or the NUL - which is how callers like breakLine() know whether the
+ * closing quote was actually present and where to resume parsing.
  */
 char *processString(char *output, char *input, int max, char end) {
     while (*input && *input != end && max) {
@@ -479,9 +680,16 @@ char *processString(char *output, char *input, int max, char end) {
 }
 
 /**
- * Get a boolean version of a string value.
+ * Interprets a config file or console argument as a boolean, so settings
+ * can be written the way an admin would naturally type them rather than
+ * requiring 1/0.
  *
- * Case insensitive
+ * arg: the string to interpret. "yes", "y" and "1" are true, in any
+ *      casing.
+ *
+ * Returns true only for those; anything else - including "true",
+ * unrecognised text and an empty string - is false. That default means a
+ * typo'd setting reads as off rather than erroring.
  */
 bool getLogicalValue(char *arg) {
     if (Q_stricmp(arg, "Yes") == 0 ||
@@ -493,7 +701,27 @@ bool getLogicalValue(char *arg) {
 }
 
 /**
+ * Reads the line ending at *fpos by scanning *backwards* through a file,
+ * so log files can be shown newest-first without loading the whole thing
+ * or making a forward pass just to find the end.
  *
+ * Walks back a byte at a time collecting characters until it hits a
+ * newline or start of file, then reverses what it collected into
+ * `buffer`. *fpos is left just before the line it returned, so repeated
+ * calls walk steadily back through the file.
+ *
+ * buffer:   receives the line, NUL terminated. Needs room for 256 bytes,
+ *           the cap on how much of a long line is kept.
+ * dumpfile: open file to read; its position is moved around freely.
+ * fpos:     in/out, the offset to read back from. Updated ready for the
+ *           next call; a negative value means the start of the file has
+ *           been passed.
+ *
+ * Returns 1 if a line was produced, 0 once *fpos has gone negative and
+ * there's nothing left to read.
+ *
+ * Uses the global buffer2 as scratch, so it clobbers anything else
+ * relying on that and can't be nested.
  */
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos) {
     char *bp = buffer2;
@@ -527,7 +755,12 @@ int getLastLine(char *buffer, FILE *dumpfile, long *fpos) {
 }
 
 /**
- * Change string to all upper case
+ * Upper-cases a string in place. Mostly used to normalise both sides of
+ * a comparison before matching, and to fold regex patterns and the text
+ * they're matched against so those rules end up case insensitive.
+ *
+ * c: the string to convert in place; the caller's buffer is modified, so
+ *    copy first if the original is still needed.
  */
 void upperCase(char *c) {
     while (*c) {
@@ -539,7 +772,12 @@ void upperCase(char *c) {
 }
 
 /**
- * Change string to all lower case
+ * Lower-cases a string in place, the counterpart to upperCase() for the
+ * places that want the other normalisation - filenames, and values
+ * compared against lowercase literals.
+ *
+ * c: the string to convert in place; the caller's buffer is modified, so
+ *    copy first if the original is still needed.
  */
 void lowerCase(char *c) {
     while (*c) {
@@ -551,6 +789,17 @@ void lowerCase(char *c) {
 }
 
 /**
+ * vsnprintf() wrapper that papers over the Win32 runtime's differing
+ * behaviour (where the MSVC variants don't NUL terminate on truncation
+ * and need a separate call to measure), so the rest of q2admin gets one
+ * predictable formatting primitive on every platform. The other
+ * Q_*printf functions here all funnel through this.
+ *
+ * dest:   destination buffer, always NUL terminated.
+ * size:   capacity of dest, including the terminator.
+ * fmt:    printf style format string.
+ * argptr: the already-started va_list of arguments.
+ *
  * Returns number of characters that would be written into the buffer,
  * excluding trailing '\0'. If the returned value is equal to or greater than
  * buffer size, resulting string is truncated.
@@ -578,6 +827,16 @@ size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr) {
 }
 
 /**
+ * Like Q_vsnprintf(), but reports what actually landed in the buffer
+ * rather than what would have. That makes the return value safe to use
+ * as an offset for appending more text, which the "would have" count
+ * isn't once truncation happens.
+ *
+ * dest:   destination buffer, always NUL terminated when size is non-zero.
+ * size:   capacity of dest, including the terminator.
+ * fmt:    printf style format string.
+ * argptr: the already-started va_list of arguments.
+ *
  * Returns number of characters actually written into the buffer,
  * excluding trailing '\0'. If buffer size is 0, this function does nothing
  * and returns 0.
@@ -591,6 +850,14 @@ size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr) {
 }
 
 /**
+ * The variadic form of Q_vsnprintf() - the everyday "format into this
+ * buffer safely" call, used in preference to raw snprintf() so the Win32
+ * differences stay handled in one place.
+ *
+ * dest: destination buffer, always NUL terminated.
+ * size: capacity of dest, including the terminator.
+ * fmt:  printf style format string, followed by its arguments.
+ *
  * Returns number of characters that would be written into the buffer,
  * excluding trailing '\0'. If the returned value is equal to or greater
  * than buffer size, resulting string is truncated.
@@ -611,6 +878,15 @@ size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...) {
 }
 
 /**
+ * The variadic form of Q_vscnprintf(). Use this one instead of
+ * Q_snprintf() when the return value will be used to keep appending -
+ * repeatedly advancing a pointer by the result is only correct with the
+ * actually-written count.
+ *
+ * dest: destination buffer, always NUL terminated when size is non-zero.
+ * size: capacity of dest, including the terminator.
+ * fmt:  printf style format string, followed by its arguments.
+ *
  * Returns number of characters actually written into the buffer, excluding
  * trailing '\0'. If buffer size is 0, this function does nothing and returns
  * 0.
@@ -628,6 +904,16 @@ size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...) {
 }
 
 /**
+ * Joins any number of strings into one buffer in a single call, as a
+ * bounded alternative to a chain of strcat()s - handy for assembling
+ * paths and messages from several pieces.
+ *
+ * dest: destination buffer, NUL terminated as long as size is non-zero.
+ * size: capacity of dest, including the terminator.
+ * ...:  the strings to concatenate, terminated by a NULL argument. That
+ *       sentinel is mandatory; forgetting it walks off the end of the
+ *       argument list.
+ *
  * Returns number of characters that would be written into the buffer,
  * excluding trailing '\0'. If the returned value is equal to or greater than
  * buffer size, resulting string is truncated.
@@ -658,8 +944,20 @@ size_t Q_concat(char *dest, size_t size, ...) {
 }
 
 /**
- * Concatenate a string onto the end of another string up to a certain size.
- * Returns the new length of the destination string.
+ * Appends src to dst without overrunning size, the bounded replacement
+ * for strcat().
+ *
+ * dst:  destination string, appended to in place and NUL terminated.
+ * src:  string to append.
+ * size: total capacity of dst, including the terminator - not the space
+ *       remaining.
+ *
+ * Returns the length the result would need (existing length plus src
+ * length); a value >= size means it was truncated.
+ *
+ * dst must already be NUL terminated and no longer than size - the
+ * remaining space is computed as size minus the current length, which
+ * underflows into a huge value if that isn't true.
  */
 size_t Q_strlcat(char *dst, const char *src, size_t size) {
     size_t len = q2a_strlen(dst);
@@ -667,8 +965,17 @@ size_t Q_strlcat(char *dst, const char *src, size_t size) {
 }
 
 /**
- * Copy a string up to a specific size. Returns length copied, which can be
- * smaller than the specifid size due to src string length.
+ * Copies src into dst, always NUL terminating and never writing past
+ * size - the bounded replacement for strcpy(), and safer than strncpy()
+ * which leaves the result unterminated on truncation.
+ *
+ * dst:  destination buffer.
+ * src:  string to copy.
+ * size: capacity of dst, including the terminator.
+ *
+ * Returns the length of src, i.e. what it would have taken to copy it
+ * whole - so a return >= size means the copy was truncated. Note that's
+ * the source length, not the number of bytes written.
  */
 size_t Q_strlcpy(char *dst, const char *src, size_t size) {
     size_t ret = q2a_strlen(src);
@@ -682,7 +989,16 @@ size_t Q_strlcpy(char *dst, const char *src, size_t size) {
 }
 
 /**
- * Size limited case insensitive string compare
+ * Case insensitive comparison of at most the first n characters, for
+ * matching a known-length prefix without needing to copy it out first.
+ * Also the primitive Q_strcasestr() is built on.
+ *
+ * s1, s2: strings to compare. Unlike Q_stricmp() these are const, so
+ *         this one can be used on string literals without casting.
+ * n:      maximum number of characters to compare.
+ *
+ * Returns 0 if the first n characters match ignoring case, -1 if s1
+ * sorts first, 1 if s2 does.
  *
  * Stolen from Q2Pro
  */
@@ -711,9 +1027,17 @@ int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
 
 
 /**
- * Case insensitive version of strstr. If s2 is a substring of s1,
- * return a pointer to it in s1. Empty s2 will just return the
- * beginning of s1. No match will return NULL
+ * Case insensitive version of strstr. Where stringContains() only
+ * answers yes/no and copies its inputs to do it, this returns the
+ * position of the match and touches neither string, so use it when the
+ * location matters or the inputs are large.
+ *
+ * s1: the string to search.
+ * s2: the substring to find.
+ *
+ * If s2 is a substring of s1, return a pointer to it in s1. Empty s2
+ * will just return the beginning of s1. No match will return NULL.
+ * The result points into s1, so it's only valid while s1 is.
  */
 char *Q_strcasestr(const char *s1, const char *s2) {
     size_t l1, l2;
@@ -734,7 +1058,13 @@ char *Q_strcasestr(const char *s1, const char *s2) {
 }
 
 /**
- * The version in math.h was weird with values between 0-1
+ * Rounds up to an int, returning an int directly rather than the double
+ * that math.h's ceil() gives back. Exists because that one behaved
+ * oddly here for values between 0 and 1.
+ *
+ * x: the value to round up.
+ *
+ * Returns the smallest integer not less than x.
  */
 int Q_ceil(float x) {
     float temp;
@@ -748,7 +1078,14 @@ int Q_ceil(float x) {
 }
 
 /**
- * Just to complement Q_ceil
+ * Rounds down to an int, to complement Q_ceil().
+ *
+ * x: the value to round down.
+ *
+ * Returns (int)x, which is a plain truncation toward zero rather than a
+ * true floor. That matches floor() for positive values but not negative
+ * ones: this gives -1 for -1.5 where floor() gives -2. Fine for the
+ * non-negative quantities it's used on (times, counts, percentages).
  */
 int Q_floor(float x) {
    return (int)x;
@@ -757,6 +1094,14 @@ int Q_floor(float x) {
 /**
  * Converts pitch/yaw angles (degrees) into a normalized forward direction
  * vector. Roll is ignored, it doesn't affect where a player is looking.
+ *
+ * Turning a player's view angles into a direction is what lets the aim
+ * checks reason geometrically about where someone is pointing - tracing
+ * along it, or measuring it against the direction to another player.
+ *
+ * angles:  pitch/yaw/roll in degrees, as sent in a usercmd_t (convert
+ *          from the wire's short encoding with SHORT2ANGLE first).
+ * forward: receives the resulting unit vector.
  */
 void angleVectorsForward(vec3_t angles, vec3_t forward) {
     float yaw = (float)(angles[YAW] * (M_PI / 180.0));
@@ -772,6 +1117,17 @@ void angleVectorsForward(vec3_t angles, vec3_t forward) {
 /**
  * Angle in degrees between two vectors, order doesn't matter, vectors need
  * not be normalized or the same length.
+ *
+ * This is how "how far off target is this player looking" gets measured -
+ * comparing a view direction against the direction to another player, or
+ * against the same player's view a frame earlier to see how far they
+ * swung.
+ *
+ * a, b: the two vectors; lengths are divided out, so raw
+ *       eye-to-target differences can be passed without normalizing.
+ *
+ * Returns 0 through 180. A zero-length vector has no direction to
+ * compare, so that returns 0 rather than a NaN from dividing by zero.
  */
 float angleBetweenVectors(vec3_t a, vec3_t b) {
     float lena = sqrtf(DotProduct(a, a));
@@ -793,7 +1149,18 @@ float angleBetweenVectors(vec3_t a, vec3_t b) {
 }
 
 /**
- * Throttle command usage
+ * Rate limits a client to one command every 3 seconds, so a player can't
+ * spam commands that cost the server real work or spray output at
+ * everyone.
+ *
+ * client: the client index to check.
+ *
+ * Returns true if they're allowed to run one now, false if they're still
+ * inside the cooldown.
+ *
+ * Not a pure query - returning true *consumes* the allowance and starts
+ * the next cooldown, so call it once at the point of deciding and reuse
+ * the answer rather than calling it again to re-check.
  */
 bool newCommandAllowed(int client) {
     if (proxyinfo[client].newcmd_timeout <= ltime) {
@@ -805,7 +1172,16 @@ bool newCommandAllowed(int client) {
 }
 
 /**
- * Random characters of whatever length
+ * Fills a buffer with random alphanumeric characters.
+ *
+ * These are the unguessable tokens the client probes are built around:
+ * an alias or cvar is named with one of these and the client is asked to
+ * echo it back, so a cheat client can't recognise a fixed string and
+ * pre-canned a reply. Fresh randomness per probe is the whole point.
+ *
+ * buffer: destination, which must have room for length + 1 bytes - a
+ *         terminator is written at buffer[length].
+ * length: how many random characters to generate.
  */
 void randomString(char *buffer, int length) {
     unsigned int i;
@@ -820,6 +1196,16 @@ void randomString(char *buffer, int length) {
  * - relative paths only
  * - no ".."s
  * - only printable characters
+ *
+ * This is a path traversal guard: several settings and commands name
+ * files to read or write, and without this a leading '/' or a "../"
+ * could reach outside the mod directory.
+ *
+ * s: the path to check.
+ *
+ * Returns PATH_VALID if acceptable, PATH_INVALID otherwise. Note
+ * PATH_MIXED_CASE exists in pathtype_t but is never returned here, so
+ * callers only ever see the two outcomes.
  */
 pathtype_t validatePath(const char *s) {
     int res = PATH_VALID;
@@ -842,6 +1228,17 @@ pathtype_t validatePath(const char *s) {
  * Print a formatted string to the server console prepended with an identifier
  * to make it obvious the message was from q2admin. Primary use-case is for
  * console logging and info prints.
+ *
+ * Since q2admin sits between the server and a game mod that's also
+ * printing to the same console, the "[q2a]" tag is what tells an admin
+ * reading the log which side a line came from.
+ *
+ * fmt: printf style format string, followed by its arguments. Output
+ *      over 8KB is truncated.
+ *
+ * Goes to the server console only - passing NULL as the edict means no
+ * player sees it, so this is safe for messages that shouldn't be
+ * broadcast.
  */
 void q2a_printf(char *fmt, ...) {
     char cbuffer[8192];
