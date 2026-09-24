@@ -2996,6 +2996,10 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
         logEvent(LT_INTERNALWARN, client, ent, text, IW_UNKNOWNCMD, 0.0, true);
     }
 
+    // Client was told to set an alias to a specific random string. A normal
+    // client will not respond to this, it'll quietly just set the alias. A
+    // custom client that doesn't know how to handle a "alias" command will
+    // probably send the string "alias" back as a chat print.
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY1) {
         // client doesn't support "alias" command, it just printed
         if (Q_stricmp(cmd, "alias") == 0) {
@@ -3041,8 +3045,11 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
     }
 
+    // Test the alias we set in stage 1. A normal client will respond with the
+    // string we set. No response is bad and receiving the key we ask for is
+    // bad and means the client isn't properly resolving the alias. 
     if (proxyinfo[client].clientcommand & CCMD_WAITFORALIASREPLY2) {
-        // alias cmd unsupported, it just printed the alias
+        // alias cmd unsupported, it just printed the requested alias name
         if (Q_stricmp(cmd, proxyinfo[client].alias_test_str1) == 0) {
             proxyinfo[client].hack.type = HT_ALIAS;
             hackDetected(ent, client, SIGNAL_ALIAS_UNSUPPORTED);

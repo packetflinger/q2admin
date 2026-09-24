@@ -242,8 +242,8 @@ typedef struct {
 #define CCMD_SCSILENCE              BIT(16)  // skin change silence
 #define CCMD_RECONNECT              BIT(17)
 #define CCMD_ALIASCHECKSTARTED      BIT(18)
-#define CCMD_WAITFORALIASREPLY1     BIT(19)
-#define CCMD_WAITFORALIASREPLY2     BIT(20)
+#define CCMD_WAITFORALIASREPLY1     BIT(19)  // SET an alias (shouldn't respond)
+#define CCMD_WAITFORALIASREPLY2     BIT(20)  // USE that alias (should respond)
 #define CCMD_WAITFORCONNECTREPLY    BIT(21)
 #define CCMD_REMEMBERHACK           BIT(22)
 #define CCMD_CLIENTOVERFLOWED       BIT(23)
