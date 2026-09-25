@@ -393,11 +393,9 @@ bool checkForFlood(int client) {
                 addCmdQueue(client, QCMD_DISCONNECT, 0, 0, chatFloodProtectMsg);
             } else if (fi->chatFloodProtectSilence < 0) {
                 proxyinfo[client].clientcommand |= CCMD_PCSILENCE;
-                evaluateSignalScore(client);
             } else {
                 proxyinfo[client].chattimeout = ltime + fi->chatFloodProtectSilence;
                 proxyinfo[client].clientcommand |= CCMD_CSILENCE;
-                evaluateSignalScore(client);
             }
             return true;
         }

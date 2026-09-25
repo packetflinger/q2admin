@@ -767,7 +767,6 @@ bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd) {
 
     t->last_match = ltime;
     raiseSignal(client, SIGNAL_AIM_TRACK);
-    evaluateSignalScore(client);
     return true;
 }
 
@@ -840,5 +839,4 @@ void checkClientDeadlines(int c) {
             }
         }
     }
-    evaluateSignalScore(c);
 }
