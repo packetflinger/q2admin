@@ -201,7 +201,9 @@ typedef struct {
     char version_test[6];           // random chars to force sending version
     float version_deadline;         // must respond by this ltime
     char client_version[MAX_VERSION_CHARS];   // build string
-    chatpest_t pest;                // tracking annoying chat behavior
+    chatstats_t chat_stats;               // tracking annoying chat behavior
+    float distance_moved;           // cumulative world units moved, see ClientThink
+    float words_per_mile;           // words chatted per mile travelled, see cprintf_internal
     freeze_t freeze;                // used to freeze a player in place
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply

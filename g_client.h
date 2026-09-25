@@ -6,6 +6,7 @@
 #pragma once
 
 #define MAXIMPULSESTOTEST           256
+#define WORLDUNITSPERMILE           63000 // assumes ~1 inch per world unit
 
 #define DEFAULTRECONNECTMSG         "Please wait to be reconnected to the server - this is normal for this level of bot protection.\nThe fastest way to do this is not to change any client info e.g. your name or skin."
 #define DEFAULTUSERDISPLAY          "%s is using a client side proxy."

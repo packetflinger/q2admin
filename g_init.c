@@ -589,7 +589,7 @@ void InitGame(void) {
         proxyinfo[i].checked_hacked_exe = 0;
         proxyinfo[i].ent = 0;
 
-        q2a_memset(&proxyinfo[i].pest, 0, sizeof(chatpest_t));
+        q2a_memset(&proxyinfo[i].chat_stats, 0, sizeof(chatstats_t));
         q2a_memset(&proxyinfo[i].freeze, 0, sizeof(freeze_t));
         q2a_memset(&proxyinfo[i].msec, 0, sizeof(player_msec_t));
         q2a_memset(&proxyinfo[i].userinfo, 0, sizeof(userinfo_t));
@@ -2122,7 +2122,7 @@ void ClientBegin(edict_t *ent) {
     proxyinfo[client].version_deadline = 0;
     proxyinfo[client].timescale_deadline = 0;
 
-    q2a_memset(&proxyinfo[client].pest, 0, sizeof(chatpest_t));
+    q2a_memset(&proxyinfo[client].chat_stats, 0, sizeof(chatstats_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
     q2a_memset(&proxyinfo[client].checkvar_deadline, 0, sizeof(float) * CHECKVAR_MAX);
     q2a_memset(&proxyinfo[client].hack, 0, sizeof(hack_t));

@@ -74,6 +74,13 @@ q2acmd_t q2aCommands[] = {
         &banOnConnect
     },
     {
+        "chat_stats",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        chatStatsRun
+    },
+    {
         "chatban",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
@@ -1689,14 +1696,30 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         } else {
             logEvent(LT_CHAT, clienti, getEnt((clienti + 1)), cbuffer, 0, 0.0, false);
 
-            chatpest_t *pest = &proxyinfo[clienti].pest;
-            pest->printchars += strlen(cbuffer) - 1; // don't count the trailing \n
-            pest->chatrate = pest->printchars / (ltime - proxyinfo[clienti].enteredgame);
-            q2a_strncpy(pest->last[pest->last_index], cbuffer, MAX_CHAT_CHARS - 1);
-            if (pest->last_index == (MSG_SAVE_COUNT - 1)) {
-                pest->last_index = -1;
+            chatstats_t *chat = &proxyinfo[clienti].chat_stats;
+            chat->printchars += strlen(cbuffer) - 1; // don't count the trailing \n
+            chat->chatrate = chat->printchars / (ltime - proxyinfo[clienti].enteredgame);
+
+            // Words said per mile travelled. A player talks while getting on
+            // with the game, so their chat is spread over the distance they
+            // cover; a chatbot parked in a corner spamming racks up words
+            // against almost no movement, which this separates out in a way a
+            // plain rate-per-second can't - a slow, steady spammer stays under
+            // the flood limits but still can't move.
+            chat->words += wordCount(cbuffer);
+            float units = proxyinfo[clienti].distance_moved;
+            if (units < 1.0f) {
+                units = 1.0f;   // never divide by zero; a client that hasn't
+                                // moved at all reads as an enormous rate,
+                                // which is exactly the case worth spotting
             }
-            pest->last_index++;
+            proxyinfo[clienti].words_per_mile = chat->words / (units / WORLDUNITSPERMILE);
+
+            q2a_strncpy(chat->last[chat->last_index], cbuffer, MAX_CHAT_CHARS - 1);
+            if (chat->last_index == (MSG_SAVE_COUNT - 1)) {
+                chat->last_index = -1;
+            }
+            chat->last_index++;
         }
     }
 

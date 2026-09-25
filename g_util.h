@@ -22,6 +22,8 @@ typedef enum {
 float angleBetweenVectors(vec3_t a, vec3_t b);
 void angleVectorsForward(vec3_t angles, vec3_t forward);
 int breakLine(char *buffer, char *buff1, char *buff2, int buff2size);
+int wordCount(const char *s);
+float decayFactor(float elapsed, float halflife);
 void G_MergeEdicts(void);
 int getLastLine(char *buffer, FILE *dumpfile, long *fpos);
 bool getLogicalValue(char *arg);

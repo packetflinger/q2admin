@@ -216,6 +216,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     int client;
     char *msg = 0;
     proxyinfo_t *cl;
+    float seconds, decay;
 
     profile_init_2(1);
     profile_init_2(2);
@@ -285,6 +286,27 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     }
 
     cl->msec.total += ucmd->msec;
+
+    // Distance covered since the last usercmd, for the words-per-mile chat
+    // metric (see cprintf_internal). The move fields are requested speeds in
+    // units/sec rather than distances, so they're scaled by this command's
+    // msec - without that the total would climb faster for a client running a
+    // higher cl_maxfps simply because it sends more commands per second.
+    // Summing the three axes rather than taking the vector length overstates
+    // diagonal movement, which doesn't matter for a ratio this coarse.
+    //
+    // Both sides of that metric are faded first, by the same factor, so it
+    // reflects how a client is behaving lately rather than averaging over the
+    // whole session - otherwise a bot that spams and then wanders off looks
+    // innocent again, and an hour in a fresh burst barely moves the number.
+    // Decaying words and distance together leaves their ratio untouched; only
+    // the weight of older data drops.
+    seconds = ucmd->msec / 1000.0f;
+    decay = decayFactor(seconds, CHATPEST_HALFLIFE);
+    cl->chat_stats.words *= decay;
+    cl->distance_moved *= decay;
+
+    cl->distance_moved += (abs(ucmd->forwardmove) + abs(ucmd->sidemove) + abs(ucmd->upmove)) * seconds;
 
     if (cl->speedfreeze) {
         if (cl->speedfreeze > ltime) {

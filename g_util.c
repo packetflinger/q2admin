@@ -579,6 +579,58 @@ int stringContains(char *buff1, char *buff2) {
 }
 
 /**
+ * How much of a value should survive after a given amount of time, for
+ * exponential decay - multiply an accumulator by this each time it's
+ * updated and old contributions fade out smoothly instead of counting
+ * forever.
+ *
+ * Decay is the alternative to a fixed reset window for "recent activity"
+ * metrics: there's no boundary for someone to pace themselves across,
+ * the value never jumps, and it costs two floats rather than a set of
+ * per-period counters.
+ *
+ * elapsed:  seconds since the value was last decayed.
+ * halflife: seconds after which a contribution counts for half as much.
+ *
+ * Returns the factor to multiply by, between 0 and 1. A non-positive
+ * halflife returns 1, i.e. no decay, so a misconfigured value degrades
+ * to plain cumulative behaviour rather than wiping the accumulator.
+ */
+float decayFactor(float elapsed, float halflife) {
+    if (halflife <= 0.0f) {
+        return 1.0f;
+    }
+    return expf(-elapsed * 0.69314718f / halflife); // ln(2) / halflife
+}
+
+/**
+ * Counts the words in a string, a word being any run of non-whitespace.
+ * Used to measure how much a player is actually saying, which is a
+ * steadier signal than raw character count - one long URL isn't chatty
+ * the way a dozen short words are.
+ *
+ * s: the string to count.
+ *
+ * Returns the number of words; 0 for an empty or whitespace-only string.
+ * Punctuation isn't special, so "hi!!!" counts once and "a - b" counts
+ * three times.
+ */
+int wordCount(const char *s) {
+    int words = 0;
+    bool inword = false;
+
+    for (; *s; s++) {
+        if (isspace((unsigned char) *s)) {
+            inword = false;
+        } else if (!inword) {
+            inword = true;
+            words++;
+        }
+    }
+    return words;
+}
+
+/**
  * Whether a string is empty or nothing but spaces, used by the config
  * and ban file readers to skip over blank lines.
  *

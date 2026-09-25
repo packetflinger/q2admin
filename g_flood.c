@@ -987,6 +987,76 @@ void displayNextFlood(edict_t *ent, int client, long floodcmd) {
 }
 
 /**
+ * "chat_stats <player>" - dumps a player's chat tracking figures, for
+ * deciding whether someone is a chatbot rather than just talkative.
+ *
+ * None of these numbers mean much alone, which is why they're shown
+ * together: a high chat rate is just as likely to be a chatty regular,
+ * and low movement on its own is someone idling in spectator. It's the
+ * combination - lots of words against almost no distance covered - that
+ * separates a parked bot from a player, and the stored recent messages
+ * are what let an admin confirm it by eye before acting.
+ *
+ * Words and distance are the decaying accumulators (see CHATPEST_HALFLIFE),
+ * so they describe recent behaviour rather than the whole session, and
+ * both will read lower than a raw running total.
+ *
+ * startarg: unused; the player is parsed from the raw argument string so
+ *           quoted names survive.
+ * ent:      who to print to. NULL when run from the server console, which
+ *           is the only place this is registered.
+ * client:   the invoking client index, used to resolve the target name.
+ *
+ * Returns nothing; prints the usage line if no player matched.
+ *
+ * Called via the "chat_stats" entry in q2aCommands[] (g_cmd.c).
+ */
+void chatStatsRun(int startarg, edict_t *ent, int client) {
+    char *text;
+    edict_t *enti;
+    int clienti;
+    chatstats_t *chat;
+    float miles;
+
+    text = getArgs();
+    if (!ent) {
+        while (*text != ' ') {
+            text++;
+        }
+    }
+    SKIPBLANK(text);
+    enti = getClientFromArg(client, ent, &clienti, text, &text);
+
+    if (!enti) {
+        gi.cprintf(ent, PRINT_HIGH, "[sv] chat_stats %s\n", PLAYERSPEC);
+        return;
+    }
+
+    chat = &proxyinfo[clienti].chat_stats;
+    miles = proxyinfo[clienti].distance_moved / WORLDUNITSPERMILE;
+
+    cprintf_internal(ent, PRINT_HIGH, "Chat stats for %s:\n", proxyinfo[clienti].name);
+    cprintf_internal(ent, PRINT_HIGH, "  words:        %.1f (decaying, %.0fs half-life)\n",
+            chat->words, (float) CHATPEST_HALFLIFE);
+    cprintf_internal(ent, PRINT_HIGH, "  distance:     %.0f units (%.3f miles)\n",
+            proxyinfo[clienti].distance_moved, miles);
+    cprintf_internal(ent, PRINT_HIGH, "  words/mile:   %.1f\n", proxyinfo[clienti].words_per_mile);
+    cprintf_internal(ent, PRINT_HIGH, "  chars/sec:    %.2f\n", chat->chatrate);
+    cprintf_internal(ent, PRINT_HIGH, "  total chars:  %d\n", chat->printchars);
+
+    // The stored messages are a circular buffer, so walk back from the
+    // most recent rather than printing the array in slot order - the
+    // newest few are what an admin actually wants to read.
+    for (int i = 0; i < MSG_SAVE_COUNT; i++) {
+        int idx = (chat->last_index - 1 - i + (MSG_SAVE_COUNT * 2)) % MSG_SAVE_COUNT;
+
+        if (chat->last[idx][0]) {
+            cprintf_internal(ent, PRINT_HIGH, "  recent[%d]:    %s", i + 1, chat->last[idx]);
+        }
+    }
+}
+
+/**
  * "!floodcmd [SW/EX/RE] "command"" - appends one rule to the
  * flood-command list at runtime, for bringing a command under the chat
  * limit without editing the flood file and reloading. Useful when a

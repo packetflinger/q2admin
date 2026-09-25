@@ -22,6 +22,12 @@
 // how many chats for each player to save for analysis.
 #define MSG_SAVE_COUNT 4
 
+// Half-life in seconds for the words-per-mile accumulators. Chat and
+// distance from this long ago count for half as much, from twice as long
+// ago a quarter, and so on - so the metric tracks what a client is doing
+// lately rather than averaging over the whole session.
+#define CHATPEST_HALFLIFE 120.0f
+
 typedef struct {
     char *floodcmd;
     byte type;
@@ -37,10 +43,11 @@ typedef struct {
 typedef struct {
     float chatrate;             // print characters per second, running average
     int printchars;             // cumulative # of characters said
+    float words;                // decaying # of words said, for words_per_mile
     float stutterrate;          //
     char last[MSG_SAVE_COUNT][MAX_CHAT_CHARS]; // circular arr of last x chats
     int last_index;             // where we are in the array
-} chatpest_t;
+} chatstats_t;
 
 extern bool fpsFloodExempt;
 extern bool nameChangeFloodProtect;
@@ -58,6 +65,7 @@ extern struct chatflood_s floodinfo;
 
 void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
+void chatStatsRun(int startarg, edict_t *ent, int client);
 bool checkForFlood(int client);
 bool checkforfloodcmd(char *cp, int floodcmd);
 bool checkforfloodcmds(char *cp);
