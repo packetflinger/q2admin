@@ -76,7 +76,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
             v->is_relay = relay_val && Q_stricmp((char *)relay_val, "true") == 0;
             if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
                 v->state = VPN_POSITIVE;
-                raiseSignal(i, SIGNAL_VPN);
+                raiseSignal(i, SIGNAL_VPN_DETECTED);
                 evaluateSignalScore(i);
             }
         }

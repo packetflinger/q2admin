@@ -2583,7 +2583,7 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
  * flagged CCMD_NITRO2PROXY and allowed.
  *
  * Note this doesn't disconnect anyone itself. It raises
- * SIGNAL_HACK_PROXY, which carries the kick-level weight, but doesn't
+ * SIGNAL_PROXY_DETECTED, which carries the kick-level weight, but doesn't
  * call evaluateSignalScore(), so removal waits until something else
  * evaluates that client's score.
  */
@@ -2605,7 +2605,7 @@ void proxyDetected(edict_t *ent, int client) {
     if (customClientCmd[0]) {
         addCmdQueue(client, QCMD_CUSTOM, 0, 0, 0);
     }
-    raiseSignal(client, SIGNAL_HACK_PROXY);
+    raiseSignal(client, SIGNAL_PROXY_DETECTED);
 }
 
 /**
@@ -3077,15 +3077,22 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             return false;
         }
 
+        // A previous connection attempt was instructed to reconnect, testing
+        // the evaluation order of CVARs vs aliases. CVARs should be first
+        // resulting in a successful reconnect, otherwise client is marked as
+        // modified (or non-legit) and handled here. 
         if (proxyinfo[client].hack.disconnect) {
             sameip = 1;
+            // Just in case someone else grabbed this slot before the offender
+            // could reconnect. If the IPs are different, it's a different player
+            // so don't raise the signal.
             if (!net_addressesMatch(&proxyinfo[client].hack.addr, &proxyinfo[client].address)) {
                 sameip = 0;
             }
             if (sameip == 1) {
                 proxyinfo[client].hack.disconnect = false;
                 proxyinfo[client].hack.type = HT_UNKNOWN;
-                hackDetected(ent, client, SIGNAL_HACK_UNKNOWN);
+                hackDetected(ent, client, SIGNAL_BAD_CLIENT);
                 return false;
             }
             proxyinfo[client].hack.disconnect = false;

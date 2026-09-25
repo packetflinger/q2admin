@@ -33,7 +33,6 @@ typedef struct {
 // here are just the defaults.
 static signal_def_t signalDefs[] = {
     { SIGNAL_AIMBOT_JITTER,             25,  "aimbot-jitter" },
-    { SIGNAL_VPN,                       25,  "vpn" },
     { SIGNAL_CHATFLOOD,                 15,  "chatflood" },
     { SIGNAL_SNAP_FIRE,                 40,  "snap-fire" },
     { SIGNAL_AIM_TRACK,                 30,  "aim-track" },
@@ -49,20 +48,14 @@ static signal_def_t signalDefs[] = {
     { SIGNAL_BAN_ADJUSTMENT,             0,  "ban-entry" },
     { SIGNAL_VPN_SUSPICIOUS,            20,  "vpn-suspicious" },
     { SIGNAL_VPN_LIKEY,                 30,  "vpn-likely" },
-    { SIGNAL_VPN_DETECTED,              40,  "vpn-found" },
+    { SIGNAL_VPN_DETECTED,              40,  "vpn-detected" },
     { SIGNAL_WONKY_USERINFO,            15,  "wonky-userinfo" },
     { SIGNAL_TIMESCALE_MODIFIED,   1000000,  "timescale-modified" },
     { SIGNAL_ZBOT_DETECTED,        1000000,  "zbot-detected" },
     { SIGNAL_RATBOT_DETECTED,      1000000,  "ratbot-detected" },
-    { SIGNAL_HACK_PROXY,           1000000,  "hack-proxy" },
-    { SIGNAL_HACK_AIMBOT,          1000000,  "hack-aimbot" },
-    { SIGNAL_HACK_ZBOT,            1000000,  "hack-zbot" },
-    { SIGNAL_HACK_RATBOT,          1000000,  "hack-ratbot" },
-    { SIGNAL_HACK_CUSTOMCLIENT,    1000000,  "hack-customclient" },
-    { SIGNAL_HACK_MSEC,            1000000,  "hack-msec" },
+    { SIGNAL_PROXY_DETECTED,       1000000,  "proxy-detected" },
     { SIGNAL_ALIAS_UNSUPPORTED,    1000000,  "alias-unsupported" },
-    { SIGNAL_HACK_STUFF,           1000000,  "hack-stuff" },
-    { SIGNAL_HACK_UNKNOWN,         1000000,  "hack-unknown" },
+    { SIGNAL_BAD_CLIENT,           1000000,  "bad-client" },
 };
 
 /**
@@ -155,26 +148,6 @@ char *signalListString(int client) {
         q2a_strncpy(list, "(none)", sizeof(list)-1);
     }
     return list;
-}
-
-/**
- * Maps a hacktype_t (the reason hackDetected() is disconnecting a client)
- * to its corresponding signal bit, purely so it's visible on the client's
- * signal mask alongside the other detections.
- */
-unsigned int signalForHacktype(hacktype_t h) {
-    switch (h) {
-        case HT_GENERAL_PROXY:  return SIGNAL_HACK_PROXY;
-        case HT_GENERAL_AIMBOT: return SIGNAL_HACK_AIMBOT;
-        case HT_ZBOT:            return SIGNAL_HACK_ZBOT;
-        case HT_RATBOT:          return SIGNAL_HACK_RATBOT;
-        case HT_CUSTOM_CLIENT:   return SIGNAL_HACK_CUSTOMCLIENT;
-        case HT_MSEC:            return SIGNAL_HACK_MSEC;
-        //case HT_ALIAS:           return SIGNAL_ALIAS_UNSUPPORTED;
-        case HT_STUFF:           return SIGNAL_HACK_STUFF;
-        case HT_USERINFO:        return SIGNAL_WONKY_USERINFO;
-        default:                 return SIGNAL_HACK_UNKNOWN;
-    }
 }
 
 /**
