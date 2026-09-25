@@ -32,9 +32,9 @@ typedef struct {
 // findSignalDef()/signalWeightRun()/signalWeightInit() below. The values
 // here are just the defaults.
 static signal_def_t signalDefs[] = {
-    { SIGNAL_AIMBOT_JITTER,             25,  "aimbot-jitter" },
+    { SIGNAL_AIMBOT_JITTER,             15,  "aimbot-jitter" }, // each
     { SIGNAL_CHATFLOOD,                 15,  "chatflood" },
-    { SIGNAL_SNAP_FIRE,                 40,  "snap-fire" },
+    { SIGNAL_SNAP_FIRE,                 15,  "snap-fire" },     // each
     { SIGNAL_AIM_TRACK,                 30,  "aim-track" },
     { SIGNAL_SKIN_OVERFLOW,             25,  "skin-overflow" },
     { SIGNAL_VERSION_DEADLINE,          20,  "version-probe" },
@@ -43,7 +43,7 @@ static signal_def_t signalDefs[] = {
     { SIGNAL_CHECKVAR_DEADLINE,         20,  "checkvar-probe" },
     { SIGNAL_MSEC_OVERRUN,              20,  "msec-overrun" },
     { SIGNAL_MSEC_UNDERRUN,             20,  "msec-underrun" },
-    { SIGNAL_IMPULSE,                   10,  "impulse-sent" },
+    { SIGNAL_IMPULSE,                   10,  "impulse-sent" },  // each 
     { SIGNAL_MANUAL,                     0,  "admin-adjustment" },
     { SIGNAL_BAN_ADJUSTMENT,             0,  "ban-entry" },
     { SIGNAL_VPN_SUSPICIOUS,            20,  "vpn-suspicious" },
@@ -102,6 +102,10 @@ int signalScore(int client) {
                 score += cl->ban_signal_score;
             } else if (signalDefs[i].bit == SIGNAL_MANUAL) {
                 score += cl->manual_signal_score;
+            } else if (signalDefs[i].bit == SIGNAL_AIMBOT_JITTER) {
+                score += (signalDefs[i].weight * cl->aim_assist.jitter);
+            }else if (signalDefs[i].bit == SIGNAL_SNAP_FIRE) {
+                score += (signalDefs[i].weight * cl->aimsnap.snapcount);
             } else {
                 score += signalDefs[i].weight;
             }
@@ -137,6 +141,10 @@ char *signalListString(int client) {
                 q2a_strcat(list, va("%s(%d)", signalDefs[i].name, proxyinfo[client].manual_signal_score));
             } else if (signalDefs[i].bit == SIGNAL_IMPULSE) {
                 q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].impulsesgenerated));
+            } else if (signalDefs[i].bit == SIGNAL_SNAP_FIRE) {
+                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].aimsnap.snapcount));
+            } else if (signalDefs[i].bit == SIGNAL_AIMBOT_JITTER) {
+                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].aim_assist.jitter));
             } else {
                 q2a_strcat(list, va("%s(%d)", signalDefs[i].name, signalDefs[i].weight));
             }

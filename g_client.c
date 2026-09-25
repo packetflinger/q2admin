@@ -557,11 +557,10 @@ bool checkForAimbot(int client, usercmd_t *ucmd) {
             if (!a->jitter) {
                 a->jitter_time = ltime;
             }
+            raiseSignal(client, SIGNAL_AIMBOT_JITTER);
             if (a->jitter++ >= zbc_jittermax) {
                 return true;
             }
-            raiseSignal(client, SIGNAL_AIMBOT_JITTER);
-            evaluateSignalScore(client);
         }
         a->jitter_last = ltime;
     }
@@ -649,8 +648,8 @@ bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd) {
     }
 
     s->last_snap = ltime;
+    s->snapcount++;
     raiseSignal(client, SIGNAL_SNAP_FIRE);
-    evaluateSignalScore(client);
     return true;
 }
 

@@ -19,7 +19,7 @@
 
 #define SIGNAL_AIMBOT_JITTER       BIT(0)  // suspicious angle snapping, below confirmed-aimbot threshold
 #define SIGNAL_CHATFLOOD           BIT(1)  // sending chat messages faster than allowed
-#define SIGNAL_PROXY_DETECTED      BIT(2)  // HT_GENERAL_PROXY
+#define SIGNAL_PROXY_DETECTED      BIT(2)  // Related to reconnection 
 #define SIGNAL_TIMESCALE_MODIFIED  BIT(4)  // Client's timescale is more than 1.0
 #define SIGNAL_ALIAS_UNSUPPORTED   BIT(5)  // Client doesn't handle "alias" command properly
 #define SIGNAL_WONKY_USERINFO      BIT(6)  // A standard key is missing from userinfo

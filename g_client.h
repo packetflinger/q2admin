@@ -71,6 +71,7 @@ typedef struct {
     bool haslast;          // false until lastangles holds a real sample
     bool wasattacking;     // BUTTON_ATTACK state on the previous frame
     float last_snap;       // ltime a snap-fire was last detected, for decay
+    int snapcount;         // how many times has this matched? This * weight = score
 } aimsnap_t;
 
 // Tracks a player's crosshair error against the nearest visible enemy,
