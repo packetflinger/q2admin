@@ -221,6 +221,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
 
     profile_init_2(1);
     profile_init_2(2);
+    profile_init_2(3);
 
     if (!dllloaded) {
         return;
@@ -396,14 +397,18 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
                 addCmdQueue(client, QCMD_RESTART, 1, IW_ZBCHECK, 0);
             }
         }
-
+        
+        profile_start(3);
         if (snapfire_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
             checkForSnapFire(client, ent, ucmd);
         }
+        profile_stop_2(3, "q2a->checkForSnapFire", 0, NULL);
 
+        profile_start(3);
         if (track_enable && !(cl->clientcommand & CCMD_ZBOTDETECTED)) {
             checkForTracking(client, ent, ucmd);
         }
+        profile_stop_2(3, "q2a->checkForTracking", 0, NULL);
 
         profile_start(2);
         ge_mod->ClientThink(ent, ucmd);
