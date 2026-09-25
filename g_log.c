@@ -442,7 +442,13 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     dest++;
                 }
             } else if (*format == 'f') {
-                Q_snprintf(dest, sizeof(dest), "%g", ret_time);
+                // %g would switch to scientific notation once the exponent
+                // drops below -4, so a fast function logs as "4.1e-06" while
+                // a slower one logs as "0.00041" - the same column in the same
+                // file, in two different formats. %f keeps it decimal; 6 places
+                // resolves down to a microsecond, which is finer than clock()
+                // ticks on any platform this runs on.
+                Q_snprintf(dest, sizeof(dest), "%.6f", ret_time);
                 while (*dest) {
                     dest++;
                 }
