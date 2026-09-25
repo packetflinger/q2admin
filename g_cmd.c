@@ -2899,6 +2899,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             removeClientCommand(client, QCMD_ZPROXYCHECK2);
             return false;
         } else if (Q_stricmp(cmd, zbot_str_please_disconnect) == 0) {
+            // normal clients will "say" the disconnect request, just swallow it.
             return false;
         } else if (Q_stricmp(cmd, zbot_str_q2e) == 0) {
             if (!zbotdetect || !proxyinfo[client].inuse || (proxyinfo[client].clientcommand & CCMD_ZBOTDETECTED)) {
