@@ -174,4 +174,3 @@ bool checkForAimbot(int client, usercmd_t *ucmd);
 bool checkForSnapFire(int client, edict_t *ent, usercmd_t *ucmd);
 bool checkForTracking(int client, edict_t *ent, usercmd_t *ucmd);
 void checkClientDeadlines(int c);
-char *hacktypeToString(hacktype_t h);
