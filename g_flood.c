@@ -987,6 +987,50 @@ void displayNextFlood(edict_t *ent, int client, long floodcmd) {
 }
 
 /**
+ * Recomputes a client's chat-versus-activity ratios from the current
+ * accumulators.
+ *
+ * Both ratios have to be refreshed whenever *either* side changes, not
+ * just when the player chats. Decay alone never moves them - words and
+ * their denominators fade by the same factor, so it cancels out - but
+ * adding to either side does, and distance and shots accrue constantly
+ * while chat arrives only occasionally. Recalculating on chat alone left
+ * the figures frozen at whatever they were the last time the player
+ * said something, so a spammer who then went and played still showed
+ * their old, damning numbers.
+ *
+ * client: the client whose ratios to refresh.
+ *
+ * Returns nothing; updates words_per_mile and words_per_shot in place.
+ *
+ * Called from ClientThink() (g_client.c) every usercmd, so the figures
+ * are always current, and from cprintf_internal() (g_cmd.c) right after
+ * a chat message adds to the word count.
+ */
+void updateChatStats(int client) {
+    if (!VALIDCLIENT(client)) {
+        return;
+    }
+    proxyinfo_t *cl = &proxyinfo[client];
+    float units = cl->distance_moved;
+    float shots = cl->shots_fired;
+
+    // Divide guards. These also floor how low a ratio can read: a client
+    // with under a mile's worth of movement or a single shot's worth of
+    // shooting is treated as having exactly that, so an idle client's
+    // number stays large rather than dividing down to nothing.
+    if (units < 1.0f) {
+        units = 1.0f;
+    }
+    if (shots < 1.0f) {
+        shots = 1.0f;
+    }
+
+    cl->words_per_mile = cl->chat_stats.words / (units / WORLDUNITSPERMILE);
+    cl->words_per_shot = cl->chat_stats.words / shots;
+}
+
+/**
  * "chat_stats <player>" - dumps a player's chat tracking figures, for
  * deciding whether someone is a chatbot rather than just talkative.
  *

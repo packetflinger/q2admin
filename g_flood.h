@@ -66,6 +66,7 @@ extern struct chatflood_s floodinfo;
 void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
 void chatStatsRun(int startarg, edict_t *ent, int client);
+void updateChatStats(int client);
 bool checkForFlood(int client);
 bool checkforfloodcmd(char *cp, int floodcmd);
 bool checkforfloodcmds(char *cp);

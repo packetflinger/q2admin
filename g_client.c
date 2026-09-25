@@ -326,6 +326,12 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     }
     cl->was_attacking = attacking;
 
+    // Refresh the ratios here rather than only when the player chats. Both
+    // denominators grow every usercmd, so computing them on chat alone left
+    // them frozen at whatever they read when the player last spoke - someone
+    // who spammed and then went and played kept their old numbers.
+    updateChatStats(client);
+
     if (cl->speedfreeze) {
         if (cl->speedfreeze > ltime) {
             ucmd->msec = 0;
