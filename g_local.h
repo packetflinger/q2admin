@@ -204,6 +204,9 @@ typedef struct {
     chatstats_t chat_stats;               // tracking annoying chat behavior
     float distance_moved;           // cumulative world units moved, see ClientThink
     float words_per_mile;           // words chatted per mile travelled, see cprintf_internal
+    float shots_fired;              // decaying count of attack presses, see ClientThink
+    bool was_attacking;             // BUTTON_ATTACK state last usercmd, to count presses
+    float words_per_shot;           // words chatted per shot fired, see cprintf_internal
     freeze_t freeze;                // used to freeze a player in place
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply

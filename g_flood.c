@@ -997,7 +997,7 @@ void displayNextFlood(edict_t *ent, int client, long floodcmd) {
  * separates a parked bot from a player, and the stored recent messages
  * are what let an admin confirm it by eye before acting.
  *
- * Words and distance are the decaying accumulators (see CHATPEST_HALFLIFE),
+ * Words and distance are the decaying accumulators (see CHATSTAT_HALFLIFE),
  * so they describe recent behaviour rather than the whole session, and
  * both will read lower than a raw running total.
  *
@@ -1037,10 +1037,12 @@ void chatStatsRun(int startarg, edict_t *ent, int client) {
 
     cprintf_internal(ent, PRINT_HIGH, "Chat stats for %s:\n", proxyinfo[clienti].name);
     cprintf_internal(ent, PRINT_HIGH, "  words:        %.1f (decaying, %.0fs half-life)\n",
-            chat->words, (float) CHATPEST_HALFLIFE);
+            chat->words, (float) CHATSTAT_HALFLIFE);
     cprintf_internal(ent, PRINT_HIGH, "  distance:     %.0f units (%.3f miles)\n",
             proxyinfo[clienti].distance_moved, miles);
     cprintf_internal(ent, PRINT_HIGH, "  words/mile:   %.1f\n", proxyinfo[clienti].words_per_mile);
+    cprintf_internal(ent, PRINT_HIGH, "  shots fired:  %.1f\n", proxyinfo[clienti].shots_fired);
+    cprintf_internal(ent, PRINT_HIGH, "  words/shot:   %.1f\n", proxyinfo[clienti].words_per_shot);
     cprintf_internal(ent, PRINT_HIGH, "  chars/sec:    %.2f\n", chat->chatrate);
     cprintf_internal(ent, PRINT_HIGH, "  total chars:  %d\n", chat->printchars);
 

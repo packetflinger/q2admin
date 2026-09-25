@@ -217,6 +217,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     char *msg = 0;
     proxyinfo_t *cl;
     float seconds, decay;
+    bool attacking;
 
     profile_init_2(1);
     profile_init_2(2);
@@ -302,11 +303,28 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     // Decaying words and distance together leaves their ratio untouched; only
     // the weight of older data drops.
     seconds = ucmd->msec / 1000.0f;
-    decay = decayFactor(seconds, CHATPEST_HALFLIFE);
+    decay = decayFactor(seconds, CHATSTAT_HALFLIFE);
     cl->chat_stats.words *= decay;
     cl->distance_moved *= decay;
+    cl->shots_fired *= decay;
 
     cl->distance_moved += (abs(ucmd->forwardmove) + abs(ucmd->sidemove) + abs(ucmd->upmove)) * seconds;
+
+    // Shots fired, for the companion words-per-shot metric. Moving around
+    // says a client is present; actually shooting says it's playing, which a
+    // spambot parked in a corner won't be doing however much it wanders.
+    //
+    // Counted on the press rather than while the button is held: a single
+    // click spans several usercmds at any decent framerate, so counting every
+    // frame would both inflate the number and make it depend on cl_maxfps.
+    // The trade-off is that holding an automatic weapon down counts once, so
+    // this measures trigger pulls rather than rounds - fine for a coarse "is
+    // this client playing at all" signal.
+    attacking = (ucmd->buttons & BUTTON_ATTACK) != 0;
+    if (attacking && !cl->was_attacking) {
+        cl->shots_fired += 1.0f;
+    }
+    cl->was_attacking = attacking;
 
     if (cl->speedfreeze) {
         if (cl->speedfreeze > ltime) {

@@ -26,7 +26,7 @@
 // distance from this long ago count for half as much, from twice as long
 // ago a quarter, and so on - so the metric tracks what a client is doing
 // lately rather than averaging over the whole session.
-#define CHATPEST_HALFLIFE 120.0f
+#define CHATSTAT_HALFLIFE 120.0f
 
 typedef struct {
     char *floodcmd;

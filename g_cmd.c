@@ -1715,6 +1715,18 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
             }
             proxyinfo[clienti].words_per_mile = chat->words / (units / WORLDUNITSPERMILE);
 
+            // Words said per shot fired, the companion to the above. Distance
+            // catches a bot that never moves, but not one that walks a patrol
+            // route while spamming; firing is harder to fake incidentally and
+            // needs no aim or hits to count, so it reads as "is this client
+            // actually playing" rather than merely "is it animate".
+            float shots = proxyinfo[clienti].shots_fired;
+            if (shots < 1.0f) {
+                shots = 1.0f;   // same divide guard as above; a client that
+                                // has never fired reads as an enormous rate
+            }
+            proxyinfo[clienti].words_per_shot = chat->words / shots;
+
             q2a_strncpy(chat->last[chat->last_index], cbuffer, MAX_CHAT_CHARS - 1);
             if (chat->last_index == (MSG_SAVE_COUNT - 1)) {
                 chat->last_index = -1;
