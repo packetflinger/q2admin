@@ -21,7 +21,7 @@
 #define SIGNAL_CHATFLOOD           BIT(1)  // sending chat messages faster than allowed
 #define SIGNAL_PROXY_DETECTED      BIT(2)  // HT_GENERAL_PROXY
 #define SIGNAL_TIMESCALE_MODIFIED  BIT(4)  // Client's timescale is more than 1.0
-#define SIGNAL_ALIAS_UNSUPPORTED   BIT(5)  // HT_ALIAS
+#define SIGNAL_ALIAS_UNSUPPORTED   BIT(5)  // Client doesn't handle "alias" command properly
 #define SIGNAL_WONKY_USERINFO      BIT(6)  // A standard key is missing from userinfo
 #define SIGNAL_BAD_CLIENT          BIT(7)  // Client doesn't behave the way we know it should
 #define SIGNAL_SNAP_FIRE           BIT(8)  // view snapped onto a player that wasn't near the crosshair, firing immediately
