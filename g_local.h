@@ -265,73 +265,73 @@ typedef struct {
  * have no say or influence on these commands.
  */
 enum _commands {
-    QCMD_STARTUP,
+    QCMD_STARTUP,                   // initiate checking new client
     QCMD_STARTUPTEST,
-    QCMD_CLEAR,                 // clears the client's console/chat area
-    QCMD_DISCONNECT,
-    QCMD_CUSTOM,                // stuff customClientCmd
-    QCMD_ZPROXYCHECK1,
-    QCMD_ZPROXYCHECK2,
-    QCMD_DISPLOGFILE,
-    QCMD_DISPLOGFILELIST,
-    QCMD_DISPLOGEVENTLIST,
-    QCMD_CONNECTCMD,                // do both client and server custom cmds
-    QCMD_LOGZBOT,                   // a zbot was detected, log it
-    QCMD_LOGZBOTIMPULSE,            // log the control keys sent by a zbot
-    QCMD_LOGIMPULSE,                // log a regular impulse
-    QCMD_RESTART,
-    QCMD_CLIPTOMAXRATE,
-    QCMD_CLIPTOMINRATE,
-    QCMD_SETUPMAXFPS,
-    QCMD_FORCEUDATAUPDATE,
-    QCMD_SETMAXFPS,
-    QCMD_SETMINFPS,
-    QCMD_DISPBANS,
-    QCMD_DISPLRCONS,
-    QCMD_DISPFLOOD,
-    QCMD_DISPSPAWN,
-    QCMD_DISPVOTE,
-    QCMD_DISPDISABLE,
-    QCMD_CHANGENAME,
-    QCMD_CHANGESKIN,
-    QCMD_BAN,
-    QCMD_DISPCHATBANS,
-    QCMD_STUFFCLIENT,
-    QCMD_AUTHADMINPASS,             // auth using global adminpassword
-    QCMD_AUTHADMIN,                 // auth using unique user/pass
-    QCMD_AUTHBYPASS,                // auth as bypass with user/pass
-    QCMD_RUNVOTECMD,
-    QCMD_TESTRATBOT,
+    QCMD_CLEAR,                     // Clears the client's console/chat area
+    QCMD_DISCONNECT,                // Remove player, for whatever reason
+    QCMD_CUSTOM,                    // Stuff customClientCmd
+    QCMD_ZPROXYCHECK1,              // Send test cmd and terminator
+    QCMD_ZPROXYCHECK2,              // Listen for test and term replies
+    QCMD_DISPLOGFILE,               // Output log 1 line per srv frame (BAD)
+    QCMD_DISPLOGFILELIST,           // Output all logs files 1 per srv frame
+    QCMD_DISPLOGEVENTLIST,          // Show log events we care about
+    QCMD_CONNECTCMD,                // Do both client and server custom cmds
+    QCMD_LOGZBOT,                   // A zbot was detected, log it
+    QCMD_LOGZBOTIMPULSE,            // Log the control keys sent by a zbot
+    QCMD_LOGIMPULSE,                // Log any regular impulses (rare)
+    QCMD_RESTART,                   // Start zproxy check again (QCMD_ZPROXYCHECK1)
+    QCMD_CLIPTOMAXRATE,             // Force client to max rate of our choice
+    QCMD_CLIPTOMINRATE,             // Force client to min rate of our choice
+    QCMD_SETUPMAXFPS,               // Force client to send cl_maxfps in userinfo
+    QCMD_FORCEUDATAUPDATE,          // Force client to send userinfo
+    QCMD_SETMAXFPS,                 // Stuff client the max allowed cl_maxfps
+    QCMD_SETMINFPS,                 // Stuff client the min allowed cl_maxfps
+    QCMD_DISPBANS,                  // Show current banlist in console (throttled)
+    QCMD_DISPLRCONS,                // Show current lrcons in console (throttled)
+    QCMD_DISPFLOOD,                 // Show current flood setup (throttled)
+    QCMD_DISPSPAWN,                 // Show current spawn overrides (throttled)
+    QCMD_DISPVOTE,                  // Show available vote proposals (throttled)
+    QCMD_DISPDISABLE,               // Show all disabled commands (throttled)
+    QCMD_CHANGENAME,                // Force client to change name to what we have for them
+    QCMD_CHANGESKIN,                // Force client to change skin to what we have for them
+    QCMD_BAN,                       // Print to console/player then sets QCMD_DISCONNECT
+    QCMD_DISPCHATBANS,              // Show current chat bans (throttled)
+    QCMD_STUFFCLIENT,               // For stuffing a file full of commands to client (throttled)
+    QCMD_AUTHADMINPASS,             // Auth using global adminpassword
+    QCMD_AUTHADMIN,                 // Auth using unique user/pass
+    QCMD_AUTHBYPASS,                // Auth as bypass with user/pass
+    QCMD_RUNVOTECMD,                // Vote was successful, apply the command
+    QCMD_TESTRATBOT,                // Initiate tests for ratbots
     QCMD_TESTRATBOT2,
     QCMD_TESTRATBOT3,
     QCMD_TESTRATBOT4,
-    QCMD_LETRATBOTQUIT,
-    QCMD_TESTTIMESCALE,
-    QCMD_TESTSTANDARDPROXY,
+    QCMD_LETRATBOTQUIT,             // Ask nicely for it to quit on its own
+    QCMD_TESTTIMESCALE,             // Ask client for timescale value every 15 secs (guarded)
+    QCMD_TESTSTANDARDPROXY,         // Start sending private commands
     QCMD_TESTALIASCMD1,             // set a random alias
     QCMD_TESTALIASCMD2,             // ask for the value
     QCMD_SETUPCL_PITCHSPEED,
-    QCMD_FORCEUDATAUPDATEPS,
+    QCMD_FORCEUDATAUPDATEPS,        // Force client to send userinfo using cl_pitchspeed
     QCMD_SETUPCL_ANGLESPEEDKEY,
-    QCMD_FORCEUDATAUPDATEAS,
-    QCMD_RECONNECT,
-    QCMD_KICK,
-    QCMD_DISPCHECKVAR,
-    QCMD_CHECKVARTESTS,
-    QCMD_PMODVERTIMEOUT,
-    QCMD_PMODVERTIMEOUT_INGAME,
-    QCMD_SHOWMOTD,
-    QCMD_EXECMAPCFG,                // force client to exec various .cfg files
-    QCMD_PRIVATECOMMAND,
-    QCMD_GL_CHECK,
-    QCMD_SETUPTIMESCALE,
-    QCMD_SETTIMESCALE,
-    QCMD_SPAMBYPASS,
-    QCMD_GETCMDQUEUE,
+    QCMD_FORCEUDATAUPDATEAS,        // Force client to send userinfo using cl_anglespeed
+    QCMD_RECONNECT,                 // Tell client to reconnect to reconnect_address
+    QCMD_KICK,                      // Tell server to "kick <player>"
+    QCMD_DISPCHECKVAR,              // Show all checkvar settings in console (throttled)
+    QCMD_CHECKVARTESTS,             // Run the tests for all variables to check for
+    QCMD_PMODVERTIMEOUT,            // No response to p_mod version probe, currently NO-OP
+    QCMD_PMODVERTIMEOUT_INGAME,     // No-op
+    QCMD_SHOWMOTD,                  // Centerprint the motd, if one is set
+    QCMD_EXECMAPCFG,                // Force client to exec various .cfg files
+    QCMD_PRIVATECOMMAND,            // Part of standard proxy test, stuffs 4 custom commands
+    QCMD_GL_CHECK,                  // No-op
+    QCMD_SETUPTIMESCALE,            // Force client to add timescale to their userinfo
+    QCMD_SETTIMESCALE,              // Force player to set timescale = 1
+    QCMD_SPAMBYPASS,                // No-op, used to just print something
+    QCMD_GETCMDQUEUE,               // Stuffs p_bocklist and p_server 
     QCMD_TESTCMDQUEUE,
-    QCMD_CLIENTVERSION,
-    QCMD_FREEZEPLAYER,
-    QCMD_UNFREEZEPLAYER
+    QCMD_CLIENTVERSION,             // Ask client for their software version string
+    QCMD_FREEZEPLAYER,              // Lock player in place by overriding msec with 0
+    QCMD_UNFREEZEPLAYER             // Stop overriding player's msec
 };
 
 // Internal Warnings for logging
