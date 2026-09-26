@@ -285,7 +285,6 @@ void G_RunFrame(void) {
                     addCmdQueue(client, QCMD_STARTUPTEST, 5, 0, 0);
                     proxyinfo[client].retries++;
                 } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
-                    //stuffPlayer(ent, "disconnect\n");
                     proxyinfo[client].clientcommand |= CCMD_KICKED;
                     logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0, true);
                     gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
@@ -356,6 +355,9 @@ void G_RunFrame(void) {
 
                     randomString(ReconnectString, 5);
                     randomString(rndConnectString, 5);
+                    
+                    // "set <str1> <reconnect_addr>"
+                    // "set <str2> connect"
                     Q_snprintf(
                         buffer,
                         sizeof(buffer),
@@ -369,6 +371,9 @@ void G_RunFrame(void) {
                     randomString(proxyinfo[client].connect_test_str, RANDOM_STRING_LENGTH);
                     randomString(checkConnectProxy, RANDOM_STRING_LENGTH);
 
+                    // "alias connect <str3>"
+                    // "alias <str4> $<randstr> $<str1>"
+                    // "<str2>"
                     Q_snprintf(
                         buffer,
                         sizeof(buffer),
@@ -379,10 +384,11 @@ void G_RunFrame(void) {
                         ReconnectString,
                         checkConnectProxy
                     );
-
+                    
+                    // "set"s should be resolved before "alias"es, so stuffing
+                    // <str2> should resolve to "connect <reconnect_address".
                     proxyinfo[client].clientcommand |= CCMD_WAITFORCONNECTREPLY;
                     stuffPlayer(ent, buffer);
-                    //addCmdQueue(client, QCMD_KICK, 0, 0, NULL);
                 } else {
                     // add command to back of line for processing later..
                     addCmdQueue(client, command, 0, data, str);
@@ -437,6 +443,9 @@ void G_RunFrame(void) {
                 proxyinfo[client].teststr[7] = 0;
                 proxyinfo[client].teststr[8] = 0;
 
+                // If both commands are sent back to the server, it's all good.
+                // If only the second command comes back (q2eXX), we know it's
+                // proxy/bot.
                 Q_snprintf(buffer, sizeof(buffer), "\n%s\n%s\n", proxyinfo[client].teststr, zbot_str_q2e);
                 stuffPlayer(ent, buffer);
 
