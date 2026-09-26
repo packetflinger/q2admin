@@ -1260,8 +1260,6 @@ void randomString(char *buffer, int length) {
  * callers only ever see the two outcomes.
  */
 pathtype_t validatePath(const char *s) {
-    int res = PATH_VALID;
-
     if (*s == '/') {
         return PATH_INVALID;
     }
@@ -1273,7 +1271,7 @@ pathtype_t validatePath(const char *s) {
             return PATH_INVALID;
         }
     }
-    return res;
+    return PATH_VALID;
 }
 
 /**
