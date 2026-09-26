@@ -23,11 +23,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 int clientsidetimeout = 30; // 30 seconds should be good for internet play
 int zbotdetectactivetimeout = 0; // -1 == random
 
+// A pool of leading punctuation characters used to build the zbot probe 
+// string. It's not testing the characters themselves, it's testing whether
+// the client's console will faithfully forward a command that starts with
+// each of them.
 // char testchars[] = "!@#%^&*()_=|?.>,<[{]}\':1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
 char testchars[] = "!@#%^&*()_=|?.>,<[{]}\':";
 //                  012345678901234567890 1234567890123456789012345678901234567890123456789012345678901234
 //                            1         2          3         4         5         6         7         8
-int testcharslength = sizeof (testchars) - 1;
+int testcharslength = sizeof(testchars) - 1;
 
 int zbc_jittermax = 4;
 int zbc_jittertime = 10;
