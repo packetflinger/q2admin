@@ -260,7 +260,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
                 cl->msec.violations++;
                 if (cl->msec.violations >= msec.max_violations) {
                     if (msec.action != MVA_NOTHING) {
-                        q2a_printf("%s[%s] msec limit exceeded: %d/%d in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.max_allowed, msec.timespan);
+                        Q_printf("%s[%s] msec limit exceeded: %d/%d in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.max_allowed, msec.timespan);
                         raiseSignal(client, SIGNAL_MSEC_OVERRUN);
                     }
                 }
@@ -275,7 +275,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             cl->msec.violations++;
             if (cl->msec.violations >= msec.max_violations) {
                 if (msec.action != MVA_NOTHING) {
-                    q2a_printf("%s[%s] msec underrun: %d used, %d required in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.min_required, msec.timespan);
+                    Q_printf("%s[%s] msec underrun: %d used, %d required in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.min_required, msec.timespan);
                     raiseSignal(client, SIGNAL_MSEC_UNDERRUN);
                 }
             }
@@ -821,18 +821,18 @@ void checkClientDeadlines(int c) {
     if (cl->version_deadline > 0 && cl->version_deadline < ltime) {
         raiseSignal(c, SIGNAL_VERSION_DEADLINE);
         cl->version_deadline = 0;
-        q2a_printf("%s[%s] version probe unanswered\n", NAME(c), IP(c));
+        Q_printf("%s[%s] version probe unanswered\n", NAME(c), IP(c));
     }
     if (cl->alias_deadline > 0 && cl->alias_deadline < ltime) {
         raiseSignal(c, SIGNAL_ALIAS_DEADLINE);
         cl->alias_deadline = 0;
-        q2a_printf("%s[%s] alias probe unanswered\n", NAME(c), IP(c));
+        Q_printf("%s[%s] alias probe unanswered\n", NAME(c), IP(c));
     }
     if (timescaledetect) {
         if (cl->timescale_deadline > 0 && cl->timescale_deadline < ltime) {
             raiseSignal(c, SIGNAL_TIMESCALE_DEADLINE);
             cl->timescale_deadline = 0;
-            q2a_printf("%s[%s] timescale probe unanswered\n", NAME(c), IP(c));
+            Q_printf("%s[%s] timescale probe unanswered\n", NAME(c), IP(c));
         }
     }
     if (checkvarcmds_enable) {
@@ -840,7 +840,7 @@ void checkClientDeadlines(int c) {
             if (cl->checkvar_deadline[i] > 0 && cl->checkvar_deadline[i] < ltime) {
                 raiseSignal(c, SIGNAL_CHECKVAR_DEADLINE);
                 cl->checkvar_deadline[i] = 0;
-                q2a_printf("%s[%s] checkvar probe unanswered (%s)\n", NAME(c), IP(c), checkvarList[i].variablename);
+                Q_printf("%s[%s] checkvar probe unanswered (%s)\n", NAME(c), IP(c), checkvarList[i].variablename);
             }
         }
     }

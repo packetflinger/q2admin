@@ -41,7 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 void stuffPlayer(edict_t *e, char *s) {
     if (q2a_developer) {
-        q2a_printf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
+        Q_printf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
     }
     gi.WriteByte(SVC_STUFFTEXT);
     gi.WriteString(s);
@@ -1292,7 +1292,7 @@ pathtype_t validatePath(const char *s) {
  * player sees it, so this is safe for messages that shouldn't be
  * broadcast.
  */
-void q2a_printf(char *fmt, ...) {
+void Q_printf(char *fmt, ...) {
     char cbuffer[8192];
     va_list arglist;
 

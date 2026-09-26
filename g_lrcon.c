@@ -87,7 +87,7 @@ bool ReadLRconFile(char *lrcname) {
             }
 
             if (!len || *pp == 0) {
-                q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                Q_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                 // no command or zero length password
                 continue;
             }
@@ -106,7 +106,7 @@ bool ReadLRconFile(char *lrcname) {
             // zero length command
             if (!len) {
                 G_Free(lrconcmds[maxlrcon_cmds].password);
-                q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                Q_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                 continue;
             }
 
@@ -118,7 +118,7 @@ bool ReadLRconFile(char *lrcname) {
                 lrconcmds[maxlrcon_cmds].r = re_compile(cp);
                 if (!lrconcmds[maxlrcon_cmds].r) {
                     // malformed re... skip this lrcon
-                    q2a_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
+                    Q_printf("Error loading LRCON from line %d in file %s\n", uptoLine, lrcname);
                     continue;
                 }
             } else {

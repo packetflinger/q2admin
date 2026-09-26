@@ -81,7 +81,7 @@ bool readBanFile(char *bfname) {
             } else if (startContains(data, "INCLUDE:")) {
                 data = parseBanIncludeLine(data);
             } else {
-                q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
+                Q_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 continue;
             }
         }
@@ -143,7 +143,7 @@ void readBanLists(void) {
     }
 
     if (!ret) {
-        q2a_printf("WARNING: %s could not be found\n", configfile_ban->string);
+        Q_printf("WARNING: %s could not be found\n", configfile_ban->string);
         logEvent(LT_INTERNALWARN, 0, NULL, va("%s could not be found", configfile_ban->string), IW_BANSETUPLOAD, 0.0, true);
     }
 
@@ -166,7 +166,7 @@ void readBanLists(void) {
         }
 
         if (!ret) {
-            q2a_printf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
+            Q_printf("WARNING: " BANLISTREMOTEFILE " could not be found\n");
             logEvent(LT_INTERNALWARN, 0, NULL, BANLISTREMOTEFILE " could not be found", IW_BANSETUPLOAD, 0.0, true);
         }
     }
@@ -1179,14 +1179,14 @@ int checkIfBanned(edict_t *ent, int client) {
     res = checkBanList(ent, client, false);  // check allowlists first
     if (res == BT_ALLOWLISTED) {
         if (q2a_developer) {
-            q2a_printf("%s[%s] is allowlisted\n", NAME(client), IP(client));
+            Q_printf("%s[%s] is allowlisted\n", NAME(client), IP(client));
         }
         return 0;
     }
     res = checkBanList(ent, client, true);   // check denylists second
     if (res == BT_DENYLISTED) {
         if (q2a_developer) {
-            q2a_printf("%s[%s] is denylisted\n", NAME(client), IP(client));
+            Q_printf("%s[%s] is denylisted\n", NAME(client), IP(client));
         }
         return 1;
     }
@@ -1753,7 +1753,7 @@ bool parseBanFileContents(char *data) {
             } else if (startContains(data, "INCLUDE:")) {
                 data = parseBanIncludeLine(data);
             } else {
-                q2a_printf("invalid ban at line %d, ignoring\n", uptoLine);
+                Q_printf("invalid ban at line %d, ignoring\n", uptoLine);
                 // just jump to the next line and try again
                 while (*data != '\n' || !*data) {
                     data++;
@@ -2091,7 +2091,7 @@ char *parseBanLine(char *cp) {
             G_Free(newentry->msg);
         }
         G_Free(newentry);
-        q2a_printf("Error loading BAN\n");
+        Q_printf("Error loading BAN\n");
     } else {
         // we have the ban record...
         // insert at the head of the correct list.
@@ -2215,7 +2215,7 @@ char *parseChatbanLine(char *cp) {
             G_Free(cnewentry->msg);
         }
         G_Free(cnewentry);
-        q2a_printf("invalid chatban, syntax: %s\n", CHATBANFILE_LAYOUT);
+        Q_printf("invalid chatban, syntax: %s\n", CHATBANFILE_LAYOUT);
     } else {
         // we have the ban record...
         // insert at the head of the correct list.
@@ -2242,21 +2242,21 @@ char *parseBanIncludeLine(char *in) {
         in = processString(strbuffer, in, sizeof(strbuffer) - 1, '\"');
         if (strbuffer[0]) {
             if (startContains(strbuffer, "http")) {
-                q2a_printf("reading remote ban file: %s\n", strbuffer);
+                Q_printf("reading remote ban file: %s\n", strbuffer);
                 readRemoteBanFile(strbuffer);
             } else {
                 if (validatePath(strbuffer) == PATH_INVALID) {
-                    q2a_printf("invalid path in ban config: %s\n", strbuffer);
+                    Q_printf("invalid path in ban config: %s\n", strbuffer);
                 } else {
-                    q2a_printf("reading included ban file: %s\n", strbuffer);
+                    Q_printf("reading included ban file: %s\n", strbuffer);
                     readBanFile(strbuffer);
                 }
             }
         } else {
-            q2a_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
+            Q_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
         }
     } else {
-        q2a_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
+        Q_printf("ban parse error, syntax: INCLUDE: \"<file|url>\"\n");
     }
     return in;
 }

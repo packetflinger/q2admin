@@ -185,7 +185,7 @@ void IPLogsBuildIgnorelist(void) {
     }
 
     if (q2a_developer) {
-        q2a_printf("compiled %d CIDR ranges in VPN ignorelist\n", iplogs_ignorelist_count);
+        Q_printf("compiled %d CIDR ranges in VPN ignorelist\n", iplogs_ignorelist_count);
     }
 }
 
@@ -223,7 +223,7 @@ void IPLogsCheckVPN(edict_t *ent) {
 
     if (IPLogsIsIgnorelisted(&pi->address)) {
         if (q2a_developer) {
-            q2a_printf("skipping VPN check for %s, ignorelisted\n", addr);
+            Q_printf("skipping VPN check for %s, ignorelisted\n", addr);
         }
         return;
     }
@@ -237,7 +237,7 @@ void IPLogsCheckVPN(edict_t *ent) {
     if (IPLogsCacheGet(&pi->address, &pi->iplogs)) {
         if (pi->iplogs.verdict[0]) {
             if (Q_stricmp(pi->iplogs.verdict, "suspicious") == 0) {
-                q2a_printf("verdict: %s\n", pi->iplogs.verdict);
+                Q_printf("verdict: %s\n", pi->iplogs.verdict);
                 raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
             } else if (Q_stricmp(pi->iplogs.verdict, "vpn_likely") == 0) {
                 raiseSignal(i, SIGNAL_VPN_LIKEY);
@@ -245,7 +245,7 @@ void IPLogsCheckVPN(edict_t *ent) {
                 raiseSignal(i, SIGNAL_VPN_DETECTED);
             }
         }
-        q2a_printf("%s[%s] vpn check (cached): score=%.2f verdict=%s asn=%s%s\n",
+        Q_printf("%s[%s] vpn check (cached): score=%.2f verdict=%s asn=%s%s\n",
             NAME(i), addr, pi->iplogs.score, pi->iplogs.verdict, pi->iplogs.asn, (pi->iplogs.is_vpn ? " (VPN)" : ""));
         return;
     }
@@ -261,7 +261,7 @@ void IPLogsCheckVPN(edict_t *ent) {
 
     pi->iplogs.state = IPLOGS_CHECKING;
 
-    q2a_printf("checking %s for proxy/vpn\n", addr);
+    Q_printf("checking %s for proxy/vpn\n", addr);
     httpQueueDownload(dl);
 }
 
@@ -283,7 +283,7 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     v = &proxyinfo[i].iplogs;
     root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
     if (!root) {
-        q2a_printf("iplogs: json parsing error\n");
+        Q_printf("iplogs: json parsing error\n");
         return;
     }
 
@@ -325,7 +325,7 @@ void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
     v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
     IPLogsCacheSet(&proxyinfo[i].address, v);
 
-    q2a_printf("%s[%s] vpn check: score=%.2f verdict=%s asn=%s%s\n", NAME(i), IP(i), v->score, v->verdict, v->asn, (v->is_vpn ? " (VPN)" : ""));
+    Q_printf("%s[%s] vpn check: score=%.2f verdict=%s asn=%s%s\n", NAME(i), IP(i), v->score, v->verdict, v->asn, (v->is_vpn ? " (VPN)" : ""));
 }
 
 /**

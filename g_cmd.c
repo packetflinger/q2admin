@@ -2064,7 +2064,7 @@ void readCfgFiles(void) {
         ret = true;
     }
     if (!ret) {
-        q2a_printf("%s could not be found\n", q2aconfig->string);
+        Q_printf("%s could not be found\n", q2aconfig->string);
     }
 }
 

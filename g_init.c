@@ -518,14 +518,14 @@ void InitGame(void) {
     sv_features = gi.cvar("sv_features", "0", CVAR_NOSET);
 
     if (q2a_developer) {
-        q2a_printf("Game supports:   %s\n", featuresToString((int)g_features->value));
-        q2a_printf("Server supports: %s\n", featuresToString((int)sv_features->value));
+        Q_printf("Game supports:   %s\n", featuresToString((int)g_features->value));
+        Q_printf("Server supports: %s\n", featuresToString((int)sv_features->value));
     }
 
     if (FEATURE_SUPPORTED(GMF_VARIABLE_FPS)) {
         hz = (int) gi.cvar("sv_fps", "10", CVAR_NOSET)->value;
         frametime = (float) 1 / hz;
-        q2a_printf("server fps=%d\n", hz);
+        Q_printf("server fps=%d\n", hz);
     }
 
     maxclients = gi.cvar("maxclients", "4", 0);
@@ -630,11 +630,11 @@ void InitGame(void) {
 void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, bool *found) {
     if (sub->string[0] && (!Q_stricmp(needle, token))) {
         if (!entSwapAllowed(sub->string)) {
-            q2a_printf("can't swap entities %s > %s (classname not allowlisted)\n", needle, sub->string);
+            Q_printf("can't swap entities %s > %s (classname not allowlisted)\n", needle, sub->string);
             return;
         }
         q2a_strcat(newents, va("\"%s\"\n", sub->string));
-        q2a_printf("entity swap: %s > %s\n", needle, sub->string);
+        Q_printf("entity swap: %s > %s\n", needle, sub->string);
         *found = true;
     }
 }
@@ -1312,7 +1312,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     for (int i = 0; required_ui_keys[i] != NULL; i++) {
         val = Info_ValueForKey(userinfo, required_ui_keys[i]);
         if (val[0] == 0) {
-            q2a_printf("%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
+            Q_printf("%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
             Info_SetValueForKey(ui, "rejmsg", "rejected: userinfo missing required value");
             return false;
         }
@@ -1323,7 +1323,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
-        q2a_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
+        Q_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
         raiseSignal(client, SIGNAL_SKIN_OVERFLOW);
         Info_SetValueForKey(ui, "skin", "female/jezebel");
         q2a_strcpy(skinname, "female/jezebel");
@@ -1472,7 +1472,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
 
         if (userInfoOverflow) {
-            q2a_printf("%s: WARNING: userinfo overflowed (%s)\n", proxyinfo[client].name, IP(client));
+            Q_printf("%s: WARNING: userinfo overflowed (%s)\n", proxyinfo[client].name, IP(client));
             proxyinfo[client].clientcommand |= CCMD_CLIENTOVERFLOWED;
         }
     }
@@ -1647,7 +1647,7 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (strlen(skinname) > MAX_SKIN_CHARS) {
-        q2a_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
+        Q_printf("%s: skin name overflow \"%s\" (IP = %s)\n", NAME(client), skinname, IP(client));
         raiseSignal(client, SIGNAL_SKIN_OVERFLOW);
         Info_SetValueForKey(userinfo, "skin", "female/jezebel");
     }

@@ -315,7 +315,7 @@ void signaladdRun(int startarg, edict_t *ent, int client) {
     proxyinfo[clienti].manual_signal_score += amount;
     raiseSignal(clienti, SIGNAL_MANUAL);
 
-    q2a_printf(
+    Q_printf(
         "%s manual signal adjusted by %d (now %d, score %d/%d)\n",
         proxyinfo[clienti].name,
         amount,

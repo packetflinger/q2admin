@@ -411,10 +411,10 @@ void whoisReadFile(void) {
     unsigned int i;
 
     Q_snprintf(name, sizeof(name), "%s/%s", moddir, WHOISFILE);
-    q2a_printf("reading whois file: %s\n", name);
+    Q_printf("reading whois file: %s\n", name);
     f = fopen(name, "rb");
     if (!f) {
-        q2a_printf("WARNING: %s could not be found\n", name);
+        Q_printf("WARNING: %s could not be found\n", name);
         return;
     }
 

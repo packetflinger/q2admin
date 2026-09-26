@@ -35,7 +35,7 @@ int isBlank(char *buff1);
 void lowerCase(char *c);
 bool newCommandAllowed(int client);
 char *processString(char *output, char *input, int max, char end);
-void q2a_printf(char *fmt, ...);
+void Q_printf(char *fmt, ...);
 int Q_ceil(float x);
 size_t Q_concat(char *dest, size_t size, ...);
 int Q_floor(float x);
