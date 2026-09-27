@@ -66,6 +66,10 @@ char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool inc
  * CIDR notation (number of bits in the mask).
  *
  * Calculating this for IPv6 was for serious...
+ *
+ * cidr is clamped to the address family's width. Letting it run past that
+ * would shift by a negative amount below, and callers hand this whatever
+ * mask_bits a config file supplied.
  */
 netadr_t net_cidrToMask(int cidr, netadrtype_t t) {
     int i;
@@ -77,10 +81,17 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t) {
     int qstart;
 
     q2a_memset(&addr, 0, sizeof(netadr_t));
+    if (cidr < 0) {
+        cidr = 0;
+    }
+
     if (t != NA_IP6) {
         addr.type = NA_IP;
+        if (cidr > 32) {
+            cidr = 32;
+        }
         for (i=1; i<=cidr; i++) {
-            mask += 1 << (32-i);
+            mask += 1u << (32-i);  // 1u: "1 << 31" overflows a signed int
         }
         addr.ip.u8[3] = mask & 0xff;
         addr.ip.u8[2] = (mask >> 8) & 0xff;
@@ -105,7 +116,7 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t) {
         q2a_memset(&addr.ip.u8, 0xff, sixteenth);
 
         for (i=1; i<=quarterbits; i++) {
-            mask += 1 << (32-i);
+            mask += 1u << (32-i);  // 1u: "1 << 31" overflows a signed int
         }
 
         addr.ip.u8[qstart+3] = mask & 0xff;
