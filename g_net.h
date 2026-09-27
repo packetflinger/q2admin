@@ -8,7 +8,10 @@
 #define IPMASK(x) (net_addressToString(&proxyinfo[x].address, false, false, true))
 #define IPSTR(a)  (net_addressToString(a->address, false, false, false))
 #define IPSTRMASK(a) (net_addressToString(a, false, false, true))
-#define HASIP(x)  (proxyinfo[x].address.ip.u8[0] != 0)
+// A parsed address always ends up NA_IP or NA_IP6; anything else means it was
+// never filled in. Testing the first byte instead would call a valid address
+// invalid whenever it happens to start with a zero byte, such as IPv6 "::1".
+#define HASIP(x)  (proxyinfo[x].address.type == NA_IP || proxyinfo[x].address.type == NA_IP6)
 #define CLIENTIP(x) (net_addressToString(x, false, false, false))
 
 typedef enum {
@@ -38,7 +41,7 @@ bool net_addressesMatch(netadr_t *a1, netadr_t *a2);
 char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask);
 netadr_t net_cidrToMask(int cidr, netadrtype_t t);
 bool net_contains(netadr_t *network, netadr_t *host);
-void net_parseIP(netadr_t *addr, const char *ip);
+bool net_parseIP(netadr_t *addr, const char *ip);
 netadr_t net_parseIPAddressBase(const char *ip);
 netadr_t net_parseIPAddressMask(const char *ip);
 

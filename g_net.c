@@ -4,13 +4,23 @@
 #include "g_local.h"
 
 /**
- * Check whether 2 IPs are the same
+ * Check whether 2 IPs are the same. Ports are deliberately ignored, use
+ * NET_IsEqualAdr() when the port matters too.
  */
 bool net_addressesMatch(netadr_t *a1, netadr_t *a2) {
     int len;
     if (a1->type != a2->type) {
         return false;
     }
+
+    // An address that failed to parse is left zeroed at NA_UNSPECIFIED. Two of
+    // those must not compare equal or every client with an unparseable address
+    // collides with every other one, which ip_limit would then read as a flood
+    // of connections from a single host.
+    if (a1->type != NA_IP && a1->type != NA_IP6) {
+        return false;
+    }
+
     len = (a1->type == NA_IP6) ? IP6_LEN : IP4_LEN;
     return q2a_memcmp(a1->ip.u8, a2->ip.u8, len) == 0;
 }
@@ -113,6 +123,14 @@ bool net_contains(netadr_t *network, netadr_t *host) {
     if (network->type != host->type) {
         return false;
     }
+
+    // A network that failed to parse is zeroed at NA_UNSPECIFIED, which gives
+    // an all-zero mask that would otherwise match every equally-unparseable
+    // host. Malformed entries match nothing instead.
+    if (network->type != NA_IP && network->type != NA_IP6) {
+        return false;
+    }
+
     netadr_t mask = net_cidrToMask(network->mask_bits, network->type);
     for (int i=0; i<IP6_LEN; i++) {
         if ((network->ip.u8[i] & mask.ip.u8[i]) != (host->ip.u8[i] & mask.ip.u8[i])) {
@@ -128,44 +146,66 @@ bool net_contains(netadr_t *network, netadr_t *host) {
  * assumed since it's a specific address. This support both
  * IPv4 and IPv6 addresses.
  *
- * This does not do input format checking, so be careful.
+ * The string comes from the client's userinfo, which is only as trustworthy
+ * as the engine's own userinfo sanitizing, so the length is checked before
+ * copying and inet_pton() is checked before anything is stored.
+ *
+ * On failure the address is left zeroed at NA_UNSPECIFIED rather than
+ * half-filled, so callers can tell a bad address from a good one with
+ * HASIP() and it can never be mistaken for 0.0.0.0.
  *
  * Input format: "192.2.0.4:1234" or "[2001:db8::face]:23456"
+ * A port is required; a bare address matches neither form and fails.
+ *
+ * Returns true if the address parsed.
  */
-void net_parseIP(netadr_t *address, const char *ip) {
+bool net_parseIP(netadr_t *address, const char *ip) {
     char *delim;
-    int addrlen;           // number of characters in IP string
-    char addr[40];         // temporarily hold just the IP part
-    struct in6_addr addr6; // use for both versions
+    int addrlen;                  // number of characters in IP string
+    char addr[INET6_ADDRSTRLEN];  // temporarily hold just the IP part
+    struct in6_addr addr6;        // use for both versions
 
-    q2a_memset(addr, 0, 40);
+    q2a_memset(addr, 0, sizeof(addr));
     q2a_memset(address, 0, sizeof(netadr_t));
     q2a_memset(&addr6, 0, sizeof(struct in6_addr));
 
     // Look for IPv6
     delim = strstr(ip, "]:");
     if (delim) {
+        addrlen = (int) (delim - (ip + 1));
+        if (addrlen < 1 || addrlen >= (int) sizeof(addr)) {
+            return false;
+        }
+        q2a_memcpy(addr, ip + 1, addrlen);
+        if (inet_pton(AF_INET6, addr, &addr6) != 1) {
+            return false;
+        }
         address->type = NA_IP6;
         address->port = (uint16_t) q2a_atoi(delim + 2);
         address->mask_bits = 128;
-        addrlen = (int) (delim - (ip + 1));
-        q2a_memcpy(addr, ip + 1, addrlen);
-        inet_pton(AF_INET6, addr, &addr6);
-        q2a_memcpy(address->ip.u8, addr6.s6_addr, 16);
-        return;
+        q2a_memcpy(address->ip.u8, addr6.s6_addr, IP6_LEN);
+        return true;
     }
 
     // assume it's an IPv4 address
     delim = strstr(ip, ":");
     if (delim) {
+        addrlen = (int) (delim - ip);
+        if (addrlen < 1 || addrlen >= (int) sizeof(addr)) {
+            return false;
+        }
+        q2a_memcpy(addr, ip, addrlen);
+        if (inet_pton(AF_INET, addr, &addr6) != 1) {
+            return false;
+        }
         address->type = NA_IP;
         address->port = (uint16_t) q2a_atoi(delim + 1);
         address->mask_bits = 32;
-        addrlen = (int) (delim - ip);
-        q2a_memcpy(addr, ip, addrlen);
-        inet_pton(AF_INET, addr, &addr6);
-        q2a_memcpy(address->ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        q2a_memcpy(address->ip.u8, addr6.s6_addr, IP4_LEN);
+        return true;
     }
+
+    return false;
 }
 
 /**
@@ -174,35 +214,38 @@ void net_parseIP(netadr_t *address, const char *ip) {
  * a port appended and IPv6 addresses shouldn't be surrounded by
  * square brackets.
  *
- * This does not do input format checking, so be careful.
+ * A mask of /32 or /128 is set so the result can be handed straight to
+ * net_contains() as a single-host network. On failure the returned address
+ * is zeroed at NA_UNSPECIFIED, which net_contains() never matches.
  *
  * Input format: "192.2.0.4" or "2001:db8::face"
  */
 netadr_t net_parseIPAddressBase(const char *ip) {
     netadr_t address;
-    char *delim;
-    char addr[40];         // temporarily hold just the IP part
     struct in6_addr addr6; // use for both versions
 
-    q2a_memset(addr, 0, 40);
     q2a_memset(&address, 0, sizeof(netadr_t));
     q2a_memset(&addr6, 0, sizeof(struct in6_addr));
 
     // Look for IPv6
-    delim = strstr(ip, ":");
-    if (delim) {
+    if (strstr(ip, ":")) {
+        if (inet_pton(AF_INET6, ip, &addr6) != 1) {
+            return address;
+        }
         address.type = NA_IP6;
-        inet_pton(AF_INET6, ip, &addr6);
-        q2a_memcpy(address.ip.u8, addr6.s6_addr, 16);
+        address.mask_bits = 128;
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, IP6_LEN);
         return address;
     }
 
     // assume it's an IPv4 address
-    delim = strstr(ip, ".");
-    if (delim) {
+    if (strstr(ip, ".")) {
+        if (inet_pton(AF_INET, ip, &addr6) != 1) {
+            return address;
+        }
         address.type = NA_IP;
-        inet_pton(AF_INET, ip, &addr6);
-        q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        address.mask_bits = 32;
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, IP4_LEN);
         return address;
     }
     return address;
@@ -210,6 +253,16 @@ netadr_t net_parseIPAddressBase(const char *ip) {
 
 /**
  * Parse a basic string IP address with or without a CIDR mask.
+ *
+ * Callers feed this ban file entries, config tokens and the "network" field
+ * from the IPLogs API response, so the length is checked before copying and
+ * both the address and the mask width are validated before anything is
+ * stored. An out-of-range mask is rejected rather than clamped: it means a
+ * malformed entry, and silently widening or narrowing a ban would be worse
+ * than ignoring it.
+ *
+ * On failure the returned address is zeroed at NA_UNSPECIFIED, which
+ * net_contains() never matches, so a bad entry is simply inert.
  *
  * Examples:
  * 192.0.2.5
@@ -220,44 +273,58 @@ netadr_t net_parseIPAddressBase(const char *ip) {
 netadr_t net_parseIPAddressMask(const char *ip) {
     netadr_t address;
     char *delim;
-    char addr[40];         // temporarily hold just the IP part
-    struct in6_addr addr6; // use for both versions
+    int addrlen;                  // number of characters in the address part
+    int mask_bits;
+    char addr[INET6_ADDRSTRLEN];  // temporarily hold just the IP part
+    struct in6_addr addr6;        // use for both versions
 
-    q2a_memset(addr, 0, 40);
+    q2a_memset(addr, 0, sizeof(addr));
     q2a_memset(&address, 0, sizeof(netadr_t));
     q2a_memset(&addr6, 0, sizeof(struct in6_addr));
 
     // Look for IPv6
-    delim = strstr(ip, ":");
-    if (delim) {
-        address.type = NA_IP6;
+    if (strstr(ip, ":")) {
         delim = strstr(ip, "/");
         if (delim) {
-            q2a_memcpy(addr, ip, (delim-ip));
-            address.mask_bits = q2a_atoi(delim+1);
+            addrlen = (int) (delim - ip);
+            mask_bits = q2a_atoi(delim + 1);
         } else {
-            q2a_strcpy(addr, ip);
-            address.mask_bits = 128;
+            addrlen = (int) q2a_strlen(ip);
+            mask_bits = 128;
         }
-        inet_pton(AF_INET6, addr, &addr6);
-        q2a_memcpy(address.ip.u8, addr6.s6_addr, 16);
+        if (addrlen < 1 || addrlen >= (int) sizeof(addr) || mask_bits < 0 || mask_bits > 128) {
+            return address;
+        }
+        q2a_memcpy(addr, ip, addrlen);
+        if (inet_pton(AF_INET6, addr, &addr6) != 1) {
+            return address;
+        }
+        address.type = NA_IP6;
+        address.mask_bits = (uint8_t) mask_bits;
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, IP6_LEN);
         return address;
     }
 
     // assume it's an IPv4 address
-    delim = strstr(ip, ".");
-    if (delim) {
-        address.type = NA_IP;
+    if (strstr(ip, ".")) {
         delim = strstr(ip, "/");
         if (delim) {
-            q2a_memcpy(addr, ip, (delim-ip));
-            address.mask_bits = q2a_atoi(delim+1);
+            addrlen = (int) (delim - ip);
+            mask_bits = q2a_atoi(delim + 1);
         } else {
-            q2a_strcpy(addr, ip);
-            address.mask_bits = 32;
+            addrlen = (int) q2a_strlen(ip);
+            mask_bits = 32;
         }
-        inet_pton(AF_INET, addr, &addr6);
-        q2a_memcpy(address.ip.u8, addr6.s6_addr, sizeof(in_addr_t));
+        if (addrlen < 1 || addrlen >= (int) sizeof(addr) || mask_bits < 0 || mask_bits > 32) {
+            return address;
+        }
+        q2a_memcpy(addr, ip, addrlen);
+        if (inet_pton(AF_INET, addr, &addr6) != 1) {
+            return address;
+        }
+        address.type = NA_IP;
+        address.mask_bits = (uint8_t) mask_bits;
+        q2a_memcpy(address.ip.u8, addr6.s6_addr, IP4_LEN);
         return address;
     }
     return address;
