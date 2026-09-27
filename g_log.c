@@ -49,6 +49,7 @@ logtypes_t logtypes[] = {
     {"ADMINLOG",            false,   0,    ""},
     {"CLIENTUSERINFO",      false,   0,    ""},
     {"PRIVATELOG",          false,   0,    ""},
+    {"CLIENTVERSION",       false,   0,    ""},
 };
 
 /**
@@ -354,6 +355,7 @@ void loadLogList(void) {
  *   disabled command: the command attempted
  *   entity creation/deletion: the classname of the edict_t
  *   clientuserinfo change: the new userinfo string
+ *   clientversion: the version string
  *
  * Hack detection types for #e
  *   50 to -2 = zbot detected

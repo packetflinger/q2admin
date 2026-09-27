@@ -65,6 +65,7 @@ enum zb_logtypesenum {
     LT_ADMINLOG,
     LT_CLIENTUSERINFO,
     LT_PRIVATELOG,
+    LT_CLIENTVERSION,
 };
 
 void clearlogfileRun(int startarg, edict_t *ent, int client);

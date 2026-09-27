@@ -2878,6 +2878,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         sizeof(proxyinfo[client].client_version)-1
                 );
                 proxyinfo[client].version_deadline = 0;
+                logEvent(LT_CLIENTVERSION, client, proxyinfo[client].ent, proxyinfo[client].client_version, 0, 0.0, false);
 
                 bantype_t res = checkBanList(ent, client, false); // allows first
                 if (res == BT_NOTFOUND) {
