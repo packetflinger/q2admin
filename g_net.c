@@ -6,8 +6,7 @@
 /**
  * Check whether 2 IPs are the same
  */
-bool net_addressesMatch(netadr_t *a1, netadr_t *a2)
-{
+bool net_addressesMatch(netadr_t *a1, netadr_t *a2) {
     int len;
     if (a1->type != a2->type) {
         return false;
@@ -23,8 +22,7 @@ bool net_addressesMatch(netadr_t *a1, netadr_t *a2)
  * incport arg controls whether ":portnum" will be appended.
  * incmask arg controls whether "/xx" cidr mask will be appended.
  */
-char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask)
-{
+char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask) {
     char temp[INET6_ADDRSTRLEN];
     static char dest[INET6_ADDRSTRLEN];
 
@@ -59,8 +57,7 @@ char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool inc
  *
  * Calculating this for IPv6 was for serious...
  */
-netadr_t net_cidrToMask(int cidr, netadrtype_t t)
-{
+netadr_t net_cidrToMask(int cidr, netadrtype_t t) {
     int i;
     uint32_t mask = 0;
     netadr_t addr;
@@ -112,8 +109,7 @@ netadr_t net_cidrToMask(int cidr, netadrtype_t t)
 /**
  * Tests if a network address is in a particular subnet
  */
-bool net_contains(netadr_t *network, netadr_t *host)
-{
+bool net_contains(netadr_t *network, netadr_t *host) {
     if (network->type != host->type) {
         return false;
     }
@@ -136,8 +132,7 @@ bool net_contains(netadr_t *network, netadr_t *host)
  *
  * Input format: "192.2.0.4:1234" or "[2001:db8::face]:23456"
  */
-void net_parseIP(netadr_t *address, const char *ip)
-{
+void net_parseIP(netadr_t *address, const char *ip) {
     char *delim;
     int addrlen;           // number of characters in IP string
     char addr[40];         // temporarily hold just the IP part
@@ -183,8 +178,7 @@ void net_parseIP(netadr_t *address, const char *ip)
  *
  * Input format: "192.2.0.4" or "2001:db8::face"
  */
-netadr_t net_parseIPAddressBase(const char *ip)
-{
+netadr_t net_parseIPAddressBase(const char *ip) {
     netadr_t address;
     char *delim;
     char addr[40];         // temporarily hold just the IP part
@@ -223,8 +217,7 @@ netadr_t net_parseIPAddressBase(const char *ip)
  * 2002:db8::4
  * 2002:db8::4/64
  */
-netadr_t net_parseIPAddressMask(const char *ip)
-{
+netadr_t net_parseIPAddressMask(const char *ip) {
     netadr_t address;
     char *delim;
     char addr[40];         // temporarily hold just the IP part
@@ -269,4 +262,3 @@ netadr_t net_parseIPAddressMask(const char *ip)
     }
     return address;
 }
-
