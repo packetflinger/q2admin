@@ -31,32 +31,42 @@ bool net_addressesMatch(netadr_t *a1, netadr_t *a2) {
  * wrapv6 arg controls whether IPv6 addresses are sandwiched in between brackets or not.
  * incport arg controls whether ":portnum" will be appended.
  * incmask arg controls whether "/xx" cidr mask will be appended.
+ *
+ * The result lives in a single static buffer, so two calls in one expression
+ * both see the second one's value. Copy the result, or print it, before
+ * calling again.
  */
 char *net_addressToString(netadr_t *address, bool wrapv6, bool incport, bool incmask) {
     char temp[INET6_ADDRSTRLEN];
-    static char dest[INET6_ADDRSTRLEN];
+    // "[" + 45 characters of IPv6 + "]" + "/128" + ":65535" + NUL. Sizing this
+    // INET6_ADDRSTRLEN was two bytes short of the bracketed-with-port form.
+    static char dest[64];
 
     q2a_memset(temp, 0, sizeof(temp));
     q2a_memset(dest, 0, sizeof(dest));
 
     if (address->type == NA_IP6) {
-        inet_ntop(AF_INET6, &address->ip.u8, temp, INET6_ADDRSTRLEN);
+        if (inet_ntop(AF_INET6, &address->ip.u8, temp, sizeof(temp)) == NULL) {
+            return dest;
+        }
         if (wrapv6) {
-            q2a_strcpy(dest, va("[%s]", temp));
+            Q_snprintf(dest, sizeof(dest), "[%s]", temp);
         } else {
-            q2a_strcpy(dest, temp);
+            Q_strlcpy(dest, temp, sizeof(dest));
         }
     } else {
-        inet_ntop(AF_INET, &address->ip.u8, temp, INET_ADDRSTRLEN);
-        q2a_strcpy(dest, temp);
+        if (inet_ntop(AF_INET, &address->ip.u8, temp, sizeof(temp)) == NULL) {
+            return dest;
+        }
+        Q_strlcpy(dest, temp, sizeof(dest));
     }
 
     if (incmask) {
-        q2a_strcat(dest, va("/%d", address->mask_bits));
+        Q_strlcat(dest, va("/%d", address->mask_bits), sizeof(dest));
     }
 
     if (incport) {
-        q2a_strcat(dest, va(":%d", address->port));
+        Q_strlcat(dest, va(":%d", address->port), sizeof(dest));
     }
     return dest;
 }

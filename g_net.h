@@ -4,15 +4,14 @@
 #define IP4_LEN  4
 #define IP6_LEN 16
 
+// IP/IPMASK take a client number, IPSTRMASK takes a netadr_t *.
 #define IP(x)     (net_addressToString(&proxyinfo[x].address, false, false, false))
 #define IPMASK(x) (net_addressToString(&proxyinfo[x].address, false, false, true))
-#define IPSTR(a)  (net_addressToString(a->address, false, false, false))
 #define IPSTRMASK(a) (net_addressToString(a, false, false, true))
 // A parsed address always ends up NA_IP or NA_IP6; anything else means it was
 // never filled in. Testing the first byte instead would call a valid address
 // invalid whenever it happens to start with a zero byte, such as IPv6 "::1".
 #define HASIP(x)  (proxyinfo[x].address.type == NA_IP || proxyinfo[x].address.type == NA_IP6)
-#define CLIENTIP(x) (net_addressToString(x, false, false, false))
 
 typedef enum {
     NA_UNSPECIFIED,
