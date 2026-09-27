@@ -59,7 +59,7 @@ logtypes_t logtypes[] = {
  */
 void openLogFiles(void) {
     char name[256];
-    for (int i = 0; i < LOGTYPES_MAX; i++) {
+    for (int i = 0; i < MAXLOGS; i++) {
         if (logFiles[i].inuse && logFiles[i].fp == NULL) {
             if (logFiles[i].mod) {
                 Q_snprintf(name, sizeof(name), "%s/%s", moddir, logFiles[i].filename);
@@ -78,7 +78,7 @@ void openLogFiles(void) {
  * Flush the pending buffer and close the file for any log in use.
  */
 void closeLogFiles(void) {
-    for (int i = 0; i < LOGTYPES_MAX; i++) {
+    for (int i = 0; i < MAXLOGS; i++) {
         if (logFiles[i].inuse && logFiles[i].fp != NULL) {
             fflush(logFiles[i].fp); // unsure if this is necessary
             fclose(logFiles[i].fp);
@@ -875,7 +875,7 @@ void flushLogsRun(int startarg, edict_t *ent, int client) {
  * Force any buffered log data to be written to disk
  */
 void flushLogs(void) {
-    for (int i = 0; i < LOGTYPES_MAX; i++) {
+    for (int i = 0; i < MAXLOGS; i++) {
         if (logFiles[i].inuse && logFiles[i].fp != NULL) {
             fflush(logFiles[i].fp);
         }
