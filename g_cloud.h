@@ -150,8 +150,8 @@ typedef struct {
     char mapname[32];
     uint8_t maxclients;
     uint16_t port;
-    message_queue_t queue;           // messages outgoing to RA server
-    message_queue_t queue_in;        // messages incoming from RA server
+    message_queue_t queue_out;       // messages outgoing to central server
+    message_queue_t queue_in;        // messages incoming from central server
     cloud_ping_t ping;
 } cloud_t;
 

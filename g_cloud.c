@@ -318,7 +318,7 @@ void cloudConnect(void) {
         return;
     }
 
-    q2a_memset(&cloud.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue_out, 0, sizeof(message_queue_t));
     q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 
     cloud.state = CLOUD_STATE_CONNECTING;
@@ -442,7 +442,7 @@ void cloudSendMessages(void) {
         return;
     }
 
-    if (!cloud.queue.length) {
+    if (!cloud.queue_out.length) {
         return;
     }
 
@@ -453,7 +453,7 @@ void cloudSendMessages(void) {
     message_queue_t *q, e;
 
     c = &cloud.connection;
-    q = &cloud.queue;
+    q = &cloud.queue_out;
 
     while (true) {
         FD_ZERO(&c->set_w);
@@ -956,7 +956,7 @@ uint16_t getport(void) {
  * Reset the outgoing message buffer to zero to start a new msg
  */
 void CA_InitBuffer() {
-    q2a_memset(&cloud.queue, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue_out, 0, sizeof(message_queue_t));
 }
 
 /**
@@ -971,11 +971,11 @@ uint8_t cloudReadByte(void) {
  * Write a single byte to the message buffer
  */
 void cloudWriteByte(uint8_t b) {
-    if (cloud.queue.length >= QUEUE_SIZE) {
+    if (cloud.queue_out.length >= QUEUE_SIZE) {
         cloudDPrintf("outgoing queue full, dropping byte\n");
         return;
     }
-    cloud.queue.data[cloud.queue.length++] = b & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = b & 0xff;
 }
 
 /**
@@ -992,12 +992,12 @@ uint16_t cloudReadShort(void) {
  * Write 2 bytes to the message buffer
  */
 void cloudWriteShort(uint16_t s) {
-    if (cloud.queue.length + 2 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + 2 > QUEUE_SIZE) {
         cloudDPrintf("outgoing queue full, dropping short\n");
         return;
     }
-    cloud.queue.data[cloud.queue.length++] = s & 0xff;
-    cloud.queue.data[cloud.queue.length++] = (s >> 8) & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = s & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = (s >> 8) & 0xff;
 }
 
 /**
@@ -1015,14 +1015,14 @@ int32_t cloudReadLong(void) {
  * Write 4 bytes (long) to the message buffer
  */
 void cloudWriteLong(uint32_t i) {
-    if (cloud.queue.length + 4 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + 4 > QUEUE_SIZE) {
         cloudDPrintf("outgoing queue full, dropping long\n");
         return;
     }
-    cloud.queue.data[cloud.queue.length++] = i & 0xff;
-    cloud.queue.data[cloud.queue.length++] = (i >> 8) & 0xff;
-    cloud.queue.data[cloud.queue.length++] = (i >> 16) & 0xff;
-    cloud.queue.data[cloud.queue.length++] = (i >> 24) & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = i & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = (i >> 8) & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = (i >> 16) & 0xff;
+    cloud.queue_out.data[cloud.queue_out.length++] = (i >> 24) & 0xff;
 }
 
 /**
@@ -1090,15 +1090,15 @@ void cloudWriteString(const char *fmt, ...) {
     // (vsnprintf already truncates safely, and len is re-derived via
     // strlen() from the truncated result) - the real constraint is the
     // shared outgoing queue's actual capacity. Checked as addition, never
-    // subtraction, so it can't underflow if cloud.queue.length is ever
+    // subtraction, so it can't underflow if cloud.queue_out.length is ever
     // unexpectedly large.
-    if (cloud.queue.length + len + 1 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + len + 1 > QUEUE_SIZE) {
         cloudWriteByte(0);
         return;
     }
 
     for (i=0; i<len; i++) {
-        cloud.queue.data[cloud.queue.length++] = str[i];
+        cloud.queue_out.data[cloud.queue_out.length++] = str[i];
     }
 
     cloudWriteByte(0);
