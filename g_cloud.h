@@ -221,16 +221,12 @@ typedef struct {
     char uuid[37];
 } cloud_config_t;
 
-void        CA_Send(void);
 void        cloudInit(void);
 void        cloudShutdown(void);
 void        cloudFrame(void);
-void        CA_Register(void);
-void        CA_Unregister(void);
 void        cloudPlayerConnect(edict_t *ent);
 void        cloudPlayerDisconnect(edict_t *ent);
 void        CA_PlayerCommand(edict_t *ent);
-
 uint8_t     cloudReadByte(void);
 uint16_t    cloudReadShort(void);
 int32_t     cloudReadLong(void);
@@ -255,10 +251,6 @@ void        cloudPlayerUpdate(uint8_t cl, const char *ui);
 void        cloudInvite(uint8_t cl, const char *text);
 void        cloudWhois(uint8_t cl, const char *name);
 void        cloudMap(const char *mapname);
-void        CA_Authorize(const char *authkey);
-void        CA_HeartBeat(void);
-void        CA_Encrypt(void);
-
 void        cloudConnect(void);
 void        cloudDisconnect(void);
 void        cloudCheckConnection(void);
