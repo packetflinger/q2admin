@@ -241,7 +241,6 @@ void        cloudWriteByte(uint8_t b);
 void        cloudWriteLong(uint32_t i);
 void        cloudWriteShort(uint16_t s);
 void        cloudWriteData(const void *data, size_t length);
-void        CA_InitBuffer(void);
 uint16_t    getport(void);
 
 void        cloudPrint(uint8_t level, char *text);

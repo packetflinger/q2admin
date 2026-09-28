@@ -953,13 +953,6 @@ uint16_t getport(void) {
 }
 
 /**
- * Reset the outgoing message buffer to zero to start a new msg
- */
-void CA_InitBuffer() {
-    q2a_memset(&cloud.queue_out, 0, sizeof(message_queue_t));
-}
-
-/**
  * Read a single byte from the message buffer
  */
 uint8_t cloudReadByte(void) {
