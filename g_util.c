@@ -1301,3 +1301,75 @@ void Q_printf(char *fmt, ...) {
     // NULL edict sends to the console only
     gi.cprintf(NULL, PRINT_HIGH, "[q2a] %s", cbuffer);
 }
+
+/**
+ * Helper for printing out binary keys and ciphertext as hex
+ *
+ * Classic hex-dump format: 16 bytes per line as an offset, the hex
+ * bytes, and the printable ASCII alongside. Everything this file handles
+ * is binary - keys, nonces, digests, ciphertext - so when a handshake
+ * fails the only way to see what was actually on the wire is to dump it
+ * and compare the two ends byte for byte.
+ *
+ * desc: label printed above the dump, or NULL for none.
+ * addr: start of the data.
+ * len:  how many bytes to dump; zero and negative lengths are reported
+ *       rather than walked, since a bad length here usually means a
+ *       length calculation went wrong somewhere upstream.
+ *
+ * Returns nothing; writes to stdout via printf rather than the game's
+ * console, so output goes to wherever the server process's stdout is
+ * pointed.
+ *
+ * Currently unreachable: nothing calls it. It's a debugging aid kept
+ * around to be dropped in temporarily while working on the protocol.
+ */
+void Q_hexdump (char *desc, void *addr, int len) {
+    int i;
+    unsigned char buff[17];
+    unsigned char *pc = (unsigned char*)addr;
+
+    // Output description if given.
+    if (desc != NULL) {
+        printf ("%s:\n", desc);
+    }
+    if (len == 0) {
+        printf("  ZERO LENGTH\n");
+        return;
+    }
+    if (len < 0) {
+        printf("  NEGATIVE LENGTH: %i\n",len);
+        return;
+    }
+
+    // Process every byte in the data.
+    for (i = 0; i < len; i++) {
+        // Multiple of 16 means new line (with line offset).
+
+        if ((i % 16) == 0) {
+            // Just don't print ASCII for the zeroth line.
+            if (i != 0) {
+                printf("  %s\n", buff);
+            }
+            printf("  %04x ", i);
+        }
+
+        // Now the hex code for the specific character.
+        printf(" %02x", pc[i]);
+
+        // And store a printable ASCII character for later.
+        if ((pc[i] < 0x20) || (pc[i] > 0x7e)) {
+            buff[i % 16] = '.';
+        } else {
+            buff[i % 16] = pc[i];
+        }
+        buff[(i % 16) + 1] = '\0';
+    }
+
+    // Pad out last line if not exactly 16 characters.
+    while ((i % 16) != 0) {
+        printf("   ");
+        i++;
+    }
+    printf("  %s\n", buff);
+}

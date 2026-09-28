@@ -7,7 +7,7 @@
  *
  * Every server talking to the cloud admin backend needs its own keypair
  * - the private key proves the server's identity during the handshake
- * and decrypts what the backend sends back (see G_PrivateDecrypt()), and
+ * and decrypts what the backend sends back (see cryptoPrivateDecrypt()), and
  * the public half is what the backend is given to identify it by. The
  * timestamp in the filenames keeps a new pair from silently overwriting
  * one already in use.
@@ -24,7 +24,7 @@
  * Note the file handles aren't checked, so a directory that can't be
  * written to gives a NULL FILE* straight to the PEM writers.
  */
-void G_GenerateKeyPair(int bits) {
+void cryptoGenKeyPair(int bits) {
     FILE *fp;
     RSA *rsa;
     BIGNUM *e;
@@ -60,8 +60,8 @@ void G_GenerateKeyPair(int bits) {
  * all named by config settings: this server's own private and public
  * keys, plus the cloud admin backend's public key. Each has a distinct
  * job in the handshake - the backend's public key encrypts challenges
- * only the real backend can read (G_PublicEncrypt()), and this server's
- * private key decrypts what comes back (G_PrivateDecrypt()). Shipping
+ * only the real backend can read (cryptoPublicEncrypt()), and this server's
+ * private key decrypts what comes back (cryptoPrivateDecrypt()). Shipping
  * the backend's key with the server is what makes the backend
  * impersonation-resistant: an imposter without the matching private key
  * can't answer a challenge.
@@ -78,7 +78,7 @@ void G_GenerateKeyPair(int bits) {
  * Called from the cloud connection setup in g_cloud.c, which gives up on
  * connecting if this returns false.
  */
-bool G_LoadKeys(void) {
+bool cryptoLoadKeys(void) {
     FILE *fp;
     cloud_connection_t *c = &cloud.connection;
     char path[200];
@@ -168,7 +168,7 @@ bool G_LoadKeys(void) {
  * are leaked on every call, including the successful path - the result
  * is copied out to dest but never freed.
  */
-size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len) {
+size_t cryptoPrivateDecrypt(byte *dest, byte *src, int src_len) {
     size_t len = 0;
 
     EVP_PKEY *key = cloud.connection.private_key;
@@ -220,7 +220,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len) {
  * challenge, proving identity in the other direction.
  *
  * key:   the public key to encrypt to - in practice always the cloud
- *        backend's, loaded by G_LoadKeys().
+ *        backend's, loaded by cryptoLoadKeys().
  * out:   buffer to receive the ciphertext. Not bounds checked; callers
  *        size it at RSA_LEN.
  * in:    the plaintext.
@@ -239,7 +239,7 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len) {
  * the buffer just allocated, so an allocation failure prints a warning
  * and then carries on to use the NULL pointer.
  */
-size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
+size_t cryptoPublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
     size_t cipherlen = 0;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
@@ -292,7 +292,7 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
  * literal with no room. It needs a writable buffer of at least 256
  * bytes, or NULL to use OpenSSL's own static one.
  */
-void G_RSAError() {
+void cryptoLogRSAErrors() {
     int error = 0;
     char *msg = "";
     ERR_load_crypto_strings();
@@ -303,79 +303,6 @@ void G_RSAError() {
 }
 
 /**
- * Helper for printing out binary keys and ciphertext as hex
- *
- * Classic hex-dump format: 16 bytes per line as an offset, the hex
- * bytes, and the printable ASCII alongside. Everything this file handles
- * is binary - keys, nonces, digests, ciphertext - so when a handshake
- * fails the only way to see what was actually on the wire is to dump it
- * and compare the two ends byte for byte.
- *
- * desc: label printed above the dump, or NULL for none.
- * addr: start of the data.
- * len:  how many bytes to dump; zero and negative lengths are reported
- *       rather than walked, since a bad length here usually means a
- *       length calculation went wrong somewhere upstream.
- *
- * Returns nothing; writes to stdout via printf rather than the game's
- * console, so output goes to wherever the server process's stdout is
- * pointed.
- *
- * Currently unreachable: nothing calls it. It's a debugging aid kept
- * around to be dropped in temporarily while working on the protocol.
- */
-void hexDump (char *desc, void *addr, int len) {
-    int i;
-    unsigned char buff[17];
-    unsigned char *pc = (unsigned char*)addr;
-
-    // Output description if given.
-    if (desc != NULL) {
-        printf ("%s:\n", desc);
-    }
-    if (len == 0) {
-        printf("  ZERO LENGTH\n");
-        return;
-    }
-    if (len < 0) {
-        printf("  NEGATIVE LENGTH: %i\n",len);
-        return;
-    }
-
-    // Process every byte in the data.
-    for (i = 0; i < len; i++) {
-        // Multiple of 16 means new line (with line offset).
-
-        if ((i % 16) == 0) {
-            // Just don't print ASCII for the zeroth line.
-            if (i != 0) {
-                printf("  %s\n", buff);
-            }
-            printf("  %04x ", i);
-        }
-
-        // Now the hex code for the specific character.
-        printf(" %02x", pc[i]);
-
-        // And store a printable ASCII character for later.
-        if ((pc[i] < 0x20) || (pc[i] > 0x7e)) {
-            buff[i % 16] = '.';
-        } else {
-            buff[i % 16] = pc[i];
-        }
-        buff[(i % 16) + 1] = '\0';
-    }
-
-    // Pad out last line if not exactly 16 characters.
-    while ((i % 16) != 0) {
-        printf("   ");
-        i++;
-    }
-    printf("  %s\n", buff);
-}
-
-
-/**
  * Encrypt a buffer using 128bit AES
  *
  * This is called automatically from RA_SendMessages() if we're
@@ -384,7 +311,7 @@ void hexDump (char *desc, void *addr, int len) {
  * Bulk traffic uses AES rather than RSA because RSA can only encrypt
  * less than a key's worth of data and is far too slow for a per-frame
  * message stream. The session key and IV this uses were handed over
- * during the RSA handshake (see G_PrivateDecrypt()), which is the point
+ * during the RSA handshake (see cryptoPrivateDecrypt()), which is the point
  * of that handshake: establish a shared secret, then switch to fast
  * symmetric crypto for everything after.
  *
@@ -407,7 +334,7 @@ void hexDump (char *desc, void *addr, int len) {
  * than a fresh one, which under CBC means identical plaintext encrypts
  * to identical ciphertext across messages.
  */
-size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len) {
+size_t cryptoSymmetricEncrypt(byte *dest, byte *src, size_t src_len) {
     cloud_connection_t *c = &cloud.connection;
     int dest_len = 0;
     int written = 0;
@@ -432,7 +359,7 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len) {
  * Called automatically from RA_ReadMessages() if we're
  * set to encrypt traffic in the config
  *
- * The inbound counterpart to G_SymmetricEncrypt(), using the same
+ * The inbound counterpart to cryptoSymmetricEncrypt(), using the same
  * session key and IV agreed during the handshake, so anything the
  * backend sends over the established channel is readable only by this
  * server.
@@ -454,7 +381,7 @@ size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len) {
  * would be caught - isn't checked, so a corrupt message is reported the
  * same as a good one.
  */
-size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len) {
+size_t cryptoSymmetricDecrypt(byte *dest, byte *src, size_t src_len) {
     cloud_connection_t *c = &cloud.connection;
     int dest_len = 0;
     int written = 0;
@@ -496,7 +423,7 @@ size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len) {
  * nonce for comparison against the backend's reply, and once to hash the
  * backend's challenge for the answer we send back.
  */
-void G_MessageDigest(byte *dest, byte *src, size_t src_len) {
+void cryptoMessageDigest(byte *dest, byte *src, size_t src_len) {
     const EVP_MD *md;
     EVP_MD_CTX *ctx;
     unsigned int md_len;

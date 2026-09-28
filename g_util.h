@@ -58,3 +58,4 @@ void upperCase(char *c);
 char *va(const char *format, ...);
 pathtype_t validatePath(const char *s);
 bool wildcardMatch(char *pattern, char *haystack);
+void Q_hexdump(char *desc, void *addr, int len);

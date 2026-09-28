@@ -40,7 +40,7 @@ void cloudInit() {
     cloud.state = CLOUD_STATE_DISCONNECTED;
     cloudPrintf("init...\n");
 
-    if (!G_LoadKeys()) {
+    if (!cryptoLoadKeys()) {
         cloud.state = CLOUD_STATE_DISABLED;
         return;
     }
@@ -470,7 +470,7 @@ void cloudSendMessages(void) {
         if (ret) {
             if (c->encrypted && c->have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
                 q2a_memset(&e, 0, sizeof(message_queue_t));
-                e.length = G_SymmetricEncrypt(e.data, q->data, q->length);
+                e.length = cryptoSymmetricEncrypt(e.data, q->data, q->length);
                 q2a_memset(q, 0, sizeof(message_queue_t));
                 q2a_memcpy(q->data, e.data, e.length);
                 q->length = e.length;
@@ -560,7 +560,7 @@ void cloudReadMessages(void) {
             if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
                 q2a_memcpy(temp_iv, in->data, AES_IV_LEN);
                 q2a_memset(&dec, 0, sizeof(message_queue_t));
-                dec.length = G_SymmetricDecrypt(dec.data, in->data, in->length);
+                dec.length = cryptoSymmetricDecrypt(dec.data, in->data, in->length);
                 q2a_memset(in->data, 0, in->length);
                 q2a_memcpy(in->data, dec.data, dec.length);
                 in->length = dec.length;
@@ -704,7 +704,7 @@ bool cloudVerifyServerAuth(void) {
     }
     cloudReadData(response, resp_len);
     q2a_memset(response_plain, 0, sizeof(response_plain));
-    dec_len = G_PrivateDecrypt(response_plain, response, sizeof(response));
+    dec_len = cryptoPrivateDecrypt(response_plain, response, sizeof(response));
     if (dec_len == 0) {
         cloudDPrintf("zero bytes decrypted for server authentication\n");
         return false;
@@ -737,7 +737,7 @@ bool cloudVerifyServerAuth(void) {
     }
 
     // to compare with what server sent back to us
-    G_MessageDigest(challenge_hash, c->cl_nonce, CHALLENGE_LEN);
+    cryptoMessageDigest(challenge_hash, c->cl_nonce, CHALLENGE_LEN);
 
     // if the hashes match, server is authenticated
     if (q2a_memcmp(challenge_hash, response_hash, DIGEST_LEN) == 0) {
@@ -746,8 +746,8 @@ bool cloudVerifyServerAuth(void) {
         // reuse response and challenge_hash for our auth to server
         q2a_memset(response, 0, sizeof(response));
         q2a_memset(challenge_hash, 0, sizeof(challenge_hash));
-        G_MessageDigest(challenge_hash, sv_challenge, sizeof(sv_challenge));
-        enc_len = G_PublicEncrypt(cloud.connection.server_key, response, challenge_hash, DIGEST_LEN);
+        cryptoMessageDigest(challenge_hash, sv_challenge, sizeof(sv_challenge));
+        enc_len = cryptoPublicEncrypt(cloud.connection.server_key, response, challenge_hash, DIGEST_LEN);
 
         // send our response to server's challenge
         cloudWriteByte(CMD_AUTH);
@@ -889,7 +889,7 @@ void cloudSayHello(void) {
 
     byte challenge[RSA_LEN];
     q2a_memset(challenge, 0, sizeof(challenge));
-    G_PublicEncrypt(cloud.connection.server_key, challenge,
+    cryptoPublicEncrypt(cloud.connection.server_key, challenge,
             cloud.connection.cl_nonce, CHALLENGE_LEN);
 
     cloudWriteLong(MAGIC_CLIENT);
