@@ -331,7 +331,7 @@ void loadLogList(void) {
  *   client - the proxyinfo_t index for the client the log event refers to
  *   ent - the edict_t pointer for the client the log event refers to
  *   message - a string message related to the event, "you're banned!"
- *   impulse - in the context of logging impulses, it's the number seen
+ *   number - in the context of logging impulses, it's the number seen
  *   ret_time - in the context of performance logging, the time for function
  *              return
  *
@@ -343,7 +343,7 @@ void loadLogList(void) {
  *   #s = client skin
  *   #t = current date/time (long format)
  *   #T = current date/time (short format (YYYYMMDDhhmmss))
- *   #e = impulse number, hack detected type, internal warning
+ *   #e = number number, hack detected type, internal warning
  *   #f = function complete time (performance monitoring only)
  *   #w = name of the signal raised or cleared
  *   #x = player's current signal score (sort, number only)
@@ -371,7 +371,7 @@ void loadLogList(void) {
  *   -8       = generic hack detected
  *   -9       = cl_anglespeedkey change detected
  */
-void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int impulse, float ret_time) {
+void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float ret_time) {
     char *cp;
     char num[32];   // scratch for numeric replacements, see note below
     time_t ltimetemp;
@@ -452,7 +452,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     }
                 }
             } else if (*format == 'e') {
-                Q_snprintf(num, sizeof(num), "%d", impulse);
+                Q_snprintf(num, sizeof(num), "%d", number);
                 cp = num;
                 while (*cp) {
                     *dest++ = *cp++;
@@ -473,7 +473,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 // For LT_SIGNAL the message is the signal's name, so the
                 // weight it currently carries can be looked up from it. Any
                 // other log type has no signal to resolve and logs 0.
-                signal_def_t *s = findSignalDefFromID(impulse);
+                signal_def_t *s = findSignalDefFromID(number);
                 if (s) {
                     cp = s->name;
                     while (*cp) {
@@ -536,15 +536,16 @@ bool isLogWritable(int index) {
  *   client = the proxyinfo index of the player the event relates to
  *   ent = the edict_t of the player the event relates to
  *   message = any text related to the event
- *   impulse = impulse-log specific, the impulse number seen
+ *   number = the impulse number seen (impulse specific), the signal type
+ *            (signal specific). 
  *   ret_time = permformance-log specific, the time elapsed for func to return
  *   echo = whether to output the final log line to the server console.
  */
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int impulse, float ret_time, bool echo) {
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float ret_time, bool echo) {
     char logline[4096];
 
     if (logtypes[(int) ltype].log) {
-        convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, impulse, ret_time);
+        convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, number, ret_time);
 
         // each logtype can be linked to multiple log files
         for (unsigned int i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {

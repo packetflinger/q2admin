@@ -82,7 +82,7 @@ void flushLogsRun(int startarg, edict_t *ent, int client);
 bool isLogEvent(enum zb_logtypesenum ltype);
 void loadLogList(void);
 bool loadLogListFile(char *filename);
-void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float number2, bool echo);
+void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *message, int number, float ret_time, bool echo);
 void logeventRun(int startarg, edict_t *ent, int client);
 void logfileRun(int startarg, edict_t *ent, int client);
 void openLogFiles(void);
