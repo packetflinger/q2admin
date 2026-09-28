@@ -174,33 +174,33 @@ size_t G_PrivateDecrypt(byte *dest, byte *src, int src_len) {
     EVP_PKEY *key = cloud.connection.private_key;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
-        CA_printf("error creating private key context\n");
+        cloudPrintf("error creating private key context\n");
         return len;
     }
 
     if (EVP_PKEY_decrypt_init(ctx) <= 0) {
-        CA_printf("error initializing decrypt\n");
+        cloudPrintf("error initializing decrypt\n");
         return len;
     }
 
     if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
-        CA_printf("error adding decryption padding (PKCS1)\n");
+        cloudPrintf("error adding decryption padding (PKCS1)\n");
         return len;
     }
 
     if (EVP_PKEY_decrypt(ctx, NULL, &len, (const unsigned char *)src, src_len) <= 0) {
-        CA_printf("error getting decrypt size\n");
+        cloudPrintf("error getting decrypt size\n");
         return 0;
     }
 
     byte *newplain = OPENSSL_malloc(len);
     if (!newplain) {
-        CA_printf("error mallocing in decrypt\n");
+        cloudPrintf("error mallocing in decrypt\n");
         return 0;
     }
 
     if (EVP_PKEY_decrypt(ctx, (unsigned char *)newplain, &len, (const unsigned char *)src, src_len) <= 0) {
-        CA_printf("error decrypting\n");
+        cloudPrintf("error decrypting\n");
         return 0;
     }
 
@@ -243,32 +243,32 @@ size_t G_PublicEncrypt(EVP_PKEY *key, byte *out, byte *in, size_t inlen) {
     size_t cipherlen = 0;
     EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(key, NULL);
     if (!ctx) {
-        CA_printf("error creating context for encrypting\n");
+        cloudPrintf("error creating context for encrypting\n");
         return 0;
     }
 
     if (EVP_PKEY_encrypt_init(ctx) <= 0) {
-        CA_printf("encrypt init failed\n");
+        cloudPrintf("encrypt init failed\n");
         return 0;
     }
 
     if (EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING) <= 0) {
-        CA_printf("error adding padding type (PKCS1)\n");
+        cloudPrintf("error adding padding type (PKCS1)\n");
         return 0;
     }
 
     if (EVP_PKEY_encrypt(ctx, NULL, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
-        CA_printf("encrypt error\n");
+        cloudPrintf("encrypt error\n");
         return 0;
     }
 
     byte *out1 = OPENSSL_malloc(cipherlen);
     if (!out) {
-        CA_printf("malloc error while encrypting\n");
+        cloudPrintf("malloc error while encrypting\n");
     }
 
     if (EVP_PKEY_encrypt(ctx, (unsigned char *)out1, &cipherlen, (const unsigned char *)in, inlen) <= 0) {
-        CA_printf("error encrypting\n");
+        cloudPrintf("error encrypting\n");
     }
 
     q2a_memcpy(out, out1, cipherlen);

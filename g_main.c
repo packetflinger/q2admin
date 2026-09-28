@@ -49,7 +49,7 @@ char moddir[256];
  *    before it's lost (whoisWriteFile) and frees its table
  *  - logs the server-end event
  *  - frees the level's substituted entity string (finalentities)
- *  - tears down the cloud admin service connection (CA_Shutdown) and
+ *  - tears down the cloud admin service connection (cloudShutdown) and
  *    resets the lrcon remote-console password state
  *
  * Unlike InitGame() (which calls the wrapped game mod's own Init()
@@ -85,7 +85,7 @@ void ShutdownGame(void) {
         profile_start(2);
     }
     G_Free(finalentities);
-    CA_Shutdown();
+    cloudShutdown();
 
     lrcon_reset_rcon_password(0, 0, 0);
     ge_mod->Shutdown();
@@ -140,7 +140,7 @@ void ShutdownGame(void) {
  *    real mod
  *
  * Finally calls the wrapped game mod's own RunFrame() and the cloud
- * admin service's per-frame tick (CA_RunFrame), so both still advance
+ * admin service's per-frame tick (cloudFrame), so both still advance
  * normally underneath q2admin.
  *
  * Takes no parameters - it's a bare engine entry point.
@@ -856,7 +856,7 @@ void G_RunFrame(void) {
 
     profile_start(2);
     ge_mod->RunFrame();
-    CA_RunFrame();
+    cloudFrame();
     profile_stop_2(2, "mod->G_RunFrame", 0, NULL);
 
     G_MergeEdicts();

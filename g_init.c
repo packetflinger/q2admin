@@ -610,7 +610,7 @@ void InitGame(void) {
 
     profile_stop(1, "q2admin->InitGame", 0, NULL);
     httpInit();
-    CA_Init();
+    cloudInit();
 }
 
 /**
@@ -1012,7 +1012,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     cloud.frame_number = 0;
 
     if (cloud.state == CLOUD_STATE_TRUSTED) {
-        CA_Map(mapname);
+        cloudMap(mapname);
     }
 
     profile_stop(1, "q2admin->SpawnEntities", 0, NULL);
@@ -1884,7 +1884,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     proxyinfo[client].next_report = 0;
 
-    CA_PlayerUpdate(client, proxyinfo[client].userinfo.raw);
+    cloudPlayerUpdate(client, proxyinfo[client].userinfo.raw);
     
     profile_stop(1, "q2admin->ClientUserinfoChanged", client, ent);
 }
@@ -1941,7 +1941,7 @@ void ClientDisconnect(edict_t *ent) {
         return;
     }
 
-    CA_PlayerDisconnect(ent);
+    cloudPlayerDisconnect(ent);
     
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         profile_start(2);

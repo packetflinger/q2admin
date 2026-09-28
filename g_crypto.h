@@ -14,3 +14,4 @@ void G_RSAError();
 size_t G_SymmetricDecrypt(byte *dest, byte *src, size_t src_len);
 size_t G_SymmetricEncrypt(byte *dest, byte *src, size_t src_len);
 void hexDump(char *desc, void *addr, int len);
+bool G_LoadKeys(void);

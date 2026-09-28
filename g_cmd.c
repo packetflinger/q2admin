@@ -1719,7 +1719,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
 
     // only works if we're a dedicated server
     if (ent == NULL) {
-        CA_Print(printlevel, cbuffer);	// send the one for the server console
+        cloudPrint(printlevel, cbuffer);	// send the one for the server console
     }
 
     gi.cprintf(ent, printlevel, "%s", cbuffer);
@@ -1781,7 +1781,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
          *
          * -claire (Dec. 22, 2019)
          */
-        CA_Print(printlevel, cbuffer);
+        cloudPrint(printlevel, cbuffer);
     }
 
     if (q2a_strcmp(mutedText, cbuffer) == 0) {
@@ -2889,7 +2889,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         return false;
                     }
                 }
-                CA_PlayerConnect(ent);
+                cloudPlayerConnect(ent);
                 return false;
             }
         }
