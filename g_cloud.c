@@ -289,6 +289,7 @@ void cloudDisconnect(void) {
     }
     closesocket(cloud.connection.socket);
     cloud.state = CLOUD_STATE_DISCONNECTED;
+    logEvent(LT_CLOUDDISCONNECT, 0, NULL, "closed locally", cloud.disconnect_count, 0.0, false);
 }
 
 /**
@@ -331,6 +332,8 @@ void cloudConnect(void) {
 
     if (cloud.connection.socket == -1) {
         perror("connect");
+        logEvent(LT_CLOUDERROR, 0, NULL,
+            va("cannot create socket: %s", strerror(errno)), errno, 0.0, false);
         errno = 0;
         cloud.connect_retry_frame = cloudNextConnectFrame();
         return;
@@ -348,6 +351,8 @@ void cloudConnect(void) {
 
     if (ret == -1) {
         cloudPrintf("error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
+        logEvent(LT_CLOUDERROR, 0, NULL,
+            va("cannot set socket non-blocking: %s", strerror(errno)), errno, 0.0, false);
         cloud.state = CLOUD_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
     }
@@ -409,6 +414,8 @@ void cloudCheckConnection(void) {
     if (ret == -1) {
         perror("CheckConnection");
         cloudPrintf("connection unfinished: %s\n", strerror(errno));
+        logEvent(LT_CLOUDERROR, 0, NULL,
+            va("connection unfinished: %s", strerror(errno)), errno, 0.0, false);
         closesocket(c->socket);
         cloud.state = CLOUD_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_CA_FRAME(10);
@@ -421,6 +428,11 @@ void cloudCheckConnection(void) {
         getpeername(c->socket, (struct sockaddr *)&addr, &len);
 
         if (errno) {
+            // Snapshot errno before logEvent, which writes to a file and can
+            // clobber it.
+            int err = errno;
+            logEvent(LT_CLOUDERROR, 0, NULL,
+                va("peer not connected: %s", strerror(err)), err, 0.0, false);
             cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
             cloud.state = CLOUD_STATE_DISCONNECTED;
             closesocket(c->socket);
@@ -580,6 +592,13 @@ void cloudReadMessages(void) {
 void cloudTrusted(void) {
     cloudDPrintf("connection trusted\n");
     cloud.state = CLOUD_STATE_TRUSTED;
+
+    // Logged here rather than when the socket comes up in
+    // cloudCheckConnection(), because the link isn't usable until the server
+    // has authenticated us. A connection that gets that far and no further
+    // shows up as a CLOUDERROR instead.
+    logEvent(LT_CLOUDCONNECT, 0, NULL,
+        va("%s:%d", cloud_config.address, cloud_config.port), 0, 0.0, false);
 }
 
 /**
@@ -759,11 +778,19 @@ bool cloudVerifyServerAuth(void) {
         cloud.connection.auth_fail_count = 0;
         return true;
     } else {
-        cloudDPrintf("server auth error: %s\n", ERR_error_string(ERR_get_error(), NULL));
+        // ERR_get_error() pops the error off the queue, so read it once and
+        // reuse it for both the console and the log.
+        char *sslerr = ERR_error_string(ERR_get_error(), NULL);
+
+        cloudDPrintf("server auth error: %s\n", sslerr);
+        logEvent(LT_CLOUDERROR, 0, NULL, va("server auth error: %s", sslerr),
+            cloud.connection.auth_fail_count, 0.0, false);
         cloud.connection.auth_fail_count++;
 
         if (cloud.connection.auth_fail_count > AUTH_FAIL_LIMIT) {
             cloudDPrintf("too many auth failures, giving up\n");
+            logEvent(LT_CLOUDERROR, 0, NULL, "too many auth failures, giving up",
+                cloud.connection.auth_fail_count, 0.0, false);
             cloud.state = CLOUD_STATE_DISABLED;
         }
         return false;
@@ -823,6 +850,9 @@ void cloudPeerDisconnected(void) {
     cloud.connection.trusted = false;
     cloud.connection.have_keys = false;
     cloud.disconnect_count++;
+    logEvent(LT_CLOUDDISCONNECT, 0, NULL, 
+        va("%s:%d connection lost", cloud_config.address, cloud_config.port),
+        cloud.disconnect_count, 0.0, false);
 
     closesocket(cloud.connection.socket);
     FD_CLR(cloud.connection.socket, &cloud.connection.set_r);
@@ -915,6 +945,8 @@ void cloudParseError(void) {
     reason_id = cloudReadByte();
     reason = cloudReadString();
 
+    logEvent(LT_CLOUDERROR, 0, NULL, reason ? reason : "", reason_id, 0.0, false);
+
     // Where to output the error msg
     if (client_id == -1) {
         gi.cprintf(NULL, PRINT_HIGH, "%s\n", reason);
@@ -927,6 +959,9 @@ void cloudParseError(void) {
         closesocket(cloud.connection.socket);
         cloud.state = CLOUD_STATE_DISABLED;
         freeaddrinfo(cloud.addr);
+        logEvent(LT_CLOUDDISCONNECT, 0, NULL,
+            va("disabled by server: %s", reason ? reason : ""),
+            cloud.disconnect_count, 0.0, false);
     }
 }
 

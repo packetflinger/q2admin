@@ -52,6 +52,9 @@ logtypes_t logtypes[] = {
     {"CLIENTVERSION",       false,   0,    ""},
     {"SIGNALRAISED",        false,   0,    ""},
     {"SIGNALCLEARED",       false,   0,    ""},
+    {"CLOUDCONNECT",        false,   0,    ""},
+    {"CLOUDDISCONNECT",     false,   0,    ""},
+    {"CLOUDERROR",          false,   0,    ""},
 };
 
 /**
@@ -361,6 +364,9 @@ void loadLogList(void) {
  *   entity creation/deletion: the classname of the edict_t
  *   clientuserinfo change: the new userinfo string
  *   clientversion: the version string
+ *   cloud connect: the cloud server address that was connected to
+ *   cloud disconnect: why the connection ended
+ *   cloud error: the error description
  *
  * Hack detection types for #e
  *   50 to -2 = zbot detected
@@ -470,9 +476,9 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     *dest++ = *cp++;
                 }
             } else if (*format == 'w') {
-                // For LT_SIGNAL the message is the signal's name, so the
-                // weight it currently carries can be looked up from it. Any
-                // other log type has no signal to resolve and logs 0.
+                // The signal log types pass the signal's bit as the number, so
+                // the name it goes by can be resolved from that. Any other log
+                // type has no signal to resolve and expands to nothing.
                 signal_def_t *s = findSignalDefFromID(number);
                 if (s) {
                     cp = s->name;
@@ -485,16 +491,23 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     }
                 }
             } else if (*format == 'x') {
-                Q_snprintf(num, sizeof(num), "%d", signalScore(client));
-                cp = num;
-                while (*cp) {
-                    *dest++ = *cp++;
+                // Guarded on ent like the other client replacements: a
+                // server-wide event passes client 0, and without this it would
+                // report whoever happens to occupy slot 0 rather than nothing.
+                if (ent) {
+                    Q_snprintf(num, sizeof(num), "%d", signalScore(client));
+                    cp = num;
+                    while (*cp) {
+                        *dest++ = *cp++;
+                    }
                 }
             } else if (*format == 'X') {
-                Q_snprintf(num, sizeof(num), "%d/%d", signalScore(client), signal_score_threshold);
-                cp = num;
-                while (*cp) {
-                    *dest++ = *cp++;
+                if (ent) {
+                    Q_snprintf(num, sizeof(num), "%d/%d", signalScore(client), signal_score_threshold);
+                    cp = num;
+                    while (*cp) {
+                        *dest++ = *cp++;
+                    }
                 }
             } else {
                 *dest++ = '#';

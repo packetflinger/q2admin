@@ -68,6 +68,9 @@ enum zb_logtypesenum {
     LT_CLIENTVERSION,
     LT_SIGNALRAISED,
     LT_SIGNALCLEARED,
+    LT_CLOUDCONNECT,
+    LT_CLOUDDISCONNECT,
+    LT_CLOUDERROR,
 };
 
 void clearlogfileRun(int startarg, edict_t *ent, int client);
