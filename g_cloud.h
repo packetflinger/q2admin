@@ -268,7 +268,6 @@ void        cloudParseError(void);
 void        cloudSayClient(void);
 void        cloudSayAll(void);
 bool        cloudVerifyServerAuth(void);
-void        cryptoLogRSAErrors(void);
 void        cloudRotateKeys(void);
 void        cloudDebugPrint(char *str);
 void        cloudRun(int startarg, edict_t *ent, int client);
