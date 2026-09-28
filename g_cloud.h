@@ -226,7 +226,6 @@ void        cloudShutdown(void);
 void        cloudFrame(void);
 void        cloudPlayerConnect(edict_t *ent);
 void        cloudPlayerDisconnect(edict_t *ent);
-void        CA_PlayerCommand(edict_t *ent);
 uint8_t     cloudReadByte(void);
 uint16_t    cloudReadShort(void);
 int32_t     cloudReadLong(void);

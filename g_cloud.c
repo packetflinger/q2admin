@@ -1140,10 +1140,6 @@ void cloudPlayerDisconnect(edict_t *ent) {
     cloudWriteByte(cl);
 }
 
-void CA_PlayerCommand(edict_t *ent) {
-    
-}
-
 /**
  * Called for every broadcast print (bprintf), but only
  * on dedicated servers
