@@ -50,6 +50,8 @@ logtypes_t logtypes[] = {
     {"CLIENTUSERINFO",      false,   0,    ""},
     {"PRIVATELOG",          false,   0,    ""},
     {"CLIENTVERSION",       false,   0,    ""},
+    {"SIGNALRAISED",        false,   0,    ""},
+    {"SIGNALCLEARED",       false,   0,    ""},
 };
 
 /**
@@ -343,6 +345,9 @@ void loadLogList(void) {
  *   #T = current date/time (short format (YYYYMMDDhhmmss))
  *   #e = impulse number, hack detected type, internal warning
  *   #f = function complete time (performance monitoring only)
+ *   #w = name of the signal raised or cleared
+ *   #x = player's current signal score (sort, number only)
+ *   #X = player's current signal score (long, #/threshold)
  *   #m = message
  *
  * Context->value for #m:
@@ -368,6 +373,7 @@ void loadLogList(void) {
  */
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int impulse, float ret_time) {
     char *cp;
+    char num[32];   // scratch for numeric replacements, see note below
     time_t ltimetemp;
 	struct tm *timeinfo;
 
@@ -384,9 +390,15 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'p') {
                 if (ent) {
-                    Q_snprintf(dest, sizeof(dest), "%d", ent->client->ping);
-                    while (*dest) {
-                        dest++;
+                    // Formatting straight into dest would bound the write by
+                    // sizeof(dest), which is the size of the pointer, not the
+                    // caller's 4096-byte line - anything over 7 characters got
+                    // silently truncated. Numeric replacements go through num
+                    // and are copied out like every other replacement here.
+                    Q_snprintf(num, sizeof(num), "%d", ent->client->ping);
+                    cp = num;
+                    while (*cp) {
+                        *dest++ = *cp++;
                     }
                 }
             } else if (*format == 'i') {
@@ -398,9 +410,10 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 }
             } else if (*format == 'r') {
                 if (ent) {
-                    Q_snprintf(dest, sizeof(dest), "%d", proxyinfo[client].userinfo.rate);
-                    while (*dest) {
-                        dest++;
+                    Q_snprintf(num, sizeof(num), "%d", proxyinfo[client].userinfo.rate);
+                    cp = num;
+                    while (*cp) {
+                        *dest++ = *cp++;
                     }
                 }
             } else if (*format == 's') {
@@ -439,9 +452,10 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     }
                 }
             } else if (*format == 'e') {
-                Q_snprintf(dest, sizeof(dest), "%d", impulse);
-                while (*dest) {
-                    dest++;
+                Q_snprintf(num, sizeof(num), "%d", impulse);
+                cp = num;
+                while (*cp) {
+                    *dest++ = *cp++;
                 }
             } else if (*format == 'f') {
                 // %g would switch to scientific notation once the exponent
@@ -450,9 +464,37 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 // file, in two different formats. %f keeps it decimal; 6 places
                 // resolves down to a microsecond, which is finer than clock()
                 // ticks on any platform this runs on.
-                Q_snprintf(dest, sizeof(dest), "%.6f", ret_time);
-                while (*dest) {
-                    dest++;
+                Q_snprintf(num, sizeof(num), "%.6f", ret_time);
+                cp = num;
+                while (*cp) {
+                    *dest++ = *cp++;
+                }
+            } else if (*format == 'w') {
+                // For LT_SIGNAL the message is the signal's name, so the
+                // weight it currently carries can be looked up from it. Any
+                // other log type has no signal to resolve and logs 0.
+                signal_def_t *s = findSignalDefFromID(impulse);
+                if (s) {
+                    cp = s->name;
+                    while (*cp) {
+                        if (*cp != '\n') {
+                            *dest++ = *cp++;
+                        } else {
+                            cp++;
+                        }
+                    }
+                }
+            } else if (*format == 'x') {
+                Q_snprintf(num, sizeof(num), "%d", signalScore(client));
+                cp = num;
+                while (*cp) {
+                    *dest++ = *cp++;
+                }
+            } else if (*format == 'X') {
+                Q_snprintf(num, sizeof(num), "%d/%d", signalScore(client), signal_score_threshold);
+                cp = num;
+                while (*cp) {
+                    *dest++ = *cp++;
                 }
             } else {
                 *dest++ = '#';

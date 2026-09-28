@@ -42,10 +42,22 @@
 #define SIGNAL_VPN_LIKEY           BIT(23) // 50-75% sure on VPN usage
 #define SIGNAL_VPN_DETECTED        BIT(24) // 75-100% sure on VPN usage
 
+// One signal's definition: the bit it sets, what it contributes to a client's
+// score while set, and the name it goes by in q2admin.cfg, !signals and
+// !signal_weight. Weights are overridable at runtime and from the config file,
+// so the table in g_signal.c is not const; the values there are the defaults.
+typedef struct {
+    unsigned int bit;
+    int weight;
+    const char *name;
+} signal_def_t;
+
 extern int signal_score_threshold; // total score needed to remove a client, 0 disables
 
 void clearSignal(int client, unsigned int signal);
 void evaluateSignalScore(int client);
+signal_def_t *findSignalDef(const char *name);
+signal_def_t *findSignalDefFromID(const int id);
 void raiseSignal(int client, unsigned int signal);
 void signaladdRun(int startarg, edict_t *ent, int client);
 char *signalListString(int client);

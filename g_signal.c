@@ -22,15 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int signal_score_threshold = 50; // 0 disables score-based removal
 
-typedef struct {
-    unsigned int bit;
-    int weight;
-    const char *name;
-} signal_def_t;
-
 // Not const: weights are overridable at runtime/via cfg, see
 // findSignalDef()/signalWeightRun()/signalWeightInit() below. The values
-// here are just the defaults.
+// here are just the defaults. signal_def_t itself lives in g_signal.h so
+// convertToLogLine() can resolve a weight for the "#w" log format.
 static signal_def_t signalDefs[] = {
     { SIGNAL_AIMBOT_JITTER,             15,  "aimbot-jitter" }, // each
     { SIGNAL_CHATFLOOD,                 15,  "chatflood" },
@@ -68,6 +63,7 @@ void raiseSignal(int client, unsigned int signal) {
         return;
     }
     proxyinfo[client].signalMask |= signal;
+    logEvent(LT_SIGNALRAISED, client, proxyinfo[client].ent, NULL, signal, 0.0, false);
 }
 
 /**
@@ -78,6 +74,7 @@ void clearSignal(int client, unsigned int signal) {
         return;
     }
     proxyinfo[client].signalMask &= ~signal;
+    logEvent(LT_SIGNALCLEARED, client, proxyinfo[client].ent, NULL, signal, 0.0, false);
 }
 
 /**
@@ -192,9 +189,18 @@ void evaluateSignalScore(int client) {
  * shown in !signals/signalListString()), for signalWeightRun()/
  * signalWeightInit() below. NULL if nothing matches.
  */
-static signal_def_t *findSignalDef(const char *name) {
+signal_def_t *findSignalDef(const char *name) {
     for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
         if (Q_stricmp((char *) signalDefs[i].name, (char *) name) == 0) {
+            return &signalDefs[i];
+        }
+    }
+    return NULL;
+}
+
+signal_def_t *findSignalDefFromID(const int id) {
+    for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
+        if (signalDefs[i].bit == id) {
             return &signalDefs[i];
         }
     }
