@@ -133,6 +133,7 @@ HEADERS :=  game.h \
             g_log.h \
             g_lrcon.h \
             g_net.h \
+            g_protoco.h \
             g_queue.h \
             g_regex.h \
             g_signal.h \
@@ -165,6 +166,7 @@ OBJS :=     g_admin.o \
             g_lrcon.o \
             g_main.o \
             g_net.o \
+            g_protocol.o \
             g_queue.o \
             g_regex.o \
             g_signal.o \

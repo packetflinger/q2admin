@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_ip.h"
 #include "g_log.h"
 #include "g_lrcon.h"
+#include "g_protocol.h"
 #include "g_queue.h"
 #include "g_signal.h"
 #include "g_spawn.h"

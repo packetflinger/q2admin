@@ -45,6 +45,7 @@ static signal_def_t signalDefs[] = {
     { SIGNAL_VPN_LIKEY,                 30,  "vpn-likely" },
     { SIGNAL_VPN_DETECTED,              40,  "vpn-detected" },
     { SIGNAL_WONKY_USERINFO,            15,  "wonky-userinfo" },
+    { SIGNAL_PROTOCOL_DOWNGRADE,        10,  "protocol-downgrade" },
     { SIGNAL_TIMESCALE_MODIFIED,   1000000,  "timescale-modified" },
     { SIGNAL_ZBOT_DETECTED,        1000000,  "zbot-detected" },
     { SIGNAL_RATBOT_DETECTED,      1000000,  "ratbot-detected" },
