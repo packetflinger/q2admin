@@ -423,6 +423,7 @@ extern bool disconnectuserimpulse;
 extern bool disconnectuser;
 extern bool mapcfgexec;
 extern bool checkClientIpAddress;
+extern bool userinfoProxy;
 extern bool votecountnovotes;
 
 extern int hz;

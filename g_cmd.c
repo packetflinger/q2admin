@@ -1385,6 +1385,12 @@ q2acmd_t q2aCommands[] = {
         unstifleRun
     },
     {
+        "userinfo_proxy",
+        CMDCTX_CFGFILE,
+        CMDTYPE_LOGICAL,
+        &userinfoProxy
+    },
+    {
         "userinfochange_count",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,

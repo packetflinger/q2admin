@@ -214,6 +214,7 @@ bool spawnentities_enable               = false;
 bool spawnentities_internal_enable      = false;
 int speedbot_check_type                 = 3;
 char timescaleuserdisplay[256];
+bool userinfoProxy                      = false;
 int USERINFOCHANGE_TIME                 = 60;
 int USERINFOCHANGE_COUNT                = 40;
 char version[256];
@@ -516,6 +517,25 @@ void InitGame(void) {
 
     g_features = gi.cvar("g_features", "0", CVAR_NOSET);
     sv_features = gi.cvar("sv_features", "0", CVAR_NOSET);
+
+    // A mod declares the optional engine features it wants by setting
+    // g_features during its own Init(), which just ran above. With
+    // userinfo_proxy set, q2admin asks for GMF_EXTRA_USERINFO on the mod's
+    // behalf, then merges the extra keys into one ordinary userinfo string
+    // before forwarding ClientConnect() - so a mod that knows nothing about
+    // the feature still gets the challenge/protocol/qport/zlib data.
+    //
+    // Only worth doing when the engine can actually supply it; asking an
+    // engine that can't would leave g_features advertising a feature that
+    // never arrives. The engine reads g_features after ge->Init() returns,
+    // and this runs inside that call, so the change is seen in time.
+    if (userinfoProxy
+            && ((unsigned)sv_features->value & GMF_EXTRA_USERINFO)
+            && !((unsigned)g_features->value & GMF_EXTRA_USERINFO)) {
+        g_features = gi.cvar_forceset("g_features",
+                va("%d", (int)g_features->value | GMF_EXTRA_USERINFO));
+        Q_printf("userinfo_proxy: requesting extra userinfo for the mod\n");
+    }
 
     if (q2a_developer) {
         Q_printf("Game supports:   %s\n", featuresToString((int)g_features->value));
@@ -1205,22 +1225,15 @@ bool checkReconnectList(char *username) {
 bool ClientConnect(edict_t *ent, char *ui) {
     int client;
     char *skinname, *extra, *userinfo;
-
-    client = getEntOffset(ent) - 1;
-
-    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
-        extra = ui + q2a_strlen(ui) + 1;
-        if (q2a_strlen(extra) == 0) {
-            Info_SetValueForKey(ui, "rejmsg", "Error: wonky userinfo.");
-            return false;
-        }
-        userinfo = va("%s%s", ui, extra);
-    } else {
-        userinfo = ui;
-    }
-
+    // Holds the standard and extra userinfo spliced together. va()'s buffers
+    // rotate every 8 calls and this has to stay valid all the way down to the
+    // ge_mod->ClientConnect() forward at the bottom of the function, which is
+    // hundreds of lines and many va() calls away.
+    char merged[MAX_INFO_STRING * 2];
     bool ret;
     bool userInfoOverflow = false;
+
+    client = getEntOffset(ent) - 1;
 
     profile_init(1);
     profile_init(2);
@@ -1229,10 +1242,27 @@ bool ClientConnect(edict_t *ent, char *ui) {
         return false;
     }
 
+    // Both early returns have to come before the feature check below.
+    // InitGame() returns as soon as it sees runmode 0, which is before it
+    // looks up g_features, so that pointer is still NULL here and
+    // FEATURE_SUPPORTED() would dereference it. Nothing on this path wants
+    // the merged userinfo anyway - runmode 0 forwards everything untouched.
     if (runmode == 0) {
         ret = ge_mod->ClientConnect(ent, ui);
         G_MergeEdicts();
         return ret;
+    }
+
+    if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
+        extra = ui + q2a_strlen(ui) + 1;
+        if (q2a_strlen(extra) == 0) {
+            Info_SetValueForKey(ui, "rejmsg", "Error: wonky userinfo.");
+            return false;
+        }
+        Q_snprintf(merged, sizeof(merged), "%s%s", ui, extra);
+        userinfo = merged;
+    } else {
+        userinfo = ui;
     }
 
     profile_start(1);
@@ -1448,9 +1478,20 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
         if (doConnect) {
             profile_start(2);
-            ret = ge_mod->ClientConnect(ent, ui);
+            // When the extra userinfo feature is in play this hands the mod
+            // the merged string rather than the engine's, so a mod with no
+            // knowledge of the feature reads the extra keys like any other.
+            // Without the feature the two are the same pointer.
+            ret = ge_mod->ClientConnect(ent, userinfo);
             profile_stop(2, "mod->ClientConnect", client, ent);
 
+            // A rejecting mod reports why by setting "rejmsg" on the userinfo
+            // it was handed, and the engine reads that back out of its own
+            // buffer. Those are different buffers here, so carry it across or
+            // the player is dropped with no reason given.
+            if (!ret && userinfo != ui) {
+                Info_SetValueForKey(ui, "rejmsg", Info_ValueForKey(userinfo, "rejmsg"));
+            }
             G_MergeEdicts();
         }
     }
