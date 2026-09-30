@@ -133,7 +133,7 @@ HEADERS :=  game.h \
             g_log.h \
             g_lrcon.h \
             g_net.h \
-            g_protoco.h \
+            g_protocol.h \
             g_queue.h \
             g_regex.h \
             g_signal.h \
