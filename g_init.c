@@ -225,6 +225,7 @@ bool vpn_kick                           = true;
 bool zbotdetect                         = true;
 char motdFilename[256];
 char zbotuserdisplay[256];
+int server_protocol                     = PROTOCOL_VANILLA;
 
 //r1ch 2005-01-26 disable hugely buggy commands BEGIN
 /*bool play_team_enable = false;
@@ -535,6 +536,12 @@ void InitGame(void) {
         g_features = gi.cvar_forceset("g_features",
                 va("%d", (int)g_features->value | GMF_EXTRA_USERINFO));
         Q_printf("userinfo_proxy: requesting extra userinfo for the mod\n");
+    }
+
+    if (((unsigned)sv_features->value) > 0 && ((unsigned)sv_features->value) < GMF_ENHANCED_SAVEGAMES) {
+        server_protocol = PROTOCOL_R1Q2;
+    } else if (((unsigned)sv_features->value) >= GMF_ENHANCED_SAVEGAMES) {
+        server_protocol = PROTOCOL_Q2PRO;
     }
 
     if (q2a_developer) {

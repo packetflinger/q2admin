@@ -612,6 +612,8 @@ extern int gl_driver_max_changes;
 extern int q2a_developer;
 extern bool enforce_deadlines;
 
+extern int server_protocol;
+
 #define MAX_ENTALLOWLIST    43
 extern const char *entAllowlist[MAX_ENTALLOWLIST];     // ents allowed for substitutions
 

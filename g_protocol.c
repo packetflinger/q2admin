@@ -109,6 +109,7 @@ const client_def_t *identifyClient(const char *version) {
 void checkProtocolDowngrade(int client) {
     const client_def_t *def;
     proxyinfo_t *cl;
+    int max;
 
     if (!VALIDCLIENT(client)) {
         return;
@@ -127,8 +128,14 @@ void checkProtocolDowngrade(int client) {
     if (!def || def->max_protocol == PROTOCOL_UNKNOWN) {
         return;
     }
-
-    if (cl->protocol_major < def->max_protocol) {
+    
+    // account for lower protocol server with higher clients (r1q2ded with
+    // q2pro)
+    max = def->max_protocol;
+    if (max > server_protocol) {
+        max = server_protocol;
+    }
+    if (cl->protocol_major < max) {
         raiseSignal(client, SIGNAL_PROTOCOL_DOWNGRADE);
     }
 }
