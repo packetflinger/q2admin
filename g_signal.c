@@ -65,6 +65,7 @@ void raiseSignal(int client, unsigned int signal) {
     }
     proxyinfo[client].signalMask |= signal;
     logEvent(LT_SIGNALRAISED, client, proxyinfo[client].ent, NULL, signal, 0.0, false);
+    evaluateSignalScore(client);
 }
 
 /**

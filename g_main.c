@@ -845,7 +845,6 @@ void G_RunFrame(void) {
                 maxdoclients++;
             }
         }
-        evaluateSignalScore(client);
     }
 
     if (client >= maxclients->value) {
