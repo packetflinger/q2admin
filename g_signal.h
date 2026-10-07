@@ -20,29 +20,29 @@
 #define SIGNAL_AIMBOT_JITTER       BIT(0)  // suspicious angle snapping, below confirmed-aimbot threshold
 #define SIGNAL_CHATFLOOD           BIT(1)  // sending chat messages faster than allowed
 #define SIGNAL_PROXY_DETECTED      BIT(2)  // Related to reconnection 
-#define SIGNAL_TIMESCALE_MODIFIED  BIT(4)  // Client's timescale is more than 1.0
-#define SIGNAL_ALIAS_UNSUPPORTED   BIT(5)  // Client doesn't handle "alias" command properly
-#define SIGNAL_WONKY_USERINFO      BIT(6)  // A standard key is missing from userinfo
-#define SIGNAL_BAD_CLIENT          BIT(7)  // Client doesn't behave the way we know it should
-#define SIGNAL_SNAP_FIRE           BIT(8)  // view snapped onto a player that wasn't near the crosshair, firing immediately
-#define SIGNAL_AIM_TRACK           BIT(9)  // crosshair stayed implausibly tight on a moving target for a sustained streak
-#define SIGNAL_SKIN_OVERFLOW       BIT(10) // Attempted to use an oversized skin
-#define SIGNAL_VERSION_DEADLINE    BIT(11) // Client version probe unanswered
-#define SIGNAL_ALIAS_DEADLINE      BIT(12) // Alias probe unanswered
-#define SIGNAL_TIMESCALE_DEADLINE  BIT(13) // Timescale probe unanwered
-#define SIGNAL_CHECKVAR_DEADLINE   BIT(14) // Checkvar probe unanswered
-#define SIGNAL_MSEC_OVERRUN        BIT(15) // Client command used too much msec
-#define SIGNAL_MSEC_UNDERRUN       BIT(16) // Client banking msec for later burst
-#define SIGNAL_IMPULSE             BIT(17) // Player issued a bad impulse
-#define SIGNAL_ZBOT_DETECTED       BIT(18) // Pretty sure player is using a zbot
-#define SIGNAL_RATBOT_DETECTED     BIT(19) // Pretty sure player is using a ratbot
-#define SIGNAL_BAN_ADJUSTMENT      BIT(20) // Ban entry has a "SCORE" property
-#define SIGNAL_MANUAL              BIT(21) // Human admin manually added score
-#define SIGNAL_VPN_SUSPICIOUS      BIT(22) // 25-50% sure on VPN usage
-#define SIGNAL_VPN_LIKEY           BIT(23) // 50-75% sure on VPN usage
-#define SIGNAL_VPN_DETECTED        BIT(24) // 75-100% sure on VPN usage
-#define SIGNAL_PROTOCOL_DOWNGRADE  BIT(25) // connected with less protocol than their client supports
-#define SIGNAL_MVD_IMPOSTER        BIT(26) // Player's userinfo claims to be q2pro's dummy MVD client
+#define SIGNAL_TIMESCALE_MODIFIED  BIT(3)  // Client's timescale is more than 1.0
+#define SIGNAL_ALIAS_UNSUPPORTED   BIT(4)  // Client doesn't handle "alias" command properly
+#define SIGNAL_WONKY_USERINFO      BIT(5)  // A standard key is missing from userinfo
+#define SIGNAL_BAD_CLIENT          BIT(6)  // Client doesn't behave the way we know it should
+#define SIGNAL_SNAP_FIRE           BIT(7)  // view snapped onto a player that wasn't near the crosshair, firing immediately
+#define SIGNAL_AIM_TRACK           BIT(8)  // crosshair stayed implausibly tight on a moving target for a sustained streak
+#define SIGNAL_SKIN_OVERFLOW       BIT(9)  // Attempted to use an oversized skin
+#define SIGNAL_VERSION_DEADLINE    BIT(10) // Client version probe unanswered
+#define SIGNAL_ALIAS_DEADLINE      BIT(11) // Alias probe unanswered
+#define SIGNAL_TIMESCALE_DEADLINE  BIT(12) // Timescale probe unanwered
+#define SIGNAL_CHECKVAR_DEADLINE   BIT(13) // Checkvar probe unanswered
+#define SIGNAL_MSEC_OVERRUN        BIT(14) // Client command used too much msec
+#define SIGNAL_MSEC_UNDERRUN       BIT(15) // Client banking msec for later burst
+#define SIGNAL_IMPULSE             BIT(16) // Player issued a bad impulse
+#define SIGNAL_ZBOT_DETECTED       BIT(17) // Pretty sure player is using a zbot
+#define SIGNAL_RATBOT_DETECTED     BIT(18) // Pretty sure player is using a ratbot
+#define SIGNAL_BAN_ADJUSTMENT      BIT(19) // Ban entry has a "SCORE" property
+#define SIGNAL_MANUAL              BIT(20) // Human admin manually added score
+#define SIGNAL_VPN_SUSPICIOUS      BIT(21) // 25-50% sure on VPN usage
+#define SIGNAL_VPN_LIKEY           BIT(22) // 50-75% sure on VPN usage
+#define SIGNAL_VPN_DETECTED        BIT(23) // 75-100% sure on VPN usage
+#define SIGNAL_PROTOCOL_DOWNGRADE  BIT(24) // connected with less protocol than their client supports
+#define SIGNAL_MVD_IMPOSTER        BIT(25) // Player's userinfo claims to be q2pro's dummy MVD client
 
 // One signal's definition: the bit it sets, what it contributes to a client's
 // score while set, and the name it goes by in q2admin.cfg, !signals and
