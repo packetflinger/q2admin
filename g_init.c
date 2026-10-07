@@ -1228,6 +1228,26 @@ static bool IsMVDDummy(char *ui, char *extra) {
 }
 
 /**
+ * Flag a player whose userinfo carries the "mvdspec" key q2pro reserves for
+ * its dummy MVD client. Real clients never send it, so it's only there if a
+ * player set it hoping to be treated as the dummy (and skip checks). Without
+ * GMF_EXTRA_USERINFO q2pro strips it before ClientConnect(), but it's still
+ * worth catching here since it can be set later and arrive via
+ * ClientUserinfoChanged(). Checking the key alone (rather than mvdspec with a
+ * non-loopback ip) matters: a player can set ip too, and theirs is found
+ * before the engine's in the merged userinfo.
+ *
+ * Called from ClientConnect() and ClientUserinfoChanged().
+ */
+static void checkMVDImposter(int client, char *userinfo) {
+    if (proxyinfo[client].mvddummy || !*Info_ValueForKey(userinfo, "mvdspec")) {
+        return;
+    }
+    Q_printf("%s: userinfo claims to be the MVD dummy client (IP = %s)\n", NAME(client), IP(client));
+    raiseSignal(client, SIGNAL_MVD_IMPOSTER);
+}
+
+/**
  * Called when a new player first connects to the server, before entering the
  * game. This function checks the userinfo string from the client as well.
  *
@@ -1343,6 +1363,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     proxyinfo[client].ent = ent;
     proxyinfo[client].enteredgame = ltime;
     proxyinfo[client].userinfo.changed_start = ltime;
+    proxyinfo[client].mvddummy = mvddummy;
 
     if (FEATURE_SUPPORTED(GMF_EXTRA_USERINFO)) {
         proxyinfo[client].challenge = q2a_atoi(Info_ValueForKey(userinfo, "challenge"));
@@ -1402,6 +1423,8 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof(proxyinfo[client].userinfo.skin) - 1);
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw) - 1);
+
+    checkMVDImposter(client, userinfo);
 
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;
@@ -1789,6 +1812,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     client = getEntOffset(ent) - 1;
 
     logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0, false);
+
+    checkMVDImposter(client, userinfo);
 
     //zgh_frk check
     if (stringContains(userinfo, "\\skon\\")) {

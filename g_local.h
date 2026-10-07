@@ -143,6 +143,7 @@ typedef struct {
     aimsnap_t aimsnap;              // for checking snap-onto-target-and-fire behavior
     aimtrack_t aimtrack;            // for checking sustained too-tight tracking on a moving target
     unsigned int signalMask;        // bitmask of currently-matching signals, see g_signal.h
+    bool mvddummy;                  // this is q2pro's server-side dummy MVD client, see IsMVDDummy()
     int votescast;                  // cumulative total votes proposed
     int votetimeout;                // can't propose until ltime is greater
 

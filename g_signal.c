@@ -52,6 +52,7 @@ static signal_def_t signalDefs[] = {
     { SIGNAL_PROXY_DETECTED,       1000000,  "proxy-detected" },
     { SIGNAL_ALIAS_UNSUPPORTED,    1000000,  "alias-unsupported" },
     { SIGNAL_BAD_CLIENT,           1000000,  "bad-client" },
+    { SIGNAL_MVD_IMPOSTER,         1000000,  "mvd-imposter" },
 };
 
 /**

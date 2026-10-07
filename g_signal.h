@@ -42,6 +42,7 @@
 #define SIGNAL_VPN_LIKEY           BIT(23) // 50-75% sure on VPN usage
 #define SIGNAL_VPN_DETECTED        BIT(24) // 75-100% sure on VPN usage
 #define SIGNAL_PROTOCOL_DOWNGRADE  BIT(25) // connected with less protocol than their client supports
+#define SIGNAL_MVD_IMPOSTER        BIT(26) // Player's userinfo claims to be q2pro's dummy MVD client
 
 // One signal's definition: the bit it sets, what it contributes to a client's
 // score while set, and the name it goes by in q2admin.cfg, !signals and
