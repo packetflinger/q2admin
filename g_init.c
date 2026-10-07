@@ -215,6 +215,9 @@ bool spawnentities_internal_enable      = false;
 int speedbot_check_type                 = 3;
 char timescaleuserdisplay[256];
 bool userinfoProxy                      = false;
+// true when q2admin requested GMF_EXTRA_USERINFO on the mod's behalf (see
+// InitGame()), so the mod needs the extra keys merged into one string
+static bool userinfoProxyActive         = false;
 int USERINFOCHANGE_TIME                 = 60;
 int USERINFOCHANGE_COUNT                = 40;
 char version[256];
@@ -530,9 +533,11 @@ void InitGame(void) {
     // engine that can't would leave g_features advertising a feature that
     // never arrives. The engine reads g_features after ge->Init() returns,
     // and this runs inside that call, so the change is seen in time.
+    userinfoProxyActive = false;
     if (userinfoProxy
             && ((unsigned)sv_features->value & GMF_EXTRA_USERINFO)
             && !((unsigned)g_features->value & GMF_EXTRA_USERINFO)) {
+        userinfoProxyActive = true;
         g_features = gi.cvar_forceset("g_features",
                 va("%d", (int)g_features->value | GMF_EXTRA_USERINFO));
         Q_printf("userinfo_proxy: requesting extra userinfo for the mod\n");
@@ -1200,6 +1205,29 @@ bool checkReconnectList(char *username) {
 }
 
 /**
+ * Is this connection q2pro's dummy MVD client? That's a fake client the
+ * server creates entirely on its own to spectate the game for MVD
+ * recording, with a fixed userinfo of:
+ *
+ *  "\name\[MVDSPEC]\skin\male/grunt\spectator\1\mvdspec\<ver>\ip\loopback"
+ *
+ * With GMF_EXTRA_USERINFO the "\mvdspec\...\ip\loopback" half arrives as the
+ * extra segment after the NUL. The engine builds that segment itself for
+ * real clients too (without mvdspec), so a player can't fake it by setting
+ * keys in their own userinfo. Without the feature q2pro strips mvdspec from
+ * every real client's userinfo, so its presence alone is trustworthy.
+ *
+ * ui:     the userinfo exactly as the engine passed it to ClientConnect()
+ * extra:  the extra userinfo segment, or NULL if the feature isn't in use
+ */
+static bool IsMVDDummy(char *ui, char *extra) {
+    char *info = extra ? extra : ui;
+
+    return *Info_ValueForKey(info, "mvdspec")
+            && q2a_strcmp(Info_ValueForKey(info, "ip"), "loopback") == 0;
+}
+
+/**
  * Called when a new player first connects to the server, before entering the
  * game. This function checks the userinfo string from the client as well.
  *
@@ -1231,7 +1259,7 @@ bool checkReconnectList(char *username) {
  */
 bool ClientConnect(edict_t *ent, char *ui) {
     int client;
-    char *skinname, *extra, *userinfo;
+    char *skinname, *extra = NULL, *userinfo;
     // Holds the standard and extra userinfo spliced together. va()'s buffers
     // rotate every 8 calls and this has to stay valid all the way down to the
     // ge_mod->ClientConnect() forward at the bottom of the function, which is
@@ -1239,6 +1267,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     char merged[MAX_INFO_STRING * 2];
     bool ret;
     bool userInfoOverflow = false;
+    bool mvddummy;
 
     client = getEntOffset(ent) - 1;
 
@@ -1271,6 +1300,10 @@ bool ClientConnect(edict_t *ent, char *ui) {
     } else {
         userinfo = ui;
     }
+
+    // q2pro's dummy MVD client has a minimal, fixed userinfo (no rate, etc)
+    // and can't follow a reconnect, so it skips those checks below.
+    mvddummy = IsMVDDummy(ui, extra);
 
     profile_start(1);
 
@@ -1346,7 +1379,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     // ensure required keys are present and have values
     char *val;
-    for (int i = 0; required_ui_keys[i] != NULL; i++) {
+    for (int i = 0; !mvddummy && required_ui_keys[i] != NULL; i++) {
         val = Info_ValueForKey(userinfo, required_ui_keys[i]);
         if (val[0] == 0) {
             Q_printf("%s: required userinfo variable missing: %s\n", IP(client), required_ui_keys[i]);
@@ -1405,7 +1438,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         bool doConnect = true;
 
         // is reconnect_address set?
-        if (!isBlank(reconnect_address)) {
+        if (!isBlank(reconnect_address) && !mvddummy) {
             char *ip = FindIpAddressInUserInfo(userinfo, 0);
             char *bp = ip;
             unsigned int i;
@@ -1485,19 +1518,23 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
         if (doConnect) {
             profile_start(2);
-            // When the extra userinfo feature is in play this hands the mod
-            // the merged string rather than the engine's, so a mod with no
+            // When q2admin requested the extra userinfo feature on the mod's
+            // behalf, hand the mod the merged string so a mod with no
             // knowledge of the feature reads the extra keys like any other.
-            // Without the feature the two are the same pointer.
-            ret = ge_mod->ClientConnect(ent, userinfo);
+            // A mod that asked for the feature itself expects the engine's
+            // two-segment string, with the extra keys after the NUL, so it
+            // gets that untouched (merged has nothing after its NUL, which
+            // such a mod rejects, eg OpenTDM's "invalid userinfo.").
+            char *modinfo = userinfoProxyActive ? userinfo : ui;
+            ret = ge_mod->ClientConnect(ent, modinfo);
             profile_stop(2, "mod->ClientConnect", client, ent);
 
             // A rejecting mod reports why by setting "rejmsg" on the userinfo
             // it was handed, and the engine reads that back out of its own
             // buffer. Those are different buffers here, so carry it across or
             // the player is dropped with no reason given.
-            if (!ret && userinfo != ui) {
-                Info_SetValueForKey(ui, "rejmsg", Info_ValueForKey(userinfo, "rejmsg"));
+            if (!ret && modinfo != ui) {
+                Info_SetValueForKey(ui, "rejmsg", Info_ValueForKey(modinfo, "rejmsg"));
             }
             G_MergeEdicts();
         }
