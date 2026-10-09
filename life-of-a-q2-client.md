@@ -605,9 +605,13 @@ auth and timescale probes all wait for it.
    | `QCMD_TESTRATBOT` | 12 s | the ratbot test has already passed |
 
 4. **No reply.** If no reply arrives, `QCMD_STARTUPTEST` fires again every
-   5 seconds and stuffs `q2startNN` again. After 500 tries (about 40
-   minutes), a startup failure is logged and the player is put through the
-   zbot verdict described below.
+   5 seconds and stuffs `q2startNN` again. A genuine client answers the first
+   one: it's a reliable message, which the engine retransmits until it
+   arrives. Once it has been sent `startup_attempts` times (default 3, at
+   about B+2, B+7 and B+12 s) without an answer, a startup failure is logged
+   at the next check (about B+17 s) and the player is put through the zbot
+   verdict described below. This matters because a client that never
+   answers also never gets the zbot, ratbot or alias tests.
 
 ### The client version probe (immediately after `inuse`)
 
@@ -1152,7 +1156,7 @@ job per frame) and with the client's ping.
 | Ban list at connect | Matches a deny rule | Rejected, or shown the message and removed. |
 | Ban list after version | Matches a deny rule | Shown the message and removed. |
 | Address limit | Over `ip_limit` | Disconnected. |
-| Startup handshake | No `q2startNN` after 500 tries | Zbot verdict. |
+| Startup handshake | No `q2startNN` after `startup_attempts` (3) sends | Zbot verdict, about 17 s after entering. |
 | Version probe | No reply within 1 s | `version-probe` (20). |
 | Protocol | Older than the client's engine supports | `protocol-downgrade` (10). |
 | Timescale probe | Reply isn't `1` | `timescale-modified` (removal). |

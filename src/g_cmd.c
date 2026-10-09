@@ -1326,6 +1326,12 @@ q2acmd_t q2aCommands[] = {
         &speedbot_check_type
     },
     {
+        "startup_attempts",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &startup_attempts
+    },
+    {
         "stifle",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,

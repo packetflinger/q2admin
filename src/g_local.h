@@ -120,7 +120,7 @@ extern char *finalentities;
 
 typedef struct {
     bool admin;                     // player authed with !admin command
-    int retries;                    // startup/zbot test attempts, see MAXSTARTTRY and MAXDETECTRETRIES
+    int retries;                    // startup/zbot test attempts, see startup_attempts and MAXDETECTRETRIES
     int rbotretries;                // ratbot name test attempts, see MAXDETECTRETRIES
     cmd_queue_t cmdQueue[ALLOWED_MAXCMDS];
     int maxCmds;                    // current command count
@@ -358,7 +358,6 @@ enum _commands {
 #define IW_INVALIDIPADDRESS     19
 
 #define MINIMUMTIMEOUT  5
-#define MAXSTARTTRY     500
 
 extern cvar_t *g_features,      // features the game supports
               *sv_features,     // features the server supports
@@ -441,6 +440,8 @@ extern int ip_limit_vpn;    // 0 for no limit, per ASN
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
 extern int maxImpulses;
+extern int startup_attempts;
+bool startupAttemptsUsed(int client);
 
 extern bool displayimpulses;
 extern bool printmessageonplaycmds;

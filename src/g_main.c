@@ -110,6 +110,26 @@ void ShutdownGame(void) {
 }
 
 /**
+ * Whether a client has been sent the q2startNN startup handshake
+ * startup_attempts times without answering, so it's time for the verdict.
+ *
+ * A genuine client answers the handshake immediately; it's a reliable
+ * message the engine retransmits until it arrives. The few resends only
+ * allow for a client that was mid-hiccup. One that still hasn't answered is
+ * either filtering what the server sends it (a proxy) or not a real client,
+ * and it skips every bot test until it answers, so it shouldn't be waited
+ * on for long. Values below 1 are treated as 1, since 0 would give up
+ * before the handshake was ever sent.
+ *
+ * Called from G_RunFrame()'s QCMD_STARTUPTEST handling before each send.
+ */
+bool startupAttemptsUsed(int client) {
+    int limit = (startup_attempts > 0) ? startup_attempts : 1;
+
+    return proxyinfo[client].retries >= limit;
+}
+
+/**
  * q2admin's intercept of the engine's RunFrame callback, ticked once
  * every server frame. Most of q2admin's own checks (ClientThink,
  * ClientConnect, etc) react to something the client just did, but a lot
@@ -247,7 +267,7 @@ void G_RunFrame(void) {
 
                     proxyinfo[client].inuse = 1;
 
-                    if (proxyinfo[client].retries > MAXSTARTTRY) {
+                    if (startupAttemptsUsed(client)) {
                         if (zbotdetect) {
                             serverLogZBot(ent, client);
                             proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
@@ -360,7 +380,7 @@ void G_RunFrame(void) {
                     break;
                 }
 
-                if (proxyinfo[client].retries > MAXSTARTTRY) {
+                if (startupAttemptsUsed(client)) {
                     if (zbotdetect) {
                         serverLogZBot(ent, client);
                         proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;

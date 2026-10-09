@@ -236,7 +236,7 @@ private_command_kick "yes"
 ```
 
 From the console: `sv !zbotdetect yes`, `sv !disconnectuser no`, and so on.
-Related options: `clientsidetimeout`, `zbotdetectactivetimeout`,
+Related options: `startup_attempts`, `clientsidetimeout`, `zbotdetectactivetimeout`,
 `randomwaitreporttime`, `proxy_bwproxy`, `proxy_nitro2`, `customclientcmd`,
 `customservercmd`, `hackuserdisplay`, `numofdisplays`, `do_franck_check`,
 `do_vid_restart`, `inverted_command1-4`.
@@ -1171,6 +1171,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `spawnentities_enable` | bool | no | Enable entity disabling (`q2a_spawn.cfg`). |
 | `spawnentities_internal_enable` | bool | no | Also intercept entities the mod spawns itself after the map loads. Needs a correct `entity_classname_offset`. |
 | `speedbot_check_type` | number | 3 | Bit 2 announces when a speed-limited player is unfrozen. |
+| `startup_attempts` | number | 3 | Times the startup handshake is sent, 5 seconds apart, before a client that hasn't answered gets the zbot verdict. Genuine clients answer the first one. Values below 1 count as 1. |
 | `swap_attack_use` | bool | no | Swap `+attack` and `+use`. This breaks auto-aim proxies but confuses players. |
 | `timers_active` | bool | no | Enable player timers (`timer_start` and `timer_stop`). |
 | `timers_max_seconds` | number | 180 | Longest timer allowed. |

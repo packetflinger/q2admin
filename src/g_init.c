@@ -213,6 +213,7 @@ char skincrashmsg[256];
 bool spawnentities_enable               = false;
 bool spawnentities_internal_enable      = false;
 int speedbot_check_type                 = 3;
+int startup_attempts                    = 3;  // q2startNN sends before giving up, see startupAttemptsUsed()
 char timescaleuserdisplay[256];
 bool userinfoProxy                      = false;
 // true when q2admin requested GMF_EXTRA_USERINFO on the mod's behalf (see
