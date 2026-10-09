@@ -1686,19 +1686,30 @@ Makefile.
 
 | Setting | Effect |
 | --- | --- |
-| `CPU` | Target architecture, used for the output name and to pick the bundled libraries. Detected with `uname -m` by default. |
+| `CPU` | Target architecture, used for the output name, the build directory and to pick the bundled libraries. Detected with `uname -m` by default. |
 | `SHARED_DEPS=1` | Link against the system's shared libraries instead of the bundled ones (see [Dependencies](#dependencies)). |
 | `CONFIG_WINDOWS=1` | Cross-compile a 32-bit Windows DLL with MinGW. |
 | `CONFIG_MACOS=1` | Add the macOS system frameworks needed at link time. |
 | `CC`, `CFLAGS`, `LDFLAGS`, `LIBS` | Standard toolchain overrides. |
+| `BUILDDIR` | Where build output goes. Defaults to `build-<cpu>`. |
 | `V=1` | Show the full compiler commands. |
 
-Useful targets: `make` (build), `make strip` (strip debug symbols),
-`make clean`, and `make genkeys` (builds a small tool that generates Cloud
-Admin keys).
+The source code is in [`src/`](src/). Everything the build produces (object
+files, dependency files and the finished library) goes in a separate
+directory for each architecture: `build-<cpu>`, for example `build-x86_64`
+on 64-bit Linux or `build-x86` for the Windows DLL. Builds for different
+architectures don't mix, and the source tree stays clean.
 
-The output is named `game<cpu>-q2admin-r<revision>~<commit>.<ext>`, for
-example `gamex86_64-q2admin-r1211~0633d58.so`. Rename it, or set
+Useful targets:
+
+- `make` builds the library.
+- `make strip` strips debug symbols from it.
+- `make clean` deletes the build directory for the current architecture.
+- `make genkeys` builds `build-<cpu>/genkeys`, a small tool that generates
+  Cloud Admin keys.
+
+The library is named `game<cpu>-q2admin-r<revision>~<commit>.<ext>`, for
+example `build-x86_64/gamex86_64-q2admin-r1211~0633d58.so`. Rename it, or set
 `gamelibrary`, when you install it.
 
 ### Linux

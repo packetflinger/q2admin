@@ -56,14 +56,14 @@ These are the engine events q2admin hooks for each player:
 
 | Engine event | When it happens | q2admin's handler |
 | --- | --- | --- |
-| `ClientConnect` | The client has passed the engine's checks and wants a player slot. | `ClientConnect()`, [g_init.c](g_init.c) |
-| `ClientUserinfoChanged` | The client's userinfo (name, skin, rate, and so on) changes. | `ClientUserinfoChanged()`, [g_init.c](g_init.c) |
-| `ClientBegin` | The client has finished loading the map and enters the world. This happens again on every map change. | `ClientBegin()`, [g_init.c](g_init.c) |
-| `ClientCommand` | The client sends a command the engine doesn't handle itself. | `ClientCommand()`/`doClientCommand()`, [g_cmd.c](g_cmd.c) |
-| `ClientThink` | The client sends a movement packet (a *usercmd*), many times a second. | `ClientThink()`, [g_client.c](g_client.c) |
-| `RunFrame` | Every server frame (100 ms). | `G_RunFrame()`, [g_main.c](g_main.c) |
-| `SpawnEntities` | A new map loads. | `SpawnEntities()`, [g_init.c](g_init.c) |
-| `ClientDisconnect` | The player leaves, for any reason. | `ClientDisconnect()`, [g_init.c](g_init.c) |
+| `ClientConnect` | The client has passed the engine's checks and wants a player slot. | `ClientConnect()`, [g_init.c](src/g_init.c) |
+| `ClientUserinfoChanged` | The client's userinfo (name, skin, rate, and so on) changes. | `ClientUserinfoChanged()`, [g_init.c](src/g_init.c) |
+| `ClientBegin` | The client has finished loading the map and enters the world. This happens again on every map change. | `ClientBegin()`, [g_init.c](src/g_init.c) |
+| `ClientCommand` | The client sends a command the engine doesn't handle itself. | `ClientCommand()`/`doClientCommand()`, [g_cmd.c](src/g_cmd.c) |
+| `ClientThink` | The client sends a movement packet (a *usercmd*), many times a second. | `ClientThink()`, [g_client.c](src/g_client.c) |
+| `RunFrame` | Every server frame (100 ms). | `G_RunFrame()`, [g_main.c](src/g_main.c) |
+| `SpawnEntities` | A new map loads. | `SpawnEntities()`, [g_init.c](src/g_init.c) |
+| `ClientDisconnect` | The player leaves, for any reason. | `ClientDisconnect()`, [g_init.c](src/g_init.c) |
 
 Two of the mod's calls back to the engine matter here too:
 
@@ -120,7 +120,7 @@ A probe fails when the client:
 
 Most of what q2admin does to a player is scheduled rather than immediate.
 Each player slot has a small queue of pending jobs (`QCMD_*` values, added
-with `addCmdQueue()` in [g_queue.c](g_queue.c)). Each job has a due time on
+with `addCmdQueue()` in [g_queue.c](src/g_queue.c)). Each job has a due time on
 q2admin's own clock, `ltime`, which advances 0.1 seconds per server frame.
 
 On every frame, `G_RunFrame()` visits each player slot. For each slot it:
@@ -138,7 +138,7 @@ server and kicks them immediately.
 ### Player state
 
 q2admin keeps a record for each player slot (`proxyinfo_t` in
-[g_local.h](g_local.h)). Among other things, it holds:
+[g_local.h](src/g_local.h)). Among other things, it holds:
 
 - the player's name, IP address, userinfo and client version;
 - the outstanding random probe strings and their deadlines;
@@ -161,7 +161,7 @@ Two flags matter throughout:
 
 Many checks don't kick anyone directly. Instead they *raise a signal*, a
 named, weighted mark on the player (see `raiseSignal()` in
-[g_signal.c](g_signal.c)). Every time a signal is raised, q2admin adds up the
+[g_signal.c](src/g_signal.c)). Every time a signal is raised, q2admin adds up the
 player's score. When it reaches `signal_score_threshold` (50), the player is
 told "You exceeded the server's signal threshold", the event is logged with
 the list of signals, and a disconnect is queued. Confirmed cheats are

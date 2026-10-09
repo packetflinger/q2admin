@@ -1,5 +1,9 @@
-# Override defaults in the file named ".config" in the same directory as the
-# source.
+# Override defaults in the file named ".config" in the same directory as this
+# Makefile.
+#
+# Sources live in src/. Everything the build produces (objects, dependency
+# files and the library) goes in build-<cpu>/ (eg build-x86_64), so
+# "make clean" just removes that directory.
 #
 # For verbose output, to see the exact command used for building each at each
 # step, define the "V" environment variable. Example: $ V=1 make
@@ -114,6 +118,8 @@ endif
 CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
 RCFLAGS += -DQ2A_REVISION=$(REV) -DYEAR='\"$(YEAR)\"'
 
+SRCDIR := src
+
 HEADERS :=  game.h \
             g_admin.h \
             g_anticheat.h \
@@ -188,11 +194,20 @@ else
     TARGET ?= game$(CPU)-q2admin-r$(VER).$(EXT)
 endif
 
-all: $(TARGET)
+# Everything the build produces (objects, dependency files and the library)
+# goes in one directory per architecture, so "make clean" only has to remove
+# that directory. Set after the Windows block above, which changes CPU.
+BUILDDIR ?= build-$(CPU)
+
+HEADERS := $(addprefix $(SRCDIR)/,$(HEADERS))
+OBJS := $(addprefix $(BUILDDIR)/,$(OBJS))
+OUTPUT := $(BUILDDIR)/$(TARGET)
+
+all: $(OUTPUT)
 
 default: all
 
-.PHONY: all default clean strip
+.PHONY: all default clean strip genkeys
 
 # Define V=1 to show command line.
 ifdef V
@@ -205,26 +220,31 @@ endif
 
 -include $(OBJS:.o=.d)
 
-%.o: %.c $(HEADERS)
+$(BUILDDIR):
+	$(Q)mkdir -p $@
+
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c $(HEADERS) | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -c $(CFLAGS) -o $@ $<
 
-%.o: %.rc
+$(BUILDDIR)/%.o: $(SRCDIR)/%.rc | $(BUILDDIR)
 	$(E) [RC] $@
 	$(Q)$(WINDRES) $(RCFLAGS) -o $@ $<
 
-$(TARGET): $(OBJS)
+$(OUTPUT): $(OBJS)
 	$(E) [LD] $@
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 clean:
-	$(E) [CLEAN]
-	$(Q)$(RM) *.o *.d $(TARGET) genkeys
+	$(E) [CLEAN] $(BUILDDIR)
+	$(Q)$(RM) -r $(BUILDDIR)
 
-strip: $(TARGET)
-	$(E) [STRIP]
-	$(Q)$(STRIP) $(TARGET)
+strip: $(OUTPUT)
+	$(E) [STRIP] $(OUTPUT)
+	$(Q)$(STRIP) $(OUTPUT)
 
-genkeys:
-	$(E) [CC] genkeys
-	$(Q)$(CC) -o genkeys genkeys.c -lcrypto
+genkeys: $(BUILDDIR)/genkeys
+
+$(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
+	$(E) [CC] $@
+	$(Q)$(CC) -o $@ $< -lcrypto
