@@ -1603,11 +1603,12 @@ bool ClientConnect(edict_t *ent, char *ui) {
         whoisUpdateSeen(client, ent);
     }
 
-    if (vpn_enable) {
+    // the MVD dummy's loopback address isn't worth an API lookup
+    if (vpn_enable && !mvddummy) {
         LookupVPNStatus(ent);
     }
 
-    if (iplogs_enable) {
+    if (iplogs_enable && !mvddummy) {
         IPLogsCheckVPN(ent);
     }
 
@@ -2276,7 +2277,7 @@ void ClientBegin(edict_t *ent) {
     q2a_memset(&proxyinfo[client].checkvar_deadline, 0, sizeof(float) * CHECKVAR_MAX);
     q2a_memset(&proxyinfo[client].hack, 0, sizeof(hack_t));
 
-    if (ip_limit > 0) {
+    if (ip_limit > 0 && !proxyinfo[client].mvddummy) {
         int sameaddr = 1;
         for (int i = 0; i < (int)maxclients->value; i++) {
             if (!proxyinfo[i].inuse || i == client) {
@@ -2304,6 +2305,14 @@ void ClientBegin(edict_t *ent) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
     } else if (proxyinfo[client].clientcommand & CCMD_KICKED) {
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked.");
+    } else if (proxyinfo[client].mvddummy) {
+        // Q2Pro's MVD dummy is created by the server itself and, by default
+        // (sv_mvd_allow_stufftext 0), ignores stuffed text entirely, so it
+        // can never answer a probe. Every missed deadline would raise a
+        // signal until the recording client got removed, and the startup
+        // handshake would repeat forever. Mark it in use, as the handshake
+        // would have, and skip the probes.
+        proxyinfo[client].inuse = 1;
     } else {
         addCmdQueue(client, QCMD_STARTUP, 0, 0, 0);
         addCmdQueue(client, QCMD_CLIENTVERSION, 0, 0, 0);

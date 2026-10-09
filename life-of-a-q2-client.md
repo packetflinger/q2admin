@@ -535,6 +535,11 @@ What happens next depends on the player's flags:
 - **`BANNED` set:** the ban reason is printed in a banner and a disconnect is
   queued for 1 second later.
 - **Kicked:** a disconnect is queued.
+- **Q2Pro's MVD recording client:** the slot is marked in use and no probes
+  are queued. The server creates this client itself and, by default, ignores
+  stuffed commands, so it could never answer a probe. Signals are never
+  raised against it, and it's left out of the address limit and the VPN
+  lookups.
 - **Otherwise,** the probe battery is queued (all due immediately unless a
   delay is listed):
 

@@ -64,6 +64,11 @@ void raiseSignal(int client, unsigned int signal) {
     if (!VALIDCLIENT(client)) {
         return;
     }
+    // Q2Pro's MVD dummy is created by the server itself and can't respond
+    // to q2admin's checks, so it's never scored (see ClientBegin()).
+    if (proxyinfo[client].mvddummy) {
+        return;
+    }
     proxyinfo[client].signalMask |= signal;
     logEvent(LT_SIGNALRAISED, client, proxyinfo[client].ent, NULL, signal, 0.0, false);
     evaluateSignalScore(client);
