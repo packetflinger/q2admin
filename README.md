@@ -528,6 +528,21 @@ lockoutmsg "This server is currently locked."
 
 From the console: `sv !lock yes` and `sv !lock no`.
 
+Locking only keeps out *new* players. If a player who was already on the
+server quits, times out or is disconnected while it's locked, they can
+rejoin, so a dropped connection doesn't lock them out of their own match.
+Some details:
+
+- Players are recognized by name, so they must reconnect with the same name.
+  Anyone using that name gets the place.
+- Each departure allows one rejoin. A player who leaves again while the
+  server is still locked gets a new place.
+- Players who left before the server was locked aren't let back in.
+- Kicking someone doesn't stop them from rejoining. To keep them out, ban
+  them instead.
+- Running `lock` again, whether to lock or unlock, clears the list of players
+  waiting to rejoin.
+
 ### Flood protection
 
 **What it is.** Rate limits on chat, name changes, skin changes, userinfo
@@ -1031,7 +1046,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` or `"disable"`.
 | `iplogs_ignorelist` | string | empty | CIDR ranges exempt from the IPLogs check, separated by spaces or commas. |
 | `kickonnamechange` | bool | no | Kick players who change to a banned name, instead of just refusing the change. |
 | `lanip` | string | empty | Accepted but currently has no effect. |
-| `lock` | bool | no | Refuse all new connections. **Console only**; can't be set in a config file. |
+| `lock` | bool | no | Refuse new connections. Players who leave while the server is locked can still rejoin under the same name. **Console only**; can't be set in a config file. |
 | `lockoutmsg` | string | `This server is currently locked.` | Message shown while the server is locked. |
 | `lrcon_timeout` | number | 2 | Seconds before the real rcon password is restored after an lrcon command. |
 | `mapcfgexec` | bool | no | Run the server-side `mapcfg/<map>-pre/-post/-end.cfg` files. |
