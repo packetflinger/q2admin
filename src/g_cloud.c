@@ -951,11 +951,13 @@ void cloudParseError(void) {
 
     logEvent(LT_CLOUDERROR, 0, NULL, reason ? reason : "", reason_id, 0.0, false);
 
-    // Where to output the error msg
-    if (client_id == -1) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s\n", reason);
+    // Errors about a player (an !invite or !teleport quota, for example)
+    // go to that player, who caused it. Anything else, or an id that no
+    // longer belongs to a connected player, goes to the server console.
+    if (VALIDCLIENT(client_id) && proxyinfo[client_id].inuse) {
+        gi.cprintf(getEnt(client_id + 1), PRINT_HIGH, "%s\n", reason ? reason : "");
     } else {
-        gi.cprintf(NULL, PRINT_HIGH, "error msg here\n");
+        gi.cprintf(NULL, PRINT_HIGH, "[cloud] error %d: %s\n", reason_id, reason ? reason : "");
     }
 
     // serious enough to disconnect
