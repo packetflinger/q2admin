@@ -44,6 +44,13 @@
 #define SIGNAL_PROTOCOL_DOWNGRADE  BIT(24) // connected with less protocol than their client supports
 #define SIGNAL_MVD_IMPOSTER        BIT(25) // Player's userinfo claims to be q2pro's dummy MVD client
 
+// Signals whose contribution can change while they're already raised: either
+// a weight times a running count, or a per-player amount. Raising one of these
+// again always re-scores; raising any other signal that's already set is a
+// no-op (see raiseSignal()).
+#define SIGNAL_SCORE_VARIES (SIGNAL_AIMBOT_JITTER | SIGNAL_SNAP_FIRE | SIGNAL_IMPULSE | \
+                             SIGNAL_MANUAL | SIGNAL_BAN_ADJUSTMENT)
+
 // One signal's definition: the bit it sets, what it contributes to a client's
 // score while set, and the name it goes by in q2admin.cfg, !signals and
 // !signal_weight. Weights are overridable at runtime and from the config file,

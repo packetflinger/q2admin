@@ -69,6 +69,14 @@ void raiseSignal(int client, unsigned int signal) {
     if (proxyinfo[client].mvddummy) {
         return;
     }
+    // Re-raising a signal that's already set changes nothing unless its
+    // score is a running count or a per-player amount, so don't log it or
+    // recount the score again. Some detectors (aim-track in particular)
+    // re-raise on every usercmd while their condition holds, which would
+    // otherwise write a SIGNALRAISED line 60-120 times a second per player.
+    if ((proxyinfo[client].signalMask & signal) && !(signal & SIGNAL_SCORE_VARIES)) {
+        return;
+    }
     proxyinfo[client].signalMask |= signal;
     logEvent(LT_SIGNALRAISED, client, proxyinfo[client].ent, NULL, signal, 0.0, false);
     evaluateSignalScore(client);
