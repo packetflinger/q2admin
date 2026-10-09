@@ -63,8 +63,8 @@ extern game_export_t ge;        // game access from inside server
 extern game_export_t *ge_mod;   // real game access from inside proxy game lib
 extern edict_t *g_edicts;
 
-#define getEntOffset(ent)   (((char *)ent - (char *)ge.edicts) / ge.edict_size)
-#define getEnt(entnum)      (edict_t *)((char *)ge.edicts + (ge.edict_size * entnum))
+#define getEntOffset(ent)   (((char *)(ent) - (char *)ge.edicts) / ge.edict_size)
+#define getEnt(entnum)      ((edict_t *)((char *)ge.edicts + (ge.edict_size * (entnum))))
 
 // R1Q2 and Q2PRO specific features
 #define GMF_CLIENTNUM               BIT(0)      // game sets clientNum gclient_s field
