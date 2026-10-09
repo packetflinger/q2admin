@@ -81,12 +81,15 @@ void cryptoGenKeyPair(int bits) {
 bool cryptoLoadKeys(void) {
     FILE *fp;
     cloud_connection_t *c = &cloud.connection;
-    char path[200];
+    // moddir and each key's file name are up to 255 characters, so this
+    // fits both plus the separator; Q_snprintf truncates rather than
+    // overflowing if those ever grow.
+    char path[sizeof(moddir) + sizeof(cloud_config.private) + 1];
 
     gi.cprintf(NULL, PRINT_HIGH, "[cloud] loading encryption keys...");
 
     // first load our private key
-    sprintf(path, "%s/%s", moddir, cloud_config.private);
+    Q_snprintf(path, sizeof(path), "%s/%s", moddir, cloud_config.private);
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
@@ -102,7 +105,7 @@ bool cryptoLoadKeys(void) {
     }
 
     // then our public key
-    sprintf(path, "%s/%s", moddir, cloud_config.public);
+    Q_snprintf(path, sizeof(path), "%s/%s", moddir, cloud_config.public);
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
@@ -121,7 +124,7 @@ bool cryptoLoadKeys(void) {
     }
 
     // last the cloud admin server's public key
-    sprintf(path, "%s/%s", moddir, cloud_config.serverkey);
+    Q_snprintf(path, sizeof(path), "%s/%s", moddir, cloud_config.serverkey);
     fp = fopen(path, "rb");
     if (!fp) {
         gi.cprintf(NULL, PRINT_HIGH, "failed, %s not found\n", path);
