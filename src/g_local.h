@@ -440,7 +440,7 @@ extern int ip_limit;        // 0 for no limit
 extern int ip_limit_vpn;    // 0 for no limit, per ASN
 
 extern byte impulsesToKickOn[MAXIMPULSESTOTEST];
-extern byte maxImpulses;
+extern int maxImpulses;
 
 extern bool displayimpulses;
 extern bool printmessageonplaycmds;

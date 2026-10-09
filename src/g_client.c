@@ -52,7 +52,7 @@ int track_min_motion_deg = 15;  // total target angular movement (degrees) requi
 
 
 byte impulsesToKickOn[MAXIMPULSESTOTEST];
-byte maxImpulses = 0;
+int maxImpulses = 0;
 
 char *impulsemessages[] ={
     "169 (zbot toggle menu command)",

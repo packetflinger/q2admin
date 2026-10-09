@@ -49,7 +49,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #define BIT(n)  (1U << (n))
-typedef char byte;
+typedef unsigned char byte;
 
 #ifndef min
   #define min(x,y) ((x) < (y)) ? (x) : (y)

@@ -3886,7 +3886,7 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
     int impulses = 0;
     char *cp = gi.argv(startarg);
 
-    impulses = q2a_atoi(&maxImpulses);
+    impulses = maxImpulses;
     if (Q_stricmp(cp, "ADD") == 0) {
         startarg++;
     } else if (Q_stricmp(cp, "RESET") == 0) {
@@ -3917,7 +3917,7 @@ void impulsesToKickOnRun(int startarg, edict_t *ent, int client) {
  */
 void impulsesToKickOnInit(char *arg) {
     while (*arg && maxImpulses < MAXIMPULSESTOTEST) {
-        impulsesToKickOn[(int)maxImpulses] = q2a_atoi(arg);
+        impulsesToKickOn[maxImpulses] = q2a_atoi(arg);
         maxImpulses++;
         while (*arg && *arg != ' ') {
             arg++;
