@@ -1,6 +1,6 @@
-# Life of a Quake 2 Player
+# Life of a Quake 2 Client
 
-*A player's whole visit to a q2admin-protected server, from connecting to
+*A client's whole visit to a q2admin-protected server, from connecting to
 disconnecting, as q2admin sees it.*
 
 This document follows one player through a visit to a Quake 2 server running
