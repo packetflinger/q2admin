@@ -120,8 +120,8 @@ extern char *finalentities;
 
 typedef struct {
     bool admin;                     // player authed with !admin command
-    unsigned char retries;
-    unsigned char rbotretries;
+    int retries;                    // startup/zbot test attempts, see MAXSTARTTRY and MAXDETECTRETRIES
+    int rbotretries;                // ratbot name test attempts, see MAXDETECTRETRIES
     cmd_queue_t cmdQueue[ALLOWED_MAXCMDS];
     int maxCmds;                    // current command count
     unsigned long clientcommand;    // internal proxy commands
