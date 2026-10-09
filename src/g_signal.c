@@ -120,9 +120,13 @@ int signalScore(int client) {
  * currently matches.
  */
 char *signalListString(int client) {
-    static char list[256];
+    // Big enough for every signal at once with its score: the names alone
+    // add up to over 400 characters. Appends are bounded regardless, so a
+    // future signal can only truncate the list, never overflow it.
+    static char list[1024];
     unsigned int mask;
     bool first = true;
+    signal_def_t *d;
 
     list[0] = 0;
     if (!VALIDCLIENT(client)) {
@@ -131,29 +135,30 @@ char *signalListString(int client) {
 
     mask = proxyinfo[client].signalMask;
     for (unsigned int i = 0; i < lengthof(signalDefs); i++) {
-        if (mask & signalDefs[i].bit) {
+        d = &signalDefs[i];
+        if (mask & d->bit) {
             if (!first) {
-                q2a_strcat(list, ", ");
+                Q_strlcat(list, ", ", sizeof(list));
             }
-            if (signalDefs[i].bit == SIGNAL_BAN_ADJUSTMENT) {
-                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, proxyinfo[client].ban_signal_score));
-            } else if (signalDefs[i].bit == SIGNAL_MANUAL) {
-                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, proxyinfo[client].manual_signal_score));
-            } else if (signalDefs[i].bit == SIGNAL_IMPULSE) {
-                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].impulsesgenerated));
-            } else if (signalDefs[i].bit == SIGNAL_SNAP_FIRE) {
-                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].aimsnap.snapcount));
-            } else if (signalDefs[i].bit == SIGNAL_AIMBOT_JITTER) {
-                q2a_strcat(list, va("%s(%d*%d)", signalDefs[i].name, signalDefs[i], proxyinfo[client].aim_assist.jitter));
+            if (d->bit == SIGNAL_BAN_ADJUSTMENT) {
+                Q_strlcat(list, va("%s(%d)", d->name, proxyinfo[client].ban_signal_score), sizeof(list));
+            } else if (d->bit == SIGNAL_MANUAL) {
+                Q_strlcat(list, va("%s(%d)", d->name, proxyinfo[client].manual_signal_score), sizeof(list));
+            } else if (d->bit == SIGNAL_IMPULSE) {
+                Q_strlcat(list, va("%s(%d*%d)", d->name, d->weight, proxyinfo[client].impulsesgenerated), sizeof(list));
+            } else if (d->bit == SIGNAL_SNAP_FIRE) {
+                Q_strlcat(list, va("%s(%d*%d)", d->name, d->weight, proxyinfo[client].aimsnap.snapcount), sizeof(list));
+            } else if (d->bit == SIGNAL_AIMBOT_JITTER) {
+                Q_strlcat(list, va("%s(%d*%d)", d->name, d->weight, proxyinfo[client].aim_assist.jitter), sizeof(list));
             } else {
-                q2a_strcat(list, va("%s(%d)", signalDefs[i].name, signalDefs[i].weight));
+                Q_strlcat(list, va("%s(%d)", d->name, d->weight), sizeof(list));
             }
             first = false;
         }
     }
 
     if (first) {
-        q2a_strncpy(list, "(none)", sizeof(list)-1);
+        Q_strlcpy(list, "(none)", sizeof(list));
     }
     return list;
 }
@@ -343,7 +348,7 @@ void signalsRun(int startarg, edict_t *ent, int client) {
     char *text;
     edict_t *enti;
     int clienti;
-    char tmptext[320];
+    char tmptext[MAX_STRING_CHARS];
 
     text = getArgs();
     if (!ent) {
