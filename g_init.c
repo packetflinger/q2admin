@@ -56,20 +56,20 @@ cvar_t *rcon_password;
 cvar_t *rconpassword;   // why?
 cvar_t *serverbindip;
 cvar_t *sv_features;
-cvar_t *tune_spawn_bfg;
-cvar_t *tune_spawn_chaingun;
-cvar_t *tune_spawn_grenadelauncher;
-cvar_t *tune_spawn_grenades;
-cvar_t *tune_spawn_hyperblaster;
-cvar_t *tune_spawn_invulnerability;
-cvar_t *tune_spawn_machinegun;
-cvar_t *tune_spawn_megahealth;
-cvar_t *tune_spawn_powershield;
-cvar_t *tune_spawn_quad;
-cvar_t *tune_spawn_railgun;
-cvar_t *tune_spawn_rocketlauncher;
-cvar_t *tune_spawn_shotgun;
-cvar_t *tune_spawn_supershotgun;
+cvar_t *spawn_swap_bfg;
+cvar_t *spawn_swap_chaingun;
+cvar_t *spawn_swap_grenadelauncher;
+cvar_t *spawn_swap_grenades;
+cvar_t *spawn_swap_hyperblaster;
+cvar_t *spawn_swap_invulnerability;
+cvar_t *spawn_swap_machinegun;
+cvar_t *spawn_swap_megahealth;
+cvar_t *spawn_swap_powershield;
+cvar_t *spawn_swap_quad;
+cvar_t *spawn_swap_railgun;
+cvar_t *spawn_swap_rocketlauncher;
+cvar_t *spawn_swap_shotgun;
+cvar_t *spawn_swap_supershotgun;
 
 // default settings, overridden by q2admin.cfg and friends
 char adminpassword[256];
@@ -676,14 +676,14 @@ void SubstituteEntity(char *newents, cvar_t *sub, char *needle, char *token, boo
  * and weapon spawns (quad, invulnerability, power shield, mega health,
  * bfg, railgun, rocket launcher, hyperblaster, grenade launcher,
  * chaingun, machinegun, supershotgun, shotgun, grenades) for a different
- * classname at runtime via the `tune_spawn_*` CVARs, without having to
+ * classname at runtime via the `spawn_swap_*` CVARs, without having to
  * edit the map itself. This is how an admin can, say, disable quad damage
  * spawns or replace a railgun spawn with something else map-wide.
  *
- * Re-reads the current `tune_spawn_*` CVAR values, then walks oldents
+ * Re-reads the current `spawn_swap_*` CVAR values, then walks oldents
  * token by token (brace/key/value, using the same tokenizer the engine
  * uses to parse entity strings) and copies each token into newents
- * unchanged, except that a value token matching a configured `tune_spawn_*`
+ * unchanged, except that a value token matching a configured `spawn_swap_*`
  * classname is replaced via SubstituteEntity() with the configured
  * substitute (subject to the entity allow-list there).
  *
@@ -703,21 +703,21 @@ void SubstituteEntities(char *newents, char *oldents) {
     bool replaced;
     char *com_tok, *classnamepos;
 
-    tune_spawn_railgun = gi.cvar("tune_spawn_railgun", "", CVAR_GENERAL);
-    tune_spawn_bfg = gi.cvar("tune_spawn_bfg", "", CVAR_GENERAL);
-    tune_spawn_quad = gi.cvar("tune_spawn_quad", "", CVAR_GENERAL);
-    tune_spawn_invulnerability = gi.cvar("tune_spawn_invulnerability", "", CVAR_GENERAL);
-    tune_spawn_powershield = gi.cvar("tune_spawn_powershield", "", CVAR_GENERAL);
-    tune_spawn_megahealth = gi.cvar("tune_spawn_megahealth", "", CVAR_GENERAL);
-    tune_spawn_rocketlauncher = gi.cvar("tune_spawn_rocketlauncher", "", CVAR_GENERAL);
-    tune_spawn_hyperblaster = gi.cvar("tune_spawn_hyperblaster", "", CVAR_GENERAL);
-    tune_spawn_grenadelauncher = gi.cvar("tune_spawn_grenadelauncher", "", CVAR_GENERAL);
-    tune_spawn_chaingun = gi.cvar("tune_spawn_chaingun", "", CVAR_GENERAL);
-    tune_spawn_machinegun = gi.cvar("tune_spawn_machinegun", "", CVAR_GENERAL);
-    tune_spawn_supershotgun = gi.cvar("tune_spawn_supershotgun", "", CVAR_GENERAL);
-    tune_spawn_shotgun = gi.cvar("tune_spawn_shotgun", "", CVAR_GENERAL);
-    tune_spawn_machinegun = gi.cvar("tune_spawn_machinegun", "", CVAR_GENERAL);
-    tune_spawn_grenades = gi.cvar("tune_spawn_grenades ", "", CVAR_GENERAL);
+    spawn_swap_railgun = gi.cvar("spawn_swap_railgun", "", CVAR_GENERAL);
+    spawn_swap_bfg = gi.cvar("spawn_swap_bfg", "", CVAR_GENERAL);
+    spawn_swap_quad = gi.cvar("spawn_swap_quad", "", CVAR_GENERAL);
+    spawn_swap_invulnerability = gi.cvar("spawn_swap_invulnerability", "", CVAR_GENERAL);
+    spawn_swap_powershield = gi.cvar("spawn_swap_powershield", "", CVAR_GENERAL);
+    spawn_swap_megahealth = gi.cvar("spawn_swap_megahealth", "", CVAR_GENERAL);
+    spawn_swap_rocketlauncher = gi.cvar("spawn_swap_rocketlauncher", "", CVAR_GENERAL);
+    spawn_swap_hyperblaster = gi.cvar("spawn_swap_hyperblaster", "", CVAR_GENERAL);
+    spawn_swap_grenadelauncher = gi.cvar("spawn_swap_grenadelauncher", "", CVAR_GENERAL);
+    spawn_swap_chaingun = gi.cvar("spawn_swap_chaingun", "", CVAR_GENERAL);
+    spawn_swap_machinegun = gi.cvar("spawn_swap_machinegun", "", CVAR_GENERAL);
+    spawn_swap_supershotgun = gi.cvar("spawn_swap_supershotgun", "", CVAR_GENERAL);
+    spawn_swap_shotgun = gi.cvar("spawn_swap_shotgun", "", CVAR_GENERAL);
+    spawn_swap_machinegun = gi.cvar("spawn_swap_machinegun", "", CVAR_GENERAL);
+    spawn_swap_grenades = gi.cvar("spawn_swap_grenades", "", CVAR_GENERAL);
 
     while (true) {
         com_tok = NULL;
@@ -757,20 +757,20 @@ void SubstituteEntities(char *newents, char *oldents) {
             }
 
             replaced = false;
-            SubstituteEntity(newents, tune_spawn_quad, "item_quad", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_invulnerability, "item_invulnerability", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_powershield, "item_power_shield", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_megahealth, "item_health_mega", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_bfg, "weapon_bfg", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_railgun, "weapon_railgun", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_rocketlauncher, "weapon_rocketlauncher", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_hyperblaster, "weapon_hyperblaster", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_grenadelauncher, "weapon_grenadelauncher", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_chaingun, "weapon_chaingun", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_machinegun, "weapon_machinegun", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_supershotgun, "weapon_supershotgun", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_shotgun, "weapon_shotgun", com_tok, &replaced);
-            SubstituteEntity(newents, tune_spawn_grenades, "ammo_grenades", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_quad, "item_quad", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_invulnerability, "item_invulnerability", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_powershield, "item_power_shield", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_megahealth, "item_health_mega", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_bfg, "weapon_bfg", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_railgun, "weapon_railgun", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_rocketlauncher, "weapon_rocketlauncher", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_hyperblaster, "weapon_hyperblaster", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_grenadelauncher, "weapon_grenadelauncher", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_chaingun, "weapon_chaingun", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_machinegun, "weapon_machinegun", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_supershotgun, "weapon_supershotgun", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_shotgun, "weapon_shotgun", com_tok, &replaced);
+            SubstituteEntity(newents, spawn_swap_grenades, "ammo_grenades", com_tok, &replaced);
 
             // add the original token if it wasn't replaced
             if (!replaced) {
@@ -806,7 +806,7 @@ void SubstituteEntities(char *newents, char *oldents) {
  *    it, and unlinking any "team" reference to it) any entity whose
  *    classname matches the disabled-entities list
  *  - rebuilds the entity string via SubstituteEntities() for the
- *    tune_spawn_* item/weapon swaps, and passes that rebuilt string
+ *    spawn_swap_* item/weapon swaps, and passes that rebuilt string
  *    (not the original) to the real game mod's SpawnEntities
  *  - afterward, reloads the remaining runtime lists, execs an optional
  *    per-map mapcfg/<mapname>-post.cfg, and updates/reports the new map

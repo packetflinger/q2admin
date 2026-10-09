@@ -729,7 +729,7 @@ before the mod sees it:
 
 - Entities whose classname matches a rule in `q2a_spawn.cfg` are removed.
   Rules in `<moddir>/q2adminmaps/<mapname>.q2aspawn` apply to that map only.
-- The `tune_spawn_*` engine cvars swap one item for another. Replacements
+- The `spawn_swap_*` engine cvars swap one item for another. Replacements
   must come from a fixed list of standard items, weapons, ammo and keys, so a
   typo can't crash the mod.
 
@@ -748,8 +748,8 @@ spawnentities_enable "yes"
 
 ```
 ; server.cfg (engine cvars)
-set tune_spawn_powershield "item_power_screen"
-set tune_spawn_bfg "weapon_railgun"
+set spawn_swap_powershield "item_power_screen"
+set spawn_swap_bfg "weapon_railgun"
 ```
 
 From the console: `spawncmd`, `listspawns`, `spawndel`, `reloadspawnfile`.
@@ -952,7 +952,7 @@ Set these on the server's command line (`+set name value`) or in
 | `q2adminhashlist_dir` | `https://q2admin.net/server` | Base URL for the hash lists. |
 | `q2adminanticheat_enable` | `0` | `1` loads the anti-cheat exception list. |
 | `q2adminanticheat_file` | packetflinger.com list | Location of the anti-cheat exception list. |
-| `tune_spawn_bfg`, `tune_spawn_chaingun`, `tune_spawn_grenadelauncher`, `tune_spawn_grenades`, `tune_spawn_hyperblaster`, `tune_spawn_invulnerability`, `tune_spawn_machinegun`, `tune_spawn_megahealth`, `tune_spawn_powershield`, `tune_spawn_quad`, `tune_spawn_railgun`, `tune_spawn_rocketlauncher`, `tune_spawn_shotgun`, `tune_spawn_supershotgun` | empty | Classname to spawn in place of that item on every map. Empty leaves the item alone. |
+| `spawn_swap_bfg`, `spawn_swap_chaingun`, `spawn_swap_grenadelauncher`, `spawn_swap_grenades`, `spawn_swap_hyperblaster`, `spawn_swap_invulnerability`, `spawn_swap_machinegun`, `spawn_swap_megahealth`, `spawn_swap_powershield`, `spawn_swap_quad`, `spawn_swap_railgun`, `spawn_swap_rocketlauncher`, `spawn_swap_shotgun`, `spawn_swap_supershotgun` | empty | Classname to spawn in place of that item on every map. Empty leaves the item alone. |
 
 ### Options
 
