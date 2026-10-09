@@ -490,9 +490,10 @@ the background, so a slow lookup never stalls the server:
   Results are cached per address for `iplogs_cache_ttl` seconds, and
   addresses in `iplogs_ignorelist` are never checked.
 
-Both need `http_enable`. `ip_limit_vpn` caps the number of VPN players from
-the same provider (ASN), and `IP VPN` and `ASN` [ban rules](#banning) use the
-results.
+Both need `http_enable`. The vpnapi.io results drive `ip_limit_vpn`, which
+limits how many VPN players can connect from the same provider (ASN)
+separately from the per-address `ip_limit`. The `IP VPN` and `ASN`
+[ban rules](#banning) also use those results.
 
 **Configuring it.**
 
@@ -1038,8 +1039,8 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` or `"disable"`.
 | `http_verifyssl` | bool | yes | Verify HTTPS certificates. |
 | `impulsestokickon` | list | all impulses | Comma-separated impulses that count as bot control, for example `169, 170, 171, 172, 173, 174, 175`. |
 | `inverted_command1` – `inverted_command4` | string | empty | Private probe commands that a genuine client should *not* answer. |
-| `ip_limit` | number | 0 | Maximum players from one IP address. 0 means unlimited. |
-| `ip_limit_vpn` | number | 0 | Maximum VPN players from the same provider (ASN). 0 means unlimited. |
+| `ip_limit` | number | 0 | Maximum players from one IP address, VPN or not. 0 means unlimited. Negative values are rejected. |
+| `ip_limit_vpn` | number | 0 | Maximum VPN players from the same provider (ASN), separate from `ip_limit`. Needs `vpn_enable`. 0 means unlimited. Negative values are rejected. |
 | `ipbanning_enable` | bool | yes | Enable IP-based ban rules. |
 | `iplogs_cache_ttl` | number | 86400 | Seconds an IPLogs result is cached for each IP address. |
 | `iplogs_enable` | bool | no | Run the IPLogs VPN check on connect. |

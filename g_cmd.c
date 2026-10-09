@@ -650,13 +650,17 @@ q2acmd_t q2aCommands[] = {
         "ip_limit",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &ip_limit
+        &ip_limit,
+        ipLimitRun,
+        ipLimitInit
     },
     {
         "ip_limit_vpn",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &ip_limit_vpn
+        &ip_limit_vpn,
+        ipLimitVPNRun,
+        ipLimitVPNInit
     },
     {
         "ipbanning_enable",
@@ -3770,6 +3774,62 @@ void minfpsallowedRun(int startarg, edict_t *ent, int client) {
     } else {
         gi.cprintf(ent, PRINT_HIGH, "minfps = %d\n", minfpsallowed);
     }
+}
+
+/**
+ * Shared setter for ip_limit and ip_limit_vpn. Both are a count of players,
+ * so only 0 (no limit) or a positive number makes sense. A negative value
+ * is refused rather than clamped, so a stale config using the old
+ * "negative means VPN only" convention gets noticed instead of silently
+ * turning the limit off.
+ *
+ * Returns false (leaving *limit untouched) if the value was negative.
+ */
+static bool setIPLimit(int *limit, const char *name, char *arg) {
+    int value = q2a_atoi(arg);
+
+    if (value < 0) {
+        Q_printf("%s must be 0 (no limit) or a positive number, ignoring \"%s\"\n", name, arg);
+        return false;
+    }
+    *limit = value;
+    return true;
+}
+
+/**
+ * "ip_limit [n]" from a console: set (if given) and show the max number of
+ * players allowed from the same IP address.
+ */
+void ipLimitRun(int startarg, edict_t *ent, int client) {
+    if (gi.argc() > startarg && !setIPLimit(&ip_limit, "ip_limit", gi.argv(startarg))) {
+        gi.cprintf(ent, PRINT_HIGH, "ip_limit must be 0 (no limit) or a positive number\n");
+    }
+    gi.cprintf(ent, PRINT_HIGH, "ip_limit = %d\n", ip_limit);
+}
+
+/**
+ * ip_limit from a config file.
+ */
+void ipLimitInit(char *arg) {
+    setIPLimit(&ip_limit, "ip_limit", arg);
+}
+
+/**
+ * "ip_limit_vpn [n]" from a console: set (if given) and show the max number
+ * of VPN players allowed from the same VPN provider (ASN).
+ */
+void ipLimitVPNRun(int startarg, edict_t *ent, int client) {
+    if (gi.argc() > startarg && !setIPLimit(&ip_limit_vpn, "ip_limit_vpn", gi.argv(startarg))) {
+        gi.cprintf(ent, PRINT_HIGH, "ip_limit_vpn must be 0 (no limit) or a positive number\n");
+    }
+    gi.cprintf(ent, PRINT_HIGH, "ip_limit_vpn = %d\n", ip_limit_vpn);
+}
+
+/**
+ * ip_limit_vpn from a config file.
+ */
+void ipLimitVPNInit(char *arg) {
+    setIPLimit(&ip_limit_vpn, "ip_limit_vpn", arg);
 }
 
 /**
