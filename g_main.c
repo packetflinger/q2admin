@@ -86,6 +86,9 @@ void ShutdownGame(void) {
     }
     G_Free(finalentities);
     cloudShutdown();
+    if (runmode) {
+        connectFloodReleaseAll();
+    }
 
     lrcon_reset_rcon_password(0, 0, 0);
     ge_mod->Shutdown();
@@ -187,6 +190,9 @@ void G_RunFrame(void) {
 
     // check if a lrcon password has timed out
     check_lrcon_password();
+
+    // lift connect flood blocks whose cooldown has run out
+    connectFloodRunFrame();
 
     if (maxReconnectList) {
         unsigned int i;

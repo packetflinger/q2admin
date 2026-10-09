@@ -327,6 +327,32 @@ q2acmd_t q2aCommands[] = {
         cl_pitchspeed_kickmsg,
     },
     {
+        "connectfloodcmd",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        connectFloodCmd
+    },
+    {
+        "connectfloodprotect",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        connectFloodProtectRun,
+        connectFloodProtectInit
+    },
+    {
+        "connectfloodprotectmsg",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        connectFloodProtectMsg
+    },
+    {
+        "connectfloodreleasecmd",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        connectFloodReleaseCmd
+    },
+    {
         "consolechat_disable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,

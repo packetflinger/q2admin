@@ -13,11 +13,18 @@
 #define DEFAULTCHATFLOODMSG "%s is making too much noise."
 #define DEFAULTSKINFLOODMSG "%s changed skin too many times."\
 
+#define DEFAULTCONNECTFLOODMSG "Too many connections, try again later."
+
 #define STIFLE_TIME         SECS_TO_FRAMES(60)
 
 #define FLOOD_SW  0
 #define FLOOD_EX  1
 #define FLOOD_RE  2
+
+// How many different addresses connect flood protection can track at once.
+// Only addresses that connected within the last window (or are currently
+// being held off) need a slot, so this comfortably covers a busy server.
+#define CONNECTFLOOD_MAXTRACK 128
 
 // how many chats for each player to save for analysis.
 #define MSG_SAVE_COUNT 4
@@ -49,6 +56,24 @@ typedef struct {
     int last_index;             // where we are in the array
 } chatstats_t;
 
+// Server-wide connect flood settings, set by "connectfloodprotect" - the
+// connect counterpart to chatflood_s.
+typedef struct {
+    bool enabled;
+    int num;        // connections allowed from one address within sec
+    int sec;        // length of the counting window
+    int cooldown;   // seconds to hold the address off once tripped, <0 = until restart
+} connectflood_t;
+
+// One address being watched for connect flooding.
+typedef struct {
+    netadr_t addr;
+    float window_start;     // ltime the current counting window began
+    int count;              // connections seen in the current window
+    bool blocked;           // tripped and being held off
+    float release;          // ltime to release at, 0 = never (permanent)
+} connectflood_entry_t;
+
 extern bool fpsFloodExempt;
 extern bool nameChangeFloodProtect;
 extern bool skinChangeFloodProtect;
@@ -62,7 +87,16 @@ extern int skinChangeFloodProtectNum;
 extern int skinChangeFloodProtectSec;
 extern int skinChangeFloodProtectSilence;
 extern struct chatflood_s floodinfo;
+extern connectflood_t connectflood;
+extern char connectFloodProtectMsg[256];
+extern char connectFloodCmd[256];
+extern char connectFloodReleaseCmd[256];
 
+bool checkConnectFlood(int client, bool expected);
+void connectFloodProtectInit(char *arg);
+void connectFloodProtectRun(int startarg, edict_t *ent, int client);
+void connectFloodReleaseAll(void);
+void connectFloodRunFrame(void);
 void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
 void chatStatsRun(int startarg, edict_t *ent, int client);

@@ -583,6 +583,73 @@ From the console: `chatfloodprotect`, `namechangefloodprotect`,
 `skinchangefloodprotect`, `clientchatfloodprotect` (per player), `floodcmd`,
 `listfloods`, `flooddel`, `chat_stats`.
 
+### Connect flood protection
+
+**What it is.** Holding off an IP address that connects to the server over
+and over in a short time.
+
+**Why it matters.** A muted or stifled player can get around the mute by
+using their *name* to talk: they disconnect, change their name to the next
+part of their message, and reconnect, again and again. That also fills
+everyone's screen with join and leave messages. Banned players retrying in a
+loop cause the same noise.
+
+**How it works.** q2admin counts connections from each IP address. It's
+modelled on `chatfloodprotect` and set with three numbers: *count*, *seconds*
+and *cooldown*. The connection that brings an address to *count* connections
+within *seconds* trips the limit. Then:
+
+1. That connection is refused with `connectfloodprotectmsg`, and the event is
+   logged under the `BAN` log type.
+2. `connectfloodcmd` runs on the server, with `%i` replaced by the address.
+   Use it to have the engine drop the address itself, which is cheaper than
+   q2admin refusing each attempt. Different engines name these commands
+   differently, which is why they're configurable.
+3. Until *cooldown* seconds have passed, q2admin refuses every connection
+   from that address. This works even if no engine command is configured.
+4. When the cooldown ends, `connectfloodreleasecmd` runs with the same
+   address, and the address starts again with a clean count.
+
+Some details:
+
+- **Negative cooldown:** a negative *cooldown* holds the address off until the
+  server restarts, and the release command never runs.
+- **The reconnect check isn't counted:** when `reconnect_address` makes a new
+  player reconnect, the second connection isn't counted, so one join counts
+  once.
+- **Banned players are caught too:** connections are counted before the ban
+  and lockdown checks, so a banned player retrying in a loop is held off as
+  well.
+- **The recording client is exempt:** Q2Pro's MVD recording client is never
+  counted.
+- **Shared addresses:** everyone behind one address (a LAN party, a household,
+  or carrier-grade NAT on mobile networks) shares one count. Three of them
+  joining within a minute trips the default limit, so raise *count* if your
+  players often share an address.
+- **Blocks don't survive an unload:** q2admin's tracking is lost when the game
+  library is unloaded (a full `map` restart rather than `gamemap`, or the
+  server shutting down). So that engine blocks aren't left in place forever,
+  any temporary block still active at that point is released early.
+
+**Configuring it.**
+
+```
+; q2admin.cfg
+connectfloodprotect "3 60 300"     ; 3 connections in 60 s = 5 minutes off; or "disable"
+connectfloodprotectmsg "Too many connections, try again later."
+
+; Q2Pro
+connectfloodcmd "addblackhole %i"
+connectfloodreleasecmd "delblackhole %i"
+
+; R1Q2 (its blackholes are IPv4 only)
+;connectfloodcmd "addhole %i"
+;connectfloodreleasecmd "delhole %i"
+```
+
+From the console: `sv !connectfloodprotect 4 60 600`, or
+`sv !connectfloodprotect disable`.
+
 ### Muting
 
 **What it is.** Silencing a player's chat entirely (`mute`), or slowing them
@@ -963,7 +1030,8 @@ with `sv !<option> [value]`, and by in-game admins with `!<option> [value]`.
 Changes made from the console last until the server restarts.
 
 Types: **bool** is `yes`/`no`; **number** is an integer; **string** is
-quoted text; **triple** is `"<count> <seconds> <silence>"` or `"disable"`.
+quoted text; **triple** is `"<count> <seconds> <silence>"` (or
+`"<count> <seconds> <cooldown>"` for `connectfloodprotect`) or `"disable"`.
 
 | Option | Type | Default | What it controls |
 | --- | --- | --- | --- |
@@ -1002,6 +1070,10 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` or `"disable"`.
 | `cloud_publickey` | string | `public.pem` | This server's public key, which is given to the Cloud Admin server. |
 | `cloud_serverkey` | string | `server.pem` | The Cloud Admin server's public key. |
 | `cloud_uuid` | string | all zeros | This server's identifier on the Cloud Admin server. |
+| `connectfloodcmd` | string | empty | Server command run when an address trips connect flood protection. `%i` is the IP address, for example `addblackhole %i` (Q2Pro) or `addhole %i` (R1Q2). Not settable in-game. |
+| `connectfloodprotect` | triple | `3 60 300` | Connect flood limit: `"<connections> <seconds> <cooldown>"`. The connection that brings one address to that many within the window trips it, and the address is refused for *cooldown* seconds (negative = until restart). `disable` turns it off. |
+| `connectfloodprotectmsg` | string | `Too many connections, try again later.` | Message shown to a player refused for connect flooding. |
+| `connectfloodreleasecmd` | string | empty | Server command run when an address's cooldown ends. `%i` is the IP address, for example `delblackhole %i` (Q2Pro) or `delhole %i` (R1Q2). Not settable in-game. |
 | `consolechat_disable` | bool | no | Stop players from chatting by typing text into the console without a command. |
 | `consolelog_enable` | bool | no | Echo logged q2admin events to the server console. |
 | `consolelog_pattern` | string | `[q2a] %s\n` | Format for console-echoed events. |
@@ -1348,6 +1420,18 @@ Override the chat flood limit for one player.
 ```
 sv !clientchatfloodprotect CL 3 20 7 60
 sv !clientchatfloodprotect claire disable
+```
+
+#### `connectfloodprotect`
+Show or set the connect flood limit: the connection that brings one IP address
+to *count* connections within *seconds* trips it, and that address is refused
+for *cooldown* seconds (negative means until restart). See
+[Connect flood protection](#connect-flood-protection).
+`sv !connectfloodprotect [<count> <seconds> <cooldown> | disable]`
+```
+sv !connectfloodprotect
+sv !connectfloodprotect 4 60 600
+sv !connectfloodprotect disable
 ```
 
 #### `floodcmd` / `listfloods` / `flooddel` / `reloadfloodfile`

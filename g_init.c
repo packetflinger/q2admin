@@ -1248,6 +1248,31 @@ static void checkMVDImposter(int client, char *userinfo) {
 }
 
 /**
+ * Whether this connection is the reconnect that reconnect_address makes every
+ * new player do, i.e. its userinfo matches an entry in the reconnect list.
+ * Read only: the comparison works on copies, since
+ * checkReconnectUserInfoSame() can write into the strings it's given.
+ */
+static bool isExpectedReconnect(char *userinfo) {
+    char mine[MAX_INFO_STRING * 2];
+    char theirs[sizeof(reconnectlist[0].userinfo)];
+
+    if (isBlank(reconnect_address)) {
+        return false;
+    }
+    for (unsigned int i = 0; i < maxReconnectList; i++) {
+        q2a_strncpy(mine, userinfo, sizeof(mine) - 1);
+        mine[sizeof(mine) - 1] = 0;
+        q2a_strncpy(theirs, reconnectlist[i].userinfo, sizeof(theirs) - 1);
+        theirs[sizeof(theirs) - 1] = 0;
+        if (checkReconnectUserInfoSame(mine, theirs)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Called when a new player first connects to the server, before entering the
  * game. This function checks the userinfo string from the client as well.
  *
@@ -1425,6 +1450,13 @@ bool ClientConnect(edict_t *ent, char *ui) {
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw) - 1);
 
     checkMVDImposter(client, userinfo);
+
+    // Counted ahead of the lockdown/IP/ban checks below so a banned player
+    // hammering the server with reconnects is caught too.
+    if (!mvddummy && checkConnectFlood(client, isExpectedReconnect(userinfo))) {
+        Info_SetValueForKey(ui, "rejmsg", connectFloodProtectMsg);
+        return false;
+    }
 
     if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
         currentBanMsg = lockoutmsg;

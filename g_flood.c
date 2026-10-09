@@ -23,6 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 floodcmd_t floodcmds[FLOOD_MAXCMDS];
 int maxflood_cmds = 0;
 
+connectflood_t connectflood = { true, 3, 60, 300 };
+char connectFloodProtectMsg[256] = DEFAULTCONNECTFLOODMSG;
+char connectFloodCmd[256] = "";
+char connectFloodReleaseCmd[256] = "";
+static connectflood_entry_t connectfloods[CONNECTFLOOD_MAXTRACK];
+
 /**
  * Loads one flood-command file into floodcmds[]. The list names client
  * commands that should count towards chat flood protection on top of the
@@ -632,6 +638,242 @@ void chatFloodProtectRun(int startarg, edict_t *ent, int client) {
         gi.cprintf(ent, PRINT_HIGH, "chatfloodprotect %d %d %d\n", floodinfo.chatFloodProtectNum, floodinfo.chatFloodProtectSec, floodinfo.chatFloodProtectSilence);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "chatfloodprotect disabled\n");
+    }
+}
+
+/**
+ * Runs connectfloodcmd or connectfloodreleasecmd on the server, with every
+ * "%i" replaced by the address being blocked or released. The commands are
+ * admin-defined because each engine names its address blocking commands
+ * differently (R1Q2's addhole/delhole, Q2Pro's addblackhole/delblackhole).
+ * An empty command does nothing.
+ */
+static void connectFloodServerCmd(const char *cmd, netadr_t *addr) {
+    char out[512];
+    char c[2] = {0, 0};
+    const char *ip;
+
+    if (!cmd[0]) {
+        return;
+    }
+
+    ip = net_addressToString(addr, false, false, false);
+    out[0] = 0;
+    for (; *cmd; cmd++) {
+        if (cmd[0] == '%' && tolower((unsigned char) cmd[1]) == 'i') {
+            Q_strlcat(out, ip, sizeof(out));
+            cmd++;
+        } else {
+            c[0] = *cmd;
+            Q_strlcat(out, c, sizeof(out));
+        }
+    }
+    Q_strlcat(out, "\n", sizeof(out));
+    gi.AddCommandString(out);
+}
+
+/**
+ * Finds the tracking slot for an address. With create set, an address that
+ * isn't tracked yet takes a free or stale slot (one that isn't holding an
+ * address off and whose window has lapsed), or failing that the unblocked
+ * slot with the oldest window. Returns NULL if there's nothing to reuse,
+ * which only happens if every slot is holding an address off.
+ */
+static connectflood_entry_t *connectFloodEntry(netadr_t *addr, bool create) {
+    connectflood_entry_t *e, *spare = NULL;
+    int i;
+
+    for (i = 0; i < CONNECTFLOOD_MAXTRACK; i++) {
+        e = &connectfloods[i];
+        if ((e->count || e->blocked) && net_addressesMatch(&e->addr, addr)) {
+            return e;
+        }
+    }
+
+    if (!create) {
+        return NULL;
+    }
+
+    for (i = 0; i < CONNECTFLOOD_MAXTRACK && !spare; i++) {
+        e = &connectfloods[i];
+        if (!e->blocked && (e->count == 0 || e->window_start + connectflood.sec < ltime)) {
+            spare = e;
+        }
+    }
+    if (!spare) {
+        for (i = 0; i < CONNECTFLOOD_MAXTRACK; i++) {
+            e = &connectfloods[i];
+            if (!e->blocked && (!spare || e->window_start < spare->window_start)) {
+                spare = e;
+            }
+        }
+    }
+    if (spare) {
+        q2a_memset(spare, 0, sizeof(*spare));
+        spare->addr = *addr;
+    }
+    return spare;
+}
+
+/**
+ * Counts a connection from this client's address and decides whether it's
+ * part of a connect flood: the same address connecting over and over in a
+ * short time. The usual culprit is a muted or stifled player who keeps
+ * reconnecting under a new name to talk through their name, which also
+ * spams everyone with join messages.
+ *
+ * The connect that brings an address to connectflood.num within
+ * connectflood.sec seconds trips it. The address is then held off for
+ * connectflood.cooldown seconds (or until restart if negative):
+ * connectfloodcmd runs once so the engine can block it outright, and any
+ * connection that still reaches q2admin in the meantime is refused here, so
+ * the block holds even when no engine command is configured.
+ *
+ * expected: true for the reconnect that reconnect_address makes every new
+ *           player do. It's still refused while the address is held off,
+ *           but isn't counted.
+ *
+ * Returns true if this connection should be refused.
+ *
+ * Called from ClientConnect() once the address and name are known, before
+ * the lockdown/IP/ban checks so banned players retrying are counted too.
+ */
+bool checkConnectFlood(int client, bool expected) {
+    netadr_t *addr = &proxyinfo[client].address;
+    connectflood_entry_t *e;
+
+    if (!connectflood.enabled) {
+        return false;
+    }
+    if (addr->type != NA_IP && addr->type != NA_IP6) {
+        return false;
+    }
+
+    e = connectFloodEntry(addr, !expected);
+    if (!e) {
+        return false;
+    }
+    if (e->blocked) {
+        return true;
+    }
+
+    // The reconnect q2admin itself asked for (reconnect_address) is the
+    // second half of the same join, so it isn't counted.
+    if (expected) {
+        return false;
+    }
+
+    if (e->count == 0 || e->window_start + connectflood.sec < ltime) {
+        e->window_start = ltime;
+        e->count = 0;
+    }
+    e->count++;
+
+    if (e->count < connectflood.num) {
+        return false;
+    }
+
+    e->blocked = true;
+    e->release = (connectflood.cooldown > 0) ? ltime + connectflood.cooldown : 0;
+
+    Q_snprintf(buffer, sizeof(buffer), "connect flood from %s: %d connections in %d seconds, blocked %s",
+            IP(client), e->count, connectflood.sec,
+            (connectflood.cooldown > 0) ? va("for %d seconds", connectflood.cooldown) : "until restart");
+    gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", NAME(client), buffer);
+    logEvent(LT_BAN, client, proxyinfo[client].ent, buffer, 0, 0.0, true);
+
+    connectFloodServerCmd(connectFloodCmd, &e->addr);
+    return true;
+}
+
+/**
+ * Releases addresses whose cooldown has run out, running
+ * connectfloodreleasecmd for each. Runs whether or not the feature is
+ * currently enabled, so turning it off mid-block doesn't strand a block.
+ *
+ * Called every frame from G_RunFrame().
+ */
+void connectFloodRunFrame(void) {
+    connectflood_entry_t *e;
+
+    for (int i = 0; i < CONNECTFLOOD_MAXTRACK; i++) {
+        e = &connectfloods[i];
+        if (e->blocked && e->release > 0 && e->release < ltime) {
+            gi.cprintf(NULL, PRINT_HIGH, "connect flood block on %s released\n", net_addressToString(&e->addr, false, false, false));
+            connectFloodServerCmd(connectFloodReleaseCmd, &e->addr);
+            q2a_memset(e, 0, sizeof(*e));
+        }
+    }
+}
+
+/**
+ * Releases every temporary block early. q2admin's tracking doesn't survive
+ * the game library being unloaded, so without this an engine-level block
+ * would be left in place forever. Permanent blocks (negative cooldown) are
+ * left as they are, since they're meant to last.
+ *
+ * Called from ShutdownGame().
+ */
+void connectFloodReleaseAll(void) {
+    connectflood_entry_t *e;
+
+    for (int i = 0; i < CONNECTFLOOD_MAXTRACK; i++) {
+        e = &connectfloods[i];
+        if (e->blocked && e->release > 0) {
+            connectFloodServerCmd(connectFloodReleaseCmd, &e->addr);
+        }
+        q2a_memset(e, 0, sizeof(*e));
+    }
+}
+
+/**
+ * Parses connectfloodprotect from a config file: "<count> <seconds>
+ * <cooldown>", the same layout as chatfloodprotect. A negative cooldown
+ * holds an address off until restart. Anything else, such as "disable",
+ * turns the check off.
+ */
+void connectFloodProtectInit(char *arg) {
+    connectflood.enabled = false;
+
+    if (*arg) {
+        connectflood.num = q2a_atoi(arg);
+        while (*arg && *arg != ' ') {
+            arg++;
+        }
+        SKIPBLANK(arg);
+        if (*arg) {
+            connectflood.sec = q2a_atoi(arg);
+            while (*arg && *arg != ' ') {
+                arg++;
+            }
+            SKIPBLANK(arg);
+            if (*arg) {
+                connectflood.cooldown = q2a_atoi(arg);
+                if (connectflood.num > 0 && connectflood.sec > 0 && connectflood.cooldown) {
+                    connectflood.enabled = true;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * "connectfloodprotect [<count> <seconds> <cooldown> | disable]" from a
+ * console: set (if given) and show the connect flood settings.
+ */
+void connectFloodProtectRun(int startarg, edict_t *ent, int client) {
+    if (gi.argc() > startarg + 2) {
+        connectflood.num = q2a_atoi(gi.argv(startarg));
+        connectflood.sec = q2a_atoi(gi.argv(startarg + 1));
+        connectflood.cooldown = q2a_atoi(gi.argv(startarg + 2));
+        connectflood.enabled = (connectflood.num > 0 && connectflood.sec > 0 && connectflood.cooldown);
+    } else if (gi.argc() > startarg) {
+        connectflood.enabled = false;
+    }
+    if (connectflood.enabled) {
+        gi.cprintf(ent, PRINT_HIGH, "connectfloodprotect %d %d %d\n", connectflood.num, connectflood.sec, connectflood.cooldown);
+    } else {
+        gi.cprintf(ent, PRINT_HIGH, "connectfloodprotect disabled\n");
     }
 }
 

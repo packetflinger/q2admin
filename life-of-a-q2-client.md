@@ -180,7 +180,8 @@ CLIENT                                 ENGINE                     Q2ADMIN
   |-- getchallenge / connect ---------->|                            |
   |                                     |-- ClientConnect --------->| Phase 1: gatekeeping
   |                                     |                            |  userinfo sanity, proxy keys,
-  |                                     |                            |  lockdown, IP, bans, reconnect
+  |                                     |                            |  connect flood, lockdown, IP,
+  |                                     |                            |  bans, reconnect
   |                                     |                            |  check, forward to mod, start
   |                                     |                            |  VPN lookups, whois
   |<-- serverdata, configstrings -------|                            |
@@ -252,7 +253,7 @@ That client gets a few exemptions, described below.
 Two things happen next:
 
 - **Reconnect list cleanup.** Expired entries are removed from the list of
-  players waiting to reconnect (see step 9).
+  players waiting to reconnect (see step 8).
 - **A clean slate for the slot.** The player's record is wiped and the slot
   is stamped with the current time.
 
@@ -276,7 +277,7 @@ proxy user:
 
 - with `banonconnect`, the connection is rejected with
   `rejected: proxy/bot signature found`;
-- otherwise they're marked banned and removed after entering (see step 8).
+- otherwise they're marked banned and removed after entering (see step 7).
 
 ### 4. Userinfo validation
 
@@ -301,7 +302,38 @@ crash servers and clients), q2admin:
 - raises `skin-overflow`;
 - replaces the skin with `female/jezebel`.
 
-### 6. The admission decision
+### 6. The connect flood check (`checkConnectFlood()`)
+
+This check is aimed at players who connect, disconnect and reconnect over and
+over. The classic case is a muted player who rejoins under a new name each
+time to talk through their name. It runs before the lockdown and ban checks,
+so a banned player retrying in a loop is counted too. The MVD recording
+client is never counted.
+
+q2admin keeps a count of connections per IP address. The count isn't stored
+with the player slot, so it survives disconnects. With the default
+`connectfloodprotect "3 60 300"`:
+
+1. **If the address is already being held off,** the connection is refused
+   with `connectfloodprotectmsg` and nothing else happens.
+2. **If this is the reconnect q2admin asked for** (the second half of the
+   reconnect check in step 8, recognized by its userinfo matching the saved
+   entry), it isn't counted.
+3. **Otherwise the connection is counted.** If the address's last count
+   started more than 60 seconds ago, counting starts again from this
+   connection.
+4. **The third connection within the 60 seconds trips the limit.** It's
+   refused, the event is printed to the console and logged under the `BAN`
+   log type, and `connectfloodcmd` runs on the server with `%i` replaced by
+   the address (for example `addblackhole 192.0.2.7`). From then on, the
+   engine can drop the address before it reaches q2admin. If it doesn't,
+   because no command is configured, q2admin refuses every attempt itself
+   (case 1).
+
+The hold lasts for the cooldown (300 seconds). It's lifted by the frame loop
+(Phase 5), not by anything the player does.
+
+### 7. The admission decision
 
 Four checks run in order. The first one that applies decides the outcome.
 
@@ -334,7 +366,7 @@ When one of the first three refuses the player, what happens next depends on
   mod is never told about them. They're removed shortly after entering
   (Phase 3).
 
-### 7. The reconnect check (only when `reconnect_address` is set)
+### 8. The reconnect check (only when `reconnect_address` is set)
 
 This check is a defence against proxies. Every new player is made to
 disconnect and reconnect directly to the server's real address; a proxy sitting
@@ -356,7 +388,7 @@ The outcomes:
   Any older entry from the same IP address is removed so that a proxy can't
   leave stale entries behind.
 
-### 8. Handing over to the mod
+### 9. Handing over to the mod
 
 If the player passed, q2admin calls the mod's own `ClientConnect`.
 
@@ -367,7 +399,7 @@ If the player passed, q2admin calls the mod's own `ClientConnect`.
 - **If the mod refuses the player,** its `rejmsg` is copied back to the
   engine so the player sees the reason.
 
-### 9. Background lookups
+### 10. Background lookups
 
 These run whether or not the mod accepted the player:
 
@@ -381,7 +413,7 @@ These run whether or not the mod accepted the player:
 
 Both lookups finish on later frames ([Phase 5](#asynchronous-results-vpn-lookups)).
 
-### 10. Logging
+### 11. Logging
 
 If the connection is accepted, a `CLIENTCONNECT` event is logged. If the
 userinfo had overflowed, a warning is recorded and the player is told about
@@ -959,6 +991,11 @@ the player is removed (Phase 7).
 
 ### Periodic and admin-driven events
 
+- **Connect flood releases:** every frame, q2admin checks for addresses whose
+  connect flood cooldown has ended. For each one, it prints a release message
+  and runs `connectfloodreleasecmd` with the address (for example
+  `delblackhole 192.0.2.7`), and the address starts again with a clean count.
+  This happens whether or not that player ever comes back.
 - **Recurring checks:** the timescale probe (every 15 s) and client variable
   polling (every `checkvar_poll_time`) continue for the whole visit.
 - **Player timers** (`timer_start`) are checked every frame. When one
@@ -1004,7 +1041,12 @@ the player through the version-reply ban check on every map, the name-change
 re-check, and the immediate check when an admin adds a ban.
 
 A player's signals and score survive the map change; only the per-map
-counters are reset.
+counters are reset. Connect flood counts and holds aren't tied to a map
+either, so they carry on as normal. They're only lost when the game library
+itself is unloaded (a full `map` restart rather than `gamemap`, or a server
+shutdown). At that point, every temporary hold still active is released
+early by running `connectfloodreleasecmd`, so the engine isn't left blocking
+an address forever.
 
 
 ## Phase 7: Leaving
@@ -1097,6 +1139,7 @@ job per frame) and with the client's ping.
 | Skin length | Too long | Skin replaced, `skin-overflow` (25). |
 | Lockdown | Locked and not on the rejoin list | Rejected or banned. |
 | IP address | Unparseable (with `checkclientipaddress`) | Rejected or banned. |
+| Connect flood | Third connection from one address within 60 s | Refused, `connectfloodcmd` runs, and the address is held off for 300 s. |
 | Ban list at connect | Matches a deny rule | Rejected, or shown the message and removed. |
 | Ban list after version | Matches a deny rule | Shown the message and removed. |
 | Address limit | Over `ip_limit` | Disconnected. |
