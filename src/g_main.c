@@ -194,35 +194,7 @@ void G_RunFrame(void) {
     // lift connect flood blocks whose cooldown has run out
     connectFloodRunFrame();
 
-    if (maxReconnectList) {
-        unsigned int i;
-
-        for (i = 0; i < maxReconnectList; i++) {
-            if (reconnectlist[i].reconnecttimeout < ltime) {
-                unsigned int j;
-
-                // remove the retry list entry if needed...
-                for (j = 0; j < maxReconnectList; j++) {
-                    if ((j != i) && (reconnectlist[j].retrylistidx == reconnectlist[i].retrylistidx)) {
-                        break;
-                    }
-                }
-
-                if (j >= maxReconnectList) {
-                    if ((reconnectlist[i].retrylistidx + 1) < maxretryList) {
-                        q2a_memmove(&(retrylist[reconnectlist[i].retrylistidx]), &(retrylist[reconnectlist[i].retrylistidx + 1]), (maxretryList - (reconnectlist[i].retrylistidx + 1)) * sizeof (retrylist_info));
-                    }
-                    maxretryList--;
-                }
-
-                if ((i + 1) < maxReconnectList) {
-                    q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
-                    i--;
-                }
-                maxReconnectList--;
-            }
-        }
-    }
+    expireReconnectEntries();
 
     if (framesperprocess && ((lframenum % framesperprocess) != 0)) {
         ge_mod->RunFrame();
@@ -311,7 +283,11 @@ void G_RunFrame(void) {
                     *bp = 0;
 
                     if (*ip) {
-                        q2a_strcpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo.raw);
+                        // The list holds maxclients entries; when it's full
+                        // the oldest entry, which expires soonest, makes way.
+                        reserveReconnectEntry();
+                        q2a_strncpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo.raw, sizeof(reconnectlist[maxReconnectList].userinfo) - 1);
+                        reconnectlist[maxReconnectList].userinfo[sizeof(reconnectlist[maxReconnectList].userinfo) - 1] = 0;
                         reconnectlist[maxReconnectList].reconnecttimeout = ltime;
                         reconnectlist[maxReconnectList].reconnecttimeout += reconnect_time;
 
@@ -324,20 +300,8 @@ void G_RunFrame(void) {
 
                         if (i < maxretryList) {
                             if (retrylist[i].retry >= 5) {
-                                unsigned int j;
-
-                                // remove the retry list entry if needed...
-                                for (j = 0; j < maxReconnectList; j++) {
-                                    if (reconnectlist[j].retrylistidx == i) {
-                                        break;
-                                    }
-                                }
-                                if (j >= maxReconnectList) {
-                                    if ((i + 1) < maxretryList) {
-                                        q2a_memmove(&(retrylist[i]), &(retrylist[i + 1]), (maxretryList - (i + 1)) * sizeof (retrylist_info));
-                                    }
-                                    maxretryList--;
-                                }
+                                // done counting this address if nothing else uses it
+                                releaseRetryEntry(i);
 
                                 // cut off here...
                                 Q_snprintf(buffer, sizeof(buffer), "\ndisconnect\n");
@@ -348,9 +312,7 @@ void G_RunFrame(void) {
                             retrylist[i].retry++;
                             reconnectlist[maxReconnectList].retrylistidx = i;
                         } else {
-                            q2a_strncpy(retrylist[maxretryList].ip, ip, MAX_INFO_STRING + 45);
-                            retrylist[maxretryList].retry = 0;
-                            maxretryList++;
+                            reconnectlist[maxReconnectList].retrylistidx = addRetryEntry(ip);
                         }
 
                         maxReconnectList++;

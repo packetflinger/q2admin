@@ -572,10 +572,11 @@ void InitGame(void) {
     reconnectproxyinfo = G_Malloc(maxclients->value * sizeof(proxyreconnectinfo_t));
     q2a_memset(reconnectproxyinfo, 0x0, maxclients->value * sizeof(proxyreconnectinfo_t));
 
-    reconnectlist = (reconnect_info *) G_Malloc(maxclients->value * sizeof(reconnect_info));
+    reconnectCapacity = (unsigned int) maxclients->value;
+    reconnectlist = (reconnect_info *) G_Malloc(reconnectCapacity * sizeof(reconnect_info));
     maxReconnectList = 0;
 
-    retrylist = (retrylist_info *) G_Malloc(maxclients->value * sizeof (retrylist_info));
+    retrylist = (retrylist_info *) G_Malloc(reconnectCapacity * sizeof (retrylist_info));
     maxretryList = 0;
 
     logEvent(LT_SERVERINIT, 0, NULL, NULL, 0, 0.0, false);
@@ -1178,6 +1179,133 @@ bool checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
 }
 
 /**
+ * Reconnect list bookkeeping, for the reconnect_address check.
+ *
+ * reconnectlist holds the players q2admin has told to reconnect, and
+ * retrylist counts reconnect attempts per IP address so a client that never
+ * manages it can be cut off. Each reconnect entry points at its address's
+ * retry entry by index (retrylistidx, -1 for none). Both arrays hold
+ * reconnectCapacity entries, and these helpers are the only way entries are
+ * added or removed, which keeps the indexes valid and both lists bounded.
+ */
+unsigned int reconnectCapacity = 0;
+
+/**
+ * Whether any reconnect entry still points at retry entry r.
+ */
+static bool retryEntryInUse(int r) {
+    for (int j = 0; j < maxReconnectList; j++) {
+        if (reconnectlist[j].retrylistidx == r) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Removes retry entry r, shifting the later ones down and updating every
+ * reconnect entry's index to match. Only call this for an entry nothing
+ * points at.
+ */
+static void removeRetryEntry(int r) {
+    if (r < 0 || r >= maxretryList) {
+        return;
+    }
+    if (r + 1 < maxretryList) {
+        q2a_memmove(&retrylist[r], &retrylist[r + 1], (maxretryList - (r + 1)) * sizeof(retrylist_info));
+    }
+    maxretryList--;
+    for (int j = 0; j < maxReconnectList; j++) {
+        if (reconnectlist[j].retrylistidx > r) {
+            reconnectlist[j].retrylistidx--;
+        }
+    }
+}
+
+/**
+ * Removes retry entry r if no reconnect entry points at it any more.
+ */
+void releaseRetryEntry(int r) {
+    if (r >= 0 && !retryEntryInUse(r)) {
+        removeRetryEntry(r);
+    }
+}
+
+/**
+ * Removes reconnect entry i, along with its retry entry if nothing else
+ * points at it.
+ *
+ * keepRetry: keep the retry entry even if it's now unused, so the address's
+ *            attempt count survives until its next reconnect entry is added.
+ *            Unused entries are reclaimed by addRetryEntry() if space runs
+ *            out.
+ */
+void removeReconnectEntry(int i, bool keepRetry) {
+    int r;
+
+    if (i < 0 || i >= maxReconnectList) {
+        return;
+    }
+    r = reconnectlist[i].retrylistidx;
+    if (i + 1 < maxReconnectList) {
+        q2a_memmove(&reconnectlist[i], &reconnectlist[i + 1], (maxReconnectList - (i + 1)) * sizeof(reconnect_info));
+    }
+    maxReconnectList--;
+    if (!keepRetry) {
+        releaseRetryEntry(r);
+    }
+}
+
+/**
+ * Removes every reconnect entry whose time to reconnect has run out.
+ */
+void expireReconnectEntries(void) {
+    int i = 0;
+
+    while (i < maxReconnectList) {
+        if (reconnectlist[i].reconnecttimeout < ltime) {
+            removeReconnectEntry(i, false);
+        } else {
+            i++;
+        }
+    }
+}
+
+/**
+ * Makes sure there's room for one more reconnect entry, dropping the oldest
+ * (which expires soonest) when the list is full.
+ */
+void reserveReconnectEntry(void) {
+    if (maxReconnectList >= (int) reconnectCapacity) {
+        removeReconnectEntry(0, false);
+    }
+}
+
+/**
+ * Adds a retry entry for an address and returns its index, or -1 if there's
+ * no room. Unused entries are reclaimed first if the list is full.
+ */
+int addRetryEntry(char *ip) {
+    if (maxretryList >= (int) reconnectCapacity) {
+        int r = 0;
+        while (r < maxretryList) {
+            if (!retryEntryInUse(r)) {
+                removeRetryEntry(r);
+            } else {
+                r++;
+            }
+        }
+    }
+    if (maxretryList >= (int) reconnectCapacity) {
+        return -1;
+    }
+    q2a_strncpy(retrylist[maxretryList].ip, ip, sizeof(retrylist[maxretryList].ip) - 1);
+    retrylist[maxretryList].ip[sizeof(retrylist[maxretryList].ip) - 1] = 0;
+    retrylist[maxretryList].retry = 0;
+    return maxretryList++;
+}
+
+/**
  * While the server is locked down (lockDownServer), ClientDisconnect()
  * records the name of anyone who disconnects into reconnectproxyinfo so
  * they can rejoin despite the lockdown - otherwise a lockdown would also
@@ -1353,36 +1481,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     profile_start(1);
 
     // always clear out just in case there isn't any clients (therefore runframe doesn't get called)
-    if (maxReconnectList) {
-        unsigned int i;
-
-        for (i = 0; i < maxReconnectList; i++) {
-            if (reconnectlist[i].reconnecttimeout < ltime) {
-                // wipe out the retry list if it's the only one pointing to it.
-                unsigned int j;
-
-                for (j = 0; j < maxReconnectList; j++) {
-                    if (j != i && reconnectlist[j].retrylistidx == reconnectlist[i].retrylistidx) {
-                        break;
-                    }
-                }
-
-                if (j >= maxReconnectList) {
-                    if (reconnectlist[i].retrylistidx + 1 < maxretryList) {
-                        q2a_memmove(&(retrylist[reconnectlist[i].retrylistidx]), &(retrylist[reconnectlist[i].retrylistidx + 1]), (maxretryList - (reconnectlist[i].retrylistidx + 1)) * sizeof (retrylist_info));
-                    }
-                    maxretryList--;
-                }
-
-                // wipe out the reconnect list entry
-                if (i + 1 < maxReconnectList) {
-                    q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
-                    i--;
-                }
-                maxReconnectList--;
-            }
-        }
-    }
+    expireReconnectEntries();
 
     // The slot's VPN/IPLogs request state is about to be zeroed, so drop
     // any lookup a previous occupant left running first.
@@ -1531,39 +1630,20 @@ bool ClientConnect(edict_t *ent, char *ui) {
                             *bp = 0;
 
                             if (strcmp(ip, reconnectip) == 0) {
-                                // remove from list and continue with connect
-                                if (i + 1 < maxReconnectList) {
-                                    q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
-                                    i--;
-                                }
-                                maxReconnectList--;
+                                // Remove it and continue with connect. The
+                                // address's retry count is kept, so a
+                                // client stuck in a reconnect loop is still
+                                // cut off after enough attempts.
+                                removeReconnectEntry(i, true);
+                                i--;
                             }
                         }
                     }
                 }
 
                 if (i < maxReconnectList) {
-                    unsigned int j;
-
-                    // remove the retry list entry if needed...
-                    for (j = 0; j < maxReconnectList; j++) {
-                        if (j != i && reconnectlist[j].retrylistidx == reconnectlist[i].retrylistidx) {
-                            break;
-                        }
-                    }
-
-                    if (j >= maxReconnectList) {
-                        if (reconnectlist[i].retrylistidx + 1 < maxretryList) {
-                            q2a_memmove(&(retrylist[reconnectlist[i].retrylistidx]), &(retrylist[reconnectlist[i].retrylistidx + 1]), (maxretryList - (reconnectlist[i].retrylistidx + 1)) * sizeof (retrylist_info));
-                        }
-                        maxretryList--;
-                    }
-
-                    // remove from list and continue with connect
-                    if (i + 1 < maxReconnectList) {
-                        q2a_memmove(&(reconnectlist[i]), &(reconnectlist[i + 1]), (maxReconnectList - (i + 1)) * sizeof (reconnect_info));
-                    }
-                    maxReconnectList--;
+                    // the reconnect we asked for, remove it and continue with connect
+                    removeReconnectEntry(i, false);
                 } else {
                     // force a reconnect and exit...
 
