@@ -1152,7 +1152,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `rcon_insecure` | bool | yes | Run lrcon commands from the client so the player sees the output. `no` runs them on the server, where the output isn't sent to the player. **cfg only.** |
 | `rcon_random_password` | bool | yes | Randomize the real rcon password while lrcon commands run. **cfg only.** |
 | `reconnect_address` | string | empty | Address that players are made to reconnect to. Empty disables the reconnect check. |
-| `reconnect_checklevel` | number | 0 | Reconnect matching: 0 = strict (whole userinfo), 1 = looser (friendlier to NAT). |
+| `reconnect_checklevel` | number | 0 | How a returning player is recognized. Both levels require the same IP address. 0 = the whole userinfo must match, apart from the connection details the engine adds; 1 = only the name and skin must match. |
 | `reconnect_time` | number | 60 | Seconds a player has to reconnect. |
 | `say_group_enable` | bool | no | Allow players to use `say_group`. |
 | `say_person_enable` | bool | no | Allow players to use `say_person`. |

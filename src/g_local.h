@@ -538,6 +538,7 @@ extern checkvar_t checkvarList[CHECKVAR_MAX];
 typedef struct {
     long reconnecttimeout;
     int retrylistidx;
+    char ip[64];                    // address told to reconnect, no port (see IP())
     char userinfo[MAX_INFO_STRING + 45];
 } reconnect_info;
 
@@ -547,6 +548,7 @@ typedef struct {
 } retrylist_info;
 
 extern reconnect_info* reconnectlist;
+bool reconnectEntryMatches(reconnect_info *entry, int client, char *userinfo);
 extern retrylist_info* retrylist;
 extern int maxReconnectList;
 extern int maxretryList;

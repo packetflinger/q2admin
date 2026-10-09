@@ -269,23 +269,17 @@ void G_RunFrame(void) {
                     Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                     gi.AddCommandString(buffer);
                 } else if (command == QCMD_RECONNECT) {
-                    unsigned int i;
-                    char ipbuffer[40];
-                    char *ip = ipbuffer;
-                    char *bp = ip;
+                    int i;
+                    char ip[sizeof(reconnectlist[0].ip)];
 
-                    q2a_strncpy(ipbuffer, IP(client), sizeof(ipbuffer)-1);
-
-                    while (*bp && (*bp != ':')) {
-                        bp++;
-                    }
-
-                    *bp = 0;
+                    // the parsed address, without a port; works for IPv6 too
+                    Q_strlcpy(ip, IP(client), sizeof(ip));
 
                     if (*ip) {
                         // The list holds maxclients entries; when it's full
                         // the oldest entry, which expires soonest, makes way.
                         reserveReconnectEntry();
+                        Q_strlcpy(reconnectlist[maxReconnectList].ip, ip, sizeof(reconnectlist[maxReconnectList].ip));
                         q2a_strncpy(reconnectlist[maxReconnectList].userinfo, proxyinfo[client].userinfo.raw, sizeof(reconnectlist[maxReconnectList].userinfo) - 1);
                         reconnectlist[maxReconnectList].userinfo[sizeof(reconnectlist[maxReconnectList].userinfo) - 1] = 0;
                         reconnectlist[maxReconnectList].reconnecttimeout = ltime;

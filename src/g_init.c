@@ -423,10 +423,9 @@ skipwhite:
  * found at all); the caller is responsible for stripping off the ":port"
  * suffix if present.
  *
- * Called from UpdateInternalClientInfo() (during ClientConnect()),
- * checkReconnectUserInfoSame(), and directly within ClientConnect()'s
- * reconnect_address handling - anywhere q2admin needs to recover a
- * client's real address from a live or previously stored userinfo string.
+ * Called from UpdateInternalClientInfo() (during ClientConnect()) and
+ * ClientConnect()'s reconnect_address handling, to recover a client's real
+ * address from its userinfo.
  */
 char *FindIpAddressInUserInfo(char *userinfo, bool *userInfoOverflow) {
     char *ip = Info_ValueForKey(userinfo, "ip");
@@ -1113,69 +1112,70 @@ bool UpdateInternalClientInfo(int client, edict_t *ent, char *userinfo, bool* us
 }
 
 /**
- * When q2admin redirects a connecting client elsewhere (reconnect_address
- * set - see ClientConnect()), it records their userinfo in reconnectlist
- * and waits for them to show back up. This decides whether a later
- * incoming connection's userinfo (userinfo1) is that same player
- * reconnecting rather than an unrelated new connection (userinfo2, the
- * stored reconnectlist entry) - so q2admin can recognize the completed
- * reconnect, dequeue it, and let the connection through without treating
- * it as a fresh connect.
- *
- * A literal string compare of the full userinfo would rarely match across
- * two separate connections, since incidental fields (challenge, protocol,
- * rate, etc) can legitimately differ even for the same player reconnecting.
- * When reconnect_checklevel is set, this instead does a looser match on
- * just the fields that actually identify the player - base IP (port
- * stripped, since it changes per connection), name, and skin - accepting
- * that as "the same player". When it's not set, it falls back to requiring
- * an exact match of the whole userinfo string.
- *
- * Called from ClientConnect() while walking reconnectlist to find a match
- * for an incoming connection.
+ * Keys the engine adds to a connecting client's userinfo: the client's
+ * address, and with R1Q2/Q2Pro's extra userinfo the connection details.
+ * They describe the connection rather than the player, and several change
+ * on every connection (challenge, the port in ip, qport), so they're left
+ * out when comparing userinfo across a reconnect.
  */
-bool checkReconnectUserInfoSame(char *userinfo1, char *userinfo2) {
-    if (reconnect_checklevel) {
-        char *cp1 = FindIpAddressInUserInfo(userinfo1, 0);
-        char *cp2 = FindIpAddressInUserInfo(userinfo2, 0);
-        char *bp = cp1;
+static const char *engineUserinfoKeys[] = {
+    "challenge", "ip", "major", "minor", "netchan", "packetlen", "qport", "zlib", NULL
+};
 
-        if (*cp1 == 0 || *cp2 == 0) {
-            return false;
-        }
+/**
+ * Removes the engine-added keys above from a userinfo string, in place.
+ */
+static void stripEngineUserinfo(char *userinfo) {
+    for (int i = 0; engineUserinfoKeys[i]; i++) {
+        Info_RemoveKey(userinfo, engineUserinfoKeys[i]);
+    }
+}
 
-        while (*bp && *bp != ':') {
-            bp++;
-        }
+/**
+ * When q2admin redirects a connecting client elsewhere (reconnect_address
+ * set - see ClientConnect()), it records them in reconnectlist and waits
+ * for them to show back up. This decides whether an incoming connection is
+ * that same player reconnecting, so q2admin can recognize the completed
+ * reconnect and let it through instead of sending them away again.
+ *
+ * The address always has to match: the one stored when they were told to
+ * reconnect against this connection's, both without a port since that can
+ * legitimately change. Beyond that, reconnect_checklevel decides:
+ *
+ *   0 - the whole userinfo has to match, apart from the keys the engine
+ *       adds itself (engineUserinfoKeys). Those can't be compared: the
+ *       challenge and port change on every connection, and with extra
+ *       userinfo the stored copy may not even have them.
+ *   1 - only the name and skin have to match.
+ *
+ * entry:    the reconnectlist entry to compare against.
+ * client:   the connecting client, whose address has already been parsed.
+ * userinfo: the connecting client's userinfo. Not modified.
+ *
+ * Called from ClientConnect() and isExpectedReconnect().
+ */
+bool reconnectEntryMatches(reconnect_info *entry, int client, char *userinfo) {
+    char mine[MAX_INFO_STRING * 2];
+    char theirs[sizeof(entry->userinfo)];
 
-        *bp = 0;
-
-        bp = cp2;
-
-        while (*bp && *bp != ':') {
-            bp++;
-        }
-
-        *bp = 0;
-
-        if (q2a_strcmp(cp1, cp2) != 0) {
-            return false;
-        }
-
-        cp1 = Info_ValueForKey(userinfo1, "name");
-        cp2 = Info_ValueForKey(userinfo2, "name");
-
-        if (q2a_strcmp(cp1, cp2) != 0) {
-            return false;
-        }
-
-        cp1 = Info_ValueForKey(userinfo1, "skin");
-        cp2 = Info_ValueForKey(userinfo2, "skin");
-
-        return (q2a_strcmp(cp1, cp2) == 0);
+    if (!entry->ip[0] || q2a_strcmp(entry->ip, IP(client)) != 0) {
+        return false;
     }
 
-    return (q2a_strcmp(userinfo1, userinfo2) == 0);
+    if (reconnect_checklevel) {
+        if (q2a_strcmp(Info_ValueForKey(userinfo, "name"), Info_ValueForKey(entry->userinfo, "name")) != 0) {
+            return false;
+        }
+        return q2a_strcmp(Info_ValueForKey(userinfo, "skin"), Info_ValueForKey(entry->userinfo, "skin")) == 0;
+    }
+
+    q2a_strncpy(mine, userinfo, sizeof(mine) - 1);
+    mine[sizeof(mine) - 1] = 0;
+    q2a_strncpy(theirs, entry->userinfo, sizeof(theirs) - 1);
+    theirs[sizeof(theirs) - 1] = 0;
+    stripEngineUserinfo(mine);
+    stripEngineUserinfo(theirs);
+    return q2a_strcmp(mine, theirs) == 0;
 }
 
 /**
@@ -1377,23 +1377,14 @@ static void checkMVDImposter(int client, char *userinfo) {
 
 /**
  * Whether this connection is the reconnect that reconnect_address makes every
- * new player do, i.e. its userinfo matches an entry in the reconnect list.
- * Read only: the comparison works on copies, since
- * checkReconnectUserInfoSame() can write into the strings it's given.
+ * new player do, i.e. it matches an entry in the reconnect list.
  */
-static bool isExpectedReconnect(char *userinfo) {
-    char mine[MAX_INFO_STRING * 2];
-    char theirs[sizeof(reconnectlist[0].userinfo)];
-
+static bool isExpectedReconnect(int client, char *userinfo) {
     if (isBlank(reconnect_address)) {
         return false;
     }
-    for (unsigned int i = 0; i < maxReconnectList; i++) {
-        q2a_strncpy(mine, userinfo, sizeof(mine) - 1);
-        mine[sizeof(mine) - 1] = 0;
-        q2a_strncpy(theirs, reconnectlist[i].userinfo, sizeof(theirs) - 1);
-        theirs[sizeof(theirs) - 1] = 0;
-        if (checkReconnectUserInfoSame(mine, theirs)) {
+    for (int i = 0; i < maxReconnectList; i++) {
+        if (reconnectEntryMatches(&reconnectlist[i], client, userinfo)) {
             return true;
         }
     }
@@ -1555,7 +1546,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     // Counted ahead of the lockdown/IP/ban checks below so a banned player
     // hammering the server with reconnects is caught too.
-    if (!mvddummy && checkConnectFlood(client, isExpectedReconnect(userinfo))) {
+    if (!mvddummy && checkConnectFlood(client, isExpectedReconnect(client, userinfo))) {
         Info_SetValueForKey(ui, "rejmsg", connectFloodProtectMsg);
         return false;
     }
@@ -1597,47 +1588,26 @@ bool ClientConnect(edict_t *ent, char *ui) {
         // is reconnect_address set?
         if (!isBlank(reconnect_address) && !mvddummy) {
             char *ip = FindIpAddressInUserInfo(userinfo, 0);
-            char *bp = ip;
-            unsigned int i;
+            int i;
 
             if (*ip == 0) {
                 // force a reconnect and exit...
                 doConnect = false;
                 proxyinfo[client].clientcommand |= CCMD_RECONNECT;
             } else {
-                while (*bp && *bp != ':') {
-                    bp++;
-                }
-
-                *bp = 0;
-
-
                 // check to see if they are in the reconnect list?
                 for (i = 0; i < maxReconnectList; i++) {
-                    if (checkReconnectUserInfoSame(userinfo, reconnectlist[i].userinfo)) {
+                    if (reconnectEntryMatches(&reconnectlist[i], client, userinfo)) {
                         // found a match...
                         break;
-                    } else {
-                        // check if the same IP and delete... this stops proxies from reconnecting...
-                        char *reconnectip = FindIpAddressInUserInfo(reconnectlist[i].userinfo, 0);
-                        bp = reconnectip;
-
-                        if (*reconnectip) {
-                            while (*bp && *bp != ':') {
-                                bp++;
-                            }
-
-                            *bp = 0;
-
-                            if (strcmp(ip, reconnectip) == 0) {
-                                // Remove it and continue with connect. The
-                                // address's retry count is kept, so a
-                                // client stuck in a reconnect loop is still
-                                // cut off after enough attempts.
-                                removeReconnectEntry(i, true);
-                                i--;
-                            }
-                        }
+                    } else if (q2a_strcmp(reconnectlist[i].ip, IP(client)) == 0) {
+                        // Same address but not a match: remove it, which
+                        // stops proxies from reconnecting, and continue
+                        // with connect. The address's retry count is kept,
+                        // so a client stuck in a reconnect loop is still
+                        // cut off after enough attempts.
+                        removeReconnectEntry(i, true);
+                        i--;
                     }
                 }
 

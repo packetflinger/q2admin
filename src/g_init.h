@@ -13,7 +13,6 @@ void expireReconnectEntries(void);
 void releaseRetryEntry(int r);
 void removeReconnectEntry(int i, bool keepRetry);
 void reserveReconnectEntry(void);
-bool checkReconnectUserInfoSame(char *userinfo1, char *userinfo2);
 void ClientBegin(edict_t *ent);
 bool ClientConnect(edict_t *ent, char *userinfo);
 void ClientDisconnect(edict_t *ent);

@@ -373,11 +373,15 @@ disconnect and reconnect directly to the server's real address; a proxy sitting
 in the middle is left behind.
 
 q2admin keeps a short list of players it has told to reconnect, saving the
-userinfo each one had. When a player connects, q2admin compares their userinfo
-with that list:
+address (without its port) and the userinfo each one had. When a player
+connects, q2admin compares them with that list. The address always has to
+match. Then:
 
-- **With `reconnect_checklevel 0`:** the whole string must be identical.
-- **Otherwise:** only certain keys must match.
+- **With `reconnect_checklevel 0`:** the whole userinfo must be identical,
+  apart from the keys the engine adds itself (`ip`, and with extra userinfo
+  `challenge`, `qport` and the other connection details). Several of those
+  change on every connection, so they can't be compared.
+- **Otherwise:** only the name and skin must match.
 
 The outcomes:
 
