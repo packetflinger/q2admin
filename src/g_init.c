@@ -827,6 +827,7 @@ void SubstituteEntities(char *newents, char *oldents) {
  */
 void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     int len, currentlen;
+    size_t finalentities_size;
     FILE *motdptr;
     int i;
     char *backupentities = entities;
@@ -1006,8 +1007,11 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
         }
     }
 
-    finalentities = G_Malloc(strlen(backupentities) * 2);
-    q2a_memset(finalentities, 0, sizeof(finalentities));
+    // Twice the original leaves room for spawn_swap_* replacements longer
+    // than the classnames they replace, plus the terminator.
+    finalentities_size = (strlen(backupentities) * 2) + 1;
+    finalentities = G_Malloc(finalentities_size);
+    q2a_memset(finalentities, 0, finalentities_size);
     SubstituteEntities(finalentities, backupentities);
 
     profile_start(2);
