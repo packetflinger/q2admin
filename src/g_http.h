@@ -62,6 +62,7 @@ extern bool http_enable;
 extern bool http_verifyssl;
 
 int curlDebug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr);
+void httpCancelDownloads(download_t *d);
 void httpHandleDownload(download_t *download, char *buff, int len, int code);
 size_t httpGetFile(generic_file_t *output, const char *url);
 void httpInit(void);

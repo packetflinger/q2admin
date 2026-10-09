@@ -52,15 +52,53 @@ static time_t               last_dns_lookup;
  * HTTP error and transport error alike - so a caller's handler always
  * runs exactly once per request and can clean up its own state.
  *
- * Note the NULL-initiator check only logs; it still calls onFinish, and
- * the handlers in g_vpn.c dereference that edict immediately, so the
- * warning doesn't actually prevent the crash it's warning about.
+ * A request with no initiator or no handler is dropped rather than
+ * dispatched: the handlers in g_vpn.c dereference the initiator straight
+ * away, and both are zeroed if the request's owner was cleared out from
+ * under it. httpCancelDownloads() is what should prevent that; this is
+ * the backstop.
  */
 void httpHandleDownload(download_t *download, char *buff, int len, int code) {
-    if (!download->initiator) {
-        gi.dprintf("httpHandleDownload: NULL initiator");
+    if (!download || !download->initiator || !download->onFinish) {
+        gi.dprintf("httpHandleDownload: dropping a request with no owner\n");
+        return;
     }
     download->onFinish(download, code, (byte *)buff, len);
+}
+
+/**
+ * Abandons every in-flight request that reports back to this download_t,
+ * without calling its handler.
+ *
+ * Needed because a download_t lives inside a player's proxyinfo slot. When
+ * the slot is reset for the next player, a request still running for the
+ * previous one would otherwise finish into zeroed memory (a NULL handler,
+ * which crashes the server) or deliver its result to the wrong player.
+ *
+ * d: the download_t whose requests to cancel.
+ *
+ * Called from VPNCancelLookups() (g_vpn.c) whenever a player slot is
+ * cleared, on disconnect and before ClientConnect() reuses it.
+ */
+void httpCancelDownloads(download_t *d) {
+    dlhandle_t *dl;
+
+    for (unsigned int i = 0; i < MAX_DOWNLOADS; i++) {
+        dl = &downloads[i];
+        if (!dl->inuse || dl->handle != d) {
+            continue;
+        }
+        curl_multi_remove_handle(multi, dl->curl);
+        if (dl->tempBuffer) {
+            gi.TagFree(dl->tempBuffer);
+            dl->tempBuffer = NULL;
+        }
+        dl->handle = NULL;
+        dl->inuse = false;
+        if (handleCount) {
+            handleCount--;
+        }
+    }
 }
 
 /**
@@ -406,6 +444,7 @@ static void httpFinishDownload(void) {
 
         if (i == MAX_DOWNLOADS) {
             gi.dprintf("httpFinishDownload: Handle not found!\n");
+            continue;
         }
 
         dl = &downloads[i];

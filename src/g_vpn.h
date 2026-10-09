@@ -32,6 +32,7 @@ extern char vpn_host[50];
 void FinishVPNLookup(download_t *download, int code, byte *buff, int len);
 bool isVPN(int clientnum);
 void LookupVPNStatus(edict_t *ent);
+void VPNCancelLookups(int client);
 void vpnUsersRun(int startarg, edict_t *ent, int client);
 
 /**

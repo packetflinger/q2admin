@@ -18,6 +18,24 @@
 char vpn_host[50] = VPNAPIHOST;
 
 /**
+ * Cancels any VPN (vpnapi.io) or IPLogs lookup still running for a player
+ * slot. Both lookups keep their request state inside the slot, so this must
+ * run before the slot is cleared for someone else - otherwise the lookup
+ * finishes into zeroed memory and crashes the server, or reports its result
+ * against whoever has the slot by then.
+ *
+ * Called from ClientConnect() before it wipes the slot, and from
+ * ClientDisconnect().
+ */
+void VPNCancelLookups(int client) {
+    if (!VALIDCLIENT(client)) {
+        return;
+    }
+    httpCancelDownloads(&proxyinfo[client].dl);
+    httpCancelDownloads(&proxyinfo[client].iplogs_dl);
+}
+
+/**
  * Initiates a lookup for the VPN status of a player edict using CURL. This is
  * a non-blocking call that will finish on a later framerun.
  */

@@ -1384,6 +1384,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
         }
     }
 
+    // The slot's VPN/IPLogs request state is about to be zeroed, so drop
+    // any lookup a previous occupant left running first.
+    VPNCancelLookups(client);
     q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
     proxyinfo[client].enteredgame = ltime;
@@ -2084,7 +2087,11 @@ void ClientDisconnect(edict_t *ent) {
     }
 
     cloudPlayerDisconnect(ent);
-    
+
+    // A lookup that finishes after this point would land on whoever takes
+    // the slot next.
+    VPNCancelLookups(client);
+
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         profile_start(2);
         ge_mod->ClientDisconnect(ent);
