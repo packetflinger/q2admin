@@ -76,7 +76,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
 
     if (buff) {
         v = &proxyinfo[i].vpn;
-        root = json_create(buff, mem, sizeof(mem)/sizeof(*mem));
+        root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
         if (!root) {
             gi.dprintf("json parsing error\n");
             return;

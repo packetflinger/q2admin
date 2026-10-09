@@ -83,6 +83,15 @@ ifdef CONFIG_WINDOWS
     CC = i686-w64-mingw32-gcc
     STRIP = i686-w64-mingw32-strip
     WINDRES = i686-w64-mingw32-windres
+    OBJCOPY = i686-w64-mingw32-objcopy
+    # Some of the prebuilt libraries in deps/win32 carry DWARF 5 debug
+    # sections the MinGW linker doesn't know how to place. It puts them ahead
+    # of .text, which leaves the DLL an invalid image that Windows (and Wine)
+    # refuse to load, so they're removed after linking. The rest of the debug
+    # info is kept.
+    POSTLINK = $(OBJCOPY) --remove-section=.debug_loclists \
+               --remove-section=.debug_rnglists \
+               --remove-section=.debug_line_str $@
     CFLAGS += -DQ2ADMINCLIB=1 -static -static-libgcc -DCURL_STATICLIB
     CFLAGS += -Wno-unknown-pragmas
     LDFLAGS += -mconsole
@@ -106,11 +115,14 @@ ifdef CONFIG_WINDOWS
             deps/win32/lib/libSDL2main.a \
             deps/win32/lib/libmingw32.a \
             deps/win32/lib/libdl.a \
+            deps/win32/lib/libsqlite3.a \
             -static -static-libgcc \
-           -lpthread -ldl -lsqlite3
+            -lpthread
     INCLUDES = -Ideps/win32/include \
                -I/usr/i686-w64-mingw32/sys-root/mingw/include
-    CFLAGS = -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB  $(INCLUDES)
+    # Vista or later, for inet_pton()/inet_ntop() from ws2tcpip.h. MinGW
+    # otherwise targets XP and leaves them undeclared.
+    CFLAGS = -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB -D_WIN32_WINNT=0x0600 $(INCLUDES)
 else
     CFLAGS += -fPIC -ffast-math -w -DLINUX
 endif
@@ -234,6 +246,9 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.rc | $(BUILDDIR)
 $(OUTPUT): $(OBJS)
 	$(E) [LD] $@
 	$(Q)$(CC) $(LDFLAGS) -o $@ $^ $(LIBS)
+ifdef POSTLINK
+	$(Q)$(POSTLINK)
+endif
 
 clean:
 	$(E) [CLEAN] $(BUILDDIR)

@@ -487,7 +487,7 @@ void cloudSendMessages(void) {
                 q2a_memcpy(q->data, e.data, e.length);
                 q->length = e.length;
             }
-            ret = send(c->socket, q->data, q->length, 0);
+            ret = send(c->socket, (const char *) q->data, q->length, 0);
             if (ret == -1) {
                 if (errno == EPIPE) {
                     gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
@@ -551,7 +551,7 @@ void cloudReadMessages(void) {
                 // drained some of it, instead of overflowing in->data[]
                 break;
             }
-            ret = recv(cloud.connection.socket, in->data + in->length,
+            ret = recv(cloud.connection.socket, (char *) in->data + in->length,
                     (QUEUE_SIZE - 1) - in->length, 0);
 
             if (ret == 0) {
