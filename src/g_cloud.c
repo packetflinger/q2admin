@@ -936,12 +936,16 @@ void cloudSayHello(void) {
  * The server replied negatively to something
  */
 void cloudParseError(void) {
-    uint8_t client_id, reason_id;
+    int client_id;
+    uint8_t reason_id;
     char *reason;
 
     gi.dprintf("parsing error\n");
 
-    client_id = cloudReadByte(); // will be -1 if not player specific
+    // The server sends -1 (0xFF) when the error isn't about a particular
+    // player. cloudReadByte() returns it unsigned, so read it back as a
+    // signed byte or it would come through as 255 and never equal -1.
+    client_id = (int8_t) cloudReadByte();
     reason_id = cloudReadByte();
     reason = cloudReadString();
 
