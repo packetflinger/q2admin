@@ -585,15 +585,15 @@ From the console: `chatfloodprotect`, `namechangefloodprotect`,
 
 ### Muting
 
-**What it is.** Silencing a player's chat entirely (`mute`), or letting them
-speak only once a minute (`stifle`).
+**What it is.** Silencing a player's chat entirely (`mute`), or slowing them
+down so they can only say one line every so often (`stifle`).
 
 **Why it matters.** It deals with a disruptive player without kicking them.
 
 ```
 sv !mute claire 300       ; mute for 5 minutes
 sv !mute CL 3 PERM        ; mute until they disconnect
-sv !stifle claire 600     ; one message a minute, for 10 minutes
+sv !stifle claire 60      ; one line, then 60 seconds of silence, repeatedly
 sv !unstifle claire
 ```
 
@@ -1160,11 +1160,12 @@ sv !mute claire          ; unmute
 ```
 
 #### `stifle` / `unstifle`
-Limit a player to one chat message a minute for the given number of seconds,
-or lift the limit.
+Make a player wait the given number of seconds after each chat line before
+they can say another, or lift the limit. A stifle lasts until it's lifted or
+the player disconnects.
 `sv !stifle <player> <seconds>` · `sv !unstifle <player>`
 ```
-sv !stifle CL 0 1800
+sv !stifle CL 0 120
 sv !unstifle CL 0
 ```
 
