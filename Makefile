@@ -50,6 +50,7 @@ LD ?= ld
 WINDRES ?= windres
 STRIP ?= strip
 RM ?= rm -f
+PYTHON ?= python3
 
 # Assuming linux at this point, update later for windows/mac
 ifndef SHARED_DEPS
@@ -219,7 +220,7 @@ all: $(OUTPUT)
 
 default: all
 
-.PHONY: all default clean strip genkeys
+.PHONY: all default clean strip genkeys example-cfg
 
 # Define V=1 to show command line.
 ifdef V
@@ -263,3 +264,17 @@ genkeys: $(BUILDDIR)/genkeys
 $(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -o $@ $< -lcrypto
+
+# runtime-config/example.cfg lists every config option with its default. It is
+# generated from the q2aCommands[] table rather than maintained by hand, so it
+# has to be regenerated whenever a command is added, renamed or removed. It
+# writes into the source tree, so it is deliberately NOT part of "all" - run it
+# yourself and commit the result. The generator also warns about settings in
+# runtime-config/*.cfg that match no command and are therefore ignored.
+EXAMPLECFG := runtime-config/example.cfg
+
+example-cfg: $(EXAMPLECFG)
+
+$(EXAMPLECFG): tools/gen-example-cfg.py $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*.h)
+	$(E) [GEN] $@
+	$(Q)$(PYTHON) $< $@
