@@ -294,9 +294,11 @@ the banked time all at once.
 - Going over `msec_max_allowed` raises `msec-overrun`.
 - Going under `msec_min_required` raises `msec-underrun`.
 
-After `msec_max_violations` violations, `msec_action` decides what happens.
-Admins can see each player's recent totals with the in-game `!dumpmsec`
-command, and can pin a player in place with `freeze`.
+Either signal is raised once a player passes `msec_max_violations`. Neither
+removes anyone by itself - adjust `signal_weight` for `msec-overrun` or
+`msec-underrun` to change how much they count, or set it to 0 to log the
+violation without scoring it. Admins can see each player's recent totals with
+the in-game `!dumpmsec` command, and can pin a player in place with `freeze`.
 
 **Configuring it.**
 
@@ -305,7 +307,6 @@ msec_timespan "5"
 msec_max_allowed "5600"      ; about (1000 * timespan) * 1.12
 msec_min_required "0"        ; about (1000 * timespan) * 0.88 if you want it strict
 msec_max_violations "2"
-msec_action "2"              ; 0 = legacy kick, 1 = do nothing, 2 = announce and kick
 ```
 
 Packet loss can make honest players look like they're under-reporting, so
@@ -1133,9 +1134,8 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `maxrate` | number | 0 | Highest `rate` allowed. 0 means no limit. |
 | `minfps` | number | 0 | Lowest `cl_maxfps` allowed. 0 means no limit. |
 | `minrate` | number | 0 | Lowest `rate` allowed. 0 means no limit. |
-| `msec_action` | number | 2 | Action on msec violations: 0 = legacy kick, 1 = nothing, 2 = announce and kick. |
 | `msec_max_allowed` | number | 5600 | Most msec allowed in each `msec_timespan`. |
-| `msec_max_violations` | number | 2 | Violations allowed before `msec_action` applies. |
+| `msec_max_violations` | number | 2 | Violations allowed before the msec signal is raised. |
 | `msec_min_required` | number | 0 | Least msec required in each `msec_timespan`. 0 disables the check. |
 | `msec_timespan` | number | 5 | Length in seconds of the msec measurement window. |
 | `namechangefloodprotect` | triple | disable | Name change flood limit. |

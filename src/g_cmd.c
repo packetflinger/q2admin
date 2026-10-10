@@ -888,12 +888,6 @@ q2acmd_t q2aCommands[] = {
         minrateallowedRun
     },
     {
-        "msec_action",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &(msec.action)
-    },
-    {
         "msec_max_allowed",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,

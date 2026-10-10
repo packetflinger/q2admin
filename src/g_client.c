@@ -189,11 +189,12 @@ void Pmove_internal(pmove_t *pmove) {
  * elsewhere:
  *
  *  - tracks each client's msec budget over a rolling window against the
- *    configured min/max (msec), applying a temporary speedfreeze (msec
- *    zeroed for a few seconds) or kicking outright depending on
- *    msec.action - this is the speedhack detection, since a client
- *    reporting more simulated time than it should have for the real time
- *    elapsed is a classic speedhack signature; also honors an
+ *    configured min/max (msec), raising SIGNAL_MSEC_OVERRUN or
+ *    SIGNAL_MSEC_UNDERRUN once a client passes msec.max_violations, or
+ *    applying a temporary speedfreeze (msec zeroed for a few seconds) when
+ *    no violation count is configured - this is the speedhack detection,
+ *    since a client reporting more simulated time than it should have for
+ *    the real time elapsed is a classic speedhack signature; also honors an
  *    admin-triggered freeze (cl->freeze) by zeroing msec the same way
  *  - logs every impulse, and tallies the ones checkImpulse() says matter
  *    into impulsesgenerated, raising SIGNAL_IMPULSE (weighted per impulse,
@@ -264,10 +265,8 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             if (msec.max_violations) {
                 cl->msec.violations++;
                 if (cl->msec.violations >= msec.max_violations) {
-                    if (msec.action != MVA_NOTHING) {
-                        Q_printf("%s[%s] msec limit exceeded: %d/%d in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.max_allowed, msec.timespan);
-                        raiseSignal(client, SIGNAL_MSEC_OVERRUN);
-                    }
+                    Q_printf("%s[%s] msec limit exceeded: %d/%d in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.max_allowed, msec.timespan);
+                    raiseSignal(client, SIGNAL_MSEC_OVERRUN);
                 }
             } else {
                 // let things stabilize after joining for a few seconds
@@ -279,10 +278,8 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         if (cl->msec.total < msec.min_required) {
             cl->msec.violations++;
             if (cl->msec.violations >= msec.max_violations) {
-                if (msec.action != MVA_NOTHING) {
-                    Q_printf("%s[%s] msec underrun: %d used, %d required in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.min_required, msec.timespan);
-                    raiseSignal(client, SIGNAL_MSEC_UNDERRUN);
-                }
+                Q_printf("%s[%s] msec underrun: %d used, %d required in %d secs\n", NAME(client), IP(client), cl->msec.total, msec.min_required, msec.timespan);
+                raiseSignal(client, SIGNAL_MSEC_UNDERRUN);
             }
         }
 

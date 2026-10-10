@@ -1210,6 +1210,3 @@ It's listed here so nobody goes looking for behaviour that won't happen:
   starts these checks.
 - **`QCMD_SPAMBYPASS`, `QCMD_PMODVERTIMEOUT`, `QCMD_GL_CHECK`:** these jobs
   can be queued, but they have empty handlers.
-- **`msec_action`:** any value other than 1 (*do nothing*) raises the msec
-  signals. The difference between 0 (*legacy*) and 2 (*announce and kick*)
-  isn't currently acted on; the signal threshold decides the outcome.

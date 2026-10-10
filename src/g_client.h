@@ -95,13 +95,6 @@ typedef struct {
     float thaw;       // future ltime to automatically unfreeze
 } freeze_t;
 
-// What actions can be taken if msec violations are detected?
-typedef enum {
-    MVA_LEGACY,             // backwards compat, kick if over max_violations
-    MVA_NOTHING,            // Don't do anything
-    MVA_KICK,               // Remove the offender
-} msec_action_t;
-
 // Limits and such for ensuring msec values sent from clients are not abused.
 // Instead of checking each second (1000ms) for a violation, extended over a
 // larger period of time (a few seconds)
@@ -109,8 +102,7 @@ typedef struct {
     int max_allowed;        // Total consumption allowed per timespan
     int min_required;       // To prevent banking time to use in a burst later
     int timespan;           // Seconds
-    int max_violations;     // Times max_used excseeded before taking action
-    msec_action_t action;   // What do we do when violation happen?
+    int max_violations;     // Times max_used excseeded before a signal is raised
 } msec_limits_t;
 
 // A collection of msec-related properties associated with each player.

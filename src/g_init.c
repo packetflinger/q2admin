@@ -167,8 +167,7 @@ msec_limits_t msec = {
         .max_allowed    = 5600,
         .min_required   = 0,    // 4400 should be a good value
         .timespan       = 5,
-        .max_violations = 2,
-        .action         = MVA_KICK
+        .max_violations = 2
 };
 bool nameChangeFloodProtect             = false;
 char nameChangeFloodProtectMsg[256];
