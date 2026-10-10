@@ -207,8 +207,8 @@ include:
 If a response is missing or wrong, the player is flagged, the event is
 broadcast and logged, and they're kicked if configured to. Proxies leave
 recognizable keys in userinfo (`Nitro2`, `bwproxy`); these are detected at
-connect time. Known zbot control impulses (169–175) can also be flagged
-and kicked.
+connect time. Known zbot control impulses (169–175) can also be flagged,
+each raising the `impulse-sent` signal.
 
 With `enforce_deadlines` enabled, each probe has a deadline. A client that
 never answers raises a signal (`version-probe`, `alias-probe`,
@@ -230,7 +230,6 @@ dopversion "yes"
 timescaledetect "yes"
 enforce_deadlines "yes"
 impulsestokickon "169, 170, 171, 172, 173, 174, 175"
-disconnectuserimpulse "yes"
 private_command1 "mysecretcheck"
 private_command_kick "yes"
 ```
@@ -1092,7 +1091,6 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `developer` | number | 0 | q2admin debug output level. `q2a_developer` is the same setting. |
 | `disablecmds_enable` | bool | no | Enforce the rules in `q2a_disable.cfg`. |
 | `disconnectuser` | bool | yes | Kick players caught using a proxy or bot. |
-| `disconnectuserimpulse` | bool | no | Kick players who send impulses from `impulsestokickon`. |
 | `displayimpulses` | bool | no | Announce when players send impulses. |
 | `displaynamechange` | bool | yes | Announce name changes. |
 | `displayzbotuser` | bool | yes | Announce detected proxy and bot users. |
@@ -1114,7 +1112,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `http_debug` | bool | no | Verbose download logging. |
 | `http_enable` | bool | yes | Allow HTTP(S) downloads, which VPN checks, remote ban lists and hash lists need. |
 | `http_verifyssl` | bool | yes | Verify HTTPS certificates. |
-| `impulsestokickon` | list | all impulses | Comma-separated impulses that count as bot control, for example `169, 170, 171, 172, 173, 174, 175`. |
+| `impulsestokickon` | list | all impulses | Comma-separated impulses that count as bot control, for example `169, 170, 171, 172, 173, 174, 175`. Each one raises the `impulse-sent` signal. |
 | `inverted_command1` – `inverted_command4` | string | empty | Private probe commands that a genuine client should *not* answer. |
 | `ip_limit` | number | 0 | Maximum players from one IP address, VPN or not. 0 means unlimited. Negative values are rejected. |
 | `ip_limit_vpn` | number | 0 | Maximum VPN players from the same provider (ASN), separate from `ip_limit`. Needs `vpn_enable`. 0 means unlimited. Negative values are rejected. |
@@ -1131,7 +1129,6 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `max_pmod_noreply` | number | 2 | Unanswered private-command checks allowed before acting. |
 | `maxclientsperframe` | number | 100 | Internal: players processed per server frame. Leave alone. |
 | `maxfps` | number | 0 | Highest `cl_maxfps` allowed. 0 means no limit. |
-| `maximpulses` | number | 1 | Flagged impulses allowed before kicking. |
 | `maxmsglevel` | number | 3 | Accepted but currently has no effect. |
 | `maxrate` | number | 0 | Highest `rate` allowed. 0 means no limit. |
 | `minfps` | number | 0 | Lowest `cl_maxfps` allowed. 0 means no limit. |

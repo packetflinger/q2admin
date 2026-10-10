@@ -420,7 +420,6 @@ extern bool zbotdetect;
 extern bool displayzbotuser;
 extern bool displaynamechange;
 extern bool dopversion;
-extern bool disconnectuserimpulse;
 extern bool disconnectuser;
 extern bool mapcfgexec;
 extern bool checkClientIpAddress;
@@ -433,7 +432,6 @@ extern int voteminclients;
 extern int clientMaxVoteTimeout;
 extern int clientMaxVotes;
 extern int numofdisplays;
-extern int maximpulses;
 
 extern int ip_limit;        // 0 for no limit
 extern int ip_limit_vpn;    // 0 for no limit, per ASN

@@ -466,12 +466,6 @@ q2acmd_t q2aCommands[] = {
         &disconnectuser
     },
     {
-        "disconnectuserimpulse",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_LOGICAL,
-        &disconnectuserimpulse
-    },
-    {
         "displayimpulses",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
@@ -855,12 +849,6 @@ q2acmd_t q2aCommands[] = {
         &maxfpsallowed,
         maxfpsallowedRun,
         maxfpsallowedInit
-    },
-    {
-        "maximpulses",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &maximpulses
     },
     {
         "maxmsglevel",

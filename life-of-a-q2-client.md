@@ -869,8 +869,8 @@ optional *impulse*. q2admin handles each one in this order:
    - Impulses 169–175 (the zbot's menu controls) are logged as zbot impulses
      with a description.
    - With `displayimpulses` on, the impulse is announced to everyone.
-   - With `disconnectuserimpulse` on, impulses listed in `impulsestokickon`
-     raise `impulse-sent`, which is worth 10 per impulse.
+   - Impulses listed in `impulsestokickon` raise `impulse-sent`, which is
+     worth 10 per impulse.
 6. **`swap_attack_use`** swaps the attack and use buttons when enabled.
 7. **Aim analysis.** This only runs if the player isn't in limbo and hasn't
    already been caught:
@@ -1179,7 +1179,7 @@ job per frame) and with the client's ping.
 | Client variable | No reply within 1 s | `checkvar-probe` (20). |
 | msec | Over the limit, repeatedly | `msec-overrun` (20). |
 | msec | Under the minimum, repeatedly | `msec-underrun` (20). |
-| Impulses | Listed impulse, with `disconnectuserimpulse` | `impulse-sent` (10 each). |
+| Impulses | Listed impulse | `impulse-sent` (10 each). |
 | Rate or frame rate | Outside the limits | Corrected value stuffed. |
 | `cl_pitchspeed`/`cl_anglespeedkey` | Changed | Logged, announced, optionally kicked. |
 | Name change | To a banned name | Reverted, or kicked with `kickonnamechange`. |

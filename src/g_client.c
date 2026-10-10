@@ -65,22 +65,22 @@ char *impulsemessages[] ={
 };
 
 /**
- * Whether an impulse number should count toward the disconnectuserimpulse
- * kick threshold. Players send all sorts of harmless impulses constantly
- * (weapon switching, etc), so admins can scope detection down to just the
- * ones that actually matter - by default the zbot menu toggle impulses
- * (169-175, see impulsemessages[] above) - via the impulsestokickon
- * config command, rather than treating every single impulse as
- * suspicious. Per that command's documented behavior, leaving it
- * unconfigured (maxImpulses == 0) matches every impulse.
+ * Whether an impulse number should count against the player who sent it.
+ * Players send all sorts of harmless impulses constantly (weapon switching,
+ * etc), so admins can scope detection down to just the ones that actually
+ * matter - by default the zbot menu toggle impulses (169-175, see
+ * impulsemessages[] above) - via the impulsestokickon config command, rather
+ * than treating every single impulse as suspicious. Per that command's
+ * documented behavior, leaving it unconfigured (maxImpulses == 0) matches
+ * every impulse.
  *
  * impulse: the impulse number from the client's usercmd_t this frame.
  *
  * Returns true if this impulse is one that should count (either it's in
  * impulsesToKickOn, or nothing was configured so everything counts).
  *
- * Called from ClientThink(), to gate the disconnectuserimpulse
- * impulse-counting/kick logic.
+ * Called from ClientThink(), to gate the impulse tally that feeds
+ * SIGNAL_IMPULSE.
  */
 bool checkImpulse(byte impulse) {
     unsigned int i;
@@ -195,9 +195,10 @@ void Pmove_internal(pmove_t *pmove) {
  *    reporting more simulated time than it should have for the real time
  *    elapsed is a classic speedhack signature; also honors an
  *    admin-triggered freeze (cl->freeze) by zeroing msec the same way
- *  - logs/counts impulses and, if disconnectuserimpulse is set, kicks
- *    once a client crosses maximpulses worth of impulses that
- *    checkImpulse() says should count (see checkImpulse() above)
+ *  - logs every impulse, and tallies the ones checkImpulse() says matter
+ *    into impulsesgenerated, raising SIGNAL_IMPULSE (weighted per impulse,
+ *    so the score climbs with the count) rather than kicking directly
+ *    (see checkImpulse() above)
  *  - if swap_attack_use is set, swaps the ATTACK/USE button bits for
  *    accessibility
  *  - runs the per-frame aim-cheat detectors - AimbotCheck(),
@@ -370,7 +371,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
             addCmdQueue(client, QCMD_LOGIMPULSE, 0, 0, 0);
         }
 
-        if (disconnectuserimpulse && checkImpulse(ucmd->impulse)) {
+        if (checkImpulse(ucmd->impulse)) {
             cl->impulsesgenerated++;
             raiseSignal(client, SIGNAL_IMPULSE);
         }
