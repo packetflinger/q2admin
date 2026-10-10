@@ -980,9 +980,9 @@ results are processed then:
 - **vpnapi.io** marks the player as VPN-positive if the address is a VPN,
   proxy, Tor exit or relay, and records the network and ASN. Then:
   - the player is shown in the server console with their network and ASN;
-  - a positive result raises `vpn-detected` (40);
-  - with `vpn_kick` on, the player is told "VPN connections not allowed" and
-    disconnected;
+  - a positive result raises `vpn-detected` (40). That's below the default
+    threshold of 50, so a VPN alone doesn't remove anyone; it adds to the
+    player's score like any other suspicion;
   - with `ip_limit_vpn` set, VPN players from the same ASN are counted and the
     extra ones are disconnected with "Too many connections from the same VPN
     provider".
@@ -1069,7 +1069,7 @@ an address forever.
 | Cause | What q2admin does first |
 | --- | --- |
 | The player types `disconnect` or `quit`, or their connection times out. | Nothing; the engine notices and calls `ClientDisconnect`. |
-| A queued disconnect (ban, signal threshold, flood, VPN, IP limit, failed private command, and so on). | The `QCMD_DISCONNECT` job marks the player as kicked, logs a `CLIENTKICK` event with the reason, tells the player "You have been kicked", and runs `kick <slot>` on the server. |
+| A queued disconnect (ban, signal threshold, flood, VPN limit, IP limit, failed private command, and so on). | The `QCMD_DISCONNECT` job marks the player as kicked, logs a `CLIENTKICK` event with the reason, tells the player "You have been kicked", and runs `kick <slot>` on the server. |
 | An immediate kick (userinfo flood, the `\skon\` signature, a queue flood, `!kick`, `!boot`). | `kick <slot>` runs straight away. |
 | A rejection in `ClientConnect`. | The player never entered, so `ClientDisconnect` isn't called for them. |
 
@@ -1187,7 +1187,7 @@ job per frame) and with the client's ping.
 | Userinfo flood | More than 40 changes in 60 s | Kicked. |
 | `\skon\` in userinfo | Present | Kicked. |
 | Command queue | 45 pending jobs | Kicked. |
-| VPN (vpnapi.io) | Positive | `vpn-detected` (40); kicked with `vpn_kick`; limited by `ip_limit_vpn`. |
+| VPN (vpnapi.io) | Positive | `vpn-detected` (40); limited by `ip_limit_vpn`. |
 | VPN (IPLogs) | Verdict of `suspicious`, `vpn_likely` or `vpn_detected` | `vpn-suspicious`, `vpn-likely` or `vpn-detected`. |
 | Disabled command | Used | Dropped and logged. |
 | Chat ban | Matched | Dropped, logged, and the player is told. |

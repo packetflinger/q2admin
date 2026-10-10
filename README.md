@@ -346,7 +346,7 @@ some decay over time. The built-in signals are listed below. A weight of
 | `impulse-sent` | 10 per impulse | sent a flagged impulse |
 | `vpn-suspicious` | 20 | VPN check was 25–50% sure |
 | `vpn-likely` | 30 | VPN check was 50–75% sure |
-| `vpn-detected` | 40 | VPN check was 75–100% sure |
+| `vpn-detected` | 40 | vpnapi.io reported a VPN, or IPLogs was 75–100% sure |
 | `wonky-userinfo` | 15 | a standard userinfo key is missing |
 | `protocol-downgrade` | 10 | client connected with an older protocol than its engine supports |
 | `admin-adjustment` | set per player | an admin used `signaladd` |
@@ -476,15 +476,15 @@ From the console: `chatban`, `listchatbans`, `delchatban`.
 whether it belongs to a VPN or hosting provider.
 
 **Why it matters.** Kicked and banned players often come straight back on a
-VPN. Knowing who is on one lets you kick them, ban VPNs entirely, limit how
-many can join, or just add weight to their signal score.
+VPN. Knowing who is on one lets you add weight to their signal score, ban
+VPNs entirely, or limit how many can join.
 
 **How it works.** Two independent lookup services are available. Both run in
 the background, so a slow lookup never stalls the server:
 
 - **vpnapi.io** (`vpn_enable`): needs a free API key. It reports whether the
-  address is a VPN and which network (ASN) it belongs to. With `vpn_kick`,
-  VPN users are kicked.
+  address is a VPN, proxy, Tor exit or relay, and which network (ASN) it
+  belongs to. A positive result raises the `vpn-detected` signal.
 - **IPLogs** (`iplogs_enable`): no key needed. It returns a confidence score,
   which raises the `vpn-suspicious`, `vpn-likely` or `vpn-detected` signal.
   Results are cached per address for `iplogs_cache_ttl` seconds, and
@@ -495,13 +495,18 @@ limits how many VPN players can connect from the same provider (ASN)
 separately from the per-address `ip_limit`. The `IP VPN` and `ASN`
 [ban rules](#banning) also use those results.
 
+A VPN on its own doesn't remove anyone: `vpn-detected` is worth 40 points,
+below the default `signal_score_threshold` of 50, so it only removes a player
+together with other signals. To keep VPN users out entirely, raise its weight
+to the threshold (`signal_weight "vpn-detected 50"`) or add an `IP VPN` ban
+rule, which also lets you show them a message.
+
 **Configuring it.**
 
 ```
 http_enable "yes"
 vpn_enable "yes"
 vpn_api_key "your-key-from-vpnapi.io"
-vpn_kick "no"
 iplogs_enable "yes"
 iplogs_ignorelist "192.0.2.0/24, 2001:db8::/32"
 ip_limit_vpn "2"
@@ -1193,7 +1198,6 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `votepasspercent` | number | 50 | Percentage of yes votes needed to pass. |
 | `vpn_api_key` | string | empty | vpnapi.io API key. |
 | `vpn_enable` | bool | no | Run the vpnapi.io VPN check on connect. |
-| `vpn_kick` | bool | yes | Kick players who are on a VPN. |
 | `whois_active` | number | 0 | Number of whois records to keep. 0 disables whois. **cfg only.** |
 | `zbc_enable` | bool | yes | Enable aim jitter detection. |
 | `zbc_jittermax` | number | 4 | Jitter hits within `zbc_jittertime` before a player counts as a bot user. |
@@ -1644,8 +1648,8 @@ sv !version
 Every option in the [options table](#options) (except those marked cfg only)
 can be typed as a command to show it, or with a value to change it:
 ```
-sv !vpn_kick
-sv !vpn_kick no
+sv !vpn_enable
+sv !vpn_enable no
 sv !signal_score_threshold 80
 ```
 

@@ -225,7 +225,6 @@ char version[256];
 bool vote_enable                        = false;
 char vpn_api_key[33]                    = "";
 bool vpn_enable                         = false;
-bool vpn_kick                           = true;
 bool zbotdetect                         = true;
 char motdFilename[256];
 char zbotuserdisplay[256];

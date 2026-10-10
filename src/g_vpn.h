@@ -24,7 +24,6 @@ typedef struct {
     bool        is_relay;
 } vpn_t;
 
-extern bool vpn_kick;
 extern bool vpn_enable;
 extern char vpn_api_key[33];
 extern char vpn_host[50];

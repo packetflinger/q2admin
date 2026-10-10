@@ -5,7 +5,8 @@
  *
  * The feature will query an API for the player's IP address
  * to find out if it's from a VPN provider. If so, q2admin
- * can be configured to kick this player or just identity them.
+ * raises the vpn-detected signal, which counts toward the
+ * player's signal score rather than removing them outright.
  *
  * Current provider is https://vpnapi.io. There is a free
  * account option that allows for up to 1000 queries per day.
@@ -92,6 +93,10 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
             v->is_proxy = proxy_val && Q_stricmp((char *)proxy_val, "true") == 0;
             v->is_tor = tor_val && Q_stricmp((char *)tor_val, "true") == 0;
             v->is_relay = relay_val && Q_stricmp((char *)relay_val, "true") == 0;
+            // A VPN alone doesn't remove anyone: it adds to the player's
+            // signal score like any other suspicion, and only combined with
+            // other signals (or a raised vpn-detected weight) crosses the
+            // threshold. "IP VPN" ban rules still refuse VPN users outright.
             if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
                 v->state = VPN_POSITIVE;
                 raiseSignal(i, SIGNAL_VPN_DETECTED);
@@ -109,11 +114,6 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
             }
         }
 
-        if (v->state == VPN_POSITIVE && vpn_kick) {
-            Q_snprintf(buffer, sizeof(buffer), "VPN connections not allowed, please reconnect without it\n");
-            gi.cprintf(download->initiator, PRINT_HIGH, buffer);
-            addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
-        }
         if (ip_limit_vpn > 0 && proxyinfo[i].vpn.state == VPN_POSITIVE) {
             int sameasn = 1;
             for (int j = 0; j < (int)maxclients->value; j++) {

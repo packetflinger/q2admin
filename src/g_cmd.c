@@ -1521,12 +1521,6 @@ q2acmd_t q2aCommands[] = {
         &vpn_enable
     },
     {
-        "vpn_kick",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_LOGICAL,
-        &vpn_kick
-    },
-    {
         "whois_active",
         CMDCTX_CFGFILE, // Only allocates memory at InitGame: can only be read from config
         CMDTYPE_NUMBER,
