@@ -2,11 +2,15 @@
 """
 Regenerate runtime-config/example.cfg from the q2aCommands[] table.
 
-example.cfg lists every option a config file can set, with the default it
+example.cfg lists the options a config file can set, with the default each
 takes when no config sets it, so it goes stale the moment a command is added,
 renamed or removed. Rather than maintain it by hand, this reads the table in
 g_cmd.c, resolves each default from the initializer of the variable the entry
 points at, and writes the file out sorted and aligned.
+
+By default only options whose table entry sets `common` are written, since
+that field marks the ones an operator is actually likely to change. Pass
+--all to write every config option instead.
 
 It bails out rather than guessing. A new option whose default it cannot work
 out is an error, not a blank value, so "make example.cfg" fails loudly and
@@ -16,7 +20,7 @@ It also reports any setting in runtime-config/*.cfg that matches no command.
 Those lines are silently ignored by the real parser, which is how a typo like
 "client_map_config" for "client_map_cfg" can sit unnoticed for years.
 
-Usage: gen-example-cfg.py [output-path]
+Usage: gen-example-cfg.py [--all] [output-path]
 """
 
 import re
@@ -58,6 +62,29 @@ def strip_comments(text):
     return re.sub(r"//[^\n]*", "", text)
 
 
+def split_fields(block):
+    """Split one table entry's body on its top-level commas.
+
+    Positional, because that is how C reads it: cmdname, cmdwhere, cmdtype,
+    datapoint, common, runfunc, initfunc. Depth tracking keeps the commas
+    inside things like &(msec.max_allowed) from splitting a field.
+    """
+    fields, cur, depth = [], "", 0
+    for ch in block:
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            depth -= 1
+        if ch == "," and depth == 0:
+            fields.append(cur.strip())
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        fields.append(cur.strip())
+    return fields
+
+
 def parse_commands():
     """Every q2aCommands[] entry, as dicts."""
     src = strip_comments((SRC / "g_cmd.c").read_text())
@@ -66,29 +93,50 @@ def parse_commands():
         sys.exit("error: could not find the q2aCommands[] table in src/g_cmd.c")
     body = m.group(1)
 
-    entries = []
-    for blk in re.finditer(
-        r'\{\s*("(?:[^"\\]|\\.)*")\s*,\s*([^,]+?)\s*,\s*(CMDTYPE_\w+)\s*,'
-        r"\s*([^,}]*?)\s*(?:,\s*([^,}]*?)\s*)?(?:,\s*([^,}]*?)\s*)?,?\s*\}",
-        body,
-        re.S,
-    ):
-        entries.append(
-            {
-                "name": blk.group(1)[1:-1],
-                "where": " ".join(blk.group(2).split()),
-                "ctype": blk.group(3),
-                "dp": (blk.group(4) or "").strip(),
-            }
-        )
+    blocks = re.findall(r'\{\s*("(?:[^"\\]|\\.)*".*?)\n\s*\}', body, re.S)
 
     # Cross-check against a second, simpler count. A trailing comment or an
-    # unusual entry layout can make the main pattern skip a row, and silently
+    # unusual entry layout can make the pattern skip a row, and silently
     # dropping an option is exactly the failure this script exists to prevent.
     names = [n[1:-1] for n in re.findall(r'\{\s*\n\s*("(?:[^"\\]|\\.)*")\s*,', body)]
-    missed = [n for n in names if n not in {e["name"] for e in entries}]
-    if missed:
-        sys.exit(f"error: failed to parse these q2aCommands[] entries: {missed}")
+    if len(blocks) != len(names):
+        sys.exit(
+            f"error: parsed {len(blocks)} q2aCommands[] entries but found "
+            f"{len(names)} names. The table layout changed; fix parse_commands()."
+        )
+
+    entries = []
+    for block in blocks:
+        f = split_fields(block)
+        if len(f) < 5:
+            sys.exit(
+                f"error: q2aCommands[] entry {f[0] if f else '?'} has only "
+                f"{len(f)} fields; expected at least 5 "
+                f"(cmdname, cmdwhere, cmdtype, datapoint, common)."
+            )
+        name = f[0][1:-1]
+        # The 'common' slot must be a bool literal. If an entry omits it, C
+        # shifts every later initializer up a slot, so runfunc lands in
+        # common and the command loses its run function - a silent breakage
+        # worth failing the build over.
+        if f[4] not in ("true", "false"):
+            sys.exit(
+                f"error: q2aCommands[] entry '{name}' has {f[4]!r} where the "
+                f"'common' bool should be.\n"
+                f"       Field order is cmdname, cmdwhere, cmdtype, datapoint, "
+                f"common, runfunc, initfunc.\n"
+                f"       If 'common' was left out, every field after it shifted "
+                f"up and runfunc is now NULL."
+            )
+        entries.append(
+            {
+                "name": name,
+                "where": " ".join(f[1].split()),
+                "ctype": f[2],
+                "dp": f[3],
+                "common": f[4] == "true",
+            }
+        )
     return entries
 
 
@@ -226,16 +274,28 @@ def lint_configs(cfg_names):
 
 
 def main():
-    # Resolved so it works whether make passes a relative path or it is run
-    # by hand from anywhere.
-    out = pathlib.Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_OUT
+    args = sys.argv[1:]
+    everything = False
+    for flag in ("--all", "-a"):
+        if flag in args:
+            everything = True
+            args.remove(flag)
+    if len(args) > 1:
+        sys.exit(f"usage: {pathlib.Path(__file__).name} [--all] [output-path]")
+
+    out = pathlib.Path(args[0]).resolve() if args else DEFAULT_OUT
     srcs = sources()
     entries = parse_commands()
+
     cfg = [e for e in entries if "CMDCTX_CFGFILE" in e["where"]]
     if not cfg:
         sys.exit("error: no CMDCTX_CFGFILE commands found, the table parse is wrong")
 
-    rows = sorted((e["name"], config_value(e, raw_default(srcs, e))) for e in cfg)
+    selected = cfg if everything else [e for e in cfg if e["common"]]
+    if not selected:
+        sys.exit("error: no entries selected; does any CFGFILE command set common?")
+
+    rows = sorted((e["name"], config_value(e, raw_default(srcs, e))) for e in selected)
 
     width = max(len(name) for name, _ in rows) + 1
     out.write_text("".join(f'{name.ljust(width)}"{value}"\n' for name, value in rows))
@@ -244,7 +304,11 @@ def main():
         shown = out.relative_to(ROOT)
     except ValueError:
         shown = out
-    print(f"{shown}: {len(rows)} options", file=sys.stderr)
+    scope = "all config options" if everything else "common options only"
+    print(f"{shown}: {len(rows)} of {len(cfg)} options ({scope})", file=sys.stderr)
+
+    # Linted against every config option, not just the common ones: a
+    # non-common option in a config file is still perfectly valid.
     lint_configs([e["name"] for e in cfg])
 
 

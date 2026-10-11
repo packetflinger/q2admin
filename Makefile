@@ -265,12 +265,20 @@ $(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -o $@ $< -lcrypto
 
-# runtime-config/example.cfg lists every config option with its default. It is
-# generated from the q2aCommands[] table rather than maintained by hand, so it
-# has to be regenerated whenever a command is added, renamed or removed. It
-# writes into the source tree, so it is deliberately NOT part of "all" - run it
-# yourself and commit the result. The generator also warns about settings in
-# runtime-config/*.cfg that match no command and are therefore ignored.
+# runtime-config/example.cfg lists the config options an operator is likely to
+# change - the ones whose q2aCommands[] entry sets "common" - with the default
+# each takes. It is generated from that table rather than maintained by hand,
+# so it has to be regenerated whenever a command is added, renamed or removed.
+# It writes into the source tree, so it is deliberately NOT part of "all" - run
+# it yourself and commit the result.
+#
+# For every config option rather than just the common ones, run the generator
+# directly with --all and send it somewhere else:
+#
+#     python3 tools/gen-example-cfg.py --all /tmp/everything.cfg
+#
+# The generator also warns about settings in runtime-config/*.cfg that match no
+# command and are therefore silently ignored by the real parser.
 EXAMPLECFG := runtime-config/example.cfg
 
 example-cfg: $(EXAMPLECFG)
