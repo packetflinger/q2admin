@@ -58,112 +58,129 @@ q2acmd_t q2aCommands[] = {
         "adminpassword",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        adminpassword
+        adminpassword,
+        true,
     },
     {
         "ban",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        banRun
+        false,
+        banRun,
     },
     {
         "banonconnect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &banOnConnect
+        &banOnConnect,
+        true,
     },
     {
         "chat_stats",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        chatStatsRun
+        false,
+        chatStatsRun,
     },
     {
         "chatban",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        chatbanRun
+        false,
+        chatbanRun,
     },
     {
         "chatbanning_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &ChatBanning_Enable
+        &ChatBanning_Enable,
+        true,
     },
     {
         "chatfloodprotect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        true,
         chatFloodProtectRun,
-        chatFloodProtectInit
+        chatFloodProtectInit,
     },
     {
         "chatfloodprotectmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        chatFloodProtectMsg
+        chatFloodProtectMsg,
+        true,
     },
     {
         "checkclientipaddress",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &checkClientIpAddress
+        &checkClientIpAddress,
+        false,
     },
     {
         "checkvarcmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        checkvarcmdRun
+        false,
+        checkvarcmdRun,
     },
     {
         "checkvardel",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        checkvarDelRun
+        false,
+        checkvarDelRun,
     },
     {
         "checkvarcmds_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &checkvarcmds_enable
+        &checkvarcmds_enable,
+        true,
     },
     {
         "checkvar_poll_time",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &checkvar_poll_time
+        &checkvar_poll_time,
+        false,
     },
     {
         "clearlogfile",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        clearlogfileRun
+        false,
+        clearlogfileRun,
     },
     {
         "clientchatfloodprotect",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        clientchatfloodprotectRun
+        clientchatfloodprotectRun,
+        false,
     },
     {
         "clientremindtimeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &clientRemindTimeout,
+        false,
     },
     {
         "clientsidetimeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &clientsidetimeout,
+        false,
         clientsidetimeoutRun,
         clientsidetimeoutInit,
     },
@@ -171,19 +188,22 @@ q2acmd_t q2aCommands[] = {
         "clientvotecommand",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        clientVoteCommand
+        clientVoteCommand,
+        true,
     },
     {
         "clientvotetimeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &clientVoteTimeout,
+        true,
     },
     {
         "cloud",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         cloudRun,
     },
     {
@@ -191,102 +211,119 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &cloud_config.flags,
+        false,
     },
     {
         "cloud_cmd_teleport",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.cmd_teleport,
+        false,
     },
     {
         "cloud_cmd_invite",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.cmd_invite,
+        false,
     },
     {
         "cloud_cmd_seen",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.cmd_seen,
+        false,
     },
     {
         "cloud_cmd_whois",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.cmd_whois,
+        false,
     },
     {
         "cloud_dns",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.dns,
+        false,
     },
     {
         "cloud_enabled",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cloud_config.enabled,
+        false,
     },
     {
         "cloud_address",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.address,
+        false,
     },
     {
         "cloud_port",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &cloud_config.port,
+        false,
     },
     {
         "cloud_encryption",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cloud_config.encryption,
+        false,
     },
     {
         "cloud_publickey",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.public,
+        false,
     },
     {
         "cloud_privatekey",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.private,
+        false,
     },
     {
         "cloud_serverkey",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.serverkey,
+        false,
     },
     {
         "cloud_uuid",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cloud_config.uuid,
+        false,
     },
     {
         "client_map_cfg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &client_map_cfg
+        &client_map_cfg,
+        false,
     },
     {
         "cl_anglespeedkey_display",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_anglespeedkey_display,
+        false,
     },
     {
         "cl_anglespeedkey_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_anglespeedkey_enable,
+        false,
         cl_anglespeedkey_enableRun,
     },
     {
@@ -294,24 +331,28 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_anglespeedkey_kick,
+        false,
     },
     {
         "cl_anglespeedkey_kickmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cl_anglespeedkey_kickmsg,
+        false,
     },
     {
         "cl_pitchspeed_display",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_pitchspeed_display,
+        false,
     },
     {
         "cl_pitchspeed_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_pitchspeed_enable,
+        false,
         cl_pitchspeed_enableRun,
     },
     {
@@ -319,24 +360,28 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &cl_pitchspeed_kick,
+        false,
     },
     {
         "cl_pitchspeed_kickmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         cl_pitchspeed_kickmsg,
+        false,
     },
     {
         "connectfloodcmd",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        connectFloodCmd
+        connectFloodCmd,
+        false,
     },
     {
         "connectfloodprotect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         connectFloodProtectRun,
         connectFloodProtectInit
     },
@@ -344,287 +389,333 @@ q2acmd_t q2aCommands[] = {
         "connectfloodprotectmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        connectFloodProtectMsg
+        connectFloodProtectMsg,
+        false,
     },
     {
         "connectfloodreleasecmd",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        connectFloodReleaseCmd
+        connectFloodReleaseCmd,
+        true,
     },
     {
         "consolechat_disable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &consolechat_disable
+        &consolechat_disable,
+        true,
     },
     {
         "consolelog_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &consolelog_enable
+        &consolelog_enable,
+        true,
     },
     {
         "consolelog_pattern",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &consolelog_pattern
+        &consolelog_pattern,
+        false,
     },
     {
         "customclientcmd",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        customClientCmd
+        customClientCmd,
+        false,
     },
     {
         "customclientcmdconnect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        customClientCmdConnect
+        customClientCmdConnect,
+        false,
     },
     {
         "customservercmd",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        customServerCmd
+        customServerCmd,
+        false,
     },
     {
         "customservercmdconnect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        customServerCmdConnect
+        customServerCmdConnect,
+        true,
     },
     {
         "cvarset",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        cvarsetRun
+        true,
+        cvarsetRun,
     },
     {
         "defaultbanmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        defaultBanMsg
+        defaultBanMsg,
+        true,
     },
     {
         "defaultchatbanmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        defaultChatBanMsg
+        defaultChatBanMsg,
+        true,
     },
     {
         "defaultreconnectmessage",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        defaultreconnectmessage
+        defaultreconnectmessage,
+        false,
     },
     {
         "delban",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        delbanRun
+        false,
+        delbanRun,
     },
     {
         "delchatban",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        delchatbanRun
+        false,
+        delchatbanRun,
     },
     {
         "developer",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &q2a_developer
+        &q2a_developer,
+        false,
     },
     {
         "disablecmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        disablecmdRun
+        false,
+        disablecmdRun,
     },
     {
         "disablecmds_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &disablecmds_enable
+        &disablecmds_enable,
+        true,
     },
     {
         "disabledel",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        disableDelRun
+        false,
+        disableDelRun,
     },
     {
         "disconnectuser",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &disconnectuser
+        &disconnectuser,
+        true,
     },
     {
         "displayimpulses",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &displayimpulses
+        &displayimpulses,
+        true,
     },
     {
         "displaylogfile",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        displaylogfileRun
+        false,
+        displaylogfileRun,
     },
     {
         "displaynamechange",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &displaynamechange
+        &displaynamechange,
+        false,
     },
     {
         "dopversion",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &dopversion
+        &dopversion,
+        false,
     },
     {
         "do_franck_check",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &do_franck_check
+        &do_franck_check,
+        false
     },
     {
         "do_vid_restart",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &do_vid_restart
+        &do_vid_restart,
+        false,
     },
     {
         "displayzbotuser",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &displayzbotuser
+        &displayzbotuser,
+        true,
     },
     {
         "floodcmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        floodcmdRun
+        false,
+        floodcmdRun,
     },
     {
         "flooddel",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        floodDelRun
+        false,
+        floodDelRun,
     },
     {
         "freeze",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        freezeRun
+        false,
+        freezeRun,
     },
     {
         "flush_logs",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        flushLogsRun
+        false,
+        flushLogsRun,
     },
     {
         "enforce_deadlines",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &enforce_deadlines
+        &enforce_deadlines,
+        false,
     },
     {
         "entity_classname_offset",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &entity_classname_offset,
+        false,
     },
     {
         "extendedsay_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &extendedsay_enable
+        &extendedsay_enable,
+        true,
     },
     {
         "filternonprintabletext",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &filternonprintabletext
+        &filternonprintabletext,
+        true,
     },
     {
         "fpsfloodexempt",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &fpsFloodExempt
+        &fpsFloodExempt,
+        true,
     },
     {
         "framesperprocess",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &framesperprocess
+        &framesperprocess,
+        false,
     },
     {
         "gamemaptomap",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &gamemaptomap
+        &gamemaptomap,
+        false,
     },
 	{
         "gamelibrary",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        gamelibrary
+        gamelibrary,
+        true,
     },
     {
         "gl_driver_check",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &gl_driver_check
+        &gl_driver_check,
+        true,
     },
     {
         "gl_driver_max_changes",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &gl_driver_max_changes
+        &gl_driver_max_changes,
+        true,
     },
     {
         "hackuserdisplay",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        modifiedclientmsg
+        modifiedclientmsg,
+        true,
     },
     {
         "http_cacert_path",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        http_cacert_path
+        http_cacert_path,
+        false,
     },
     {
         "http_debug",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &http_debug
+        &http_debug,
+        false,
     },
     {
         "http_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &http_enable
+        &http_enable,
+        false,
     },
     {
         "http_verifyssl",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &http_verifyssl
+        &http_verifyssl,
+        false,
     },
     {
         // both a value getter/setter and a command!
@@ -632,6 +723,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &impulsesToKickOn,
+        false,
         impulsesToKickOnRun,
         impulsesToKickOnInit
     },
@@ -639,31 +731,36 @@ q2acmd_t q2aCommands[] = {
         "inverted_command1",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[4].command
+        &private_commands[4].command,
+        false,
     },
     {
         "inverted_command2",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[5].command
+        &private_commands[5].command,
+        false,
     },
     {
         "inverted_command3",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[6].command
+        &private_commands[6].command,
+        false,
     },
     {
         "inverted_command4",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[7].command
+        &private_commands[7].command,
+        false,
     },
     {
         "ip",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         ipRun
     },
     {
@@ -671,6 +768,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &ip_limit,
+        true,
         ipLimitRun,
         ipLimitInit
     },
@@ -679,6 +777,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &ip_limit_vpn,
+        true,
         ipLimitVPNRun,
         ipLimitVPNInit
     },
@@ -686,100 +785,115 @@ q2acmd_t q2aCommands[] = {
         "ipbanning_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &IPBanning_Enable
+        &IPBanning_Enable,
+        true,
     },
     {
         "iplogs_cache_ttl",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &iplogs_cache_ttl
+        &iplogs_cache_ttl,
+        false,
     },
     {
         "iplogs_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &iplogs_enable
+        &iplogs_enable,
+        true,
     },
     {
         "iplogs_ignorelist",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &iplogs_ignorelist
+        &iplogs_ignorelist,
+        true,
     },
     {
         "kick",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         kickRun
     },
     {
         "kickonnamechange",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &kickOnNameChange
+        &kickOnNameChange,
+        false,
     },
     {
         "lanip",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        lanip
+        lanip,
+        true,
     },
     {
         "listbans",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listbansRun
+        false,
+        listbansRun,
     },
     {
         "listchatbans",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listchatbansRun
+        false,
+        listchatbansRun,
     },
     {
         "listcheckvar",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listcheckvarsRun
+        false,
+        listcheckvarsRun,
     },
     {
         "listdisable",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listdisablesRun
+        false,
+        listdisablesRun,
     },
     {
         "listfloods",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listfloodsRun
+        false,
+        listfloodsRun,
     },
     {
         "listlrcons",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listlrconsRun
+        false,
+        listlrconsRun,
     },
     {
         "listspawns",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listspawnsRun
+        false,
+        listspawnsRun,
     },
     {
         "listvotes",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        listvotesRun
+        false,
+        listvotesRun,
     },
     {
         // getter/setter and command
@@ -787,6 +901,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &lockDownServer,
+        true,
         lockDownServerRun,
     },
     {
@@ -794,52 +909,59 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         lockoutmsg,
+        false,
     },
     {
         "logevent",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        logeventRun
+        false,
+        logeventRun,
     },
     {
         "logfile",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        logfileRun
+        false,
+        logfileRun,
     },
     {
         "lrcon",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        lrconRun
+        false,
+        lrconRun,
     },
     {
         "lrcondel",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        lrconDelRun
+        lrconDelRun,
     },
     {
         "lrcon_timeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &lrcon_timeout
+        &lrcon_timeout,
+        false,
     },
     {
         "mapcfgexec",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &mapcfgexec
+        &mapcfgexec,
+        true,
     },
     {
         "maxclientsperframe",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &maxclientsperframe
+        &maxclientsperframe,
+        false,
     },
     {
         // getter/setter and command
@@ -847,14 +969,16 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &maxfpsallowed,
+        true,
         maxfpsallowedRun,
-        maxfpsallowedInit
+        maxfpsallowedInit,
     },
     {
         "maxmsglevel",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &maxMsgLevel
+        &maxMsgLevel,
+        false,
     },
     {
         // getter/setter and command
@@ -862,13 +986,15 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &maxrateallowed,
-        maxrateallowedRun
+        true,
+        maxrateallowedRun,
     },
     {
         "max_pmod_noreply",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &max_pmod_noreply
+        &max_pmod_noreply,
+        false,
     },
     {
         // getter/setter and command
@@ -876,8 +1002,9 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &minfpsallowed,
+        true,
         minfpsallowedRun,
-        minfpsallowedInit
+        minfpsallowedInit,
     },
     {
         // getter/setter and command
@@ -885,178 +1012,207 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &minrateallowed,
-        minrateallowedRun
+        true,
+        minrateallowedRun,
     },
     {
         "msec_max_allowed",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &(msec.max_allowed)
+        &(msec.max_allowed),
+        false,
     },
     {
         "msec_max_violations",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &(msec.max_violations)
+        &(msec.max_violations),
+        false,
     },
     {
         "msec_min_required",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &(msec.min_required)
+        &(msec.min_required),
+        false,
     },
     {
         "msec_timespan",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &(msec.timespan)
+        &(msec.timespan),
+        false,
     },
     {
         "mute",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        muteRun
+        false,
+        muteRun,
     },
     {
         "namechangefloodprotect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         NULL,
+        true,
         nameChangeFloodProtectRun,
-        nameChangeFloodProtectInit
+        nameChangeFloodProtectInit,
     },
     {
         "namechangefloodprotectmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        nameChangeFloodProtectMsg
+        nameChangeFloodProtectMsg,
+        true,
     },
     {
         "nickbanning_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &NickBanning_Enable
+        &NickBanning_Enable,
+        true,
     },
     {
         "numofdisplays",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &numofdisplays
+        &numofdisplays,
+        false,
     },
     {
         "printmessageonplaycmds",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &printmessageonplaycmds
+        &printmessageonplaycmds,
+        false,
     },
     {
         "private_command1",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[0].command
+        &private_commands[0].command,
+        false,
     },
     {
         "private_command2",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[1].command
+        &private_commands[1].command,
+        false,
     },
     {
         "private_command3",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[2].command
+        &private_commands[2].command,
+        false,
     },
     {
         "private_command4",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &private_commands[3].command
+        &private_commands[3].command,
+        false,
     },
     {
         "private_command_kick",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &private_command_kick
+        &private_command_kick,
+        true,
     },
     {
         "proxy_bwproxy",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &proxy_bwproxy
+        &proxy_bwproxy,
+        true,
     },
     {
         "proxy_nitro2",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &proxy_nitro2
+        &proxy_nitro2,
+        true,
     },
     {
         "quake2dirsupport",
         CMDCTX_CFGFILE,
         CMDTYPE_LOGICAL,
-        &quake2dirsupport
+        &quake2dirsupport,
+        false,
     },
     {
         "q2adminrunmode",
         CMDCTX_CFGFILE,
         CMDTYPE_NUMBER,
-        &runmode
+        &runmode,
+        false,
     },
     {
         "q2a_command_check",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &q2a_command_check
+        &q2a_command_check,
+        false,
     },
     {
         "q2a_developer",
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &q2a_developer
+        &q2a_developer,
+        false,
     },
     {
         "randomwaitreporttime",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &randomwaitreporttime
+        &randomwaitreporttime,
+        true,
     },
     {
         "rcon_random_password",
         CMDCTX_CFGFILE,
         CMDTYPE_LOGICAL,
-        &rcon_random_password
+        &rcon_random_password,
+        false,
     },
     {
         "rcon_insecure",
         CMDCTX_CFGFILE,
         CMDTYPE_LOGICAL,
-        &rcon_insecure
+        &rcon_insecure,
+        false,
     },
     {
         "reconnect_address",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        reconnect_address
+        reconnect_address,
+        true,
     },
     {
         "reconnect_checklevel",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &reconnect_checklevel
+        &reconnect_checklevel,
+        true,
     },
     {
         "reconnect_time",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &reconnect_time
+        &reconnect_time,
+        false,
     },
     {
         "reloadanticheatlist",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         acReloadExceptions,
     },
     {
@@ -1064,6 +1220,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadbanfileRun,
     },
     {
@@ -1071,6 +1228,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         acReloadExceptions,
     },
     {
@@ -1078,6 +1236,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadCheckVarFileRun,
     },
     {
@@ -1085,6 +1244,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadDisableFileRun,
     },
     {
@@ -1092,6 +1252,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadFloodFileRun,
     },
     {
@@ -1099,6 +1260,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadhashlistRun,
     },
     {
@@ -1106,6 +1268,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadLoginFileRun,
     },
     {
@@ -1113,6 +1276,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadlrconfileRun,
     },
     {
@@ -1120,6 +1284,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadSpawnFileRun,
     },
     {
@@ -1127,6 +1292,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         reloadVoteFileRun,
     },
     {
@@ -1134,6 +1300,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         whoisReloadFileRun,
     },
     {
@@ -1141,6 +1308,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         lrcon_reset_rcon_password,
     },
     {
@@ -1148,19 +1316,22 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         sayGroupRun,
     },
     {
         "say_group_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &say_group_enable
+        &say_group_enable,
+        true,
     },
     {
         "say_person",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         sayPersonRun,
     },
     {
@@ -1168,31 +1339,36 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         sayPersonLowRun,
     },
     {
         "say_person_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &say_person_enable
+        &say_person_enable,
+        true,
     },
     {
         "serverinfoenable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &serverinfoenable
+        &serverinfoenable,
+        false,
     },
     {
         "serverip",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        serverip
+        serverip,
+        true,
     },
     {
         "setadmin",
         CMDCTX_CLIENTCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         setadminRun
     },
     {
@@ -1201,19 +1377,22 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         motdFilename,
+        true,
         motdRun,
     },
     {
         "signal_score_threshold",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &signal_score_threshold
+        &signal_score_threshold,
+        true,
     },
     {
         "signal_weight",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         NULL,
+        true,
         signalWeightRun,
         signalWeightInit
     },
@@ -1222,6 +1401,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         signaladdRun
     },
     {
@@ -1229,6 +1409,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         signalsRun
     },
     {
@@ -1236,6 +1417,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         NULL,
+        true,
         skinChangeFloodProtectRun,
         skinChangeFloodProtectInit
     },
@@ -1243,43 +1425,50 @@ q2acmd_t q2aCommands[] = {
         "skinchangefloodprotectmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        skinChangeFloodProtectMsg
+        skinChangeFloodProtectMsg,
+        true,
     },
     {
         "skincrashmsg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        skincrashmsg
+        skincrashmsg,
+        false,
     },
     {
         "snapfire_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &snapfire_enable
+        &snapfire_enable,
+        true,
     },
     {
         "snapfire_min_snap_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &snapfire_min_snap_deg
+        &snapfire_min_snap_deg,
+        true,
     },
     {
         "snapfire_off_crosshair_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &snapfire_off_crosshair_deg
+        &snapfire_off_crosshair_deg,
+        true,
     },
     {
         "soloadlazy",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &soloadlazy
+        &soloadlazy,
+        true,
     },
     {
         "spawncmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         spawncmdRun
     },
     {
@@ -1287,37 +1476,43 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         spawnDelRun
     },
     {
         "spawnentities_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &spawnentities_enable
+        &spawnentities_enable,
+        true,
     },
     {
         "spawnentities_internal_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &spawnentities_internal_enable
+        &spawnentities_internal_enable,
+        true,
     },
     {
         "speedbot_check_type",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &speedbot_check_type
+        &speedbot_check_type,
+        true,
     },
     {
         "startup_attempts",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &startup_attempts
+        &startup_attempts,
+        false,
     },
     {
         "stifle",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         stifleRun
     },
     {
@@ -1325,74 +1520,86 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         stuffClientRun,
     },
     {
         "swap_attack_use",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &swap_attack_use
+        &swap_attack_use,
+        false,
     },
     {
         "testplayer",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         testPlayerRun
     },
     {
         "timers_active",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &timers_active
+        &timers_active,
+        true,
     },
     {
         "timers_max_seconds",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &timers_max_seconds
+        &timers_max_seconds,
+        false,
     },
     {
         "timers_min_seconds",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &timers_min_seconds
+        &timers_min_seconds,
+        false,
     },
     {
         "timescaledetect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &timescaledetect
+        &timescaledetect,
+        true,
     },
     {
         "timescaleuserdisplay",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        timescaleuserdisplay
+        timescaleuserdisplay,
+        true,
     },
     {
         "track_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &track_enable
+        &track_enable,
+        true,
     },
     {
         "track_min_motion_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &track_min_motion_deg
+        &track_min_motion_deg,
+        true,
     },
     {
         "track_tight_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &track_tight_deg
+        &track_tight_deg,
+        true,
     },
     {
         "unfreeze",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         unfreezeRun
     },
     {
@@ -1400,155 +1607,180 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         unstifleRun
     },
     {
         "userinfo_proxy",
         CMDCTX_CFGFILE,
         CMDTYPE_LOGICAL,
-        &userinfoProxy
+        &userinfoProxy,
+        true,
     },
     {
         "userinfochange_count",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &USERINFOCHANGE_COUNT
+        &USERINFOCHANGE_COUNT,
+        false,
     },
     {
         "userinfochange_time",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &USERINFOCHANGE_TIME
+        &USERINFOCHANGE_TIME,
+        false,
     },
     {
         "version",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         versionRun
     },
     {
         "versionbanning_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &VersionBanning_Enable
+        &VersionBanning_Enable,
+        true,
     },
     {
         "votecmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        true,
         votecmdRun
     },
     {
         "voteclientmaxvotes",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &clientMaxVotes
+        &clientMaxVotes,
+        true,
     },
     {
         "voteclientmaxvotetimeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &clientMaxVoteTimeout
+        &clientMaxVoteTimeout,
+        true,
     },
     {
         "votecountnovotes",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &votecountnovotes
+        &votecountnovotes,
+        true,
     },
     {
         "votedel",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         voteDelRun
     },
     {
         "voteminclients",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &voteminclients
+        &voteminclients,
+        true,
     },
     {
         "votepasspercent",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &votepasspercent
+        &votepasspercent,
+        true,
     },
     {
         "vote_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &vote_enable
+        &vote_enable,
+        true,
     },
     {
         "vpnusers",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         vpnUsersRun,
     },
     {
         "vpn_api_key",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        &vpn_api_key
+        &vpn_api_key,
+        true,
     },
     {
         "vpn_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &vpn_enable
+        &vpn_enable,
+        true,
     },
     {
         "whois_active",
         CMDCTX_CFGFILE, // Only allocates memory at InitGame: can only be read from config
         CMDTYPE_NUMBER,
-        &whois_active
+        &whois_active,
+        true,
     },
     {
         "zbc_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &zbc_enable
+        &zbc_enable,
+        true,
     },
     {
         "zbc_jittermax",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &zbc_jittermax
+        &zbc_jittermax,
+        false,
     },
     {
         "zbc_jittermove",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &zbc_jittermove
+        &zbc_jittermove,
+        false,
     },
     {
         "zbc_jittertime",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &zbc_jittertime
+        &zbc_jittertime,
+        false,
     },
     {
         "zbotdetect",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
-        &zbotdetect
+        &zbotdetect,
+        true,
     },
     {
         "zbotdetectactivetimeout",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &zbotdetectactivetimeout
+        &zbotdetectactivetimeout,
+        false,
     },
     {
         "zbotuserdisplay",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
-        zbotuserdisplay
+        zbotuserdisplay,
+        true,
     },
 };
 

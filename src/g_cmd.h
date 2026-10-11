@@ -31,6 +31,7 @@ typedef struct {
     byte cmdwhere;
     byte cmdtype;
     void *datapoint;
+    bool common;            // commonly changed, include in config generation
     CMDRUNFUNC *runfunc;    // called when cmd is issued from console
     CMDINITFUNC *initfunc;  // only for CFGFILE, called when file is read
 } q2acmd_t;
