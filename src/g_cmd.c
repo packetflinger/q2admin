@@ -165,8 +165,8 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        true,
         clientchatfloodprotectRun,
-        false,
     },
     {
         "clientremindtimeout",
@@ -940,6 +940,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
+        false,
         lrconDelRun,
     },
     {
