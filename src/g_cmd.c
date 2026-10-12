@@ -59,7 +59,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         adminpassword,
-        true,
+        false,
     },
     {
         "ban",
@@ -494,13 +494,6 @@ q2acmd_t q2aCommands[] = {
         delchatbanRun,
     },
     {
-        "developer",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &q2a_developer,
-        false,
-    },
-    {
         "disablecmd",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
@@ -638,7 +631,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &filternonprintabletext,
-        true,
+        false,
     },
     {
         "fpsfloodexempt",
@@ -823,13 +816,6 @@ q2acmd_t q2aCommands[] = {
         CMDTYPE_LOGICAL,
         &kickOnNameChange,
         false,
-    },
-    {
-        "lanip",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        lanip,
-        true,
     },
     {
         "listbans",
@@ -1057,7 +1043,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         NULL,
-        true,
+        false,
         nameChangeFloodProtectRun,
         nameChangeFloodProtectInit,
     },
@@ -1066,7 +1052,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         nameChangeFloodProtectMsg,
-        true,
+        false,
     },
     {
         "nickbanning_enable",
@@ -1080,13 +1066,6 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &numofdisplays,
-        false,
-    },
-    {
-        "printmessageonplaycmds",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_LOGICAL,
-        &printmessageonplaycmds,
         false,
     },
     {
@@ -1122,27 +1101,20 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &private_command_kick,
-        true,
+        false,
     },
     {
         "proxy_bwproxy",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &proxy_bwproxy,
-        true,
+        false,
     },
     {
         "proxy_nitro2",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &proxy_nitro2,
-        true,
-    },
-    {
-        "quake2dirsupport",
-        CMDCTX_CFGFILE,
-        CMDTYPE_LOGICAL,
-        &quake2dirsupport,
         false,
     },
     {
@@ -1171,7 +1143,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &randomwaitreporttime,
-        true,
+        false,
     },
     {
         "rcon_random_password",
@@ -1199,7 +1171,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &reconnect_checklevel,
-        true,
+        false,
     },
     {
         "reconnect_time",
@@ -1418,7 +1390,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         NULL,
-        true,
+        false,
         skinChangeFloodProtectRun,
         skinChangeFloodProtectInit
     },
@@ -1427,7 +1399,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         skinChangeFloodProtectMsg,
-        true,
+        false,
     },
     {
         "skincrashmsg",
@@ -1448,21 +1420,21 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &snapfire_min_snap_deg,
-        true,
+        false,
     },
     {
         "snapfire_off_crosshair_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &snapfire_off_crosshair_deg,
-        true,
+        false,
     },
     {
         "soloadlazy",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &soloadlazy,
-        true,
+        false,
     },
     {
         "spawncmd",
@@ -1499,7 +1471,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &speedbot_check_type,
-        true,
+        false,
     },
     {
         "startup_attempts",
@@ -1544,7 +1516,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &timers_active,
-        true,
+        false,
     },
     {
         "timers_max_seconds",
@@ -1586,14 +1558,14 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &track_min_motion_deg,
-        true,
+        false,
     },
     {
         "track_tight_deg",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
         &track_tight_deg,
-        true,
+        false,
     },
     {
         "unfreeze",
@@ -1652,7 +1624,7 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
-        true,
+        false,
         votecmdRun
     },
     {
@@ -1718,21 +1690,21 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         &vpn_api_key,
-        true,
+        false,
     },
     {
         "vpn_enable",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &vpn_enable,
-        true,
+        false,
     },
     {
         "whois_active",
         CMDCTX_CFGFILE, // Only allocates memory at InitGame: can only be read from config
         CMDTYPE_NUMBER,
         &whois_active,
-        true,
+        false,
     },
     {
         "zbc_enable",

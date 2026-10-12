@@ -339,7 +339,7 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
         if (cl->speedfreeze > ltime) {
             ucmd->msec = 0;
         } else {
-            if (speedbot_check_type & 2) {
+            if (speedbot_check_type & 2) { // TODO: no magic numbers!
                 gi.bprintf(PRINT_HIGH, "%s has been frozen for exceeding the speed limit.\n", cl->name);
             }
             cl->speedfreeze = 0;

@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "g_local.h"
 
 checkvar_t checkvarList[CHECKVAR_MAX];
-bool checkvarcmds_enable = false;
+bool checkvarcmds_enable = true;
 int checkvar_poll_time = 60;
 int maxcheckvars = 0;
 

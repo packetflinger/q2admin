@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 disablecmd_t disablecmds[DISABLE_MAXCMDS];
 int maxdisable_cmds = 0;
-bool disablecmds_enable = false;
+bool disablecmds_enable = true;
 
 /**
  * Loads one disabled-command file into disablecmds[]. The list names

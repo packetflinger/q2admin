@@ -106,7 +106,7 @@ bool cl_pitchspeed_kick                 = false;
 char cl_pitchspeed_kickmsg[256];
 char com_token[MAX_TOKEN_CHARS];
 bool consolechat_disable                = false;
-bool consolelog_enable                  = false;
+bool consolelog_enable                  = true;
 char consolelog_pattern[256]            = "[q2a] %s\n";
 char customClientCmd[256];
 char customClientCmdConnect[256];
@@ -122,8 +122,8 @@ char dllname[256];
 bool do_franck_check                    = true;
 bool do_vid_restart                     = false;
 bool enforce_deadlines                  = true;
-bool extendedsay_enable                 = false;
-bool filternonprintabletext             = false;
+bool extendedsay_enable                 = true;
+bool filternonprintabletext             = true;
 char *finalentities;
 struct chatflood_s floodinfo = {
     false, 5, 2, 10
@@ -140,28 +140,27 @@ char modifiedclientmsg[256];
 char http_cacert_path[256]              = "/etc/ssl/certs";
 bool http_debug                         = false;
 bool http_enable                        = true;
-bool http_verifyssl                     = true;
+bool http_verifyssl                     = false;
 int  hz                                 = 10;
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
 bool iplogs_enable                      = false;
 char iplogs_ignorelist[1024]            = "";
-char lanip[256]                         = "";
 int lframenum;
 bool lockDownServer                     = false;
-char lockoutmsg[256];
+char lockoutmsg[256]                    = "Server is currently locked";
 int logfilecheckcount;
 float ltime;
 bool mapcfgexec                         = false;
 int maxclientsperframe                  = 100;
-int maxfpsallowed                       = 0;
+int maxfpsallowed                       = 150;
 int maxMsgLevel                         = 3;
-int maxrateallowed                      = 0;
+int maxrateallowed                      = 15000;
 int maxReconnectList                    = 0;
 int maxretryList                        = 0;
 int max_pmod_noreply                    = 2;
-int minfpsallowed                       = 0;
-int minrateallowed                      = 0;
+int minfpsallowed                       = 1;
+int minrateallowed                      = 1;
 char motd[4096];
 msec_limits_t msec = {
         .max_allowed    = 5600,
@@ -169,13 +168,12 @@ msec_limits_t msec = {
         .timespan       = 5,
         .max_violations = 2
 };
-bool nameChangeFloodProtect             = false;
-char nameChangeFloodProtectMsg[256];
+bool nameChangeFloodProtect             = true;
+char nameChangeFloodProtectMsg[256]     = "Too many name changes";
 int nameChangeFloodProtectNum           = 5;
 int nameChangeFloodProtectSec           = 2;
 int nameChangeFloodProtectSilence       = 10;
 int numofdisplays                       = 4;
-bool printmessageonplaycmds             = true;
 bool private_command_kick               = false;
 proxyinfo_t *proxyinfo;
 proxyinfo_t *proxyinfoBase;
@@ -183,7 +181,6 @@ int proxy_bwproxy                       = 1;
 int proxy_nitro2                        = 1;
 bool q2a_command_check                  = false;
 int q2a_developer                       = 0;
-bool quake2dirsupport                   = true;
 int randomwaitreporttime                = 55;
 reconnect_info *reconnectlist;
 proxyreconnectinfo_t *reconnectproxyinfo;
@@ -198,17 +195,17 @@ char *required_ui_keys[]                = {"name", "rate", "skin", NULL}; // end
 retrylist_info *retrylist;
 int runmode                             = 100; // don't change this
 bool say_group_enable                   = false;
-bool say_person_enable                  = false;
+bool say_person_enable                  = true;
 bool serverinfoenable                   = true;
-char serverip[256]                      = "";
-bool skinChangeFloodProtect             = false;
-char skinChangeFloodProtectMsg[256];
+char serverip[256]                      = "127.0.0.1";  // TODO: remove this
+bool skinChangeFloodProtect             = true;
+char skinChangeFloodProtectMsg[256]     = "Too many skin changes";
 int skinChangeFloodProtectNum           = 5;
 int skinChangeFloodProtectSec           = 2;
 int skinChangeFloodProtectSilence       = 10;
 char skincrashmsg[256];
-bool spawnentities_enable               = false;
-bool spawnentities_internal_enable      = false;
+bool spawnentities_enable               = true;
+bool spawnentities_internal_enable      = true;
 int speedbot_check_type                 = 3;
 int startup_attempts                    = 3;  // q2startNN sends before giving up, see startupAttemptsUsed()
 char timescaleuserdisplay[256];
@@ -219,7 +216,7 @@ static bool userinfoProxyActive         = false;
 int USERINFOCHANGE_TIME                 = 60;
 int USERINFOCHANGE_COUNT                = 40;
 char version[256];
-bool vote_enable                        = false;
+bool vote_enable                        = true;
 char vpn_api_key[33]                    = "";
 bool vpn_enable                         = false;
 bool zbotdetect                         = true;

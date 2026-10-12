@@ -415,7 +415,6 @@ extern char version[256];
 
 extern bool soloadlazy;
 extern bool dllloaded;
-extern bool quake2dirsupport;
 extern bool zbotdetect;
 extern bool displayzbotuser;
 extern bool displaynamechange;
@@ -442,7 +441,6 @@ extern int startup_attempts;
 bool startupAttemptsUsed(int client);
 
 extern bool displayimpulses;
-extern bool printmessageonplaycmds;
 extern bool say_person_enable;
 extern bool say_group_enable;
 extern bool extendedsay_enable;
@@ -526,7 +524,6 @@ extern char lockoutmsg[256];
 extern char gmapname[MAX_QPATH];
 extern char reconnect_address[256];
 extern char serverip[256];
-extern char lanip[256];
 
 extern int reconnect_time;
 extern int reconnect_checklevel;
