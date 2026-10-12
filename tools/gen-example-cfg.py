@@ -43,13 +43,17 @@ SPECIAL = {
     "entity_classname_offset": "300",
     # DEFAULTCONNECTFLOODMSG in g_flood.h.
     "connectfloodprotectmsg": "Too many connections, try again later.",
-    # "num sec cooldown" triples handled by an initfunc with no backing
-    # scalar. Their Init functions leave the feature off unless all three
-    # fields are supplied, so "disable" is the default state.
-    "chatfloodprotect": "disable",
-    "connectfloodprotect": "disable",
-    "namechangefloodprotect": "disable",
-    "skinchangefloodprotect": "disable",
+    # "num sec cooldown/silence" triples handled by an initfunc with no single
+    # backing scalar, so the default has to be read off the enable flag and the
+    # three counters together. Keep these in step with their initializers:
+    #   chatfloodprotect       floodinfo              in g_init.c
+    #   connectfloodprotect    connectflood           in g_flood.c
+    #   namechangefloodprotect nameChangeFloodProtect* in g_init.c
+    #   skinchangefloodprotect skinChangeFloodProtect* in g_init.c
+    "chatfloodprotect": "disable",          # floodinfo starts disabled
+    "connectfloodprotect": "3 60 300",
+    "namechangefloodprotect": "5 2 10",
+    "skinchangefloodprotect": "5 2 10",
     # Repeatable "<signal> <weight>" lines; there is no single default line.
     "signal_weight": "",
     # An empty list means every impulse counts (maxImpulses == 0).
@@ -228,7 +232,19 @@ def config_value(entry, raw):
             f" single backing variable."
         )
     if ctype == "CMDTYPE_LOGICAL":
-        return "Yes" if raw == "true" else "No"
+        # Absent means zero-initialized. Otherwise accept the integer spellings
+        # too: votecountnovotes is declared `= 1`, and reading that as false
+        # would document the opposite of what the server does.
+        if raw is None:
+            return "No"
+        if raw in ("true", "false"):
+            return "Yes" if raw == "true" else "No"
+        if re.fullmatch(r"-?\d+", raw):
+            return "No" if int(raw) == 0 else "Yes"
+        sys.exit(
+            f"error: '{name}' is CMDTYPE_LOGICAL but its default is {raw!r}, "
+            f"which is neither a bool nor an integer."
+        )
     if ctype == "CMDTYPE_NUMBER":
         if raw is None:
             return "0"

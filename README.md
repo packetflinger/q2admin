@@ -1047,7 +1047,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `chatfloodprotectmsg` | string | `%s is making too much noise.` | Message broadcast when someone chat-floods. `%s` is the player's name. |
 | `checkclientipaddress` | bool | yes | Reject players whose IP address can't be determined. |
 | `checkvar_poll_time` | number | 60 | Seconds between client variable checks for each player. |
-| `checkvarcmds_enable` | bool | no | Enforce the rules in `q2a_cvar.cfg`. |
+| `checkvarcmds_enable` | bool | yes | Enforce the rules in `q2a_cvar.cfg`. |
 | `cl_anglespeedkey_display` | bool | yes | Announce `cl_anglespeedkey` changes. |
 | `cl_anglespeedkey_enable` | bool | no | Watch for `cl_anglespeedkey` changes. |
 | `cl_anglespeedkey_kick` | bool | no | Kick players who change `cl_anglespeedkey`. |
@@ -1080,7 +1080,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `connectfloodprotectmsg` | string | `Too many connections, try again later.` | Message shown to a player refused for connect flooding. |
 | `connectfloodreleasecmd` | string | empty | Server command run when an address's cooldown ends. `%i` is the IP address, for example `delblackhole %i` (Q2Pro) or `delhole %i` (R1Q2). Not settable in-game. |
 | `consolechat_disable` | bool | no | Stop players from chatting by typing text into the console without a command. |
-| `consolelog_enable` | bool | no | Echo logged q2admin events to the server console. |
+| `consolelog_enable` | bool | yes | Echo logged q2admin events to the server console. |
 | `consolelog_pattern` | string | `[q2a] %s\n` | Format for console-echoed events. |
 | `customclientcmd` | string | empty | Command sent to a detected cheater's client before they're disconnected. |
 | `customclientcmdconnect` | string | empty | Command sent to every player's client when they connect. |
@@ -1089,8 +1089,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `defaultbanmsg` | string | `You are banned from this server!` | Message for ban rules without their own `MSG`. |
 | `defaultchatbanmsg` | string | `Message banned.` | Message for chat-ban rules without their own `MSG`. |
 | `defaultreconnectmessage` | string | (explains the reconnect) | Shown to players while the reconnect check runs. |
-| `developer` | number | 0 | q2admin debug output level. `q2a_developer` is the same setting. |
-| `disablecmds_enable` | bool | no | Enforce the rules in `q2a_disable.cfg`. |
+| `disablecmds_enable` | bool | yes | Enforce the rules in `q2a_disable.cfg`. |
 | `disconnectuser` | bool | yes | Kick players caught using a proxy or bot. |
 | `displayimpulses` | bool | no | Announce when players send impulses. |
 | `displaynamechange` | bool | yes | Announce name changes. |
@@ -1100,8 +1099,8 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `dopversion` | bool | yes | Send the `p_version` proxy probe on connect. |
 | `enforce_deadlines` | bool | yes | Raise a signal when a client doesn't answer a probe in time. Not settable in-game. |
 | `entity_classname_offset` | number | 300 on 64-bit | Byte offset of `classname` in the mod's entity struct. Needed for `spawnentities_internal_enable` and the entity log types. **A wrong value can crash the server.** |
-| `extendedsay_enable` | bool | no | Allow `say !p <player> msg` and `say !g <players> msg`. |
-| `filternonprintabletext` | bool | no | Strip non-printable and high-ASCII characters from chat. |
+| `extendedsay_enable` | bool | yes | Allow `say !p <player> msg` and `say !g <players> msg`. |
+| `filternonprintabletext` | bool | yes | Strip non-printable and high-ASCII characters from chat. |
 | `fpsfloodexempt` | bool | no | Don't count `cl_maxfps` changes toward userinfo flooding (for Jump mod). |
 | `framesperprocess` | number | 0 | Internal: server frames between q2admin processing passes. Leave at 0. |
 | `gamelibrary` | string | empty | File name of the real mod library. Not settable in-game. |
@@ -1112,7 +1111,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `http_cacert_path` | string | `/etc/ssl/certs` | Directory of trusted CA certificates for HTTPS. |
 | `http_debug` | bool | no | Verbose download logging. |
 | `http_enable` | bool | yes | Allow HTTP(S) downloads, which VPN checks, remote ban lists and hash lists need. |
-| `http_verifyssl` | bool | yes | Verify HTTPS certificates. |
+| `http_verifyssl` | bool | no | Verify HTTPS certificates. |
 | `impulsestokickon` | list | all impulses | Comma-separated impulses that count as bot control, for example `169, 170, 171, 172, 173, 174, 175`. Each one raises the `impulse-sent` signal. |
 | `inverted_command1` – `inverted_command4` | string | empty | Private probe commands that a genuine client should *not* answer. |
 | `ip_limit` | number | 0 | Maximum players from one IP address, VPN or not. 0 means unlimited. Negative values are rejected. |
@@ -1122,34 +1121,32 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `iplogs_enable` | bool | no | Run the IPLogs VPN check on connect. |
 | `iplogs_ignorelist` | string | empty | CIDR ranges exempt from the IPLogs check, separated by spaces or commas. |
 | `kickonnamechange` | bool | no | Kick players who change to a banned name, instead of just refusing the change. |
-| `lanip` | string | empty | Accepted but currently has no effect. |
 | `lock` | bool | no | Refuse new connections. Players who leave while the server is locked can still rejoin under the same name. **Console only**; can't be set in a config file. |
-| `lockoutmsg` | string | `This server is currently locked.` | Message shown while the server is locked. |
+| `lockoutmsg` | string | `Server is currently locked` | Message shown while the server is locked. |
 | `lrcon_timeout` | number | 2 | Seconds before the real rcon password is restored after an lrcon command. |
 | `mapcfgexec` | bool | no | Run the server-side `mapcfg/<map>-pre/-post/-end.cfg` files. |
 | `max_pmod_noreply` | number | 2 | Unanswered private-command checks allowed before acting. |
 | `maxclientsperframe` | number | 100 | Internal: players processed per server frame. Leave alone. |
-| `maxfps` | number | 0 | Highest `cl_maxfps` allowed. 0 means no limit. |
+| `maxfps` | number | 150 | Highest `cl_maxfps` allowed. 0 means no limit. |
 | `maxmsglevel` | number | 3 | Accepted but currently has no effect. |
-| `maxrate` | number | 0 | Highest `rate` allowed. 0 means no limit. |
-| `minfps` | number | 0 | Lowest `cl_maxfps` allowed. 0 means no limit. |
-| `minrate` | number | 0 | Lowest `rate` allowed. 0 means no limit. |
+| `maxrate` | number | 15000 | Highest `rate` allowed. 0 means no limit. |
+| `minfps` | number | 1 | Lowest `cl_maxfps` allowed. 0 means no limit. |
+| `minrate` | number | 1 | Lowest `rate` allowed. 0 means no limit. |
 | `msec_max_allowed` | number | 5600 | Most msec allowed in each `msec_timespan`. |
 | `msec_max_violations` | number | 2 | Violations allowed before the msec signal is raised. |
 | `msec_min_required` | number | 0 | Least msec required in each `msec_timespan`. 0 disables the check. |
 | `msec_timespan` | number | 5 | Length in seconds of the msec measurement window. |
-| `namechangefloodprotect` | triple | disable | Name change flood limit. |
-| `namechangefloodprotectmsg` | string | `%s changed names too many times.` | Broadcast when the name change limit is hit. |
+| `namechangefloodprotect` | triple | `5 2 10` | Name change flood limit. |
+| `namechangefloodprotectmsg` | string | `Too many name changes` | Broadcast when the name change limit is hit. |
 | `nickbanning_enable` | bool | yes | Enable name-based ban rules. |
 | `numofdisplays` | number | 4 | How many times a cheat detection is announced. |
-| `printmessageonplaycmds` | bool | yes | Accepted but currently has no effect. |
 | `private_command1` – `private_command4` | string | empty | Private probe commands that a genuine client must answer. |
 | `private_command_kick` | bool | no | Kick players who don't answer the private commands. |
 | `proxy_bwproxy` | number | 1 | BW-Proxy handling: 0 = treat as a zbot, 1 = detect, 2 = allow (also sets `proxy_nitro2` to 2). |
 | `proxy_nitro2` | number | 1 | Nitro2/Xania proxy handling. Same values as `proxy_bwproxy`. |
 | `q2a_command_check` | bool | no | Legacy client command-queue check. Not currently sent. |
+| `q2a_developer` | number | 0 | q2admin debug output level. |
 | `q2adminrunmode` | number | 100 | 100 = fully active; 0 = pass everything straight to the mod. **cfg only.** |
-| `quake2dirsupport` | bool | yes | Accepted but currently has no effect. **cfg only.** |
 | `randomwaitreporttime` | number | 55 | Range of the random delay used when `zbotdetectactivetimeout` is -1. |
 | `rcon_insecure` | bool | yes | Run lrcon commands from the client so the player sees the output. `no` runs them on the server, where the output isn't sent to the player. **cfg only.** |
 | `rcon_random_password` | bool | yes | Randomize the real rcon password while lrcon commands run. **cfg only.** |
@@ -1157,21 +1154,21 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `reconnect_checklevel` | number | 0 | How a returning player is recognized. Both levels require the same IP address. 0 = the whole userinfo must match, apart from the connection details the engine adds; 1 = only the name and skin must match. |
 | `reconnect_time` | number | 60 | Seconds a player has to reconnect. |
 | `say_group_enable` | bool | no | Allow players to use `say_group`. |
-| `say_person_enable` | bool | no | Allow players to use `say_person`. |
+| `say_person_enable` | bool | yes | Allow players to use `say_person`. |
 | `serverinfoenable` | bool | yes | Show q2admin's version in the server info that server browsers display. |
-| `serverip` | string | empty | The server's public IPv4 address, used by the proxy checks. |
+| `serverip` | string | `127.0.0.1` | The server's public IPv4 address, used by the proxy checks. |
 | `setmotd` | string | empty | Message of the day file, relative to the Quake 2 directory. |
 | `signal_score_threshold` | number | 50 | Signal score at which a player is removed. 0 disables removal. |
 | `signal_weight` | string | (built-in) | `"<signal> <weight>"`. Overrides one signal's weight; use one line per signal. |
-| `skinchangefloodprotect` | triple | disable | Skin change flood limit. |
-| `skinchangefloodprotectmsg` | string | `%s changed skin too many times.` | Broadcast when the skin change limit is hit. |
+| `skinchangefloodprotect` | triple | `5 2 10` | Skin change flood limit. |
+| `skinchangefloodprotectmsg` | string | `Too many skin changes` | Broadcast when the skin change limit is hit. |
 | `skincrashmsg` | string | `%s tried to crash the server.` | Broadcast when someone uses a server-crashing skin. |
 | `snapfire_enable` | bool | yes | Enable snap-fire aim detection. |
 | `snapfire_min_snap_deg` | number | 30 | Smallest one-frame view change, in degrees, that counts as a snap. |
 | `snapfire_off_crosshair_deg` | number | 40 | How far off the crosshair, in degrees, the target must have been before the snap. |
 | `soloadlazy` | bool | no | Linux only: load the mod with lazy symbol binding, as a workaround for mods that won't load otherwise. |
-| `spawnentities_enable` | bool | no | Enable entity disabling (`q2a_spawn.cfg`). |
-| `spawnentities_internal_enable` | bool | no | Also intercept entities the mod spawns itself after the map loads. Needs a correct `entity_classname_offset`. |
+| `spawnentities_enable` | bool | yes | Enable entity disabling (`q2a_spawn.cfg`). |
+| `spawnentities_internal_enable` | bool | yes | Also intercept entities the mod spawns itself after the map loads. Needs a correct `entity_classname_offset`. |
 | `speedbot_check_type` | number | 3 | Bit 2 announces when a speed-limited player is unfrozen. |
 | `startup_attempts` | number | 3 | Times the startup handshake is sent, 5 seconds apart, before a client that hasn't answered gets the zbot verdict. Genuine clients answer the first one. Values below 1 count as 1. |
 | `swap_attack_use` | bool | no | Swap `+attack` and `+use`. This breaks auto-aim proxies but confuses players. |
@@ -1187,7 +1184,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `userinfochange_count` | number | 40 | Userinfo changes allowed within `userinfochange_time` before kicking. |
 | `userinfochange_time` | number | 60 | Length in seconds of the userinfo flood window. |
 | `versionbanning_enable` | bool | yes | Enable client-version ban rules. |
-| `vote_enable` | bool | no | Enable voting. |
+| `vote_enable` | bool | yes | Enable voting. |
 | `voteclientmaxvotes` | number | 0 | Votes one player may propose within `voteclientmaxvotetimeout`. 0 means unlimited. |
 | `voteclientmaxvotetimeout` | number | 0 | Window in seconds for `voteclientmaxvotes`. 0 means the whole map. |
 | `votecountnovotes` | bool | yes | `yes`: votes pass on yes ÷ all players. `no`: players who didn't vote are left out of the total. |
