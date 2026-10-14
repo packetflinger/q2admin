@@ -177,7 +177,10 @@ bool loadLogListFile(char *filename) {
 
                 lognum = q2a_atoi(cp);
 
-                if (lognum >= 1 || lognum <= 32) {
+                // && , not ||: every number satisfies one side or the other,
+                // so with || this let any value through to index logFiles[32]
+                // below.
+                if (lognum >= 1 && lognum <= MAXLOGS) {
                     lognum--;
 
                     while (isdigit(*cp)) {
@@ -212,6 +215,9 @@ bool loadLogListFile(char *filename) {
                     } else {
                         gi.dprintf("Error loading LOGFILE from line %d in file %s\n", uptoLine, filename);
                     }
+                } else {
+                    gi.dprintf("LOGFILE number %d out of range (1-%d) on line %d in file %s\n",
+                            lognum, MAXLOGS, uptoLine, filename);
                 }
             } else {
                 for (i = 0; i < LOGTYPES_MAX; i++) {
