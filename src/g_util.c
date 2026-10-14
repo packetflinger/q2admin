@@ -736,17 +736,18 @@ char *processString(char *output, char *input, int max, char end) {
  * can be written the way an admin would naturally type them rather than
  * requiring 1/0.
  *
- * arg: the string to interpret. "yes", "y" and "1" are true, in any
- *      casing.
+ * arg: the string to interpret. "yes", "y", "true" and "1" are true, in
+ *      any casing.
  *
- * Returns true only for those; anything else - including "true",
- * unrecognised text and an empty string - is false. That default means a
- * typo'd setting reads as off rather than erroring.
+ * Returns true only for those; anything else - unrecognised text and an
+ * empty string included - is false. That default means a typo'd setting
+ * reads as off rather than erroring.
  */
 bool getLogicalValue(char *arg) {
     if (Q_stricmp(arg, "Yes") == 0 ||
             Q_stricmp(arg, "1") == 0 ||
-            Q_stricmp(arg, "Y") == 0) {
+            Q_stricmp(arg, "Y") == 0 ||
+            Q_stricmp(arg, "true") == 0) {
         return true;
     }
     return false;

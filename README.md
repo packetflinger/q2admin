@@ -126,8 +126,8 @@ in the root and per-mod settings beside the mod. The file names can be changed
 with the engine cvars listed under [Engine cvars](#engine-cvars).
 
 Settings in `q2admin.cfg` use the format `option "value"`, one per line.
-Lines starting with `;` are comments. Booleans accept `yes`/`no`/`1`/`0`
-(any case). Unknown options are silently ignored, so check the spelling if
+Lines starting with `;` are comments. Booleans accept `yes`/`y`/`true`/`1`
+for on and anything else for off (any case). Unknown options are silently ignored, so check the spelling if
 a setting doesn't seem to take effect. Lines are limited to 255 characters.
 
 ### Running commands
@@ -1034,7 +1034,8 @@ marked **cfg only**, they can also be viewed or changed from the server console
 with `sv !<option> [value]`, and by in-game admins with `!<option> [value]`.
 Changes made from the console last until the server restarts.
 
-Types: **bool** is `yes`/`no`; **number** is an integer; **string** is
+Types: **bool** is `yes`/`no` (`y`, `true` and `1` also mean yes); **number**
+is an integer; **string** is
 quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 `"<count> <seconds> <cooldown>"` for `connectfloodprotect`) or `"disable"`.
 

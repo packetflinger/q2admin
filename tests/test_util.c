@@ -17,17 +17,22 @@ int main(void)
 
     stub_engine_init();
 
-    SECTION("getLogicalValue: only Yes/Y/1 are true");
+    SECTION("getLogicalValue: Yes/Y/true/1 are true, in any casing");
     CHECK(getLogicalValue("Yes"));
     CHECK(getLogicalValue("yes"));
     CHECK(getLogicalValue("Y"));
     CHECK(getLogicalValue("1"));
+    CHECK(getLogicalValue("true"));
+    CHECK(getLogicalValue("True"));
+    CHECK(getLogicalValue("TRUE"));
     CHECK(!getLogicalValue("No"));
     CHECK(!getLogicalValue(""));
-    /* Worth knowing: these common spellings are all false. */
-    CHECK(!getLogicalValue("true"));
+    /* Still false, so worth pinning: "true" is accepted but these are not,
+     * and anything unrecognised reads as off rather than erroring. */
     CHECK(!getLogicalValue("on"));
+    CHECK(!getLogicalValue("t"));
     CHECK(!getLogicalValue("2"));
+    CHECK(!getLogicalValue("truex"));
 
     SECTION("isBlank: spaces only, not tabs");
     CHECK(isBlank(""));

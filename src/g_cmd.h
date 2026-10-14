@@ -17,7 +17,7 @@
 //  "Yes"     -> true
 //  "4.5"     -> 4.5
 #define CMDTYPE_COMMAND     0   // normal command
-#define CMDTYPE_LOGICAL     1   // boolean value (yes/no/1/0) case insensitive
+#define CMDTYPE_LOGICAL     1   // boolean value (yes/no/true/1/0) case insensitive
 #define CMDTYPE_NUMBER      2   // integer or float value
 #define CMDTYPE_STRING      3   // any string
 
