@@ -481,12 +481,11 @@ void voteDelRun(int startarg, edict_t *ent, int client) {
  */
 void displayVote(void) {
     int client;
-    unsigned int maxclientsused = 0, voteyes = 0, voteno = 0, novote = 0;
+    unsigned int voteyes = 0, voteno = 0, novote = 0;
 
     // count votes
     for (client = 0; client < maxclients->value; client++) {
         if (proxyinfo[client].inuse) {
-            maxclientsused++;
             if (proxyinfo[client].clientcommand & CCMD_VOTED) {
                 if (proxyinfo[client].clientcommand & CCMD_VOTEYES) {
                     voteyes++;
@@ -561,13 +560,11 @@ void runVote(edict_t *ent, int client) {
         // menu driven interface...
         if (voteinprogress) {
             int clienti;
-            int maxclientsused = 0, voteyes = 0, voteno = 0, novote = 0;
+            int voteyes = 0, voteno = 0, novote = 0;
 
             // count votes
             for (clienti = 0; clienti < maxclients->value; clienti++) {
                 if (proxyinfo[clienti].inuse) {
-                    maxclientsused++;
-
                     if (proxyinfo[clienti].clientcommand & CCMD_VOTED) {
                         if (proxyinfo[clienti].clientcommand & CCMD_VOTEYES) {
                             voteyes++;
