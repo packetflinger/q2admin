@@ -2341,7 +2341,7 @@ void ClientBegin(edict_t *ent) {
         }
         if (sameaddr > ip_limit) {
             Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same IP address\n");
-            gi.cprintf(ent, PRINT_HIGH, buffer);
+            gi.cprintf(ent, PRINT_HIGH, "%s", buffer);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
         }
     }
@@ -2391,7 +2391,7 @@ void ClientBegin(edict_t *ent) {
         }
 
         if (motdFilename[0]) {
-            gi.centerprintf(ent, motd);
+            gi.centerprintf(ent, "%s", motd);
         }
 
         addCmdQueue(client, QCMD_CHECKVARTESTS, (float) checkvar_poll_time, 0, 0);

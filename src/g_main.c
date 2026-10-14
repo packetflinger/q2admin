@@ -333,7 +333,7 @@ void G_RunFrame(void) {
                     }
 
                     q2a_strncpy(buffer, va("%s\n", defaultreconnectmessage), sizeof(buffer)-1);
-                    gi.cprintf(ent, PRINT_HIGH, buffer);
+                    gi.cprintf(ent, PRINT_HIGH, "%s", buffer);
 
                     randomString(ReconnectString, 5);
                     randomString(rndConnectString, 5);
@@ -775,7 +775,7 @@ void G_RunFrame(void) {
                 }
             } else if (command == QCMD_SHOWMOTD) {
                 if (motdFilename[0]) {
-                    gi.centerprintf(ent, motd);
+                    gi.centerprintf(ent, "%s", motd);
                 }
             } else if (command == QCMD_RUNVOTECMD) {
                 gi.AddCommandString(cmdpassedvote);
@@ -816,10 +816,10 @@ void G_RunFrame(void) {
                 if (data > 0) {
                     proxyinfo[client].freeze.thaw = ltime + data;
                 }
-                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, str);
+                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "%s", str);
             } else if (command == QCMD_UNFREEZEPLAYER) {
                 q2a_memset(&proxyinfo[client].freeze, 0, sizeof(freeze_t));
-                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, str);
+                gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "%s", str);
             }
 
             if (enforce_deadlines) {

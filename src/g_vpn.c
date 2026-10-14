@@ -126,7 +126,7 @@ void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
            }
            if (sameasn > ip_limit_vpn) {
                Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same VPN provider\n");
-               gi.cprintf(proxyinfo[i].ent, PRINT_HIGH, buffer);
+               gi.cprintf(proxyinfo[i].ent, PRINT_HIGH, "%s", buffer);
                addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
            }
         }

@@ -3652,7 +3652,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             return false;
         }
     } else if (motdFilename[0] && Q_stricmp(cmd, "motd") == 0) {
-        gi.centerprintf(ent, motd);
+        gi.centerprintf(ent, "%s", motd);
         return false;
     }
 
