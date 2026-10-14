@@ -887,7 +887,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     }
 
     // do you have a valid ban record?
-    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) {
+    if (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version[0])) {
         // no, abort
         if (newentry->msg) {
             G_Free(newentry->msg);
@@ -1254,7 +1254,7 @@ void displayNextBan(edict_t *ent, int client, long bannum) {
             q2a_strcat(buffer, " -");
         }
 
-        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0 && !findentry->version) {
+        if (findentry->type == NICKALL && findentry->addr.mask_bits == 0 && !findentry->version[0]) {
             q2a_strcat(buffer, " ALL");
         } else {
             if (findentry->type != NICKALL) {
@@ -2084,7 +2084,7 @@ char *parseBanLine(char *cp) {
 
     // do you have a valid ban record?
     if (newentry->type == NOTUSED ||
-            (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version)) ||
+            (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version[0])) ||
             (newentry->type == NICKRE && !newentry->r)) {
         // no, abort
         if (newentry->msg) {
