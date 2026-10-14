@@ -240,7 +240,7 @@ bool loadLogListFile(char *filename) {
                             lognum = q2a_atoi(cp);
                             logtypes[i].log = false;
 
-                            if (lognum >= 1 || lognum <= 32) {
+                            if (lognum >= 1 && lognum <= MAXLOGS) {
                                 lognum--;
 
                                 while (isdigit(*cp)) {
@@ -249,7 +249,7 @@ bool loadLogListFile(char *filename) {
 
                                 SKIPBLANK(cp);
 
-                                logtypes[i].logfiles |= (0x1 << lognum);
+                                logtypes[i].logfiles |= (0x1UL << lognum);
 
                                 while (*cp == '+') {
                                     cp++;
@@ -257,7 +257,7 @@ bool loadLogListFile(char *filename) {
 
                                     lognum = q2a_atoi(cp);
 
-                                    if (lognum >= 1 || lognum <= 32) {
+                                    if (lognum >= 1 && lognum <= MAXLOGS) {
                                         lognum--;
 
                                         while (isdigit(*cp)) {
@@ -266,7 +266,7 @@ bool loadLogListFile(char *filename) {
 
                                         SKIPBLANK(cp);
 
-                                        logtypes[i].logfiles |= (0x1 << lognum);
+                                        logtypes[i].logfiles |= (0x1UL << lognum);
                                     } else {
                                         break;
                                     }
@@ -834,13 +834,13 @@ void logeventRun(int startarg, edict_t *ent, int client) {
                     }
                     cmd = gi.argv(argi);
                     lognum = q2a_atoi(cmd);
-                    if (lognum >= 1 || lognum <= MAXLOGS) {
+                    if (lognum >= 1 && lognum <= MAXLOGS) {
                         lognum--;
                         while (isdigit(*cmd)) {
                             cmd++;
                         }
                         SKIPBLANK(cmd);
-                        logfiles = (0x1 << lognum);
+                        logfiles = (0x1UL << lognum);
                         while (*cmd == '+') {
                             cmd++;
                             SKIPBLANK(cmd);
@@ -848,13 +848,13 @@ void logeventRun(int startarg, edict_t *ent, int client) {
                                 break;
                             }
                             lognum = q2a_atoi(cmd);
-                            if (lognum >= 1 || lognum <= MAXLOGS) {
+                            if (lognum >= 1 && lognum <= MAXLOGS) {
                                 lognum--;
                                 while (isdigit(*cmd)) {
                                     cmd++;
                                 }
                                 SKIPBLANK(cmd);
-                                logfiles |= (0x1 << lognum);
+                                logfiles |= (0x1UL << lognum);
                             } else {
                                 gi.cprintf(ent, PRINT_HIGH, LOGEVENTCMD);
                                 return;
