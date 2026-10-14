@@ -1991,8 +1991,12 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
         //my check here, if maxfps = 0 and it has length we will NOT allow
         if (proxyinfo[client].userinfo.maxfps == 0) {
-            gi.bprintf(PRINT_HIGH, va(PRV_KICK_MSG, proxyinfo[client].name));
-            
+            // Pass the name as an argument rather than formatting it into
+            // the format string: a player called "%s%s%s" would otherwise
+            // make bprintf read arguments that were never passed. The va()
+            // below is fine, that string is the kick reason, not a format.
+            gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, proxyinfo[client].name));
         } else {
             if (maxfpsallowed) {
