@@ -924,7 +924,7 @@ void cloudSayHello(void) {
 
     cloudWriteLong(MAGIC_CLIENT);
     cloudWriteByte(CMD_HELLO);
-    cloudWriteString(cloud_config.uuid);
+    cloudWriteString("%s", cloud_config.uuid);
     cloudWriteLong(Q2A_REVISION);
     cloudWriteShort(cloud.port);
     cloudWriteByte(cloud.maxclients);
@@ -1240,7 +1240,7 @@ void cloudInvite(uint8_t cl, const char *text) {
     cloudWriteByte(CMD_COMMAND);
     cloudWriteByte(CMD_COMMAND_INVITE);
     cloudWriteByte(cl);
-    cloudWriteString(text);
+    cloudWriteString("%s", text);
 }
 
 /**
@@ -1256,7 +1256,7 @@ void cloudWhois(uint8_t cl, const char *name) {
     cloudWriteByte(CMD_COMMAND);
     cloudWriteByte(CMD_COMMAND_WHOIS);
     cloudWriteByte(cl);
-    cloudWriteString(name);
+    cloudWriteString("%s", name);
 }
 
 /**
@@ -1308,7 +1308,7 @@ void cloudSayClient(void) {
     if (!ent) {
         return;
     }
-    gi.cprintf(ent, level, string);
+    gi.cprintf(ent, level, "%s", string);
 }
 
 /**
