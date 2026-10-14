@@ -125,7 +125,17 @@ ifdef CONFIG_WINDOWS
     # otherwise targets XP and leaves them undeclared.
     CFLAGS = -Wall -O3 -fno-strict-aliasing -g -MMD -DCURL_STATICLIB -D_WIN32_WINNT=0x0600 $(INCLUDES)
 else
-    CFLAGS += -fPIC -ffast-math -w -DLINUX
+    # No -w here. It used to sit at the end of this line, where it cancelled
+    # the -Wall set above and hid every warning in the build - including the
+    # ones that turned out to be real bugs: a player-controlled printf format
+    # string, an out-of-bounds write into logFiles[], and a ban check that
+    # could never fire.
+    #
+    # Two groups are silenced because they are not about this code:
+    # OpenSSL deprecates most of the RSA/EVP API we call, and clang does not
+    # know the -Wstringop-truncation pragma g_http.c uses for GCC.
+    CFLAGS += -fPIC -ffast-math -DLINUX
+    CFLAGS += -Wno-deprecated-declarations -Wno-unknown-warning-option
 endif
 
 CFLAGS += -DQ2A_COMMIT='"$(VER)"' -DQ2A_REVISION=$(REV) -DCPU='"$(CPU)"'
