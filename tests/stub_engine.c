@@ -20,9 +20,9 @@
  * incidentally; without them a test trips over a NULL function pointer and
  * segfaults with no clue why. Fill in more fields as tests need them.
  *
- * shortcut: no ge/ge_mod edict array, so anything calling getEnt() or
- * getEntOffset() will not work. Add a fake edict array when a test needs
- * one.
+ * ge.edicts points at a fake edict array, so getEnt() and getEntOffset()
+ * work and code taking an edict_t * can be tested. ge_mod is NULL: nothing
+ * here can forward to a real game mod.
  */
 
 #include "g_local.h"
@@ -38,6 +38,11 @@ proxyinfo_t *proxyinfo;
 static cvar_t stub_maxclients;
 cvar_t *maxclients = &stub_maxclients;
 
+/* Slot 0 is the worldspawn entity, so clients start at 1 - the same
+ * off-by-one getEnt(client + 1) assumes in production. */
+static edict_t stub_edicts[STUB_MAXCLIENTS + 1];
+static gclient_t stub_gclients[STUB_MAXCLIENTS + 1];
+
 game_import_t gi;
 game_export_t ge;
 game_export_t *ge_mod;
@@ -52,6 +57,17 @@ char buffer2[256];
 /* What raiseSignal() was asked to set, per client, for tests to assert on. */
 unsigned int stub_signals[STUB_MAXCLIENTS + 1];
 
+/* g_log.o reads these. buffer is q2admin's shared scratch string. */
+char buffer[0x10000];
+static cvar_t stub_configfile_log;
+cvar_t *configfile_log = &stub_configfile_log;
+bool consolelog_enable;
+char consolelog_pattern[256] = "[q2a] %s\n";
+int signal_score_threshold = 50;
+
+/* Settable by a test, so "#x" and "#X" have a known value to format. */
+int stub_signal_score;
+
 /* --- stubbed q2admin functions --------------------------------------
  *
  * Stubbing raiseSignal() rather than linking the real g_signal.o keeps the
@@ -65,6 +81,34 @@ void raiseSignal(int client, unsigned int signal)
     if (client >= 0 && client < STUB_MAXCLIENTS) {
         stub_signals[client] |= signal;
     }
+}
+
+/* Deferred work: tests check the formatted output, not the queue. */
+void addCmdQueue(int client, byte command, float timeout, unsigned long data,
+                 char *str)
+{
+    (void)client; (void)command; (void)timeout; (void)data; (void)str;
+}
+
+uint16_t getport(void)
+{
+    return 27910;
+}
+
+int signalScore(int client)
+{
+    (void)client;
+    return stub_signal_score;
+}
+
+/* One fixed definition, so the "#w" format has something deterministic to
+ * print. Linking the real g_signal.o instead would clash with this and with
+ * raiseSignal() above. */
+signal_def_t *findSignalDefFromID(const int id)
+{
+    static signal_def_t def = { SIGNAL_CHATFLOOD, 15, "chatflood" };
+
+    return (unsigned int)id == def.bit ? &def : NULL;
 }
 
 /* --- fake engine print calls --- */
@@ -116,6 +160,14 @@ void stub_engine_init(void)
     proxyinfo = stub_clients + 1;
     proxyinfo[-1].inuse = 1;
 
+    memset(stub_edicts, 0, sizeof(stub_edicts));
+    memset(stub_gclients, 0, sizeof(stub_gclients));
+    ge.edicts = stub_edicts;
+    ge.edict_size = sizeof(edict_t);
+    ge.max_edicts = STUB_MAXCLIENTS + 1;
+    ge_mod = NULL;
+    stub_signal_score = 0;
+
     stub_maxclients.value = STUB_MAXCLIENTS;
     ltime = 100.0f;
     lframenum = 1000;
@@ -138,7 +190,17 @@ proxyinfo_t *stub_add_client(int slot, const char *name,
     }
     cl->protocol_major = protocol;
     stub_signals[slot] = 0;
+
+    /* Give it an entity too, so code taking an edict_t * can be called. */
+    cl->ent = stub_ent(slot);
+    cl->ent->inuse = true;
+    cl->ent->client = &stub_gclients[slot + 1];
     return cl;
+}
+
+edict_t *stub_ent(int slot)
+{
+    return &stub_edicts[slot + 1];
 }
 
 unsigned int stub_signals_for(int slot)

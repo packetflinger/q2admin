@@ -13,7 +13,13 @@ void stub_engine_init(void);
 proxyinfo_t *stub_add_client(int slot, const char *name,
                              const char *version, int protocol);
 
+/* The fake entity for a slot, same one stub_add_client() attaches. */
+edict_t *stub_ent(int slot);
+
 /* Bitmask of the signals raiseSignal() was called with for that client. */
 unsigned int stub_signals_for(int slot);
+
+/* What the stubbed signalScore() returns, for the "#x"/"#X" log formats. */
+extern int stub_signal_score;
 
 #endif /* STUB_ENGINE_H */

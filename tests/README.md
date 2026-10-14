@@ -17,8 +17,10 @@ globals, so a test supplies its own:
 | `proxyinfo` | per-client state | point it at your own array |
 | `maxclients` | `cvar_t *` | point it at your own `cvar_t` |
 | `ltime` | server clock, seconds | set it |
+| `ge.edicts` | the entity array | a fake array, so `getEnt()` works |
 
 `tests/stub_engine.c` does all of that. Call `stub_engine_init()` first.
+`ge_mod` stays NULL, so nothing can forward to a real game mod.
 
 ## Mocking a client
 
@@ -36,11 +38,13 @@ CHECK(stub_signals_for(1) & SIGNAL_PROTOCOL_DOWNGRADE);
 
 - **Cheap:** anything not touching `gi` - `g_net.c`, `g_regex.c`, `g_json.c`,
   most of `g_util.c`.
-- **Cheap, needs the stub:** code reading or writing `proxyinfo`, like
-  `g_protocol.c`.
-- **More work:** `g_signal.c` and `g_log.c` need `logEvent()`,
-  `addCmdQueue()` and a fuller `gi`. Worth doing - `convertToLogLine()` is a
-  pure string formatter where a test would have caught a real truncation bug.
+- **Cheap, needs the stub:** code reading or writing `proxyinfo` or taking an
+  `edict_t *`, like `g_protocol.c` and `convertToLogLine()`.
+- **More work:** the rest of `g_log.c` (the config parser and the file
+  writing) needs real files; `g_signal.c` needs `logEvent()`,
+  `getClientFromArg()` and a fuller `gi`, and its `raiseSignal()` and
+  `signalScore()` would clash with the stubs here - swap them out if you link
+  it.
 - **Not worth faking:** `ClientThink()`, the Cloud Admin socket code, and
   anything calling `ge_mod->*`. Those need a live engine and a real mod; test
   them on a server.
