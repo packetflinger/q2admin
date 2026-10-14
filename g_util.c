@@ -1,0 +1,820 @@
+/*
+Copyright (C) 2000 Shane Powell
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
+ */
+
+#include "g_local.h"
+
+// required for proxy testing
+
+/**
+ * Force entity to do a command
+ */
+void stuffcmd(edict_t *e, char *s) {
+    if (q2a_developer) {
+        q2a_printf("STUFF(%s): %s\n", NAME(getEntOffset(e)-1), s);
+    }
+    gi.WriteByte(SVC_STUFFTEXT);
+    gi.WriteString(s);
+    gi.unicast(e, true);
+}
+
+/**
+ * Remove whitespace (space/tab/newline) from the beginning and end of a string
+ */
+char *trim(char *s) {
+    char *ptr;
+    if (!s) {
+        return NULL;   // handle NULL string
+    }
+    if (!*s) {
+        return s;      // handle empty string
+    }
+    for (ptr = s + q2a_strlen(s) - 1; (ptr >= s) && isspace(*ptr); --ptr);
+    ptr[1] = '\0';
+    return s;
+}
+
+/**
+ * Variable assignment. Build a string printf style inline
+ */
+char *va(const char *format, ...) {
+    static char strings[8][MAX_STRING_CHARS];
+    static uint16_t index;
+
+    char *string = strings[index++ % 8];
+
+    va_list args;
+
+    va_start(args, format);
+    vsnprintf(string, MAX_STRING_CHARS, format, args);
+    va_end(args);
+
+    return string;
+}
+
+/**
+ * Recursively compare strings with wildcards.
+ */
+bool wildcard_match(char *pattern, char *haystack) {
+    if (*pattern == '\0' && *haystack == '\0') {
+        return true;
+    }
+
+    if (*pattern == '*' && *(pattern+1) != '\0' && *haystack == '\0') {
+        return false;
+    }
+
+    if (*pattern == '?' || *pattern == *haystack) {
+        return wildcard_match(pattern+1, haystack+1);
+    }
+
+    if (*pattern == '*') {
+        return wildcard_match(pattern+1, haystack) || wildcard_match(pattern, haystack+1);
+    }
+    return false;
+}
+
+/**
+ * Maybe not needed? Use startContains instead?
+ */
+bool startswith(char *needle, char *haystack) {
+    return (strncmp(needle, haystack, q2a_strlen(needle)) == 0);
+}
+
+/**
+ * Case insensitive string compare
+ */
+int Q_stricmp(char *string1, char *string2) {
+    while (*string1 && *string2) {
+        char s1c = tolower(*string1);
+        char s2c = tolower(*string2);
+        if (s1c != s2c) {
+            if (s1c < s2c) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+        string1++;
+        string2++;
+    }
+    if (*string2) {
+        return -1;
+    }
+    if (*string1) {
+        return 1;
+    }
+    return 0;
+}
+
+/**
+ * Searches the string for the given key and returns the associated value, or
+ * an empty string.
+ */
+char *Info_ValueForKey(char *s, char *key) {
+    char pkey[512];
+    static char value[2][512];  // Use two buffers so compares work without
+                                // stomping on each other
+    static int valueindex;
+    char *o;
+
+    valueindex ^= 1;
+    if (*s == '\\') {
+        s++;
+    }
+    while (1) {
+        o = pkey;
+        while (*s != '\\') {
+            if (!*s) {
+                return "";
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+        s++;
+
+        o = value[valueindex];
+
+        while (*s != '\\' && *s) {
+            if (!*s) {
+                return "";
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+
+        if (!q2a_strcmp(key, pkey)) {
+            return value[valueindex];
+        }
+
+        if (!*s) {
+            return "";
+        }
+        s++;
+    }
+}
+
+/**
+ * Ensure the FORMAT of the userinfo string is valid, not necessarily the
+ * values. Check for overall length, length of keys and values, illegal
+ * characters, etc.
+ */
+bool Info_Validate(char *s) {
+    size_t len, total;
+    int c;
+
+    total = 0;
+    while (true) {
+        // validate key
+        if (*s == '\\') {
+            s++;
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+        }
+        if (!*s) {
+            return false;   // missing key
+        }
+        len = 0;
+        while (*s != '\\') {
+            c = *s++;
+            if (!Q_isprint(c) || c == '\"' || c == ';') {
+                return false;   // illegal characters
+            }
+            if (++len == MAX_INFO_KEY) {
+                return false;   // oversize key
+            }
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+            if (!*s) {
+                return false;   // missing value
+            }
+        }
+
+        // validate value
+        s++;
+        if (++total == MAX_INFO_STRING) {
+            return false;   // oversize infostring
+        }
+        if (!*s) {
+            return false;   // missing value
+        }
+        len = 0;
+        while (*s != '\\') {
+            c = *s++;
+            if (!Q_isprint(c) || c == '\"' || c == ';') {
+                return false;   // illegal characters
+            }
+            if (++len == MAX_INFO_VALUE) {
+                return false;   // oversize value
+            }
+            if (++total == MAX_INFO_STRING) {
+                return false;   // oversize infostring
+            }
+            if (!*s) {
+                return true;    // end of string
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Remove a key/value pair from a userinfo string
+ */
+void Info_RemoveKey(char *s, const char *key) {
+    char *start;
+    char pkey[512];
+    char value[512];
+    char *o;
+
+    if (strchr(key, '\\')) {
+        return;
+    }
+    for (;;) {
+        start = s;
+        if (*s == '\\') {
+            s++;
+        }
+        o = pkey;
+        while (*s != '\\') {
+            if (!*s) {
+                return;
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+        s++;
+        o = value;
+        while (*s != '\\' && *s) {
+            if (!*s) {
+                return;
+            }
+            *o++ = *s++;
+        }
+        *o = 0;
+        if (!q2a_strcmp(key, pkey)) {
+            size_t memlen = q2a_strlen(s);
+            q2a_memmove(start, s, memlen);
+            start[memlen] = 0;
+            return;
+        }
+        if (!*s) {
+            return;
+        }
+    }
+}
+
+/**
+ * Set a key/value pair in a userinfo string. This will remove an existing
+ * key/value and append the new pair at the end. Setting a non-existing
+ * key will just add it to the end.
+ */
+void Info_SetValueForKey(char *s, const char *key, const char *value) {
+    char newi[MAX_INFO_STRING], *v;
+    int c;
+
+    if (!key || !key[0] || !value || !value[0]) {
+        return;
+    }
+    char *nope = "\\;\""; // no slashes, semicolons or double quotes
+    while (*nope) {
+        if (strchr(key, *nope) || strchr(value, *nope++)) {
+            return;
+        }
+    }
+    if (q2a_strlen(key) > MAX_INFO_KEY - 1 || q2a_strlen(value) > MAX_INFO_KEY - 1) {
+        return;
+    }
+    Info_RemoveKey(s, key);
+    sprintf(newi, "\\%s\\%s", key, value);
+    if ((q2a_strlen(newi) + q2a_strlen(s)) > MAX_INFO_STRING) {
+        return;
+    }
+    s += q2a_strlen(s);
+    v = newi;
+    while (*v) {
+        c = *v++;
+        c &= 127;                   // strip high bits
+        if (c >= 32 && c < 127) {   // only ascii values
+            *s++ = c;
+        }
+    }
+    s[0] = 0;
+}
+
+/**
+ * Copy all edicts and states from the forward game library. This is called
+ * all over the place and is the heart of how q2admin works.
+ */
+void G_MergeEdicts(void) {
+    ge.apiversion = ge_mod->apiversion;
+    ge.edict_size = ge_mod->edict_size;
+    ge.edicts = ge_mod->edicts;
+    ge.num_edicts = ge_mod->num_edicts;
+    ge.max_edicts = ge_mod->max_edicts;
+}
+
+/**
+ * Break up a configuration file line into the variable and value. For example:
+ *
+ * Input line:  `variable1 "value1"`
+ *   `buffer` is the entire input line
+ *   `buff1` will be "variable1" upon return
+ *   `buff2` will be "value1" upon return (the original quotes are stripped)
+ *
+ * Return value
+ *   1 for successfully parsing the line
+ *   0 for being unsuccessful (formatting issues)
+ *
+ * Note: There can be any number of spaces or tabs at the beginning of the line
+ * or (and only) between the variable and the value. The value MUST be quoted.
+ */
+int breakLine(char *buffer, char *buff1, char *buff2, int buff2size) {
+    char *cp, *dp;
+
+    cp = buffer;
+    dp = buff1;
+    SKIPBLANK(cp);
+    while (*cp && *cp != ' ' && *cp != '\t') {
+        *dp++ = *cp++;
+    }
+    *dp = 0x0;
+    if (dp == buff1 || !*cp) {
+        return 0;
+    }
+    dp = buff2;
+    SKIPBLANK(cp);
+    if (*cp != '\"') {
+        return 0;
+    }
+    cp++;
+    cp = processString(buff2, cp, buff2size, '\"');
+    if (!buff2[0] || *cp != '\"') {
+        return 0;
+    }
+    return 1;
+}
+
+/**
+ * Is cmp at the beginning of src?
+ *
+ * Why does this not return a bool?
+ */
+bool startContains(char *src, char *cmp) {
+    while (*cmp) {
+        if (!(*src) || toupper(*src) != toupper(*cmp)) {
+            return 0;
+        }
+        src++;
+        cmp++;
+    }
+    return 1;
+}
+
+/**
+ * Is buff2 inside buff1?
+ */
+int stringContains(char *buff1, char *buff2) {
+    char strbuffer1[4096];
+    char strbuffer2[4096];
+
+    q2a_strncpy(strbuffer1, buff1, sizeof(strbuffer1)-1);
+    q_strupr(strbuffer1);
+    q2a_strncpy(strbuffer2, buff2, sizeof(strbuffer2)-1);
+    q_strupr(strbuffer2);
+    return (q2a_strstr(strbuffer1, strbuffer2) != NULL);
+}
+
+/**
+ * Check if a buffer is made up of only space characters
+ */
+int isBlank(char *buff1) {
+    while (*buff1 == ' ') {
+        buff1++;
+    }
+    return !(*buff1);
+}
+
+/**
+ * Resolve special tokens in input string and render output
+ *
+ *  \n = newline
+ *  \d = dollar sign $
+ *  \q = double quote "
+ *  \s = single quote '
+ *  \m = mod directory name
+ *  \t = current timestamp
+ *
+ *  (case insensitive)
+ */
+char *processString(char *output, char *input, int max, char end) {
+    while (*input && *input != end && max) {
+        if (*input == '\\') {
+            input++;
+
+            if ((*input == 'n') || (*input == 'N')) {
+                *output++ = '\n';
+                input++;
+            } else if ((*input == 'd') || (*input == 'D')) {
+                *output++ = '$';
+                input++;
+            } else if ((*input == 'q') || (*input == 'Q')) {
+                *output++ = '\"';
+                input++;
+            } else if ((*input == 's') || (*input == 'S')) {
+                *output++ = ' ';
+                input++;
+            } else if ((*input == 'm') || (*input == 'M')) {
+                int modlen = q2a_strlen(moddir);
+                if (max >= modlen && modlen) {
+                    q2a_strcpy(output, moddir);
+                    output += modlen;
+                    max -= (modlen - 1);
+                }
+                input++;
+            } else if ((*input == 't') || (*input == 'T')) {
+                struct tm *timestamptm;
+                time_t timestampsec;
+                char *timestampcp;
+                int timestamplen;
+
+                time(&timestampsec);
+                timestamptm = localtime(&timestampsec);
+                timestampcp = asctime(timestamptm);
+                timestamplen = q2a_strlen(timestampcp) - 1; // minus the \n
+
+                if (timestamplen && max >= timestamplen) {
+                    q2a_strncpy(output, timestampcp, timestamplen);
+                    output += timestamplen;
+                    max -= (timestamplen - 1);
+                }
+                input++;
+            } else {
+                *output++ = *input++;
+            }
+
+            max--;
+        } else {
+            *output++ = *input++;
+            max--;
+        }
+    }
+    *output = 0x0;
+    return input;
+}
+
+/**
+ * Get a boolean version of a string value.
+ *
+ * Case insensitive
+ */
+bool getLogicalValue(char *arg) {
+    if (Q_stricmp(arg, "Yes") == 0 ||
+            Q_stricmp(arg, "1") == 0 ||
+            Q_stricmp(arg, "Y") == 0) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ *
+ */
+int getLastLine(char *buffer, FILE *dumpfile, long *fpos) {
+    char *bp = buffer2;
+    int length = 255;
+
+    if (*fpos < 0) {
+        return 0;
+    }
+
+    while (length && *fpos >= 0) {
+        fseek(dumpfile, *fpos, SEEK_SET);
+        (*fpos)--;
+
+        if (fread(bp, 1, 1, dumpfile) != 1) {
+            break;
+        }
+
+        if (*bp == '\n') {
+            break;
+        }
+
+        bp++;
+        length--;
+    }
+
+    if (bp != buffer2) {
+        bp--;
+
+        // reverse string
+        while (bp >= buffer2) {
+            *buffer++ = *bp--;
+        }
+    }
+
+    *buffer = 0;
+    return 1;
+}
+
+/**
+ * Change string to all upper case
+ */
+void q_strupr(char *c) {
+    while (*c) {
+        if (islower((*c))) {
+            *c = toupper((*c));
+        }
+        c++;
+    }
+}
+
+
+/**
+ * Returns number of characters that would be written into the buffer,
+ * excluding trailing '\0'. If the returned value is equal to or greater than
+ * buffer size, resulting string is truncated.
+ *
+ * WARNING: On Win32, until MinGW-w64 vsnprintf() bug is fixed, this may return
+ * SIZE_MAX on overflow. Only use return value to test for overflow, don't use
+ * it to allocate memory.
+ */
+size_t Q_vsnprintf(char *dest, size_t size, const char *fmt, va_list argptr) {
+    int ret;
+
+#ifdef _WIN32
+    if (size) {
+        ret = _vsnprintf(dest, size - 1, fmt, argptr);
+        if (ret < 0 || ret >= size - 1)
+            dest[size - 1] = 0;
+    } else {
+        ret = _vscprintf(fmt, argptr);
+    }
+#else
+    ret = vsnprintf(dest, size, fmt, argptr);
+#endif
+
+    return ret;
+}
+
+/**
+ * Returns number of characters actually written into the buffer,
+ * excluding trailing '\0'. If buffer size is 0, this function does nothing
+ * and returns 0.
+ */
+size_t Q_vscnprintf(char *dest, size_t size, const char *fmt, va_list argptr) {
+    if (size) {
+        size_t ret = Q_vsnprintf(dest, size, fmt, argptr);
+        return min(ret, size - 1);
+    }
+    return 0;
+}
+
+/**
+ * Returns number of characters that would be written into the buffer,
+ * excluding trailing '\0'. If the returned value is equal to or greater
+ * than buffer size, resulting string is truncated.
+ *
+ * WARNING: On Win32, until MinGW-w64 vsnprintf() bug is fixed, this may return
+ * SIZE_MAX on overflow. Only use return value to test for overflow, don't use
+ * it to allocate memory.
+ */
+size_t Q_snprintf(char *dest, size_t size, const char *fmt, ...) {
+    va_list argptr;
+    size_t  ret;
+
+    va_start(argptr, fmt);
+    ret = Q_vsnprintf(dest, size, fmt, argptr);
+    va_end(argptr);
+
+    return ret;
+}
+
+/**
+ * Returns number of characters actually written into the buffer, excluding
+ * trailing '\0'. If buffer size is 0, this function does nothing and returns
+ * 0.
+ *
+ * Stolen from q2pro
+ */
+size_t Q_scnprintf(char *dest, size_t size, const char *fmt, ...) {
+    va_list argptr;
+    size_t  ret;
+
+    va_start(argptr, fmt);
+    ret = Q_vscnprintf(dest, size, fmt, argptr);
+    va_end(argptr);
+    return ret;
+}
+
+/**
+ * Returns number of characters that would be written into the buffer,
+ * excluding trailing '\0'. If the returned value is equal to or greater than
+ * buffer size, resulting string is truncated.
+ *
+ * Stolen from q2pro
+ */
+size_t Q_concat(char *dest, size_t size, ...) {
+    va_list argptr;
+    const char *s;
+    size_t len, total = 0;
+
+    va_start(argptr, size);
+    while ((s = va_arg(argptr, const char *)) != NULL) {
+        len = strlen(s);
+        if (total + len < size) {
+            q2a_memcpy(dest, s, len);
+            dest += len;
+        }
+        total += len;
+    }
+    va_end(argptr);
+
+    if (size) {
+        *dest = 0;
+    }
+
+    return total;
+}
+
+/**
+ * Concatenate a string onto the end of another string up to a certain size.
+ * Returns the new length of the destination string.
+ */
+size_t Q_strlcat(char *dst, const char *src, size_t size) {
+    size_t len = q2a_strlen(dst);
+    return len + Q_strlcpy(dst + len, src, size - len);
+}
+
+/**
+ * Copy a string up to a specific size. Returns length copied, which can be
+ * smaller than the specifid size due to src string length.
+ */
+size_t Q_strlcpy(char *dst, const char *src, size_t size) {
+    size_t ret = q2a_strlen(src);
+
+    if (size) {
+        size_t len = min(ret, size - 1);
+        q2a_memcpy(dst, src, len);
+        dst[len] = 0;
+    }
+
+    return ret;
+}
+
+/**
+ * Size limited case insensitive string compare
+ *
+ * Stolen from Q2Pro
+ */
+int Q_strncasecmp(const char *s1, const char *s2, size_t n) {
+    int        c1, c2;
+
+    do {
+        c1 = *s1++;
+        c2 = *s2++;
+
+        if (!n--) {
+            return 0;        /* strings are equal until end point */
+        }
+
+        if (c1 != c2) {
+            c1 = Q_tolower(c1);
+            c2 = Q_tolower(c2);
+            if (c1 < c2) {
+                return -1;
+            }
+            if (c1 > c2) {
+                return 1;        /* strings not equal */
+            }
+        }
+    } while (c1);
+    return 0;        /* strings are equal */
+}
+
+
+/**
+ * Case insensitive version of strstr. If s2 is a substring of s1,
+ * return a pointer to it in s1. Empty s2 will just return the
+ * beginning of s1. No match will return NULL
+ */
+char *Q_strcasestr(const char *s1, const char *s2) {
+    size_t l1, l2;
+
+    l2 = q2a_strlen(s2);
+    if (!l2) {
+        return (char *)s1;
+    }
+    l1 = q2a_strlen(s1);
+    while (l1 >= l2) {
+        l1--;
+        if (!Q_strncasecmp(s1, s2, l2)) {
+            return (char *)s1;
+        }
+        s1++;
+    }
+    return NULL;
+}
+
+/**
+ * The version in math.h was weird with values between 0-1
+ */
+int q2a_ceil(float x) {
+    float temp;
+
+    temp = x - (int)x;
+    if (temp > 0) {
+        return ((int)x) + 1;
+    } else {
+        return (int)x;
+    }
+}
+
+/**
+ * Just to complement q2a_ceil
+ */
+int q2a_floor(float x) {
+   return (int)x;
+}
+
+/**
+ * Throttle command usage
+ */
+bool can_do_new_cmds(int client) {
+    if (proxyinfo[client].newcmd_timeout <= ltime) {
+        proxyinfo[client].newcmd_timeout = ltime + 3;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Random characters of whatever length
+ */
+void randomString(char *buffer, int length) {
+    unsigned int index;
+    for (index = 0; index < length; index++) {
+        buffer[index] = RANDCHAR();
+    }
+    buffer[index] = 0;
+}
+
+/**
+ * Ensure a filesystem path is valid and appropriate.
+ * - relative paths only
+ * - no ".."s
+ * - only printable characters
+ */
+pathtype_t validatePath(const char *s) {
+    int res = PATH_VALID;
+
+    if (*s == '/') {
+        return PATH_INVALID;
+    }
+    if (stringContains((char *)s, "..")) {
+        return PATH_INVALID;
+    }
+    for (; *s; s++) {
+        if (!Q_isprint(*s)) {
+            return PATH_INVALID;
+        }
+    }
+    return res;
+}
+
+/**
+ * Print a formatted string to the server console prepended with an identifier
+ * to make it obvious the message was from q2admin. Primary use-case is for
+ * console logging and info prints.
+ */
+void q2a_printf(char *fmt, ...) {
+    char cbuffer[8192];
+    va_list arglist;
+    char *cp;
+
+    va_start(arglist, fmt);
+    Q_vsnprintf(cbuffer, sizeof(cbuffer), fmt, arglist);
+    va_end(arglist);
+
+    // NULL edict sends to the console only
+    gi.cprintf(NULL, PRINT_HIGH, "[q2a] %s", cbuffer);
+}
