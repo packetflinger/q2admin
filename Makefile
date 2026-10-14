@@ -296,3 +296,37 @@ example-cfg: $(EXAMPLECFG)
 $(EXAMPLECFG): tools/gen-example-cfg.py $(wildcard $(SRCDIR)/*.c) $(wildcard $(SRCDIR)/*.h)
 	$(E) [GEN] $@
 	$(Q)$(PYTHON) $< $@
+
+# Unit tests. Each tests/test_*.c becomes its own program, linked against the
+# real objects from $(BUILDDIR) so the tests exercise shipped code rather than
+# a copy. tests/stub_engine.c stands in for the engine and the wrapped mod.
+#
+#     make test              build and run them all
+#     make test TESTS=net    just tests/test_net.c
+#
+# Only code that does not need a live engine is testable this way; see the
+# comment at the top of tests/stub_engine.c for what is faked and what is not.
+TESTDIR  := tests
+TESTS    ?= $(patsubst $(TESTDIR)/test_%.c,%,$(wildcard $(TESTDIR)/test_*.c))
+TESTBINS := $(addprefix $(BUILDDIR)/test_,$(TESTS))
+
+# Objects every test links. g_util.o supplies the string helpers, g_regex.o
+# the pattern matching that identifyClient() uses.
+TESTOBJS := $(BUILDDIR)/g_net.o $(BUILDDIR)/g_protocol.o \
+            $(BUILDDIR)/g_util.o $(BUILDDIR)/g_regex.o \
+            $(BUILDDIR)/stub_engine.o
+
+.PHONY: test
+test: $(TESTBINS)
+	$(Q)fail=0; for t in $(TESTBINS); do \
+	    echo "=== $$t ==="; $$t || fail=1; \
+	done; \
+	if [ $$fail -ne 0 ]; then echo; echo "TESTS FAILED"; exit 1; fi
+
+$(BUILDDIR)/stub_engine.o: $(TESTDIR)/stub_engine.c $(HEADERS) | $(BUILDDIR)
+	$(E) [CC] $@
+	$(Q)$(CC) -c $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $<
+
+$(BUILDDIR)/test_%: $(TESTDIR)/test_%.c $(TESTOBJS) $(HEADERS) | $(BUILDDIR)
+	$(E) [CC] $@
+	$(Q)$(CC) $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $< $(TESTOBJS) $(LIBS)
