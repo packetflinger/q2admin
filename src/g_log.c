@@ -487,12 +487,15 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 // type has no signal to resolve and expands to nothing.
                 signal_def_t *s = findSignalDefFromID(number);
                 if (s) {
-                    cp = s->name;
-                    while (*cp) {
-                        if (*cp != '\n') {
-                            *dest++ = *cp++;
+                    // Its own pointer, not the shared cp: the name is a
+                    // const char * and cp is assigned writable buffers
+                    // everywhere else in this function.
+                    const char *name = s->name;
+                    while (*name) {
+                        if (*name != '\n') {
+                            *dest++ = *name++;
                         } else {
-                            cp++;
+                            name++;
                         }
                     }
                 }
