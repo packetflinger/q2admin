@@ -388,8 +388,11 @@ void G_RunFrame(void) {
                         addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUPTEST, 0);
                         proxyinfo[client].charindex = -2;
                         logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail 2", IW_STARTUPFAIL, 0.0, true);
-                        break;
                     }
+                    // Outside the zbotdetect check, matching QCMD_STARTUP
+                    // above: the attempts are spent either way, and falling
+                    // through re-queues this handler for ever.
+                    break;
                 }
 
                 stuffPlayer(ent, zbot_str_start_nl);
