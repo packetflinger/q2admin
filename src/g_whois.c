@@ -442,8 +442,9 @@ void whoisReadFile(void) {
         for (i = 0; i < WHOISNAMES; i++) {
             char *slot = whois_details[WHOIS_COUNT].dyn[i].name;
 
-            // 255/-1 is the raw byte an older whois.dat used for an empty slot
-            if (slot[0] == 255 || slot[0] == -1 || slot[0] == WHOIS_SPACE) {
+            // -1 is the 0xff byte an older whois.dat used for an empty slot;
+            // char is signed here, so comparing it against 255 is always false
+            if (slot[0] == -1 || slot[0] == WHOIS_SPACE) {
                 slot[0] = 0;
             } else {
                 swapChars(slot, WHOIS_SPACE, ' ');
