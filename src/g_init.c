@@ -1520,7 +1520,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         }
     }
 
-    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw)-1);
+    Q_strlcpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
     q2a_strncpy(proxyinfo[client].name, Info_ValueForKey(userinfo, "name"), sizeof(proxyinfo[client].name) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
@@ -1533,7 +1533,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof(proxyinfo[client].userinfo.skin) - 1);
-    q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw) - 1);
+    Q_strlcpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
 
     checkMVDImposter(client, userinfo);
 
