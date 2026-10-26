@@ -1291,6 +1291,7 @@ int checkIfBanned(edict_t *ent, int client) {
         if (q2a_developer) {
             Q_printf("%s[%s] is allowlisted\n", NAME(client), IP(client));
         }
+        logEvent(LT_BAN, client, ent, va("%s[%s] allowlisted: %s", NAME(client), IP(client), banMatchReason(proxyinfo[client].baninfo)), 0, 0.0, true);
         return 0;
     }
     res = checkBanList(ent, client, true);   // check denylists second
@@ -1298,6 +1299,7 @@ int checkIfBanned(edict_t *ent, int client) {
         if (q2a_developer) {
             Q_printf("%s[%s] is denylisted\n", NAME(client), IP(client));
         }
+        logEvent(LT_BAN, client, ent, va("%s[%s] denylisted: %s", NAME(client), IP(client), banMatchReason(proxyinfo[client].baninfo)), 0, 0.0, true);
         return 1;
     }
     return 0;
