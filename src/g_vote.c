@@ -27,7 +27,7 @@ static bool voteinprogress = 0;
 static unsigned long votetimeout, voteremindtimeout;
 char cmdvote[2048];
 char cmdpassedvote[2048];
-char votecaller[16];
+char votecaller[32];    // caller's name (up to 15 characters) plus "\n"
 int clientVoteTimeout = 60;
 int clientRemindTimeout = 10;
 int clientMaxVoteTimeout = 0;
@@ -679,10 +679,8 @@ void runVote(edict_t *ent, int client) {
         votetimeout = ltime + clientVoteTimeout;
         voteremindtimeout = ltime + clientRemindTimeout;
         proxyinfo[client].clientcommand |= (CCMD_VOTEYES | CCMD_VOTED);
-        q2a_strncpy(cmdvote, votecmd, sizeof(cmdvote)-1);
-        q2a_strcat(cmdvote, "\n");
-        q2a_strncpy(votecaller, proxyinfo[client].name, sizeof(votecaller)-1);
-        q2a_strcat(votecaller, "\n");
+        Q_snprintf(cmdvote, sizeof(cmdvote), "%s\n", votecmd);
+        Q_snprintf(votecaller, sizeof(votecaller), "%s\n", proxyinfo[client].name);
         displayVote();
     } else {
         gi.cprintf(ent, PRINT_HIGH, "Invalid vote command specified.\n");
@@ -751,7 +749,7 @@ void checkOnVoting(void) {
             percent = ((double) voteyes / ((double) maxclientsused - ((double) votecountnovotes ? 0.0 : novote)));
             if (percent >= ((double) votepasspercent / 100)) {
                 q2a_strcpy(printstr, "Vote PASSED!");
-                q2a_strncpy(cmdpassedvote, cmdvote, sizeof(cmdpassedvote)-1);
+                Q_strlcpy(cmdpassedvote, cmdvote, sizeof(cmdpassedvote));
                 addCmdQueue(-1, QCMD_RUNVOTECMD, 5, 0, 0);
             } else {
                 q2a_strcpy(printstr, "Vote FAILED!");
