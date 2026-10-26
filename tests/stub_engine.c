@@ -1,28 +1,18 @@
 /**
- * A fake Quake 2 engine, just big enough to run q2admin code under test.
+ * Copyright (C) The Q2Admin contributors
  *
- * q2admin normally gets everything from the engine and the wrapped mod. All
- * of that arrives as plain globals, so a test can simply supply its own:
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *   gi          the engine's function table - a struct of function
- *               pointers, so "mocking the engine" means assigning fields
- *   proxyinfo   q2admin's per-client state; point it at our own array
- *   maxclients  a cvar_t *, so point it at our own cvar_t
- *   ltime       the server clock, in seconds; set it to whatever a test needs
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * IMPORTANT: this file includes g_local.h so proxyinfo_t has the real
- * layout. Do not be tempted to redeclare a smaller version of the struct in
- * a test - the field offsets then disagree with the compiled code under
- * test, which reads the wrong members and quietly passes or fails for the
- * wrong reason.
- *
- * gi is zeroed apart from the three print calls, which error paths hit
- * incidentally; without them a test trips over a NULL function pointer and
- * segfaults with no clue why. Fill in more fields as tests need them.
- *
- * ge.edicts points at a fake edict array, so getEnt() and getEntOffset()
- * work and code taking an edict_t * can be tested. ge_mod is NULL: nothing
- * here can forward to a real game mod.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

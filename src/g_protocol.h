@@ -1,25 +1,18 @@
 /**
- * Q2Admin
- * Identifying which engine a client is running, from the version string it
- * reports, and noticing when it connected with less protocol than it can
- * speak.
+ * Copyright (C) The Q2Admin contributors
  *
- * Shortly after a player joins, q2admin stuffs a probe that makes the client
- * send back its "version" cvar (QCMD_CLIENTVERSION, landing in
- * proxyinfo[].client_version). That string names the engine, and the engine
- * tells us the highest network protocol that client is capable of.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Comparing that against the protocol actually negotiated - the "major" key
- * from the extra userinfo, in proxyinfo[].protocol_major - catches a client
- * that connected with less than it is capable of. That alone proves nothing;
- * pinning cl_protocol is something people legitimately do when a server
- * misbehaves. But cheat clients frequently pose as an older, simpler protocol
- * to sidestep newer server-side checks, so it earns a signal rather than a
- * kick.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * Everything here rests on a self-reported, trivially forged string. Nothing
- * it produces is authenticated, and a client that lies about its version
- * simply isn't identified.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #pragma once

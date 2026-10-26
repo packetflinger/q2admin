@@ -1,15 +1,18 @@
 /**
- * convertToLogLine(): expands the "#x" macros in a log format string.
+ * Copyright (C) The Q2Admin contributors
  *
- * Worth testing because it is a pure string formatter with one output
- * buffer and a dozen branches, and because a real bug lived here: the
- * numeric macros formatted straight into dest with sizeof(dest), which is
- * the size of the pointer, so anything over 7 characters was silently cut.
- * "#f" lost the microsecond it was widened to show.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * The client macros are all guarded on ent, so each is checked both with a
- * client and with ent NULL, which is how the server-wide log types
- * (SERVERSTART, the cloud ones) call this.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

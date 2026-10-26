@@ -1,16 +1,18 @@
 /**
- * g_protocol.c: deciding whether a client connected with less protocol than
- * its engine can speak.
+ * Copyright (C) The Q2Admin contributors
  *
- * This is the pattern for testing anything that works on a player. A client
- * is three fields in a proxyinfo slot - no engine, no network, no map:
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *     stub_add_client(1, "bob", "q2pro r1892", PROTOCOL_R1Q2);
- *     checkProtocolDowngrade(1);
- *     CHECK(stub_signals_for(1) & SIGNAL_PROTOCOL_DOWNGRADE);
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * server_protocol stands for what the server itself offers, so a test can
- * put a modern client on an older server and check nothing is flagged.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

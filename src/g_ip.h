@@ -1,15 +1,20 @@
 /**
- * Q2Admin
- * Cache of IPLogs VPN-check results, keyed by client IP address.
+ * Copyright (C) The Q2Admin contributors
  *
- * Repeat connections from the same address (rejoins, alt characters, short
- * disconnects) would otherwise re-query the IPLogs API every time. This
- * keeps the most recent result per address in a small fixed-size
- * open-addressing hash table, so a repeat connection is a handful of array
- * reads instead of a network round trip. Lookup/insert are both O(1)
- * (bounded by IPLOGS_CACHE_PROBE), no allocation, no locking needed since
- * everything runs on the single main server-frame thread.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
+
 #pragma once
 
 #define IPLOGS_CACHE_SIZE    1024   // slots; must be a power of 2

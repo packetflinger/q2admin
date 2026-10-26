@@ -1,0 +1,31 @@
+Q2Admin authors and contributors
+================================
+
+Everyone who has contributed to Q2Admin, listed alphabetically by gaming
+alias.
+
+claire          Current maintainer
+Harven          Bug fixes
+id Software     Quake 2 game API definitions (game.h, shared.h)
+KillerBee       Original author
+MDVz0r          Anti-cheat exception and hash lists
+Niehztog        Bug and security fixes
+Quadz           Bug and security fixes
+QwazyWabbit     Bug and security fixes
+r1ch            Bug and security fixes
+Railwolf        Bug and security fixes
+skuller         Platform definitions (platform.h, from Q2Pro)
+WhiteFang       ZbotCheck, the basis of the aim jitter detection
+
+
+Third-party code
+----------------
+
+tiny-json       by rafagafe, MIT License (src/g_json.c, src/g_json.h)
+tiny-regex-c    by kokke, public domain (src/g_regex.c, src/g_regex.h)
+
+Additions
+---------
+
+Apologies to any contributors missed above. Feel free to submit a pull request
+adding yourself and a short description of your contribution.

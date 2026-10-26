@@ -1,18 +1,18 @@
 /**
- * The cloud admin client maintains a separate TCP connection to a remote
- * management server. The client (q2 server) and the cloud admin server
- * mutually authenticate via asymmetrically encrypted challenges. Once trusted,
- * the client feeds the server game information (player data, chats, frags,
- * etc) and will do as the cloud admin server instructs (enforcing bans/mutes,
- * telling players about other servers, etc).
+ * Copyright (C) The Q2Admin contributors
  *
- * Server operators can connect to a cloud admin server by registering using
- * it's web interface, exchanging public keys, and obtaining a unique
- * identifier used in the connection handshake.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * The tcp connection is encrypted using AES-CBC with keys rotating about once
- * an hour. AES-GCM would normally be a better mode as it's more modern and has
- * authentication built-in, but it's too vulnerable in the event of IV reuse.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

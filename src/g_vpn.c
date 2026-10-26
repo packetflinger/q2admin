@@ -1,17 +1,18 @@
 /**
- * Basic VPN detection. Sadly, as VPN services have become
- * mainstream, some abusive players have started using them
- * to hide their identities to enable abuse.
+ * Copyright (C) The Q2Admin contributors
  *
- * The feature will query an API for the player's IP address
- * to find out if it's from a VPN provider. If so, q2admin
- * raises the vpn-detected signal, which counts toward the
- * player's signal score rather than removing them outright.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Current provider is https://vpnapi.io. There is a free
- * account option that allows for up to 1000 queries per day.
- * You'll need to register on that site and add the API key
- * to your config.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

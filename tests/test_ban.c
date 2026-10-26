@@ -1,10 +1,18 @@
 /**
- * banMatchReason(): turning a ban rule's criteria into readable terms for
- * the log.
+ * Copyright (C) The Q2Admin contributors
  *
- * A rule's criteria are ANDed, so these mostly check that every field the
- * rule sets shows up, and that fields it leaves alone stay out. The caller
- * supplies its own framing, so there is no verb or rule number here.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "g_local.h"

@@ -1,19 +1,18 @@
 /**
- * Q2Admin test harness.
+ * Copyright (C) The Q2Admin contributors
  *
- * Deliberately not a framework: a few macros that count failures and print
- * what went wrong. Each test file is its own program, so the counters are
- * static here and live in whichever file includes this.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Write a test like:
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *     #include "q2a_test.h"
- *     int main(void) {
- *         SECTION("net_parseIP");
- *         CHECK(net_parseIP(&a, "192.0.2.4:1234"));
- *         CHECK_INT(a.port, 1234);
- *         return test_summary();
- *     }
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef Q2A_TEST_H

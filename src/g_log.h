@@ -1,16 +1,18 @@
 /**
- * Q2Admin Logging
- * 
- * Both log file definitions and the mapping of which events go to which log
- * are defined in the same config file. 
- * 
- * For log files, each one is defined with a unique index (1-LOGMAX). 
- *   LOGFILE: <1-32> [MOD] "filename"
- * 
- * For log events, each type is defined as whether to actually log the event,
- * the index of the log file that should receive it, and the format each event
- * should take.
- *   <TYPE>: <YES/NO> <1-32> "format"
+ * Copyright (C) The Q2Admin contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #pragma once

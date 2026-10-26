@@ -1,18 +1,18 @@
 /**
- * Q2Admin
- * Signal/score based cheat detection.
+ * Copyright (C) The Q2Admin contributors
  *
- * Various detection heuristics ("signals") each mark a bit for a client when
- * they currently match, and contribute a weight to that client's score while
- * the bit stays set. When the summed score reaches signal_score_threshold the
- * client is removed, but the mask itself is kept (and viewable via `!signals`)
- * even for clients who never cross it, so an admin can see what's currently
- * suspicious about a player.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * Signals derived from hackDetected()'s hacktype_t are weighted at
- * SIGNAL_SCORE_KICK so they still remove a client immediately on their own,
- * matching their historical behavior; they're raised purely for visibility,
- * hackDetected() still does its own disconnectuser-gated kick.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #pragma once
