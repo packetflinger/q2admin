@@ -197,9 +197,21 @@ void whoisAddUser(int client, edict_t *ent) {
     if (WHOIS_COUNT >= whois_active) {
         WHOIS_COUNT = WHOIS_COUNT - 1; //If max reached, replace latest entry with new client
     }
+
+    // When the table is full this reuses the last record, so start it clean:
+    // otherwise the previous owner's remembered names show up as the new
+    // player's aliases. Anyone still connected who was using it is detached,
+    // so their later renames can't land in the new player's record either.
+    for (int i = 0; i < maxclients->value; i++) {
+        if (i != client && proxyinfo[i].userid == WHOIS_COUNT) {
+            proxyinfo[i].userid = -1;
+        }
+    }
+    q2a_memset(&whois_details[WHOIS_COUNT], 0, sizeof(whois_details[WHOIS_COUNT]));
+
     whois_details[WHOIS_COUNT].id = WHOIS_COUNT;
-    q2a_strncpy(whois_details[WHOIS_COUNT].ip, IP(client), WHOISIPLEN-1);
-    q2a_strncpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, WHOISNAMELEN-1);
+    Q_strlcpy(whois_details[WHOIS_COUNT].ip, IP(client), WHOISIPLEN);
+    Q_strlcpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, WHOISNAMELEN);
     proxyinfo[client].userid = WHOIS_COUNT;
     WHOIS_COUNT++;
 }
