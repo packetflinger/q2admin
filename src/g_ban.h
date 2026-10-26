@@ -108,7 +108,7 @@ extern char defaultChatBanMsg[256];
 char *parseBanLine(char *cp);
 char *parseChatbanLine(char *cp);
 char *parseBanIncludeLine(char *in);
-char *banMatchReason(bantype_t result, const baninfo_t *entry);
+char *banMatchReason(const baninfo_t *entry);
 void banRun(int startarg, edict_t *ent, int client);
 void chatbanRun(int startarg, edict_t *ent, int client);
 bantype_t checkBanList(edict_t *ent, int client, bool denylisted);

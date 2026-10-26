@@ -952,49 +952,50 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- * Spells out why a ban rule matched a player, for the log line that records
- * the allow or the deny.
+ * Describes what a ban rule matches on, for the log line that records an
+ * allow or a deny.
  *
  * Knowing that someone was denylisted is not much use on its own - the
- * question an admin has afterwards is always which rule did it and on what
- * grounds, because the same player can be caught by their name, their
- * address, their client version or an ASN, and the fix differs in each case.
- * checkBanList() returns only the outcome, so this turns the matched entry
- * back into readable terms.
+ * question an admin has afterwards is on what grounds, because the same
+ * player can be caught by their name, their address, their client version
+ * or an ASN, and the fix differs in each case.
  *
  * A rule's criteria are ANDed, not ORed: every field the rule sets has to
  * match for the rule to fire. So this lists all of them rather than
  * singling one out, which is what makes a rule that is broader than its
  * author intended easy to spot.
  *
- * result: what checkBanList() returned, which supplies the verb.
- * entry:  the rule that matched, for the criteria. Ignored, and may be
- *         NULL, when result is BT_NOTFOUND.
+ * Only the criteria, so the caller supplies whatever framing its own
+ * message needs - it already knows whether the rule allowed or denied, and
+ * it has the entry for entry->bannum.
  *
- * Returns a description such as
+ * entry: the rule to describe. May be NULL.
  *
- *     denylisted by ban 4 (name contains "idiot", ip in 192.0.2.0/24)
+ * Returns a list such as
  *
- * in a static buffer, so copy it if it has to outlive the next call. Never
- * NULL.
+ *     name contains "idiot", ip in 192.0.2.0/24
+ *
+ * or "no criteria" for a rule that tests nothing, in a static buffer, so
+ * copy it if it has to outlive the next call. Never NULL.
  */
-char *banMatchReason(bantype_t result, const baninfo_t *entry)
+char *banMatchReason(const baninfo_t *entry)
 {
     static char reason[512];
-    const char *verb;
-    size_t head;
 
-    if (result == BT_NOTFOUND || !entry) {
-        Q_strlcpy(reason, "no rule matched", sizeof(reason));
+    reason[0] = 0;
+    if (!entry) {
+        Q_strlcpy(reason, "no criteria", sizeof(reason));
         return reason;
     }
 
-    verb = (result == BT_DENYLISTED) ? "denylisted" : "allowlisted";
-    Q_snprintf(reason, sizeof(reason), "%s by ban %ld (", verb, entry->bannum);
-    head = q2a_strlen(reason);
-
 /* Append one criterion, with a comma once there is something to separate. */
-#define REASON_ADD(...)                                                         do {                                                                            if (q2a_strlen(reason) > head) {                                                Q_strlcat(reason, ", ", sizeof(reason));                                }                                                                           Q_strlcat(reason, va(__VA_ARGS__), sizeof(reason));                     } while (0)
+#define REASON_ADD(...)                                                     \
+    do {                                                                    \
+        if (reason[0]) {                                                    \
+            Q_strlcat(reason, ", ", sizeof(reason));                        \
+        }                                                                   \
+        Q_strlcat(reason, va(__VA_ARGS__), sizeof(reason));                 \
+    } while (0)
 
     switch (entry->type) {
     case NICKALL:
@@ -1045,7 +1046,7 @@ char *banMatchReason(bantype_t result, const baninfo_t *entry)
     }
 
     if (entry->password[0]) {
-        REASON_ADD("%s", "password");
+        REASON_ADD("password \"%s\"", entry->password);
     }
     if (entry->maxnumberofconnects) {
         REASON_ADD("at most %ld connections", entry->maxnumberofconnects);
@@ -1053,12 +1054,10 @@ char *banMatchReason(bantype_t result, const baninfo_t *entry)
 
 #undef REASON_ADD
 
-    /* A rule with nothing set should have been rejected at load, but say so
-     * rather than printing an empty pair of brackets. */
-    if (q2a_strlen(reason) == head) {
-        Q_strlcat(reason, "no criteria", sizeof(reason));
+    /* A rule with nothing set should have been rejected at load. */
+    if (!reason[0]) {
+        Q_strlcpy(reason, "no criteria", sizeof(reason));
     }
-    Q_strlcat(reason, ")", sizeof(reason));
     return reason;
 }
 
