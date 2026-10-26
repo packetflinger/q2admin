@@ -709,7 +709,7 @@ char *processString(char *output, char *input, int max, char end) {
                 timestamplen = q2a_strlen(timestampcp) - 1; // minus the \n
 
                 if (timestamplen && max >= timestamplen) {
-                    q2a_strncpy(output, timestampcp, timestamplen);
+                    q2a_memcpy(output, timestampcp, timestamplen);
                     output += timestamplen;
                     max -= (timestamplen - 1);
                 }
