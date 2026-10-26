@@ -1810,7 +1810,7 @@ void dprintf_internal(char *fmt, ...) {
 
     if (clienti != -1) {
         if (checkForMute(clienti, getEnt((clienti + 1)), true)) {
-            q2a_strncpy(mutedText, cbuffer, sizeof(mutedText)-1);
+            Q_strlcpy(mutedText, cbuffer, sizeof(mutedText));
             return;
         }
 
@@ -1929,7 +1929,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
             chat->words += wordCount(cbuffer);
             updateChatStats(clienti);
 
-            q2a_strncpy(chat->last[chat->last_index], cbuffer, MAX_CHAT_CHARS - 1);
+            Q_strlcpy(chat->last[chat->last_index], cbuffer, MAX_CHAT_CHARS);
             if (chat->last_index == (MSG_SAVE_COUNT - 1)) {
                 chat->last_index = -1;
             }
@@ -2093,7 +2093,7 @@ void AddCommandString_internal(char *text) {
         }
     }
 
-    q2a_strncpy(buffer, text, sizeof(buffer)-1);
+    Q_strlcpy(buffer, text, sizeof(buffer));
     upperCase(buffer);
 
     str = q2a_strstr(buffer, "GAMEMAP");
@@ -2406,7 +2406,7 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0: // name
-                        q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+                        Q_strlcpy(strbuffer2, strbuffer, sizeof(strbuffer2));
                         if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
@@ -2534,7 +2534,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
             if (proxyinfo[clienti].inuse) {
                 switch (like) {
                     case 0: // name
-                        q2a_strncpy(strbuffer2, strbuffer, sizeof(strbuffer2) - 1);
+                        Q_strlcpy(strbuffer2, strbuffer, sizeof(strbuffer2));
                         if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
                             foundclienti = clienti;
                             matchcount++;
