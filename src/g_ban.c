@@ -984,7 +984,7 @@ char *banMatchReason(const baninfo_t *entry) {
         return reason;
     }
 
-/* Append one criterion, with a comma once there is something to separate. */
+// Append one criterion, with a comma once there is something to separate.
 #define REASON_ADD(...)                                                     \
     do {                                                                    \
         if (reason[0]) {                                                    \
@@ -1011,9 +1011,9 @@ char *banMatchReason(const baninfo_t *entry) {
         break;
     }
 
-    /* Mirrors checkBanList(): a zero mask means the rule sets no address.
-     * The cast is only to drop const - net_addressToString() does not
-     * modify the address but is not declared that way. */
+    // Mirrors checkBanList(): a zero mask means the rule sets no address.
+    // The cast is only to drop const - net_addressToString() does not
+    // modify the address but is not declared that way.
     if (entry->addr.mask_bits > 0) {
         REASON_ADD("ip in %s", net_addressToString((netadr_t *)&entry->addr,
                                                    false, false, true));
@@ -1050,7 +1050,7 @@ char *banMatchReason(const baninfo_t *entry) {
 
 #undef REASON_ADD
 
-    /* A rule with nothing set should have been rejected at load. */
+    // A rule with nothing set should have been rejected at load.
     if (!reason[0]) {
         Q_strlcpy(reason, "no criteria", sizeof(reason));
     }
