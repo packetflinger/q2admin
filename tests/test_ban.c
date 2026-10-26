@@ -99,10 +99,11 @@ int main(void)
     SECTION("password and connection cap");
     b = rule(NICKALL);
     snprintf(b->password, sizeof(b->password), "letmein");
-    /* The password itself is never printed - this goes into a log. */
+    /* The password is printed: it's the only stable way to tell from the log
+     * which allow rule let a player in, since rule numbers shift as rules
+     * are added and removed. It's already in plain text in q2a_ban.cfg. */
     CHECK_STR(banMatchReason(b),
-              "any name, password");
-    CHECK(strstr(banMatchReason(b), "letmein") == NULL);
+              "any name, password \"letmein\"");
     b = rule(NICKALL);
     b->maxnumberofconnects = 3;
     CHECK_STR(banMatchReason(b),
@@ -120,7 +121,7 @@ int main(void)
     b->maxnumberofconnects = 2;
     CHECK_STR(banMatchReason(b),
               "name contains \"bot\", ip in 10.0.0.0/8, "
-              "on a VPN, ASN AS1, version contains \"r1q2\", password, "
+              "on a VPN, ASN AS1, version contains \"r1q2\", password \"pw\", "
               "at most 2 connections");
 
     SECTION("a rule that tests nothing says so rather than returning empty");

@@ -975,8 +975,7 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
  * or "no criteria" for a rule that tests nothing, in a static buffer, so
  * copy it if it has to outlive the next call. Never NULL.
  */
-char *banMatchReason(const baninfo_t *entry)
-{
+char *banMatchReason(const baninfo_t *entry) {
     static char reason[512];
 
     reason[0] = 0;
