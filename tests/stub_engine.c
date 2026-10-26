@@ -57,6 +57,14 @@ char buffer2[256];
 /* What raiseSignal() was asked to set, per client, for tests to assert on. */
 unsigned int stub_signals[STUB_MAXCLIENTS + 1];
 
+/* g_ban.o reads these. The cvars stay zeroed: nothing under test reads a
+ * ban file, and a NULL ->string would fault loudly if something tried. */
+bool filternonprintabletext = true;
+static cvar_t stub_ban_cvars[3];
+cvar_t *configfile_ban = &stub_ban_cvars[0];
+cvar_t *q2adminbanremotetxt = &stub_ban_cvars[1];
+cvar_t *q2adminbanremotetxt_enable = &stub_ban_cvars[2];
+
 /* g_log.o reads these. buffer is q2admin's shared scratch string. */
 char buffer[0x10000];
 static cvar_t stub_configfile_log;
@@ -93,6 +101,15 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data,
 uint16_t getport(void)
 {
     return 27910;
+}
+
+/* logEvent() is not stubbed: g_log.o is linked, and the real one returns
+ * straight away because every logtypes[] entry starts disabled. */
+
+size_t httpGetFile(generic_file_t *output, const char *url)
+{
+    (void)output; (void)url;
+    return 0;
 }
 
 int signalScore(int client)

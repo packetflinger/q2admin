@@ -952,6 +952,117 @@ void reloadbanfileRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
+ * Spells out why a ban rule matched a player, for the log line that records
+ * the allow or the deny.
+ *
+ * Knowing that someone was denylisted is not much use on its own - the
+ * question an admin has afterwards is always which rule did it and on what
+ * grounds, because the same player can be caught by their name, their
+ * address, their client version or an ASN, and the fix differs in each case.
+ * checkBanList() returns only the outcome, so this turns the matched entry
+ * back into readable terms.
+ *
+ * A rule's criteria are ANDed, not ORed: every field the rule sets has to
+ * match for the rule to fire. So this lists all of them rather than
+ * singling one out, which is what makes a rule that is broader than its
+ * author intended easy to spot.
+ *
+ * result: what checkBanList() returned, which supplies the verb.
+ * entry:  the rule that matched, for the criteria. Ignored, and may be
+ *         NULL, when result is BT_NOTFOUND.
+ *
+ * Returns a description such as
+ *
+ *     denylisted by ban 4 (name contains "idiot", ip in 192.0.2.0/24)
+ *
+ * in a static buffer, so copy it if it has to outlive the next call. Never
+ * NULL.
+ */
+char *banMatchReason(bantype_t result, const baninfo_t *entry)
+{
+    static char reason[512];
+    const char *verb;
+    size_t head;
+
+    if (result == BT_NOTFOUND || !entry) {
+        Q_strlcpy(reason, "no rule matched", sizeof(reason));
+        return reason;
+    }
+
+    verb = (result == BT_DENYLISTED) ? "denylisted" : "allowlisted";
+    Q_snprintf(reason, sizeof(reason), "%s by ban %ld (", verb, entry->bannum);
+    head = q2a_strlen(reason);
+
+/* Append one criterion, with a comma once there is something to separate. */
+#define REASON_ADD(...)                                                         do {                                                                            if (q2a_strlen(reason) > head) {                                                Q_strlcat(reason, ", ", sizeof(reason));                                }                                                                           Q_strlcat(reason, va(__VA_ARGS__), sizeof(reason));                     } while (0)
+
+    switch (entry->type) {
+    case NICKALL:
+        REASON_ADD("%s", "any name");
+        break;
+    case NICKEQ:
+        REASON_ADD("name is \"%s\"", entry->nick);
+        break;
+    case NICKLIKE:
+        REASON_ADD("name contains \"%s\"", entry->nick);
+        break;
+    case NICKRE:
+        REASON_ADD("name matches /%s/", entry->nick);
+        break;
+    case NICKBLANK:
+        REASON_ADD("%s", "blank name");
+        break;
+    }
+
+    /* Mirrors checkBanList(): a zero mask means the rule sets no address.
+     * The cast is only to drop const - net_addressToString() does not
+     * modify the address but is not declared that way. */
+    if (entry->addr.mask_bits > 0) {
+        REASON_ADD("ip in %s", net_addressToString((netadr_t *)&entry->addr,
+                                                   false, false, true));
+    }
+    if (entry->vpn) {
+        REASON_ADD("%s", "on a VPN");
+    }
+    if (entry->asn[0]) {
+        REASON_ADD("ASN %s", entry->asn);
+    }
+
+    if (entry->version[0]) {
+        switch (entry->vtype) {
+        case VERSION_EQUALS:
+            REASON_ADD("version is \"%s\"", entry->version);
+            break;
+        case VERSION_LIKE:
+            REASON_ADD("version contains \"%s\"", entry->version);
+            break;
+        case VERSION_REGEX:
+            REASON_ADD("version matches /%s/", entry->version);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (entry->password[0]) {
+        REASON_ADD("%s", "password");
+    }
+    if (entry->maxnumberofconnects) {
+        REASON_ADD("at most %ld connections", entry->maxnumberofconnects);
+    }
+
+#undef REASON_ADD
+
+    /* A rule with nothing set should have been rejected at load, but say so
+     * rather than printing an empty pair of brackets. */
+    if (q2a_strlen(reason) == head) {
+        Q_strlcat(reason, "no criteria", sizeof(reason));
+    }
+    Q_strlcat(reason, ")", sizeof(reason));
+    return reason;
+}
+
+/**
  * Check if a particular player is allowlisted or denylisted.
  *
  * Returns `true` to deny or `false` to allow, only looking at either all the

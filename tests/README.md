@@ -39,7 +39,8 @@ CHECK(stub_signals_for(1) & SIGNAL_PROTOCOL_DOWNGRADE);
 - **Cheap:** anything not touching `gi` - `g_net.c`, `g_regex.c`, `g_json.c`,
   most of `g_util.c`.
 - **Cheap, needs the stub:** code reading or writing `proxyinfo` or taking an
-  `edict_t *`, like `g_protocol.c` and `convertToLogLine()`.
+  `edict_t *`, like `g_protocol.c`, `convertToLogLine()` and
+  `banMatchReason()`.
 - **More work:** the rest of `g_log.c` (the config parser and the file
   writing) needs real files; `g_signal.c` needs `logEvent()`,
   `getClientFromArg()` and a fuller `gi`, and its `raiseSignal()` and
