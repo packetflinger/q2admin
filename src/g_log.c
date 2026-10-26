@@ -723,7 +723,7 @@ void logfileRun(int startarg, edict_t *ent, int client) {
         processString(filename, mod ? gi.argv(startarg + 3) : cmd, sizeof (filename) - 1, 0);
         if (!isBlank(filename)) {
             logFiles[logfilenum].mod = mod;
-            q2a_strncpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename)-1);
+            Q_strlcpy(logFiles[logfilenum].filename, filename, sizeof(logFiles[logfilenum].filename));
             logFiles[logfilenum].inuse = true;
             gi.cprintf(ent, PRINT_HIGH, "Log file Added!\n");
         } else {
