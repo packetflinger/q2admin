@@ -186,7 +186,7 @@ void banRun(int startarg, edict_t *ent, int client) {
     bool nocheck = false;
     char *ipstr;
     char tempip[INET6_ADDRSTRLEN];
-    bool allver;
+    bool allver = false;
 
     if (gi.argc() <= startarg) {
         gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
@@ -1573,7 +1573,7 @@ void chatbanRun(int startarg, edict_t *ent, int client) {
     cp = processString(cnewentry->chat, cp, sizeof (cnewentry->chat) - 1, 0);
 
     if (cnewentry->type == CHATRE) { // compile RE
-        q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer)-1);
+        Q_strlcpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
         upperCase(strbuffer);
         cnewentry->r = re_compile(strbuffer);
         if (!cnewentry->r) {
@@ -1904,7 +1904,7 @@ char *parseBanLine(char *cp) {
     char strbuffer[256];
     char *tempcp;
     char ipstr[INET6_ADDRSTRLEN];
-    bool allver;
+    bool allver = false;
     int num;
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
@@ -2274,7 +2274,7 @@ char *parseChatbanLine(char *cp) {
         SKIPBLANK(cp);
 
         if (cnewentry->type == CHATRE) { // compile RE
-            q2a_strncpy(strbuffer, cnewentry->chat, sizeof(strbuffer)-1);
+            Q_strlcpy(strbuffer, cnewentry->chat, sizeof(strbuffer));
             upperCase(strbuffer);
             cnewentry->r = re_compile(strbuffer);
             if (!cnewentry->r) {
