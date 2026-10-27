@@ -26,6 +26,7 @@ int signal_score_threshold = 50; // 0 disables score-based removal
 static signal_def_t signalDefs[] = {
     { SIGNAL_AIMBOT_JITTER,             15,  "aimbot-jitter" }, // each
     { SIGNAL_CHATFLOOD,                 15,  "chatflood" },
+    { SIGNAL_CHAT_BOT,                  25,  "chat-bot" },
     { SIGNAL_SNAP_FIRE,                 15,  "snap-fire" },     // each
     { SIGNAL_AIM_TRACK,                 30,  "aim-track" },
     { SIGNAL_SKIN_OVERFLOW,             25,  "skin-overflow" },

@@ -334,6 +334,7 @@ some decay over time. The built-in signals are listed below. A weight of
 | --- | --- | --- |
 | `aimbot-jitter` | 15 per hit | aim jitter below the confirmed-bot threshold |
 | `chatflood` | 15 | player is chat-flooding |
+| `chat-bot` | 25 | player keeps chatting while in play but doesn't move or shoot |
 | `snap-fire` | 15 per hit | view snapped onto a target as they fired |
 | `aim-track` | 30 | crosshair stayed on a moving target too tightly for too long |
 | `skin-overflow` | 25 | player tried to use an oversized skin name |
@@ -1044,6 +1045,10 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `adminpassword` | string | empty | Password for `!setadmin`, which gives a player full in-game admin access. Empty disables it. Not settable in-game. |
 | `banonconnect` | bool | yes | Reject banned players at connect (they never take a slot) instead of at map entry (they see the ban message first). |
 | `chatbanning_enable` | bool | yes | Enable `CHATBAN` rules. |
+| `chatbot_min_playtime` | number | 60 | Seconds a player must have been in play (not spectating, dead or at intermission) before `chat-bot` can be raised. |
+| `chatbot_min_words` | number | 20 | Words (decayed, 2-minute half-life) a player must have before `chat-bot` can be raised. |
+| `chatbot_words_per_mile` | number | 500 | `chat-bot` needs more words per mile than this. Players moving around read well under 100. |
+| `chatbot_words_per_shot` | number | 20 | `chat-bot` also needs more words per shot than this. |
 | `chatfloodprotect` | triple | disable | Chat flood limit. A silence of 0 kicks the player. |
 | `chatfloodprotectmsg` | string | `%s is making too much noise.` | Message broadcast when someone chat-floods. `%s` is the player's name. |
 | `checkclientipaddress` | bool | yes | Reject players whose IP address can't be determined. |
@@ -1286,6 +1291,15 @@ sv !signaladd claire -25
 Show a player's chat statistics: words, distance moved, words per mile, words
 per shot, characters per second and recent messages. These help tell a chat
 bot from a talkative player.
+
+The `chat-bot` signal uses the same figures. It's raised for a player who has
+been in play (not spectating, dead or at intermission) for at least
+`chatbot_min_playtime` seconds (60), has at least `chatbot_min_words` words
+(20, decayed), and reads more than `chatbot_words_per_mile` (500) words per
+mile and more than `chatbot_words_per_shot` (20) words per shot. It clears
+once those no longer hold.
+A player who moves around reads well under 100 words per mile even when
+chatting a lot; one standing still reads in the thousands or more.
 `sv !chat_stats <player>`
 ```
 sv !chat_stats claire

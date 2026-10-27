@@ -305,10 +305,10 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     seconds = ucmd->msec / 1000.0f;
     decay = decayFactor(seconds, CHATSTAT_HALFLIFE);
     cl->chat_stats.words *= decay;
-    cl->distance_moved *= decay;
-    cl->shots_fired *= decay;
+    cl->chat_stats.distance_moved *= decay;
+    cl->chat_stats.shots_fired *= decay;
 
-    cl->distance_moved += (abs(ucmd->forwardmove) + abs(ucmd->sidemove) + abs(ucmd->upmove)) * seconds;
+    cl->chat_stats.distance_moved += (abs(ucmd->forwardmove) + abs(ucmd->sidemove) + abs(ucmd->upmove)) * seconds;
 
     // Shots fired, for the companion words-per-shot metric. Moving around
     // says a client is present; actually shooting says it's playing, which a
@@ -321,16 +321,17 @@ void ClientThink(edict_t *ent, usercmd_t *ucmd) {
     // this measures trigger pulls rather than rounds - fine for a coarse "is
     // this client playing at all" signal.
     attacking = (ucmd->buttons & BUTTON_ATTACK) != 0;
-    if (attacking && !cl->was_attacking) {
-        cl->shots_fired += 1.0f;
+    if (attacking && !cl->chat_stats.was_attacking) {
+        cl->chat_stats.shots_fired += 1.0f;
     }
-    cl->was_attacking = attacking;
+    cl->chat_stats.was_attacking = attacking;
 
     // Refresh the ratios here rather than only when the player chats. Both
     // denominators grow every usercmd, so computing them on chat alone left
     // them frozen at whatever they read when the player last spoke - someone
     // who spammed and then went and played kept their old numbers.
     updateChatStats(client);
+    checkForChatBot(client, ent);
 
     if (cl->speedfreeze) {
         if (cl->speedfreeze > ltime) {

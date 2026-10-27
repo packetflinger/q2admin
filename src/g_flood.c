@@ -17,6 +17,15 @@
 
 #include "g_local.h"
 
+// Limits for SIGNAL_CHAT_BOT, see checkForChatBot(). A player who is moving
+// around reads well under 100 words per mile even when chatting a lot, and
+// one standing still reads in the thousands or more, so the line between
+// them doesn't need to be exact.
+int chatbot_min_playtime    = 60;   // seconds in play before the check applies
+int chatbot_min_words       = 20;   // decayed words before the check applies
+int chatbot_words_per_mile  = 500;  // above this counts as not moving
+int chatbot_words_per_shot  = 20;   // above this counts as not shooting
+
 floodcmd_t floodcmds[FLOOD_MAXCMDS];
 int maxflood_cmds = 0;
 
@@ -1249,13 +1258,14 @@ void updateChatStats(int client) {
         return;
     }
     proxyinfo_t *cl = &proxyinfo[client];
-    float units = cl->distance_moved;
-    float shots = cl->shots_fired;
+    float units = cl->chat_stats.distance_moved;
+    float shots = cl->chat_stats.shots_fired;
 
-    // Divide guards. These also floor how low a ratio can read: a client
-    // with under a mile's worth of movement or a single shot's worth of
-    // shooting is treated as having exactly that, so an idle client's
-    // number stays large rather than dividing down to nothing.
+    // Divide guards. A client that hasn't moved is treated as having moved
+    // one world unit, and one that hasn't fired as having fired once, so an
+    // idle client's words per mile reads as words x 63000 rather than
+    // dividing by zero. That keeps idle clients far above anyone who is
+    // moving around, which is what checkForChatBot() relies on.
     if (units < 1.0f) {
         units = 1.0f;
     }
@@ -1263,8 +1273,66 @@ void updateChatStats(int client) {
         shots = 1.0f;
     }
 
-    cl->words_per_mile = cl->chat_stats.words / (units / WORLDUNITSPERMILE);
-    cl->words_per_shot = cl->chat_stats.words / shots;
+    cl->chat_stats.words_per_mile = cl->chat_stats.words / (units / WORLDUNITSPERMILE);
+    cl->chat_stats.words_per_shot = cl->chat_stats.words / shots;
+}
+
+/**
+ * Raise SIGNAL_CHAT_BOT for a player who keeps chatting while in play but
+ * neither moves nor shoots, and clear it again once they start playing.
+ *
+ * All of these have to hold:
+ * - the player is in normal movement (pm_type PM_NORMAL), and has been
+ *   for at least chatbot_min_playtime seconds;
+ * - they have at least chatbot_min_words decayed words;
+ * - words per mile is above chatbot_words_per_mile;
+ * - words per shot is above chatbot_words_per_shot.
+ *
+ * Only players in normal movement are checked because spectators, dead
+ * players and players at intermission don't move either, and chatting from
+ * spectator mode is normal. The time-in-play requirement covers a spectator
+ * who chatted and then joined: their words were said while not moving, so
+ * it takes a while of moving before their words per mile comes down. With
+ * the defaults, after 60 seconds of running 20 words read about 40 words per
+ * mile.
+ *
+ * client: the client to check.
+ * ent: the client's edict.
+ *
+ * Returns nothing; raises or clears SIGNAL_CHAT_BOT.
+ *
+ * Called from ClientThink() (g_client.c) every usercmd, after
+ * updateChatStats().
+ */
+void checkForChatBot(int client, edict_t *ent) {
+    proxyinfo_t *cl;
+    bool suspect;
+
+    if (!VALIDCLIENT(client) || !ent || !ent->client) {
+        return;
+    }
+    cl = &proxyinfo[client];
+
+    if (ent->client->ps.pmove.pm_type != PM_NORMAL) {
+        cl->chat_stats.inplay_since = 0;
+        return;
+    }
+    if (!cl->chat_stats.inplay_since) {
+        cl->chat_stats.inplay_since = ltime;
+    }
+    if (ltime - cl->chat_stats.inplay_since < chatbot_min_playtime) {
+        return;
+    }
+
+    suspect = cl->chat_stats.words >= chatbot_min_words &&
+              cl->chat_stats.words_per_mile > chatbot_words_per_mile &&
+              cl->chat_stats.words_per_shot > chatbot_words_per_shot;
+
+    if (suspect) {
+        raiseSignal(client, SIGNAL_CHAT_BOT);
+    } else if (cl->signalMask & SIGNAL_CHAT_BOT) {
+        clearSignal(client, SIGNAL_CHAT_BOT);
+    }
 }
 
 /**
@@ -1314,16 +1382,16 @@ void chatStatsRun(int startarg, edict_t *ent, int client) {
     }
 
     chat = &proxyinfo[clienti].chat_stats;
-    miles = proxyinfo[clienti].distance_moved / WORLDUNITSPERMILE;
+    miles = proxyinfo[clienti].chat_stats.distance_moved / WORLDUNITSPERMILE;
 
     cprintf_internal(ent, PRINT_HIGH, "Chat stats for %s:\n", proxyinfo[clienti].name);
     cprintf_internal(ent, PRINT_HIGH, "  words:        %.1f (decaying, %.0fs half-life)\n",
             chat->words, (float) CHATSTAT_HALFLIFE);
     cprintf_internal(ent, PRINT_HIGH, "  distance:     %.0f units (%.3f miles)\n",
-            proxyinfo[clienti].distance_moved, miles);
-    cprintf_internal(ent, PRINT_HIGH, "  words/mile:   %.1f\n", proxyinfo[clienti].words_per_mile);
-    cprintf_internal(ent, PRINT_HIGH, "  shots fired:  %.1f\n", proxyinfo[clienti].shots_fired);
-    cprintf_internal(ent, PRINT_HIGH, "  words/shot:   %.1f\n", proxyinfo[clienti].words_per_shot);
+            proxyinfo[clienti].chat_stats.distance_moved, miles);
+    cprintf_internal(ent, PRINT_HIGH, "  words/mile:   %.1f\n", proxyinfo[clienti].chat_stats.words_per_mile);
+    cprintf_internal(ent, PRINT_HIGH, "  shots fired:  %.1f\n", proxyinfo[clienti].chat_stats.shots_fired);
+    cprintf_internal(ent, PRINT_HIGH, "  words/shot:   %.1f\n", proxyinfo[clienti].chat_stats.words_per_shot);
     cprintf_internal(ent, PRINT_HIGH, "  chars/sec:    %.2f\n", chat->chatrate);
     cprintf_internal(ent, PRINT_HIGH, "  total chars:  %d\n", chat->printchars);
 

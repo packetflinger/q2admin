@@ -43,6 +43,7 @@
 #define SIGNAL_VPN_DETECTED        BIT(23) // 75-100% sure on VPN usage
 #define SIGNAL_PROTOCOL_DOWNGRADE  BIT(24) // connected with less protocol than their client supports
 #define SIGNAL_MVD_IMPOSTER        BIT(25) // Player's userinfo claims to be q2pro's dummy MVD client
+#define SIGNAL_CHAT_BOT            BIT(26) // Chats a lot while in play but doesn't move or shoot
 
 // Signals whose contribution can change while they're already raised: either
 // a weight times a running count, or a per-player amount. Raising one of these

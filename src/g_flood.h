@@ -48,6 +48,7 @@
 // lately rather than averaging over the whole session.
 #define CHATSTAT_HALFLIFE 120.0f
 
+
 typedef struct {
     char *floodcmd;
     byte type;
@@ -67,6 +68,12 @@ typedef struct {
     float stutterrate;          //
     char last[MSG_SAVE_COUNT][MAX_CHAT_CHARS]; // circular arr of last x chats
     int last_index;             // where we are in the array
+    float distance_moved;       // decaying world units moved, see ClientThink
+    float shots_fired;          // decaying count of attack presses, see ClientThink
+    bool was_attacking;         // BUTTON_ATTACK state last usercmd, to count presses
+    float words_per_mile;       // words chatted per mile travelled, see updateChatStats()
+    float words_per_shot;       // words chatted per shot fired, see updateChatStats()
+    float inplay_since;         // ltime the player last started playing, 0 if not playing
 } chatstats_t;
 
 // Server-wide connect flood settings, set by "connectfloodprotect" - the
@@ -88,6 +95,10 @@ typedef struct {
 } connectflood_entry_t;
 
 extern bool fpsFloodExempt;
+extern int chatbot_min_playtime;
+extern int chatbot_min_words;
+extern int chatbot_words_per_mile;
+extern int chatbot_words_per_shot;
 extern bool nameChangeFloodProtect;
 extern bool skinChangeFloodProtect;
 extern char nameChangeFloodProtectMsg[256];
@@ -114,6 +125,7 @@ void chatFloodProtectInit(char *arg);
 void chatFloodProtectRun(int startarg, edict_t *ent, int client);
 void chatStatsRun(int startarg, edict_t *ent, int client);
 void updateChatStats(int client);
+void checkForChatBot(int client, edict_t *ent);
 bool checkForFlood(int client);
 bool checkforfloodcmd(char *cp, int floodcmd);
 bool checkforfloodcmds(char *cp);

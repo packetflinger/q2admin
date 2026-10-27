@@ -863,6 +863,14 @@ optional *impulse*. q2admin handles each one in this order:
    and decay with a 2-minute half-life. Together with the words the player
    chats, these give *words per mile* and *words per shot*, which
    `chat_stats` uses to tell a chat bot from a talkative player.
+
+   The same figures drive `chat-bot` (25). Once the player has been in
+   normal movement (not spectating, dead or at intermission) for
+   `chatbot_min_playtime` (60) seconds, it's raised if they have at least
+   `chatbot_min_words` (20) words, more than `chatbot_words_per_mile` (500)
+   words per mile and more than `chatbot_words_per_shot` (20) words per shot,
+   and cleared once that stops being true. Leaving normal movement restarts
+   the playtime count.
 4. **Speed freeze.** While a speed freeze is active, `msec` is forced to 0.
 5. **Impulses.**
    - Every impulse is logged.
@@ -1184,6 +1192,7 @@ job per frame) and with the client's ping.
 | `cl_pitchspeed`/`cl_anglespeedkey` | Changed | Logged, announced, optionally kicked. |
 | Name change | To a banned name | Reverted, or kicked with `kickonnamechange`. |
 | Name, skin or chat floods | Over the limit | Silenced or kicked; chat also raises `chatflood` (15). |
+| Chat bot | Chatting in play without moving or shooting | `chat-bot` (25). |
 | Userinfo flood | More than 40 changes in 60 s | Kicked. |
 | `\skon\` in userinfo | Present | Kicked. |
 | Command queue | 45 pending jobs | Kicked. |
