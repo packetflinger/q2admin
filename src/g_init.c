@@ -1894,11 +1894,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     checkMVDImposter(client, userinfo);
 
-    //zgh_frk check
+    // zgh_frk check
     if (stringContains(userinfo, "\\skon\\")) {
-        gi.bprintf(PRINT_HIGH, "%s was caught cheating!\n", proxyinfo[client].name);
-        Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
-        gi.AddCommandString(tmptext);
+        raiseSignal(client, SIGNAL_ZBOT_DETECTED);
         logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0, true);
     }
 
