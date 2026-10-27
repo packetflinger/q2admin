@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regenerate runtime-config/example.cfg from the q2aCommands[] table.
+Regenerate config/example.cfg from the q2aCommands[] table.
 
 example.cfg lists the options a config file can set, with the default each
 takes when no config sets it, so it goes stale the moment a command is added,
@@ -16,7 +16,7 @@ It bails out rather than guessing. A new option whose default it cannot work
 out is an error, not a blank value, so "make example.cfg" fails loudly and
 the fix is to teach SPECIAL below about it.
 
-It also reports any setting in runtime-config/*.cfg that matches no command.
+It also reports any setting in config/*.cfg that matches no command.
 Those lines are silently ignored by the real parser, which is how a typo like
 "client_map_config" for "client_map_cfg" can sit unnoticed for years.
 
@@ -29,7 +29,7 @@ import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "src"
-CFGDIR = ROOT / "runtime-config"
+CFGDIR = ROOT / "config"
 DEFAULT_OUT = CFGDIR / "example.cfg"
 
 # Defaults that are not a literal in the variable's initializer. Anything that

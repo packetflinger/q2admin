@@ -275,7 +275,7 @@ $(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -o $@ $< -lcrypto
 
-# runtime-config/example.cfg lists the config options an operator is likely to
+# config/example.cfg lists the config options an operator is likely to
 # change - the ones whose q2aCommands[] entry sets "common" - with the default
 # each takes. It is generated from that table rather than maintained by hand,
 # so it has to be regenerated whenever a command is added, renamed or removed.
@@ -287,9 +287,9 @@ $(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
 #
 #     python3 tools/gen-example-cfg.py --all /tmp/everything.cfg
 #
-# The generator also warns about settings in runtime-config/*.cfg that match no
+# The generator also warns about settings in config/*.cfg that match no
 # command and are therefore silently ignored by the real parser.
-EXAMPLECFG := runtime-config/example.cfg
+EXAMPLECFG := config/example.cfg
 
 example-cfg: $(EXAMPLECFG)
 

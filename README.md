@@ -92,7 +92,7 @@ mod's code.
 3. **Install q2admin** in the mod directory under the name the engine loads,
    for example `opentdm/gamex86_64.so`.
 
-4. **Copy the example configs.** The [`runtime-config/`](runtime-config/)
+4. **Copy the example configs.** The [`config/`](config/)
    folder contains a fully commented example of every config file. Copy the
    `.cfg` files into your mod directory and edit them to suit your server.
    Start with `q2admin.cfg`.
@@ -919,7 +919,7 @@ types are:
 Format strings can include placeholders such as `#n` (name), `#i` (IP), `#p`
 (ping), `#t`/`#T` (date and time), `#m` (event message), `#w` (signal name)
 and `#x`/`#X` (signal score). The full list is in
-[`runtime-config/q2a_log.cfg`](runtime-config/q2a_log.cfg). A `%p` in a file
+[`config/q2a_log.cfg`](config/q2a_log.cfg). A `%p` in a file
 name is replaced with the server port, so several servers can share one mod
 directory.
 
@@ -1843,11 +1843,12 @@ Quake 2 server expects, or add `EXT = dylib` to `.config`.
 
 ### Example configs
 
-The [`runtime-config/`](runtime-config/) folder holds a commented example of
+The [`config/`](config/) folder holds a commented example of
 every config file q2admin reads (`q2admin.cfg`, `q2a_ban.cfg`, `q2a_log.cfg`
 and the others). Copy them into your mod directory as a starting point; every
 option is explained in the files themselves and in the
-[Configuration reference](#configuration-reference).
+[Configuration reference](#configuration-reference). The folder's own
+[README](config/README.md) lists each file and how to use them.
 
 
 ## Dependencies
