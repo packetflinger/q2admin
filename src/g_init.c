@@ -208,8 +208,8 @@ bool userinfoProxy                      = false;
 // true when q2admin requested GMF_EXTRA_USERINFO on the mod's behalf (see
 // InitGame()), so the mod needs the extra keys merged into one string
 static bool userinfoProxyActive         = false;
-int UserinfoChangeTime                 = 60;
-int UserinfoChangeCount                = 40;
+int UserinfoChangeTime                  = 60;
+int UserinfoChangeCount                 = 40;
 char version[256];
 bool vote_enable                        = true;
 char vpn_api_key[33]                    = "";
