@@ -19,17 +19,17 @@
 #include "q2a_test.h"
 #include "stub_engine.h"
 
-/* Set up one client, run the check, report whether the signal was raised. */
-static int downgraded(int server_offers, const char *version, int negotiated)
-{
+/**
+ * Set up one client, run the check, report whether the signal was raised.
+ */
+static int downgraded(int server_offers, const char *version, int negotiated) {
     server_protocol = server_offers;
     stub_add_client(1, "tester", version, negotiated);
     checkProtocolDowngrade(1);
     return (stub_signals_for(1) & SIGNAL_PROTOCOL_DOWNGRADE) != 0;
 }
 
-int main(void)
-{
+int main(void) {
     const client_def_t *d;
 
     stub_engine_init();
@@ -49,15 +49,15 @@ int main(void)
     CHECK(identifyClient("") == NULL);
     CHECK(identifyClient(NULL) == NULL);
     CHECK(identifyClient("totally made up 1.0") == NULL);
-    /* The stock-Quake-II pattern is anchored, so a version number in the
-     * middle of some other client's string must not match it. */
+    // The stock-Quake-II pattern is anchored, so a version number in the
+    // middle of some other client's string must not match it.
     CHECK(identifyClient("SomeClient build 3.21") == NULL);
 
     SECTION("on a Q2PRO server (offers 36)");
-    CHECK(!downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 36));   /* at its ceiling */
+    CHECK(!downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 36));   // at its ceiling
     CHECK(downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 35));
     CHECK(downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 34));
-    CHECK(!downgraded(PROTOCOL_Q2PRO, "R1Q2 b7900", 35));    /* r1q2's ceiling */
+    CHECK(!downgraded(PROTOCOL_Q2PRO, "R1Q2 b7900", 35));    // r1q2's ceiling
     CHECK(downgraded(PROTOCOL_Q2PRO, "R1Q2 b7900", 34));
     CHECK(!downgraded(PROTOCOL_Q2PRO, "Yamagi Quake II v8.20", 34));
 
@@ -70,20 +70,20 @@ int main(void)
     CHECK(!downgraded(PROTOCOL_VANILLA, "R1Q2 b7900", 34));
 
     SECTION("quiet when there is nothing to compare");
-    /* protocol_major only arrives with the extra userinfo block, so 0 means
-     * the server never told us what the client connected with. */
+    // protocol_major only arrives with the extra userinfo block, so 0 means
+    // the server never told us what the client connected with.
     CHECK(!downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 0));
     CHECK(!downgraded(PROTOCOL_Q2PRO, "q2pro r1892", -1));
     CHECK(!downgraded(PROTOCOL_Q2PRO, "unrecognised client 1.0", 34));
     CHECK(!downgraded(PROTOCOL_Q2PRO, "", 34));
-    /* Above its ceiling is not a downgrade. */
+    // Above its ceiling is not a downgrade.
     CHECK(!downgraded(PROTOCOL_Q2PRO, "q2pro r1892", 37));
 
     SECTION("an invalid client index is ignored, not indexed");
     server_protocol = PROTOCOL_Q2PRO;
     checkProtocolDowngrade(-1);
     checkProtocolDowngrade(9999);
-    CHECK(1);   /* reaching here without crashing is the check */
+    CHECK(1);   // reaching here without crashing is the check
 
     return test_summary();
 }

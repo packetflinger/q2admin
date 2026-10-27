@@ -20,7 +20,7 @@
 
 #define STUB_MAXCLIENTS 8
 
-/* --- the globals q2admin expects the engine and mod to have set --- */
+// the globals q2admin expects the engine and mod to have set
 
 static proxyinfo_t stub_clients[STUB_MAXCLIENTS + 1];
 proxyinfo_t *proxyinfo;
@@ -28,8 +28,10 @@ proxyinfo_t *proxyinfo;
 static cvar_t stub_maxclients;
 cvar_t *maxclients = &stub_maxclients;
 
-/* Slot 0 is the worldspawn entity, so clients start at 1 - the same
- * off-by-one getEnt(client + 1) assumes in production. */
+/**
+ * Slot 0 is the worldspawn entity, so clients start at 1 - the same
+ * off-by-one getEnt(client + 1) assumes in production.
+ */
 static edict_t stub_edicts[STUB_MAXCLIENTS + 1];
 static gclient_t stub_gclients[STUB_MAXCLIENTS + 1];
 
@@ -44,18 +46,24 @@ int q2a_developer;
 char moddir[256] = "baseq2";
 char buffer2[256];
 
-/* What raiseSignal() was asked to set, per client, for tests to assert on. */
+/**
+ * What raiseSignal() was asked to set, per client, for tests to assert on.
+ */
 unsigned int stub_signals[STUB_MAXCLIENTS + 1];
 
-/* g_ban.o reads these. The cvars stay zeroed: nothing under test reads a
- * ban file, and a NULL ->string would fault loudly if something tried. */
+/**
+ * g_ban.o reads these. The cvars stay zeroed: nothing under test reads a
+ * ban file, and a NULL ->string would fault loudly if something tried.
+ */
 bool filternonprintabletext = true;
 static cvar_t stub_ban_cvars[3];
 cvar_t *configfile_ban = &stub_ban_cvars[0];
 cvar_t *q2adminbanremotetxt = &stub_ban_cvars[1];
 cvar_t *q2adminbanremotetxt_enable = &stub_ban_cvars[2];
 
-/* g_log.o reads these. buffer is q2admin's shared scratch string. */
+/**
+ * g_log.o reads these. buffer is q2admin's shared scratch string.
+ */
 char buffer[0x10000];
 static cvar_t stub_configfile_log;
 cvar_t *configfile_log = &stub_configfile_log;
@@ -63,10 +71,13 @@ bool consolelog_enable;
 char consolelog_pattern[256] = "[q2a] %s\n";
 int signal_score_threshold = 50;
 
-/* Settable by a test, so "#x" and "#X" have a known value to format. */
+/**
+ * Settable by a test, so "#x" and "#X" have a known value to format.
+ */
 int stub_signal_score;
 
-/* --- stubbed q2admin functions --------------------------------------
+/**
+ * Stubbed q2admin functions.
  *
  * Stubbing raiseSignal() rather than linking the real g_signal.o keeps the
  * dependency list short, and recording the request is exactly what a test
@@ -74,54 +85,53 @@ int stub_signal_score;
  * addCmdQueue(); link it once something needs the real scoring.
  */
 
-void raiseSignal(int client, unsigned int signal)
-{
+void raiseSignal(int client, unsigned int signal) {
     if (client >= 0 && client < STUB_MAXCLIENTS) {
         stub_signals[client] |= signal;
     }
 }
 
-/* Deferred work: tests check the formatted output, not the queue. */
+/**
+ * Deferred work: tests check the formatted output, not the queue.
+ */
 void addCmdQueue(int client, byte command, float timeout, unsigned long data,
-                 char *str)
-{
+                 char *str) {
     (void)client; (void)command; (void)timeout; (void)data; (void)str;
 }
 
-uint16_t getport(void)
-{
+uint16_t getport(void) {
     return 27910;
 }
 
-/* logEvent() is not stubbed: g_log.o is linked, and the real one returns
- * straight away because every logtypes[] entry starts disabled. */
+/**
+ * logEvent() is not stubbed: g_log.o is linked, and the real one returns
+ * straight away because every logtypes[] entry starts disabled.
+ */
 
-size_t httpGetFile(generic_file_t *output, const char *url)
-{
+size_t httpGetFile(generic_file_t *output, const char *url) {
     (void)output; (void)url;
     return 0;
 }
 
-int signalScore(int client)
-{
+int signalScore(int client) {
     (void)client;
     return stub_signal_score;
 }
 
-/* One fixed definition, so the "#w" format has something deterministic to
+/**
+ * One fixed definition, so the "#w" format has something deterministic to
  * print. Linking the real g_signal.o instead would clash with this and with
- * raiseSignal() above. */
-signal_def_t *findSignalDefFromID(const int id)
-{
+ * raiseSignal() above.
+ */
+signal_def_t *findSignalDefFromID(const int id) {
     static signal_def_t def = { SIGNAL_CHATFLOOD, 15, "chatflood" };
 
     return (unsigned int)id == def.bit ? &def : NULL;
 }
 
-/* --- fake engine print calls --- */
+// fake engine print calls
 
-static void stub_dprintf(char *fmt, ...)
-{
+static void stub_dprintf(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
     printf("    [gi.dprintf] ");
@@ -129,8 +139,7 @@ static void stub_dprintf(char *fmt, ...)
     va_end(ap);
 }
 
-static void stub_cprintf(edict_t *ent, int level, char *fmt, ...)
-{
+static void stub_cprintf(edict_t *ent, int level, char *fmt, ...) {
     va_list ap;
     (void)ent;
     (void)level;
@@ -140,8 +149,7 @@ static void stub_cprintf(edict_t *ent, int level, char *fmt, ...)
     va_end(ap);
 }
 
-static void stub_bprintf(int level, char *fmt, ...)
-{
+static void stub_bprintf(int level, char *fmt, ...) {
     va_list ap;
     (void)level;
     va_start(ap, fmt);
@@ -150,10 +158,9 @@ static void stub_bprintf(int level, char *fmt, ...)
     va_end(ap);
 }
 
-/* --- test-facing setup ---------------------------------------------- */
+// test-facing setup
 
-void stub_engine_init(void)
-{
+void stub_engine_init(void) {
     memset(stub_clients, 0, sizeof(stub_clients));
     memset(stub_signals, 0, sizeof(stub_signals));
     memset(&gi, 0, sizeof(gi));
@@ -162,8 +169,8 @@ void stub_engine_init(void)
     gi.cprintf = stub_cprintf;
     gi.bprintf = stub_bprintf;
 
-    /* proxyinfo is offset by one in the real server: slot -1 is the
-     * "not a player" entry. Mirror that so indexes match production. */
+    // proxyinfo is offset by one in the real server: slot -1 is the
+    // "not a player" entry. Mirror that so indexes match production.
     proxyinfo = stub_clients + 1;
     proxyinfo[-1].inuse = 1;
 
@@ -182,8 +189,7 @@ void stub_engine_init(void)
 }
 
 proxyinfo_t *stub_add_client(int slot, const char *name,
-                             const char *version, int protocol)
-{
+                             const char *version, int protocol) {
     proxyinfo_t *cl = &proxyinfo[slot];
 
     memset(cl, 0, sizeof(*cl));
@@ -198,19 +204,17 @@ proxyinfo_t *stub_add_client(int slot, const char *name,
     cl->protocol_major = protocol;
     stub_signals[slot] = 0;
 
-    /* Give it an entity too, so code taking an edict_t * can be called. */
+    // Give it an entity too, so code taking an edict_t * can be called.
     cl->ent = stub_ent(slot);
     cl->ent->inuse = true;
     cl->ent->client = &stub_gclients[slot + 1];
     return cl;
 }
 
-edict_t *stub_ent(int slot)
-{
+edict_t *stub_ent(int slot) {
     return &stub_edicts[slot + 1];
 }
 
-unsigned int stub_signals_for(int slot)
-{
+unsigned int stub_signals_for(int slot) {
     return stub_signals[slot];
 }

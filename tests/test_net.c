@@ -18,8 +18,7 @@
 #include "g_local.h"
 #include "q2a_test.h"
 
-int main(void)
-{
+int main(void) {
     netadr_t a, b, n;
     char big[600];
 
@@ -36,15 +35,15 @@ int main(void)
     CHECK_STR(net_addressToString(&a, false, false, false), "2001:db8::face");
 
     SECTION("net_parseIP rejects what it cannot parse, leaving the address unset");
-    /* A bare IPv6 has no "]:" so it used to fall into the IPv4 branch and
-     * silently become 0.0.0.0, which made every such client look like the
-     * same address to ip_limit. */
+    // A bare IPv6 has no "]:" so it used to fall into the IPv4 branch and
+    // silently become 0.0.0.0, which made every such client look like the
+    // same address to ip_limit.
     CHECK(!net_parseIP(&a, "2001:db8::1"));
     CHECK_INT(a.type, NA_UNSPECIFIED);
-    CHECK(!net_parseIP(&a, "192.0.2.4"));          /* no port */
+    CHECK(!net_parseIP(&a, "192.0.2.4"));          // no port
     CHECK(!net_parseIP(&a, "not-an-ip:99"));
     CHECK(!net_parseIP(&a, ""));
-    CHECK(!net_parseIP(&a, ":1234"));              /* empty address */
+    CHECK(!net_parseIP(&a, ":1234"));              // empty address
 
     SECTION("net_parseIP bounds an overlong input");
     memset(big, 'A', sizeof(big));
@@ -80,8 +79,8 @@ int main(void)
     CHECK_INT(net_parseIPAddressMask("2001:db8::4").mask_bits, 128);
 
     SECTION("a malformed mask is inert, not a wild match");
-    /* An out-of-range width used to reach net_cidrToMask()'s IPv4 path and
-     * shift by a negative amount, giving an unpredictable mask. */
+    // An out-of-range width used to reach net_cidrToMask()'s IPv4 path and
+    // shift by a negative amount, giving an unpredictable mask.
     CHECK_INT(net_parseIPAddressMask("192.0.2.5/64").type, NA_UNSPECIFIED);
     CHECK_INT(net_parseIPAddressMask("2001:db8::4/200").type, NA_UNSPECIFIED);
     CHECK_INT(net_parseIPAddressMask("999.1.2.3/8").type, NA_UNSPECIFIED);
@@ -95,8 +94,8 @@ int main(void)
         int width = fam ? 128 : 32;
         int bad = 0;
 
-        /* Build the expected mask independently, and go past both ends to
-         * cover the clamping. */
+        // Build the expected mask independently, and go past both ends to
+        // cover the clamping.
         for (int cidr = -5; cidr <= width + 40; cidr++) {
             uint8_t want[16] = {0};
             int eff = cidr < 0 ? 0 : (cidr > width ? width : cidr);
@@ -114,8 +113,8 @@ int main(void)
     }
 
     SECTION("net_addressToString's widest output is not truncated");
-    /* 8 groups of 4 hex digits is the longest inet_ntop emits; with
-     * brackets, mask and port that needs 52 bytes. */
+    // 8 groups of 4 hex digits is the longest inet_ntop emits; with
+    // brackets, mask and port that needs 52 bytes.
     net_parseIP(&a, "[1111:2222:3333:4444:5555:6666:7777:8888]:65535");
     CHECK_STR(net_addressToString(&a, false, false, false),
               "1111:2222:3333:4444:5555:6666:7777:8888");

@@ -19,9 +19,10 @@
 #include "q2a_test.h"
 #include "stub_engine.h"
 
-/* A rule with nothing set but its number and name mode. */
-static baninfo_t *rule(int type)
-{
+/**
+ * A rule with nothing set but its number and name mode.
+ */
+static baninfo_t *rule(int type) {
     static baninfo_t b;
 
     memset(&b, 0, sizeof(b));
@@ -30,8 +31,7 @@ static baninfo_t *rule(int type)
     return &b;
 }
 
-int main(void)
-{
+int main(void) {
     baninfo_t *b;
 
     stub_engine_init();
@@ -60,8 +60,8 @@ int main(void)
     b->addr = net_parseIPAddressMask("192.0.2.0/24");
     CHECK_STR(banMatchReason(b),
               "any name, ip in 192.0.2.0/24");
-    /* checkBanList() skips the address test on a zero mask, so neither
-     * should this. */
+    // checkBanList() skips the address test on a zero mask, so neither
+    // should this.
     b = rule(NICKALL);
     memset(&b->addr, 0, sizeof(b->addr));
     CHECK_STR(banMatchReason(b),
@@ -89,8 +89,8 @@ int main(void)
     b->vtype = VERSION_REGEX;
     CHECK_STR(banMatchReason(b),
               "any name, version matches /q2pro r1892/");
-    /* An empty version string means the rule does not test the version,
-     * whatever vtype says. */
+    // An empty version string means the rule does not test the version,
+    // whatever vtype says.
     b = rule(NICKALL);
     b->vtype = VERSION_EQUALS;
     CHECK_STR(banMatchReason(b),
@@ -99,9 +99,9 @@ int main(void)
     SECTION("password and connection cap");
     b = rule(NICKALL);
     snprintf(b->password, sizeof(b->password), "letmein");
-    /* The password is printed: it's the only stable way to tell from the log
-     * which allow rule let a player in, since rule numbers shift as rules
-     * are added and removed. It's already in plain text in q2a_ban.cfg. */
+    // The password is printed: it's the only stable way to tell from the log
+    // which allow rule let a player in, since rule numbers shift as rules
+    // are added and removed. It's already in plain text in q2a_ban.cfg.
     CHECK_STR(banMatchReason(b),
               "any name, password \"letmein\"");
     b = rule(NICKALL);

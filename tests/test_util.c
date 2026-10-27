@@ -19,8 +19,7 @@
 #include "q2a_test.h"
 #include "stub_engine.h"
 
-int main(void)
-{
+int main(void) {
     char out[256], a[256], b[256];
     char info[MAX_INFO_STRING];
 
@@ -36,8 +35,8 @@ int main(void)
     CHECK(getLogicalValue("TRUE"));
     CHECK(!getLogicalValue("No"));
     CHECK(!getLogicalValue(""));
-    /* Still false, so worth pinning: "true" is accepted but these are not,
-     * and anything unrecognised reads as off rather than erroring. */
+    // Still false, so worth pinning: "true" is accepted but these are not,
+    // and anything unrecognised reads as off rather than erroring.
     CHECK(!getLogicalValue("on"));
     CHECK(!getLogicalValue("t"));
     CHECK(!getLogicalValue("2"));
@@ -47,7 +46,7 @@ int main(void)
     CHECK(isBlank(""));
     CHECK(isBlank("   "));
     CHECK(!isBlank("  x"));
-    CHECK(!isBlank("\t"));      /* only ' ' is skipped */
+    CHECK(!isBlank("\t"));      // only ' ' is skipped
 
     SECTION("Q_trim strips trailing whitespace, leaves leading alone");
     strcpy(a, "  hello  \t\n");
@@ -84,16 +83,16 @@ int main(void)
     CHECK(Q_strcasestr("Hello", "zzz") == NULL);
 
     SECTION("prefix and substring matching");
-    /* startContains(src, cmp): does src start with cmp, ignoring case. */
+    // startContains(src, cmp): does src start with cmp, ignoring case.
     CHECK(startContains("q2pro r1892", "q2pro"));
     CHECK(startContains("Q2PRO", "q2pro"));
-    CHECK(!startContains("q2pro", "q2pro r1892"));   /* src is shorter */
-    CHECK(startContains("anything", ""));            /* empty cmp matches */
-    /* startswith(needle, haystack) - note the order is the other way round
-     * from startContains, and it is case sensitive. */
+    CHECK(!startContains("q2pro", "q2pro r1892"));   // src is shorter
+    CHECK(startContains("anything", ""));            // empty cmp matches
+    // startswith(needle, haystack) - note the order is the other way round
+    // from startContains, and it is case sensitive.
     CHECK(startswith("abc", "abcdef"));
     CHECK(!startswith("abc", "ABCdef"));
-    /* stringContains is case-insensitive, anywhere in the string. */
+    // stringContains is case-insensitive, anywhere in the string.
     CHECK(stringContains("the quick brown fox", "QUICK"));
     CHECK(!stringContains("the quick brown fox", "slow"));
 
@@ -104,7 +103,7 @@ int main(void)
     CHECK(wildcardMatch("a?c", "abc"));
     CHECK(!wildcardMatch("a?c", "ac"));
     CHECK(wildcardMatch("a*", "abcdef"));
-    CHECK(wildcardMatch("a*", "a"));                 /* * may match nothing */
+    CHECK(wildcardMatch("a*", "a"));                 // * may match nothing
     CHECK(wildcardMatch("*fox", "the quick fox"));
     CHECK(wildcardMatch("*quick*", "the quick fox"));
     CHECK(!wildcardMatch("*dog", "the quick fox"));
@@ -115,18 +114,18 @@ int main(void)
     SECTION("validatePath rejects escapes and control characters");
     CHECK_INT(validatePath("maps/dm1.cfg"), PATH_VALID);
     CHECK_INT(validatePath("a/b/c"), PATH_VALID);
-    CHECK_INT(validatePath("/etc/passwd"), PATH_INVALID);       /* absolute */
-    CHECK_INT(validatePath("../../etc/passwd"), PATH_INVALID);  /* traversal */
+    CHECK_INT(validatePath("/etc/passwd"), PATH_INVALID);       // absolute
+    CHECK_INT(validatePath("../../etc/passwd"), PATH_INVALID);  // traversal
     CHECK_INT(validatePath("ok/../bad"), PATH_INVALID);
-    CHECK_INT(validatePath("bad\nname"), PATH_INVALID);         /* control char */
+    CHECK_INT(validatePath("bad\nname"), PATH_INVALID);         // control char
     CHECK_INT(validatePath(""), PATH_VALID);
-    /* PATH_MIXED_CASE is in the enum but never returned. */
+    // PATH_MIXED_CASE is in the enum but never returned.
     CHECK_INT(validatePath("MiXeD/Case.cfg"), PATH_VALID);
 
     SECTION("Q_strlcpy / Q_strlcat truncate and always terminate");
     CHECK_INT(Q_strlcpy(out, "hello", sizeof(out)), 5);
     CHECK_STR(out, "hello");
-    /* The return is the length it WANTED, so > size means truncated. */
+    // The return is the length it WANTED, so > size means truncated.
     CHECK_INT(Q_strlcpy(out, "hello", 3), 5);
     CHECK_STR(out, "he");
     strcpy(out, "ab");
@@ -139,7 +138,7 @@ int main(void)
     SECTION("Q_concat");
     CHECK_INT(Q_concat(out, sizeof(out), "a", "bb", "ccc", NULL), 6);
     CHECK_STR(out, "abbccc");
-    /* Over size: returns the wanted length and writes nothing oversized. */
+    // Over size: returns the wanted length and writes nothing oversized.
     CHECK_INT(Q_concat(out, 4, "aa", "bb", "cc", NULL), 6);
     CHECK_INT(Q_concat(out, sizeof(out), NULL), 0);
     CHECK_STR(out, "");
@@ -155,7 +154,7 @@ int main(void)
     CHECK(decayFactor(0.0f, 10.0f) == 1.0f);
     CHECK(decayFactor(10.0f, 10.0f) > 0.49f && decayFactor(10.0f, 10.0f) < 0.51f);
     CHECK(decayFactor(20.0f, 10.0f) > 0.24f && decayFactor(20.0f, 10.0f) < 0.26f);
-    /* A zero or negative half-life means no decay, not a divide by zero. */
+    // A zero or negative half-life means no decay, not a divide by zero.
     CHECK(decayFactor(5.0f, 0.0f) == 1.0f);
     CHECK(decayFactor(5.0f, -1.0f) == 1.0f);
 
@@ -172,7 +171,7 @@ int main(void)
     CHECK_STR(out, "cost $5");
     processString(out, "in \\m/here", sizeof(out), 0);
     CHECK_STR(out, "in baseq2/here");
-    /* Stops at the end character and reports where it stopped. */
+    // Stops at the end character and reports where it stopped.
     CHECK(*processString(out, "value\" trailing", sizeof(out), '\"') == '\"');
     CHECK_STR(out, "value");
 
@@ -183,10 +182,10 @@ int main(void)
     CHECK(breakLine("  padded   \"v\"  ", a, b, sizeof(b)));
     CHECK_STR(a, "padded");
     CHECK_STR(b, "v");
-    CHECK(!breakLine("option novalue", a, b, sizeof(b)));  /* no quotes */
-    CHECK(!breakLine("option", a, b, sizeof(b)));          /* no value */
+    CHECK(!breakLine("option novalue", a, b, sizeof(b)));  // no quotes
+    CHECK(!breakLine("option", a, b, sizeof(b)));          // no value
     CHECK(!breakLine("", a, b, sizeof(b)));
-    CHECK(!breakLine("option \"\"", a, b, sizeof(b)));     /* empty value */
+    CHECK(!breakLine("option \"\"", a, b, sizeof(b)));     // empty value
     CHECK(!breakLine("option \"unterminated", a, b, sizeof(b)));
 
     SECTION("Info_ValueForKey reads userinfo");
@@ -195,7 +194,7 @@ int main(void)
     CHECK_STR(Info_ValueForKey(info, "rate"), "25000");
     CHECK_STR(Info_ValueForKey(info, "skin"), "male/grunt");
     CHECK_STR(Info_ValueForKey(info, "absent"), "");
-    /* Two calls alternate between buffers, so they can be compared. */
+    // Two calls alternate between buffers, so they can be compared.
     CHECK(Info_ValueForKey(info, "name") != Info_ValueForKey(info, "rate"));
 
     SECTION("Info_SetValueForKey / Info_RemoveKey");
@@ -207,7 +206,7 @@ int main(void)
     Info_RemoveKey(info, "rate");
     CHECK_STR(Info_ValueForKey(info, "rate"), "");
     CHECK_STR(Info_ValueForKey(info, "name"), "alice");
-    /* Refuses the characters that would let a value forge a new key. */
+    // Refuses the characters that would let a value forge a new key.
     strcpy(info, "\\name\\bob");
     Info_SetValueForKey(info, "evil", "a\\b");
     CHECK_STR(Info_ValueForKey(info, "evil"), "");
@@ -215,13 +214,13 @@ int main(void)
     CHECK_STR(Info_ValueForKey(info, "evil"), "");
     Info_SetValueForKey(info, "evil", "a;b");
     CHECK_STR(Info_ValueForKey(info, "evil"), "");
-    /* An empty key or value is a no-op. */
+    // An empty key or value is a no-op.
     Info_SetValueForKey(info, "k", "");
     CHECK_STR(Info_ValueForKey(info, "k"), "");
 
     SECTION("Info_Validate rejects malformed userinfo");
     CHECK(Info_Validate("\\name\\bob\\rate\\8000"));
-    CHECK(!Info_Validate("\\name\\bob\\dangling"));   /* key with no value */
+    CHECK(!Info_Validate("\\name\\bob\\dangling"));   // key with no value
     CHECK(!Info_Validate("\\name\\has\"quote"));
     CHECK(!Info_Validate("\\name\\has;semi"));
 
@@ -239,8 +238,8 @@ int main(void)
         for (int i = 3; i <= 9; i++) {
             va("%d", i);
         }
-        /* first has now been recycled - this is why results that must
-         * outlive the next few calls have to be copied. */
+        // first has now been recycled - this is why results that must
+        // outlive the next few calls have to be copied.
         CHECK(strcmp(first, "1") != 0);
     }
 

@@ -32,15 +32,16 @@
 static int test_fails;
 static int test_checks;
 
-/* ANSI colors for results: dark green for passes, dark red for failures.
+/**
+ * ANSI colors for results: dark green for passes, dark red for failures.
  * Only used when stdout is a terminal and NO_COLOR isn't set, so output
- * redirected to a file stays plain. */
+ * redirected to a file stays plain.
+ */
 #define TEST_GREEN "\033[32m"
 #define TEST_RED   "\033[31m"
 #define TEST_RESET "\033[0m"
 
-static int test_color(void)
-{
+static int test_color(void) {
     static int color = -1;
     if (color < 0) {
         color = test_isatty(1) && !getenv("NO_COLOR");
@@ -65,11 +66,15 @@ static int test_color(void)
         }                                                                   \
     } while (0)
 
-/* Truthy check. */
+/**
+ * Truthy check.
+ */
 #define CHECK(expr) \
     CHECK_AT(__FILE__, __LINE__, (expr), "%s", #expr)
 
-/* Integer compare; prints both values on failure. */
+/**
+ * Integer compare; prints both values on failure.
+ */
 #define CHECK_INT(expr, want)                                               \
     do {                                                                    \
         long _g = (long)(expr), _w = (long)(want);                          \
@@ -77,8 +82,10 @@ static int test_color(void)
                  #expr, _g, _w);                                            \
     } while (0)
 
-/* String compare; NULL is never equal, so a NULL return fails rather than
- * crashing inside strcmp. */
+/**
+ * String compare; NULL is never equal, so a NULL return fails rather than
+ * crashing inside strcmp.
+ */
 #define CHECK_STR(expr, want)                                               \
     do {                                                                    \
         const char *_g = (expr), *_w = (want);                              \
@@ -87,8 +94,7 @@ static int test_color(void)
                  _g ? _g : "(null)", _w ? _w : "(null)");                   \
     } while (0)
 
-static int test_summary(void)
-{
+static int test_summary(void) {
     printf("\n%s%s: %d checks, %d failed%s\n",
            TEST_C(test_fails ? TEST_RED : TEST_GREEN),
            test_fails ? "FAILED" : "passed", test_checks, test_fails,
