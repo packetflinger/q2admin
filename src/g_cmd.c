@@ -1690,12 +1690,28 @@ q2acmd_t q2aCommands[] = {
         vpnCacheRun,
     },
     {
+        "vpncacheload",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        false,
+        vpnCacheLoadRun,
+    },
+    {
         "vpncacheprune",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
         NULL,
         false,
         vpnCachePruneRun,
+    },
+    {
+        "vpncachesave",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        false,
+        vpnCacheSaveRun,
     },
     {
         "vpnusers",
@@ -1717,6 +1733,13 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_STRING,
         &vpn_api_path,
+        false,
+    },
+    {
+        "vpn_cache_file",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &vpn_cache_file,
         false,
     },
     {

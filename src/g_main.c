@@ -76,6 +76,7 @@ void ShutdownGame(void) {
         whoisWriteFile();
         G_Free(whois_details);
     }
+    vpnCacheWrite();
     vpnCacheFree();
     if (runmode) {
         profile_start(1);

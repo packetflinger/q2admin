@@ -504,6 +504,9 @@ the same provider (ASN), separately from the per-address `ip_limit`. The
 
 Results are cached per address for `vpn_cache_ttl` seconds (`sv !vpncache`
 shows what's cached), and addresses in `vpn_ignorelist` are never checked.
+The cache is saved to `vpn_cache_file` in the mod directory on every map
+change and on shutdown, and loaded back when the server starts, so a restart
+doesn't mean looking everyone up again.
 
 A VPN on its own doesn't remove anyone: `vpn-detected` is worth 40 points,
 below the default `signal_score_threshold` of 50, so it only removes a player
@@ -1203,6 +1206,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `votepasspercent` | number | 50 | Percentage of yes votes needed to pass. |
 | `vpn_api_host` | string | `iplogs.com` | Host the VPN check is sent to, over HTTPS. Replies are read in IPLogs' format. |
 | `vpn_api_path` | string | `/v1/check` | Path on `vpn_api_host` the VPN check is POSTed to. |
+| `vpn_cache_file` | string | vpncache.dat | File in the mod directory the VPN check cache is saved to on map change and shutdown, and loaded from at server start. Give each server sharing a mod directory its own file. Empty to not save the cache. Config file and server console only. |
 | `vpn_cache_probe` | number | 8 | How many neighbouring cache slots are searched for an address before the oldest entry among them is replaced. Higher means fewer early evictions but slower lookups. Values below 1 count as 1. |
 | `vpn_cache_size` | number | 1024 | Number of IP addresses the VPN check result cache holds. Config file only, read at server start. 0 disables the cache. |
 | `vpn_cache_ttl` | number | 86400 | Seconds a VPN check result is cached for each IP address. |
@@ -1325,12 +1329,29 @@ until it's reused, so they're counted but not listed.
 sv !vpncache
 ```
 
+#### `vpncacheload` (console only)
+Replace the VPN check cache with what's in `vpn_cache_file`, for when the file
+has been edited by hand while the server is running. This happens
+automatically at server start. Lookups made since the last save are lost, so
+run `vpncachesave` first to keep them. If the file can't be read, the cache
+is left as it was.
+```
+sv !vpncacheload
+```
+
 #### `vpncacheprune` (console only)
 Remove every expired entry from the VPN check cache now, instead of waiting
 for its slot to be reused, and show how many were removed and how many live
 entries remain.
 ```
 sv !vpncacheprune
+```
+
+#### `vpncachesave` (console only)
+Save the VPN check cache to `vpn_cache_file` now, instead of waiting for the
+next map change or shutdown.
+```
+sv !vpncachesave
 ```
 
 #### `vpnusers` (console only)

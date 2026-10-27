@@ -1021,6 +1021,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readDisableLists();
     readCheckVarLists();
     vpnBuildIgnorelist();
+    vpnCacheWrite();
 
     // exec the map cfg file...
     Q_snprintf(gmapname, sizeof(gmapname), "%s", mapname);

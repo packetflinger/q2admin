@@ -241,11 +241,7 @@ void vpnFinishLookup(download_t *download, int code, byte *buff, int len) {
         }
     }
 
-    if (Q_stricmp(v->verdict, "vpn_likely") == 0 || Q_stricmp(v->verdict, "vpn_detected") == 0) {
-        v->state = VPN_POSITIVE;
-    } else {
-        v->state = VPN_NEGATIVE;
-    }
+    v->state = vpnVerdictState(v->verdict);
     vpnCacheSet(&proxyinfo[i].address, v);
     vpnApplyResult(i, false);
 }

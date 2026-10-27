@@ -27,11 +27,16 @@ typedef struct {
 extern int vpn_cache_probe; // max linear-probe distance before an insert evicts
 extern int vpn_cache_size;  // slots, only read at server start, 0 disables the cache
 extern int vpn_cache_ttl;   // seconds a cached VPN check result stays valid
+extern char vpn_cache_file[256]; // file in moddir the cache is saved to, empty to not save it
 
 void displayNextVPNCache(edict_t *ent, int client, unsigned long slot);
 void vpnCacheFree(void);
 bool vpnCacheGet(netadr_t *addr, vpn_t *out);
 void vpnCacheInit(void);
+void vpnCacheLoadRun(int startarg, edict_t *ent, int client);
 void vpnCachePruneRun(int startarg, edict_t *ent, int client);
+void vpnCacheSaveRun(int startarg, edict_t *ent, int client);
 void vpnCacheRun(int startarg, edict_t *ent, int client);
 void vpnCacheSet(netadr_t *addr, const vpn_t *result);
+vpn_state_t vpnVerdictState(const char *verdict);
+int vpnCacheWrite(void);
