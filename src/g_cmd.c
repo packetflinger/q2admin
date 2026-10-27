@@ -1619,14 +1619,14 @@ q2acmd_t q2aCommands[] = {
         "userinfochange_count",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &USERINFOCHANGE_COUNT,
+        &UserinfoChangeCount,
         false,
     },
     {
         "userinfochange_time",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,
-        &USERINFOCHANGE_TIME,
+        &UserinfoChangeTime,
         false,
     },
     {

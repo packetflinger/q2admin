@@ -597,8 +597,8 @@ extern bool q2a_command_check;
 extern bool do_vid_restart;
 
 extern int gl_driver_check;
-extern int USERINFOCHANGE_TIME;
-extern int USERINFOCHANGE_COUNT;
+extern int UserinfoChangeTime;
+extern int UserinfoChangeCount;
 extern int gl_driver_max_changes;
 extern int q2a_developer;
 extern bool enforce_deadlines;

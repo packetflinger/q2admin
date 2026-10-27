@@ -208,8 +208,8 @@ bool userinfoProxy                      = false;
 // true when q2admin requested GMF_EXTRA_USERINFO on the mod's behalf (see
 // InitGame()), so the mod needs the extra keys merged into one string
 static bool userinfoProxyActive         = false;
-int USERINFOCHANGE_TIME                 = 60;
-int USERINFOCHANGE_COUNT                = 40;
+int UserinfoChangeTime                 = 60;
+int UserinfoChangeCount                = 40;
 char version[256];
 bool vote_enable                        = true;
 char vpn_api_key[33]                    = "";
@@ -1908,9 +1908,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         proxyinfo[client].userinfo.changed_count++;
     }
 
-    if (proxyinfo[client].userinfo.changed_count > USERINFOCHANGE_COUNT) {
+    if (proxyinfo[client].userinfo.changed_count > UserinfoChangeCount) {
         temp = ltime - proxyinfo[client].userinfo.changed_start;
-        if (temp < USERINFOCHANGE_TIME) {
+        if (temp < UserinfoChangeTime) {
             gi.bprintf(PRINT_HIGH, "%s tried to flood the server (2)\n", proxyinfo[client].name);
             Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
             gi.AddCommandString(tmptext);
