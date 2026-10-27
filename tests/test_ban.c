@@ -20,6 +20,19 @@
 #include "stub_engine.h"
 
 /**
+ * Runs one ban-file line through parseBanLine() and returns the rule it
+ * added, or NULL if the line was rejected.
+ */
+static baninfo_t *parse(const char *line) {
+    char buf[512];
+    baninfo_t *before = banhead;
+
+    snprintf(buf, sizeof(buf), "%s", line);
+    parseBanLine(buf);
+    return banhead != before ? banhead : NULL;
+}
+
+/**
  * A rule with nothing set but its number and name mode.
  */
 static baninfo_t *rule(int type) {
@@ -84,6 +97,77 @@ int main(void) {
     CHECK(!asnMatches("as7843", "78430"));
     CHECK(!asnMatches("as7843", "843"));
     CHECK(!asnMatches("as7843", ""));
+
+    SECTION("asnParse accepts AS plus 1-10 digits, quoted or not");
+    {
+        char asn[16];
+
+        CHECK(asnParse(asn, sizeof(asn), "as7843", 6));
+        CHECK_STR(asn, "as7843");
+        CHECK(asnParse(asn, sizeof(asn), "\"AS7843\"", 8));
+        CHECK_STR(asn, "AS7843");
+        CHECK(asnParse(asn, sizeof(asn), "AS4294967295", 12));
+        CHECK_STR(asn, "AS4294967295");
+        CHECK(!asnParse(asn, sizeof(asn), "AS12345678901", 13));
+        CHECK_STR(asn, "");
+        CHECK(!asnParse(asn, sizeof(asn), "7843", 4));
+        CHECK(!asnParse(asn, sizeof(asn), "AS", 2));
+        CHECK(!asnParse(asn, sizeof(asn), "AS78x3", 6));
+        CHECK(!asnParse(asn, sizeof(asn), "\"AS7843", 7));
+    }
+
+    SECTION("ban file ASN parsing");
+    b = parse("BAN: ASN as7843");
+    CHECK(b != NULL);
+    CHECK_STR(b ? b->asn : NULL, "as7843");
+    b = parse("BAN: ASN \"as7843\" MSG \"bye\"");
+    CHECK(b != NULL);
+    CHECK_STR(b ? b->asn : NULL, "as7843");
+    CHECK_STR(b ? b->msg : NULL, "bye");
+    b = parse("BAN: ASN as7843\n");
+    CHECK_STR(b ? b->asn : NULL, "as7843");
+    // a bad ASN drops the whole rule instead of widening it to everyone
+    CHECK(parse("BAN: ASN as1234567890123456789") == NULL);
+    CHECK(parse("BAN: ASN 7843") == NULL);
+
+    SECTION("ipTokenParse takes v4/v6 with a mask, rejects junk and overlong tokens");
+    {
+        netadr_t a;
+        const char *v6 = "0000:0000:0000:0000:0000:ffff:192.168.100.228/128";
+
+        CHECK(ipTokenParse(&a, "10.1.2.3", 8));
+        CHECK(ipTokenParse(&a, "10.1.2.0/24 trailing", 11));
+        CHECK_INT(a.mask_bits, 24);
+        CHECK(ipTokenParse(&a, v6, strlen(v6)));
+        CHECK_INT(a.mask_bits, 128);
+        CHECK(ipTokenParse(&a, "::1", 3));
+        CHECK(!ipTokenParse(&a, "10.1.2.999", 10));
+        CHECK(!ipTokenParse(&a, "", 0));
+        CHECK(!ipTokenParse(&a, "1111111111111111111111111111111111111111111111111111", 52));
+    }
+
+    SECTION("ban file IP parsing");
+    b = parse("BAN: IP 10.1.2.0/24");
+    CHECK(b != NULL);
+    CHECK_INT(b ? b->addr.mask_bits : -1, 24);
+    b = parse("BAN: IP 10.1.2.3 MSG \"bye\"");
+    CHECK_STR(b ? b->msg : NULL, "bye");
+    b = parse("BAN: IP ::1");
+    CHECK(b != NULL);
+    // a bad or overlong address drops the whole rule instead of widening it
+    CHECK(parse("BAN: IP 10.1.2.999 VERSION \"q2pro\"") == NULL);
+    CHECK(parse("BAN: IP 1111111111111111111111111111111111111111111111111111111111111111 VERSION \"q2pro\"") == NULL);
+    CHECK(parse("BAN: IP") == NULL);
+
+    SECTION("a bad VERSION RE drops the rule");
+    CHECK(parse("BAN: VERSION RE \"[^\"") == NULL);
+    b = parse("BAN: VERSION RE \"^q2pro\"");
+    CHECK(b != NULL);
+
+    SECTION("a VPN-only rule loads");
+    b = parse("BAN: IP VPN");
+    CHECK(b != NULL);
+    CHECK(b && b->vpn);
 
     SECTION("version, by match type");
     b = rule(NICKALL);

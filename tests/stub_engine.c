@@ -166,6 +166,17 @@ static void stub_bprintf(int level, char *fmt, ...) {
     va_end(ap);
 }
 
+// fake engine memory calls, so code that allocates (ban parsing) can run
+
+static void *stub_tagmalloc(int size, int tag) {
+    (void)tag;
+    return calloc(1, (size_t)size);
+}
+
+static void stub_tagfree(void *block) {
+    free(block);
+}
+
 // test-facing setup
 
 void stub_engine_init(void) {
@@ -176,6 +187,8 @@ void stub_engine_init(void) {
     gi.dprintf = stub_dprintf;
     gi.cprintf = stub_cprintf;
     gi.bprintf = stub_bprintf;
+    gi.TagMalloc = stub_tagmalloc;
+    gi.TagFree = stub_tagfree;
 
     // proxyinfo is offset by one in the real server: slot -1 is the
     // "not a player" entry. Mirror that so indexes match production.

@@ -87,7 +87,7 @@ typedef struct banstruct {
     float timeout;
     int signalscore;
     bool vpn;
-    char asn[10];
+    char asn[16];                   // "AS" and up to 10 digits, see asnParse()
     struct chatflood_s floodinfo;
     struct banstruct *next;
 } baninfo_t;
@@ -122,6 +122,8 @@ char *parseBanLine(char *cp);
 char *parseChatbanLine(char *cp);
 char *parseBanIncludeLine(char *in);
 bool asnMatches(const char *rule, const char *player);
+bool asnParse(char *out, size_t size, const char *token, size_t len);
+bool ipTokenParse(netadr_t *out, const char *token, size_t len);
 char *banMatchReason(const baninfo_t *entry);
 void banRun(int startarg, edict_t *ent, int client);
 void chatbanRun(int startarg, edict_t *ent, int client);

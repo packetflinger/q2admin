@@ -174,7 +174,6 @@ void readBanLists(void) {
  */
 void banRun(int startarg, edict_t *ent, int client) {
     char *cp;
-    char *tempcp;
     int clienti, num;
     unsigned int save;
     bool like = false;
@@ -185,7 +184,6 @@ void banRun(int startarg, edict_t *ent, int client) {
     char strbuffer[384];
     bool nocheck = false;
     char *ipstr;
-    char tempip[INET6_ADDRSTRLEN];
     bool allver = false;
 
     if (gi.argc() <= startarg) {
@@ -446,7 +444,14 @@ void banRun(int startarg, edict_t *ent, int client) {
                         return;
                     }
 
+                    // check the slot before reading it, not after
                     clienti = q2a_atoi(cp);
+                    if (clienti < 0 || clienti >= maxclients->value || !proxyinfo[clienti].inuse) {
+                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
+                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
+                        G_Free(newentry);
+                        return;
+                    }
                     newentry->addr = proxyinfo[clienti].address;
 
                     while (isdigit(*cp)) {
@@ -466,17 +471,10 @@ void banRun(int startarg, edict_t *ent, int client) {
                         SKIPBLANK(cp);
                     }
 
-                    if (clienti < 0 || clienti > maxclients->value || !proxyinfo[clienti].inuse) {
-                        gi.cprintf(ent, PRINT_HIGH, "UpTo: %s\n", savecmd);
-                        gi.cprintf(ent, PRINT_HIGH, BANCMD_LAYOUT);
-                        G_Free(newentry);
-                        return;
-                    }
-
                     ipstr = IPSTRMASK(&newentry->addr);
                     Q_snprintf(
                         savecmd + q2a_strlen(savecmd),
-                        INET6_ADDRSTRLEN,
+                        sizeof(savecmd) - q2a_strlen(savecmd),
                         "%s ",
                         ipstr
                     );
@@ -495,18 +493,11 @@ void banRun(int startarg, edict_t *ent, int client) {
                     q2a_strcat(savecmd, cp);
                     q2a_strcat(savecmd, " ");
 
-                    if (isxdigit(*cp)) {
-                        tempcp = cp;
-                        // find the end of the IP string
-                        while (!isspace(*tempcp)) {
-                            tempcp++;
-                        }
-                        q2a_memset(tempip, 0, sizeof(tempip));
-                        q2a_memcpy(tempip, cp, (tempcp-cp));
-                        newentry->addr = net_parseIPAddressMask(tempip);
-                        cp = tempcp;
+                    if (!ipTokenParse(&newentry->addr, cp, q2a_strlen(cp))) {
+                        gi.cprintf(ent, PRINT_HIGH, "Not an IP address: %s\n", cp);
+                        G_Free(newentry);
+                        return;
                     }
-                    SKIPBLANK(cp);
                 }
             }
 
@@ -528,12 +519,15 @@ void banRun(int startarg, edict_t *ent, int client) {
             cp = gi.argv(startarg);
             startarg++;
 
+            if (!asnParse(newentry->asn, sizeof(newentry->asn), cp, q2a_strlen(cp))) {
+                gi.cprintf(ent, PRINT_HIGH, "Not an ASN: %s (expected AS followed by a number, e.g. AS7843)\n", cp);
+                G_Free(newentry);
+                return;
+            }
+            // saved unquoted, the way parseBanLine() reads it back
             q2a_strcat(savecmd, "ASN ");
-            q2a_memset(newentry->asn, 0, sizeof(newentry->asn));
-            processString(newentry->asn, cp, sizeof(newentry->asn)-1, '\"');
-            q2a_strcat(savecmd, "\"");
-            q2a_strcat(savecmd, cp);
-            q2a_strcat(savecmd, "\" ");
+            q2a_strcat(savecmd, newentry->asn);
+            q2a_strcat(savecmd, " ");
             if (gi.argc() <= startarg) {
                 cp = "";
             } else {
@@ -1055,6 +1049,78 @@ char *banMatchReason(const baninfo_t *entry) {
         Q_strlcpy(reason, "no criteria", sizeof(reason));
     }
     return reason;
+}
+
+/**
+ * Parses the address from a ban rule's IP clause: an IPv4 or IPv6 address
+ * with an optional /mask.
+ *
+ * out:   the parsed address and mask. Zeroed (NA_UNSPECIFIED) on failure.
+ * token: the address as written in the rule; doesn't need to be terminated.
+ * len:   length of token.
+ *
+ * Returns true if token was a valid address. A token too long to be one is
+ * rejected rather than cut short, since a shortened address could still
+ * parse as a different, valid one.
+ *
+ * Called from banRun() (the console !ban command) and parseBanLine().
+ */
+bool ipTokenParse(netadr_t *out, const char *token, size_t len) {
+    char ipstr[INET6_ADDRSTRLEN + 4];   // room for "/128"
+
+    q2a_memset(out, 0, sizeof(*out));
+    if (len == 0 || len >= sizeof(ipstr)) {
+        return false;
+    }
+    q2a_memcpy(ipstr, token, len);
+    ipstr[len] = '\0';
+    *out = net_parseIPAddressMask(ipstr);
+    return out->type != NA_UNSPECIFIED;
+}
+
+/**
+ * Validates and copies the ASN from a ban rule: "AS" (any case) followed
+ * by 1 to 10 digits, the most a 32-bit AS number needs. Surrounding double
+ * quotes are allowed and dropped, because the console !ban command used to
+ * save the ASN quoted and those lines are still in ban files.
+ *
+ * out:   where to copy the ASN, without quotes. Left empty on failure.
+ * size:  size of out, which must fit 13 characters ("AS" + 10 digits + NUL).
+ * token: the ASN as written in the rule; doesn't need to be terminated.
+ * len:   length of token.
+ *
+ * Returns true if token was a valid ASN and was copied.
+ *
+ * Called from banRun() (the console !ban command) and parseBanLine().
+ */
+bool asnParse(char *out, size_t size, const char *token, size_t len) {
+    size_t digits;
+
+    if (size) {
+        out[0] = '\0';
+    }
+    if (len >= 2 && token[0] == '"' && token[len - 1] == '"') {
+        token++;
+        len -= 2;
+    }
+    if (len < 3 || toupper((unsigned char)token[0]) != 'A' || toupper((unsigned char)token[1]) != 'S') {
+        return false;
+    }
+    digits = len - 2;
+    if (digits > 10) {
+        return false;
+    }
+    for (size_t i = 2; i < len; i++) {
+        if (!isdigit((unsigned char)token[i])) {
+            return false;
+        }
+    }
+    if (len >= size) {
+        return false;
+    }
+    q2a_memcpy(out, token, len);
+    out[len] = '\0';
+    return true;
 }
 
 /**
@@ -1930,8 +1996,8 @@ char *parseBanLine(char *cp) {
     bool like, re;
     char strbuffer[256];
     char *tempcp;
-    char ipstr[INET6_ADDRSTRLEN];
     bool allver = false;
+    bool invalid = false;     // a clause failed to parse, drop the rule
     int num;
 
     q2a_memset(strbuffer, 0, sizeof(strbuffer));
@@ -2043,17 +2109,18 @@ char *parseBanLine(char *cp) {
                 newentry->vpn = true;
                 cp += 3;
             } else {
-                if (isxdigit(*cp)) {
-                    tempcp = cp;
-                    // find the end of the IP string
-                    while (!isspace(*tempcp)) {
-                        tempcp++;
-                    }
-                    q2a_memset(ipstr, 0, sizeof(ipstr));
-                    q2a_memcpy(ipstr, cp, (tempcp-cp));
-                    newentry->addr = net_parseIPAddressMask(ipstr);
-                    cp = tempcp;
+                tempcp = cp;
+                // find the end of the IP string
+                while (*tempcp && !isspace((unsigned char)*tempcp)) {
+                    tempcp++;
                 }
+                // A rule with a bad address is dropped rather than loaded
+                // without it, which would widen it to every address.
+                if (!ipTokenParse(&newentry->addr, cp, tempcp - cp)) {
+                    gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near IP: not an IP address\n");
+                    invalid = true;
+                }
+                cp = tempcp;
             }
             SKIPBLANK(cp);
         }
@@ -2061,19 +2128,19 @@ char *parseBanLine(char *cp) {
         if (startContains(cp, "ASN")) {
             cp += 3;
             SKIPBLANK(cp);
-            if (startContains(cp, "AS")) {
-                tempcp = cp;
-                // find the end of the ASN string
-                while (!isspace(*tempcp)) {
-                    tempcp++;
-                }
-                q2a_memset(newentry->asn, 0, sizeof(newentry->asn));
-                q2a_memcpy(newentry->asn, cp, (tempcp-cp));
-                cp = tempcp;
-                SKIPBLANK(cp);
-            } else {
-                gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near ASN: not an ASN\n");
+            tempcp = cp;
+            // find the end of the ASN string
+            while (*tempcp && !isspace((unsigned char)*tempcp)) {
+                tempcp++;
             }
+            // A rule with a bad ASN is dropped rather than loaded without
+            // it, which would widen it to every network.
+            if (!asnParse(newentry->asn, sizeof(newentry->asn), cp, tempcp - cp)) {
+                gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near ASN: not an ASN\n");
+                invalid = true;
+            }
+            cp = tempcp;
+            SKIPBLANK(cp);
         }
         if (startContains(cp, "VERSION")) {
             cp += 7;
@@ -2100,7 +2167,10 @@ char *parseBanLine(char *cp) {
                 upperCase(strbuffer);
                 newentry->vr = re_compile(strbuffer);
                 if (!newentry->vr) {
-                    G_Free(newentry);
+                    // dropped at the end like any other invalid rule; freeing
+                    // it here left the rest of the parse writing to freed memory
+                    gi.cprintf(NULL, PRINT_HIGH, "Ban parsing error near VERSION: bad regular expression\n");
+                    invalid = true;
                 }
             }
             SKIPBLANK(cp);
@@ -2212,8 +2282,9 @@ char *parseBanLine(char *cp) {
     }
 
     // do you have a valid ban record?
-    if (newentry->type == NOTUSED ||
-            (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && newentry->maxnumberofconnects == 0 && (!allver && !newentry->version[0])) ||
+    if (newentry->type == NOTUSED || invalid ||
+            (!all && newentry->type == NICKALL && newentry->addr.mask_bits == 0 && !newentry->vpn && !newentry->asn[0] &&
+             newentry->maxnumberofconnects == 0 && (!allver && !newentry->version[0])) ||
             (newentry->type == NICKRE && !newentry->r)) {
         // no, abort
         if (newentry->msg) {
