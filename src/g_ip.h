@@ -28,7 +28,10 @@ extern int vpn_cache_probe; // max linear-probe distance before an insert evicts
 extern int vpn_cache_size;  // slots, only read at server start, 0 disables the cache
 extern int vpn_cache_ttl;   // seconds a cached VPN check result stays valid
 
+void displayNextVPNCache(edict_t *ent, int client, unsigned long slot);
 void vpnCacheFree(void);
 bool vpnCacheGet(netadr_t *addr, vpn_t *out);
 void vpnCacheInit(void);
+void vpnCachePruneRun(int startarg, edict_t *ent, int client);
+void vpnCacheRun(int startarg, edict_t *ent, int client);
 void vpnCacheSet(netadr_t *addr, const vpn_t *result);

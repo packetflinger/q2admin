@@ -1682,6 +1682,22 @@ q2acmd_t q2aCommands[] = {
         true,
     },
     {
+        "vpncache",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        false,
+        vpnCacheRun,
+    },
+    {
+        "vpncacheprune",
+        CMDCTX_SERVERCONSOLE,
+        CMDTYPE_COMMAND,
+        NULL,
+        false,
+        vpnCachePruneRun,
+    },
+    {
         "vpnusers",
         CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,

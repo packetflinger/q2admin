@@ -502,8 +502,8 @@ That's what the `IP VPN` [ban rule](#banning), `ip_limit_vpn` and
 the same provider (ASN), separately from the per-address `ip_limit`. The
 `ASN` ban rule matches every checked player's ASN, VPN or not.
 
-Results are cached per address for `vpn_cache_ttl` seconds, and addresses in
-`vpn_ignorelist` are never checked.
+Results are cached per address for `vpn_cache_ttl` seconds (`sv !vpncache`
+shows what's cached), and addresses in `vpn_ignorelist` are never checked.
 
 A VPN on its own doesn't remove anyone: `vpn-detected` is worth 40 points,
 below the default `signal_score_threshold` of 50, so it only removes a player
@@ -1313,6 +1313,24 @@ chatting a lot; one standing still reads in the thousands or more.
 `sv !chat_stats <player>`
 ```
 sv !chat_stats claire
+```
+
+#### `vpncache` (console only)
+Show the VPN check cache: how many slots are live or expired and the probe
+and TTL settings in use, then each live entry's address, ASN, verdict, score,
+confidence and time until it expires. Entries are printed 30 per server frame
+so a large cache doesn't stall the game. Expired entries keep their slot
+until it's reused, so they're counted but not listed.
+```
+sv !vpncache
+```
+
+#### `vpncacheprune` (console only)
+Remove every expired entry from the VPN check cache now, instead of waiting
+for its slot to be reused, and show how many were removed and how many live
+entries remain.
+```
+sv !vpncacheprune
 ```
 
 #### `vpnusers` (console only)

@@ -87,6 +87,37 @@ static unsigned int vpnCacheHash(netadr_t *addr) {
 }
 
 /**
+ * Empties a cache slot. Lookups stop at the first empty slot, so simply
+ * clearing one would hide any entry stored further along the same run of
+ * used slots. Instead, each later entry in the run that would still be
+ * found from the gap (the gap lies between its home slot and where it is
+ * now) is moved back into it, and the slot it left becomes the new gap.
+ * Entries only ever move closer to their home slot, so none end up past
+ * vpn_cache_probe.
+ */
+static void vpnCacheRemove(unsigned int gap) {
+    unsigned int j = gap;
+
+    vpn_cache[gap].used = false;
+    for (;;) {
+        unsigned int home, gapdist, jdist;
+
+        j = (j + 1) % vpn_cache_slots;
+        if (!vpn_cache[j].used) {
+            break;
+        }
+        home = vpnCacheHash(&vpn_cache[j].addr) % vpn_cache_slots;
+        gapdist = (gap + vpn_cache_slots - home) % vpn_cache_slots;
+        jdist = (j + vpn_cache_slots - home) % vpn_cache_slots;
+        if (gapdist < jdist) {
+            vpn_cache[gap] = vpn_cache[j];
+            vpn_cache[j].used = false;
+            gap = j;
+        }
+    }
+}
+
+/**
  * Looks up the cached VPN check result for an address. Returns false if
  * the cache is disabled, there's no entry within the probe window, or the
  * entry has expired (freeing the slot for reuse in that case).
@@ -108,7 +139,7 @@ bool vpnCacheGet(netadr_t *addr, vpn_t *out) {
         }
         if (NET_IsEqualBaseAdr(&e->addr, addr)) {
             if (time(NULL) >= e->expires) {
-                e->used = false;
+                vpnCacheRemove((idx + probe) % vpn_cache_slots);
                 return false;
             }
             *out = e->result;
@@ -151,4 +182,138 @@ void vpnCacheSet(netadr_t *addr, const vpn_t *result) {
     victim->addr = *addr;
     victim->expires = time(NULL) + vpn_cache_ttl;
     victim->result = *result;
+}
+
+/**
+ * Formats a number of seconds as e.g. "3h12m", "4m05s" or "9s" for the
+ * vpncache listing.
+ */
+static void vpnCacheFormatTime(char *out, size_t size, long secs) {
+    if (secs >= 3600) {
+        snprintf(out, size, "%ldh%02ldm", secs / 3600, (secs % 3600) / 60);
+    } else if (secs >= 60) {
+        snprintf(out, size, "%ldm%02lds", secs / 60, secs % 60);
+    } else {
+        snprintf(out, size, "%lds", secs);
+    }
+}
+
+#define VPN_CACHE_ROWS_PER_FRAME 30   // entries vpncache prints per server frame
+
+/**
+ * Console command "vpncache": prints a summary of the cache's settings and
+ * how full it is, then queues QCMD_DISPVPNCACHE to list the live entries a
+ * few at a time. Expired entries still hold their slot until it's reused,
+ * so they're counted but not listed.
+ */
+void vpnCacheRun(int startarg, edict_t *ent, int client) {
+    unsigned int live = 0, expired = 0;
+    time_t now = time(NULL);
+
+    (void)startarg;
+
+    if (!vpn_cache) {
+        gi.cprintf(ent, PRINT_HIGH, "VPN cache is disabled (vpn_cache_size was %d at server start)\n",
+            vpn_cache_size);
+        return;
+    }
+
+    for (unsigned int i = 0; i < vpn_cache_slots; i++) {
+        if (!vpn_cache[i].used) {
+            continue;
+        }
+        if (now >= vpn_cache[i].expires) {
+            expired++;
+        } else {
+            live++;
+        }
+    }
+
+    gi.cprintf(ent, PRINT_HIGH, "VPN cache: %u of %u slots live, %u expired; probe %u, ttl %ds\n",
+        live, vpn_cache_slots, expired, vpnCacheProbeLimit(), vpn_cache_ttl);
+    if (live) {
+        addCmdQueue(client, QCMD_DISPVPNCACHE, 0, 0, 0);
+    }
+}
+
+/**
+ * Prints up to VPN_CACHE_ROWS_PER_FRAME live cache entries, starting the
+ * scan at slot, then re-queues itself (QCMD_DISPVPNCACHE) with the slot to
+ * carry on from on the next frame. Printing a large cache in one go would
+ * stall the server frame, the same reason displayNextBan() pages its list.
+ *
+ * ent:    who to print to, NULL for the server console.
+ * client: their client index, used to requeue the next batch for them.
+ * slot:   cache slot to resume scanning at.
+ *
+ * Called from G_RunFrame()'s QCMD_DISPVPNCACHE handling (g_main.c), first
+ * queued by vpnCacheRun() at slot 0.
+ */
+void displayNextVPNCache(edict_t *ent, int client, unsigned long slot) {
+    unsigned int printed = 0;
+    time_t now = time(NULL);
+    char left[32];
+
+    // the cache can be freed (server shutdown) between frames
+    if (!vpn_cache) {
+        return;
+    }
+
+    for (; slot < vpn_cache_slots; slot++) {
+        vpn_cache_entry_t *e = &vpn_cache[slot];
+
+        if (!e->used || now >= e->expires) {
+            continue;
+        }
+        if (printed == VPN_CACHE_ROWS_PER_FRAME) {
+            addCmdQueue(client, QCMD_DISPVPNCACHE, 0, slot, 0);
+            return;
+        }
+        printed++;
+        vpnCacheFormatTime(left, sizeof(left), (long)(e->expires - now));
+        gi.cprintf(ent, PRINT_HIGH, "  %-39s AS%-10s %-12s score %.2f conf %.2f expires in %s\n",
+            net_addressToString(&e->addr, false, false, false),
+            e->result.asn[0] ? e->result.asn : "-",
+            e->result.verdict[0] ? e->result.verdict : "-",
+            e->result.score, e->result.confidence, left);
+    }
+    gi.cprintf(ent, PRINT_HIGH, "End of VPN cache.\n");
+}
+
+/**
+ * Console command "vpncacheprune": removes every expired entry from the
+ * cache now, rather than waiting for its slot to be reused, and reports
+ * how many went and how many live entries remain.
+ */
+void vpnCachePruneRun(int startarg, edict_t *ent, int client) {
+    unsigned int pruned = 0, live = 0;
+    time_t now = time(NULL);
+
+    (void)startarg; (void)client;
+
+    if (!vpn_cache) {
+        gi.cprintf(ent, PRINT_HIGH, "VPN cache is disabled (vpn_cache_size was %d at server start)\n",
+            vpn_cache_size);
+        return;
+    }
+
+    // Removing a slot can move a later entry back into it, so a slot is
+    // only stepped past once what's in it now has been checked.
+    for (unsigned int i = 0; i < vpn_cache_slots; ) {
+        if (vpn_cache[i].used && now >= vpn_cache[i].expires) {
+            vpnCacheRemove(i);
+            pruned++;
+        } else {
+            i++;
+        }
+    }
+
+    for (unsigned int i = 0; i < vpn_cache_slots; i++) {
+        if (vpn_cache[i].used) {
+            live++;
+        }
+    }
+
+    gi.cprintf(ent, PRINT_HIGH, "Pruned %u expired VPN cache entr%s, %u live of %u slots\n",
+        pruned, pruned == 1 ? "y" : "ies", live, vpn_cache_slots);
 }

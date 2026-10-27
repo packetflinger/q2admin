@@ -321,7 +321,8 @@ enum _commands {
     QCMD_TESTCMDQUEUE,
     QCMD_CLIENTVERSION,             // Ask client for their software version string
     QCMD_FREEZEPLAYER,              // Lock player in place by overriding msec with 0
-    QCMD_UNFREEZEPLAYER             // Stop overriding player's msec
+    QCMD_UNFREEZEPLAYER,            // Stop overriding player's msec
+    QCMD_DISPVPNCACHE,              // Show VPN cache entries in console (throttled)
 };
 
 // Internal Warnings for logging
