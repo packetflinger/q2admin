@@ -233,6 +233,10 @@ void vpnFinishLookup(download_t *download, int code, byte *buff, int len) {
     if (ip_info) {
         asn = json_getPropertyValue(ip_info, "asn");
         if (asn) {
+            // stored as just the number, whether or not the reply has an "AS" prefix
+            if (startContains((char *)asn, "AS")) {
+                asn += 2;
+            }
             Q_strlcpy(v->asn, asn, sizeof(v->asn));
         }
     }
