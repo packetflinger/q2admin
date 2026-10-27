@@ -38,7 +38,7 @@ static void vpnCacheReport(edict_t *ent, int loaded, int skipped, bool missing);
  * Called from InitGame() (g_init.c), after the config files are read.
  */
 void vpnCacheInit(void) {
-    int skipped;
+    int loaded, skipped;
 
     vpnCacheFree();
     if (vpn_cache_size <= 0) {
@@ -47,7 +47,11 @@ void vpnCacheInit(void) {
     vpn_cache_slots = (unsigned int)vpn_cache_size;
     vpn_cache = G_Malloc(vpn_cache_slots * sizeof(vpn_cache_entry_t));
     q2a_memset(vpn_cache, 0, vpn_cache_slots * sizeof(vpn_cache_entry_t));
-    vpnCacheReport(NULL, vpnCacheRead(&skipped), skipped, false);
+    // read first: argument evaluation order is unspecified, so passing
+    // vpnCacheRead(&skipped) and skipped to the same call can read skipped
+    // before it's set
+    loaded = vpnCacheRead(&skipped);
+    vpnCacheReport(NULL, loaded, skipped, false);
 }
 
 /**
