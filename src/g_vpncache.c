@@ -17,10 +17,10 @@
 
 #include "g_local.h"
 
-int vpn_cache_probe = 8;     // overridden via q2admin.cfg
-int vpn_cache_size  = 1024;  // overridden via q2admin.cfg, only read at server start
-int vpn_cache_ttl   = 86400; // 1 day, overridden via q2admin.cfg
-char vpn_cache_file[256] = "vpncache.dat"; // overridden via q2admin.cfg, in moddir
+int vpn_cache_probe      = 8;
+int vpn_cache_size       = 1024;
+int vpn_cache_ttl        = 86400;          // 1 day
+char vpn_cache_file[256] = "vpncache.dat"; // in moddir
 
 static vpn_cache_entry_t *vpn_cache;    // allocated by vpnCacheInit(), NULL if disabled
 static unsigned int vpn_cache_slots;    // size vpn_cache was allocated with
@@ -47,9 +47,6 @@ void vpnCacheInit(void) {
     vpn_cache_slots = (unsigned int)vpn_cache_size;
     vpn_cache = G_Malloc(vpn_cache_slots * sizeof(vpn_cache_entry_t));
     q2a_memset(vpn_cache, 0, vpn_cache_slots * sizeof(vpn_cache_entry_t));
-    // read first: argument evaluation order is unspecified, so passing
-    // vpnCacheRead(&skipped) and skipped to the same call can read skipped
-    // before it's set
     loaded = vpnCacheRead(&skipped);
     vpnCacheReport(NULL, loaded, skipped, false);
 }
@@ -513,7 +510,7 @@ static void vpnCacheReport(edict_t *ent, int loaded, int skipped, bool missing) 
 
     if (!vpnCacheFilePath(path, sizeof(path))) {
         if (missing) {
-            gi.cprintf(ent, PRINT_HIGH, "vpn_cache_file is empty, so there's no VPN cache file to load\n");
+            gi.cprintf(ent, PRINT_HIGH, "[q2a] vpn_cache_file is empty, so there's no VPN cache file to load\n");
         }
         return;
     }
@@ -523,7 +520,7 @@ static void vpnCacheReport(edict_t *ent, int loaded, int skipped, bool missing) 
         }
         return;
     }
-    gi.cprintf(ent, PRINT_HIGH, "Loaded %d VPN cache entr%s from %s%s\n", loaded, loaded == 1 ? "y" : "ies",
+    gi.cprintf(ent, PRINT_HIGH, "[q2a] Loaded %d VPN cache entr%s from %s%s\n", loaded, loaded == 1 ? "y" : "ies",
         path, skipped ? va(" (%d malformed line%s skipped)", skipped, skipped == 1 ? "" : "s") : "");
 }
 
