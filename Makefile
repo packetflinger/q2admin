@@ -309,6 +309,7 @@ $(EXAMPLECFG): tools/gen-example-cfg.py $(wildcard $(SRCDIR)/*.c) $(wildcard $(S
 TESTDIR  := tests
 TESTS    ?= $(patsubst $(TESTDIR)/test_%.c,%,$(wildcard $(TESTDIR)/test_*.c))
 TESTBINS := $(addprefix $(BUILDDIR)/test_,$(TESTS))
+TESTHEADERS := $(wildcard $(TESTDIR)/*.h)
 
 # Objects every test links. g_util.o supplies the string helpers, g_regex.o
 # the pattern matching that identifyClient() uses.
@@ -322,12 +323,20 @@ test: $(TESTBINS)
 	$(Q)fail=0; for t in $(TESTBINS); do \
 	    echo "=== $$t ==="; $$t || fail=1; \
 	done; \
-	if [ $$fail -ne 0 ]; then echo; echo "TESTS FAILED"; exit 1; fi
+	if [ $$fail -ne 0 ]; then \
+	    echo; \
+	    if [ -t 1 ] && [ -z "$$NO_COLOR" ]; then \
+	        printf '\033[31mTESTS FAILED\033[0m\n'; \
+	    else \
+	        echo "TESTS FAILED"; \
+	    fi; \
+	    exit 1; \
+	fi
 
-$(BUILDDIR)/stub_engine.o: $(TESTDIR)/stub_engine.c $(HEADERS) | $(BUILDDIR)
+$(BUILDDIR)/stub_engine.o: $(TESTDIR)/stub_engine.c $(HEADERS) $(TESTHEADERS) | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -c $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $<
 
-$(BUILDDIR)/test_%: $(TESTDIR)/test_%.c $(TESTOBJS) $(HEADERS) | $(BUILDDIR)
+$(BUILDDIR)/test_%: $(TESTDIR)/test_%.c $(TESTOBJS) $(HEADERS) $(TESTHEADERS) | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $< $(TESTOBJS) $(LIBS)

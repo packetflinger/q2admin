@@ -19,10 +19,36 @@
 #define Q2A_TEST_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#define test_isatty(fd) _isatty(fd)
+#else
+#include <unistd.h>
+#define test_isatty(fd) isatty(fd)
+#endif
 
 static int test_fails;
 static int test_checks;
+
+/* ANSI colors for results: dark green for passes, dark red for failures.
+ * Only used when stdout is a terminal and NO_COLOR isn't set, so output
+ * redirected to a file stays plain. */
+#define TEST_GREEN "\033[32m"
+#define TEST_RED   "\033[31m"
+#define TEST_RESET "\033[0m"
+
+static int test_color(void)
+{
+    static int color = -1;
+    if (color < 0) {
+        color = test_isatty(1) && !getenv("NO_COLOR");
+    }
+    return color;
+}
+
+#define TEST_C(code) (test_color() ? (code) : "")
 
 #define SECTION(name) printf("\n%s\n", (name))
 
@@ -30,10 +56,12 @@ static int test_checks;
     do {                                                                    \
         test_checks++;                                                      \
         if (ok) {                                                           \
-            printf("  ok   " fmt "\n", __VA_ARGS__);                        \
+            printf("  %sok%s   " fmt "\n", TEST_C(TEST_GREEN),              \
+                   TEST_C(TEST_RESET), __VA_ARGS__);                        \
         } else {                                                            \
             test_fails++;                                                   \
-            printf("  FAIL " fmt "   (%s:%d)\n", __VA_ARGS__, file, line);  \
+            printf("  %sFAIL " fmt "   (%s:%d)%s\n", TEST_C(TEST_RED),      \
+                   __VA_ARGS__, file, line, TEST_C(TEST_RESET));            \
         }                                                                   \
     } while (0)
 
@@ -61,8 +89,10 @@ static int test_checks;
 
 static int test_summary(void)
 {
-    printf("\n%s: %d checks, %d failed\n",
-           test_fails ? "FAILED" : "passed", test_checks, test_fails);
+    printf("\n%s%s: %d checks, %d failed%s\n",
+           TEST_C(test_fails ? TEST_RED : TEST_GREEN),
+           test_fails ? "FAILED" : "passed", test_checks, test_fails,
+           TEST_C(TEST_RESET));
     return test_fails != 0;
 }
 
