@@ -44,7 +44,7 @@ typedef enum {
 typedef struct download_s {
     edict_t     *initiator;
     dltype_t    type;
-    char        host[64];      // target host
+    char        host[256];     // target host
     char        path[1024];
     bool        post;          // true = POST "body" as-is, false = GET
     char        body[1024];    // POST body, used when post == true

@@ -20,12 +20,13 @@
 /**
  * VPN/proxy detection using the IPLogs API (https://iplogs.com/docs). It's a
  * public, unauthenticated POST endpoint, so there's no API key to configure.
+ * Where requests go is set by vpn_api_host and vpn_api_path, but the reply
+ * is parsed as IPLogs' format, so they need to point at IPLogs or something
+ * that answers the same way.
  *
  * It's a best-effort service and responses can be slow, so a player may be
  * able to join and interact for a few seconds before the result arrives.
  */
-#define VPN_API_HOST "iplogs.com"
-#define VPN_API_PATH "/v1/check"
 #define VPN_IGNORELIST_MAXRANGES 64     // max parsed entries from vpn_ignorelist
 
 // states of a VPN check
@@ -45,6 +46,8 @@ typedef struct {
     char        asn[16];        // just the number, e.g. "15169", from ip_info.asn
 } vpn_t;
 
+extern char vpn_api_host[256];      // host the VPN check is POSTed to
+extern char vpn_api_path[256];      // path on vpn_api_host
 extern bool vpn_enable;
 extern char vpn_ignorelist[1024];   // space/comma separated CIDR ranges exempt from the check
 

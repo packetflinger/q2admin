@@ -174,8 +174,8 @@ void vpnLookupStatus(edict_t *ent) {
     dl->type = DL_VPN;
     dl->onFinish = vpnFinishLookup;
     dl->post = true;
-    Q_strlcpy(dl->host, VPN_API_HOST, sizeof(dl->host));
-    Q_strlcpy(dl->path, VPN_API_PATH, sizeof(dl->path));
+    Q_strlcpy(dl->host, vpn_api_host, sizeof(dl->host));
+    Q_strlcpy(dl->path, vpn_api_path, sizeof(dl->path));
     Q_snprintf(dl->body, sizeof(dl->body), "{\"ip\":\"%s\"}", addr);
 
     pi->vpn.state = VPN_CHECKING;

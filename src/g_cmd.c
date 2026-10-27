@@ -1690,6 +1690,20 @@ q2acmd_t q2aCommands[] = {
         vpnUsersRun,
     },
     {
+        "vpn_api_host",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &vpn_api_host,
+        false,
+    },
+    {
+        "vpn_api_path",
+        CMDCTX_CFGFILE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &vpn_api_path,
+        false,
+    },
+    {
         "vpn_cache_probe",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_NUMBER,

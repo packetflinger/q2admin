@@ -210,6 +210,8 @@ int UserinfoChangeTime                  = 60;
 int UserinfoChangeCount                 = 40;
 char version[256];
 bool vote_enable                        = true;
+char vpn_api_host[256]                  = "iplogs.com";
+char vpn_api_path[256]                  = "/v1/check";
 bool vpn_enable                         = false;
 char vpn_ignorelist[1024]               = "";
 bool zbotdetect                         = true;

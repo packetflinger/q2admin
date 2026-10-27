@@ -1201,6 +1201,8 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `votecountnovotes` | bool | yes | `yes`: votes pass on yes ÷ all players. `no`: players who didn't vote are left out of the total. |
 | `voteminclients` | number | 0 | Players needed before a vote can be proposed. |
 | `votepasspercent` | number | 50 | Percentage of yes votes needed to pass. |
+| `vpn_api_host` | string | `iplogs.com` | Host the VPN check is sent to, over HTTPS. Replies are read in IPLogs' format. |
+| `vpn_api_path` | string | `/v1/check` | Path on `vpn_api_host` the VPN check is POSTed to. |
 | `vpn_cache_probe` | number | 8 | How many neighbouring cache slots are searched for an address before the oldest entry among them is replaced. Higher means fewer early evictions but slower lookups. Values below 1 count as 1. |
 | `vpn_cache_size` | number | 1024 | Number of IP addresses the VPN check result cache holds. Config file only, read at server start. 0 disables the cache. |
 | `vpn_cache_ttl` | number | 86400 | Seconds a VPN check result is cached for each IP address. |
