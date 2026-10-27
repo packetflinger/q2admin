@@ -156,7 +156,6 @@ HEADERS :=  game.h \
             g_flood.h \
             g_http.h \
             g_init.h \
-            g_ip.h \
             g_json.h \
             g_local.h \
             g_log.h \
@@ -171,6 +170,7 @@ HEADERS :=  game.h \
             g_util.h \
             g_vote.h \
             g_vpn.h \
+            g_vpncache.h \
             g_whois.h \
             platform.h \
             profile.h \
@@ -188,7 +188,6 @@ OBJS :=     g_admin.o \
             g_flood.o \
             g_http.o \
             g_init.o \
-            g_ip.o \
             g_json.o \
             g_libc.o \
             g_log.o \
@@ -204,6 +203,7 @@ OBJS :=     g_admin.o \
             g_util.o \
             g_vote.o \
             g_vpn.o \
+            g_vpncache.o \
             g_whois.o
 
 ifdef CONFIG_WINDOWS
@@ -315,7 +315,7 @@ TESTHEADERS := $(wildcard $(TESTDIR)/*.h)
 # the pattern matching that identifyClient() uses.
 TESTOBJS := $(BUILDDIR)/g_net.o $(BUILDDIR)/g_protocol.o \
             $(BUILDDIR)/g_util.o $(BUILDDIR)/g_regex.o $(BUILDDIR)/g_log.o \
-            $(BUILDDIR)/g_ban.o $(BUILDDIR)/g_ip.o \
+            $(BUILDDIR)/g_ban.o $(BUILDDIR)/g_vpncache.o \
             $(BUILDDIR)/stub_engine.o
 
 .PHONY: test

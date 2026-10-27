@@ -37,7 +37,7 @@
 #include "g_http.h"
 #include "g_init.h"
 #include "g_vpn.h"
-#include "g_ip.h"
+#include "g_vpncache.h"
 #include "g_log.h"
 #include "g_lrcon.h"
 #include "g_protocol.h"

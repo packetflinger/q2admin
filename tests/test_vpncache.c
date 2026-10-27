@@ -81,7 +81,7 @@ static void quiet_cprintf(edict_t *ent, int level, char *fmt, ...) {
  * came back. moddir points at a temporary directory for this.
  */
 static void test_save_load(void) {
-    char dir[] = "/tmp/q2a_test_ip_XXXXXX";
+    char dir[] = "/tmp/q2a_test_vpncache_XXXXXX";
     char path[600];
     netadr_t a4, a6, gone;
     vpn_t v4 = { VPN_POSITIVE, "vpn_detected", 0.92, 0.88, "15169" };
