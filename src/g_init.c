@@ -1489,7 +1489,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     if (client < maxclients->value) {
         if (UpdateInternalClientInfo(client, ent, userinfo, &userInfoOverflow)) {
-            Q_snprintf(buffer, sizeof(buffer), zbotuserdisplay, proxyinfo[client].name);
+            Q_snprintf(buffer, sizeof(buffer), zbotuserdisplay, NAME(client));
             currentBanMsg = buffer;
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
 
@@ -1521,7 +1521,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     Q_strlcpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw));
-    q2a_strncpy(proxyinfo[client].name, Info_ValueForKey(userinfo, "name"), sizeof(proxyinfo[client].name) - 1);
+    q2a_strncpy(NAME(client), Info_ValueForKey(userinfo, "name"), sizeof(NAME(client)) - 1);
 
     skinname = Info_ValueForKey(userinfo, "skin");
     if (q2a_strlen(skinname) > MAX_SKIN_CHARS) {
@@ -1544,7 +1544,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         return false;
     }
 
-    if (lockDownServer && checkReconnectList(proxyinfo[client].name)) {
+    if (lockDownServer && checkReconnectList(NAME(client))) {
         currentBanMsg = lockoutmsg;
         logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
         if (banOnConnect) {
@@ -1659,7 +1659,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
         logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
 
         if (userInfoOverflow) {
-            Q_printf("%s: WARNING: userinfo overflowed (%s)\n", proxyinfo[client].name, IP(client));
+            Q_printf("%s: WARNING: userinfo overflowed (%s)\n", NAME(client), IP(client));
             proxyinfo[client].clientcommand |= CCMD_CLIENTOVERFLOWED;
         }
     }
@@ -1684,15 +1684,15 @@ bool ClientConnect(edict_t *ent, char *ui) {
  */
 bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
     char *s = Info_ValueForKey(userinfo, "name");
-    char oldname[sizeof(proxyinfo[client].name)];
-    char newname[sizeof(proxyinfo[client].name)];
+    char oldname[sizeof(NAME(client))];
+    char newname[sizeof(NAME(client))];
 
     q2a_strncpy(newname, s, sizeof(newname) - 1);
     newname[sizeof(newname) - 1] = 0;
 
-    if (proxyinfo[client].name[0] == 0) {
-        Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", newname);
-    } else if (q2a_strcmp(proxyinfo[client].name, newname) != 0) {
+    if (NAME(client)[0] == 0) {
+        Q_snprintf(NAME(client), sizeof(NAME(client)), "%s", newname);
+    } else if (q2a_strcmp(NAME(client), newname) != 0) {
         // check if ratbot detect?
         if (q2a_strcmp(newname, RATBOT_CHANGENAMETEST) == 0) {
             removeClientCommand(client, QCMD_TESTRATBOT4);
@@ -1715,8 +1715,8 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             }
         }
 
-        Q_snprintf(oldname, sizeof(oldname), "%s", proxyinfo[client].name);
-        Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", newname);
+        Q_snprintf(oldname, sizeof(oldname), "%s", NAME(client));
+        Q_snprintf(NAME(client), sizeof(NAME(client)), "%s", newname);
 
         if (whois_active) {
             if (proxyinfo[client].userid == -1) {
@@ -1727,7 +1727,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
 
         if (checkIfBanned(ent, client)) {
             logEvent(LT_BAN, client, ent, currentBanMsg, 0, 0.0, true);
-            Q_snprintf(proxyinfo[client].name, sizeof(proxyinfo[client].name), "%s", oldname);
+            Q_snprintf(NAME(client), sizeof(NAME(client)), "%s", oldname);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             if (kickOnNameChange) {
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
@@ -1738,7 +1738,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             logEvent(LT_NAMECHANGE, client, ent, oldname, 0, 0.0, false);
 
             if (displaynamechange) {
-                gi.bprintf(PRINT_HIGH, "%s changed name to %s\n", oldname, proxyinfo[client].name);
+                gi.bprintf(PRINT_HIGH, "%s changed name to %s\n", oldname, NAME(client));
             }
 
             if (nameChangeFloodProtect) {
@@ -1747,7 +1747,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                     proxyinfo[client].userinfo.namechangecount = 0;
                 } else {
                     if (proxyinfo[client].userinfo.namechangecount >= nameChangeFloodProtectNum) {
-                        Q_snprintf(buffer, sizeof(buffer), nameChangeFloodProtectMsg, proxyinfo[client].name);
+                        Q_snprintf(buffer, sizeof(buffer), nameChangeFloodProtectMsg, NAME(client));
                         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                         if (nameChangeFloodProtectSilence == 0) {
@@ -1816,7 +1816,7 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                 proxyinfo[client].userinfo.skinchangecount = 0;
             } else {
                 if (proxyinfo[client].userinfo.skinchangecount >= skinChangeFloodProtectNum) {
-                    Q_snprintf(buffer, sizeof(buffer), skinChangeFloodProtectMsg, proxyinfo[client].name);
+                    Q_snprintf(buffer, sizeof(buffer), skinChangeFloodProtectMsg, NAME(client));
                     gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                     if (skinChangeFloodProtectSilence == 0) {
@@ -1911,7 +1911,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     if (proxyinfo[client].userinfo.changed_count > UserinfoChangeCount) {
         temp = ltime - proxyinfo[client].userinfo.changed_start;
         if (temp < UserinfoChangeTime) {
-            gi.bprintf(PRINT_HIGH, "%s tried to flood the server (2)\n", proxyinfo[client].name);
+            gi.bprintf(PRINT_HIGH, "%s tried to flood the server (2)\n", NAME(client));
             Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
             gi.AddCommandString(tmptext);
         } else {
@@ -1953,10 +1953,10 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         //my check here, if timescale = 0 and it has length we will NOT allow
         if (proxyinfo[client].timescale == 0) {
             if (displayzbotuser) {
-                gi.bprintf(PRINT_HIGH, "%s%s\n", timescaleuserdisplay, proxyinfo[client].name);
+                gi.bprintf(PRINT_HIGH, "%s%s\n", timescaleuserdisplay, NAME(client));
             }
             if (proxyinfo[client].inuse) {
-                gi.cprintf(ent, PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+                gi.cprintf(ent, PRINT_HIGH, PRV_KICK_MSG, NAME(client));
             }
 
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, timescaleuserdisplay);
@@ -1988,9 +1988,9 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // the format string: a player called "%s%s%s" would otherwise
             // make bprintf read arguments that were never passed. The va()
             // below is fine, that string is the kick reason, not a format.
-            gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+            gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, NAME(client));
 
-            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, proxyinfo[client].name));
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, NAME(client)));
         } else {
             if (maxfpsallowed) {
                 if (proxyinfo[client].userinfo.maxfps > maxfpsallowed) {
@@ -2031,7 +2031,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
                 logEvent(LT_ZBOT, client, ent, NULL, ZR_PITCHSPEED, 0.0, true);
 
                 if (cl_pitchspeed_display) {
-                    gi.bprintf(PRINT_HIGH, "%s changed cl_pitchspeed to %d\n", proxyinfo[client].name, newps);
+                    gi.bprintf(PRINT_HIGH, "%s changed cl_pitchspeed to %d\n", NAME(client), newps);
                 }
 
                 if (cl_pitchspeed_kick) {
@@ -2059,7 +2059,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
                 logEvent(LT_ZBOT, client, ent, NULL, ZR_ANGLESPEEDKEY, 0.0, true);
 
                 if (cl_anglespeedkey_display) {
-                    gi.bprintf(PRINT_HIGH, "%s changed cl_anglespeedkey to %g\n", proxyinfo[client].name, newas);
+                    gi.bprintf(PRINT_HIGH, "%s changed cl_anglespeedkey to %g\n", NAME(client), newas);
                 }
 
                 if (cl_anglespeedkey_kick) {
@@ -2151,7 +2151,7 @@ void ClientDisconnect(edict_t *ent) {
 
             for (i = 0; i < maxclients->value; i++) {
                 if (!reconnectproxyinfo[i].inuse) {
-                    Q_snprintf(reconnectproxyinfo[i].name, sizeof(reconnectproxyinfo[i].name), "%s", proxyinfo[client].name);
+                    Q_snprintf(reconnectproxyinfo[i].name, sizeof(reconnectproxyinfo[i].name), "%s", NAME(client));
                     reconnectproxyinfo[i].inuse = true;
                     break;
                 }
@@ -2178,7 +2178,7 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].rbotretries = 0;
     proxyinfo[client].clientcommand = 0;
     proxyinfo[client].charindex = 0;
-    proxyinfo[client].name[0] = 0;
+    NAME(client)[0] = 0;
     proxyinfo[client].stuffFile = 0;
     proxyinfo[client].impulsesgenerated = 0;
     proxyinfo[client].floodinfo.chatFloodProtect = false;

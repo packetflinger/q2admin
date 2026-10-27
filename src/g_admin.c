@@ -374,7 +374,7 @@ void adm_boot(edict_t *ent, int client, int user) {
     }
     if ((user >= 0) && (user < maxclients->value)) {
         if (proxyinfo[user].inuse) {
-            gi.bprintf(PRINT_HIGH, "%s was kicked by %s.\n", proxyinfo[user].name, proxyinfo[client].name);
+            gi.bprintf(PRINT_HIGH, "%s was kicked by %s.\n", NAME(user), NAME(client));
             Q_snprintf(tmptext, sizeof(tmptext), "\nkick %d\n", user);
             gi.AddCommandString(tmptext);
         }
@@ -392,7 +392,7 @@ void adm_changemap(edict_t *ent, int client, char *mname) {
     if (q2a_strstr(mname, ";")) {
         return;
     }
-    gi.bprintf(PRINT_HIGH, "%s is changing map to %s.\n", proxyinfo[client].name, mname);
+    gi.bprintf(PRINT_HIGH, "%s is changing map to %s.\n", NAME(client), mname);
     Q_snprintf(tmptext, sizeof(tmptext), "\nmap %s\n", mname);
     gi.AddCommandString(tmptext);
 }
@@ -468,7 +468,7 @@ int doAdminCommand(edict_t *ent, int client) {
                                 }
                             send_to_ent = getEnt((send_to_client + 1));
                             stuffPlayer(send_to_ent, send_string);
-                            gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, proxyinfo[send_to_client].name);
+                            gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, NAME(send_to_client));
                         }
                 } else
                     if (VALIDCLIENT(send_to_client) && proxyinfo[send_to_client].inuse) {
@@ -480,7 +480,7 @@ int doAdminCommand(edict_t *ent, int client) {
                         }
                     send_to_ent = getEnt((send_to_client + 1));
                     stuffPlayer(send_to_ent, send_string);
-                    gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, proxyinfo[send_to_client].name);
+                    gi.cprintf(ent, PRINT_HIGH, "Client %d (%s) has been stuffed!\n", send_to_client, NAME(send_to_client));
                 }
             }
             done = 2;

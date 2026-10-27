@@ -110,12 +110,12 @@ void whois(int client, edict_t *ent) {
     for (i = 0; i < maxclients->value; i++) {
         if ((proxyinfo[i].inuse) && (proxyinfo[i].userid >= 0)) {
             //only do partial match on these, dump all that apply
-            if (q2a_strcmp(proxyinfo[i].name, a1) == 0) {
+            if (q2a_strcmp(NAME(i), a1) == 0) {
                 if (proxyinfo[i].admin_level & ADMIN_LEVEL7) {
                     gi.cprintf(ent, PRINT_HIGH, "  Unable to fetch info for %s\n", a1);
                     return;
                 }
-                gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for %s\n", proxyinfo[i].name);
+                gi.cprintf(ent, PRINT_HIGH, "\n  Whois details for %s\n", NAME(i));
                 whoisDumpDetails(client, ent, proxyinfo[i].userid);
                 //got match, dump details
                 return;
@@ -211,7 +211,7 @@ void whoisAddUser(int client, edict_t *ent) {
 
     whois_details[WHOIS_COUNT].id = WHOIS_COUNT;
     Q_strlcpy(whois_details[WHOIS_COUNT].ip, IP(client), WHOISIPLEN);
-    Q_strlcpy(whois_details[WHOIS_COUNT].dyn[0].name, proxyinfo[client].name, WHOISNAMELEN);
+    Q_strlcpy(whois_details[WHOIS_COUNT].dyn[0].name, NAME(client), WHOISNAMELEN);
     proxyinfo[client].userid = WHOIS_COUNT;
     WHOIS_COUNT++;
 }
@@ -242,7 +242,7 @@ void whoisAddUser(int client, edict_t *ent) {
 void whoisNewName(int client, edict_t *ent) {
     //called when a client changes name
     user_dyn_t *names;
-    char *newname = proxyinfo[client].name;
+    char *newname = NAME(client);
     unsigned int i;
 
     if (proxyinfo[client].userid == -1) {

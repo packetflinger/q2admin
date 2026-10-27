@@ -353,9 +353,9 @@ void banRun(int startarg, edict_t *ent, int client) {
                     return;
                 }
 
-                q2a_strncpy(newentry->nick, proxyinfo[clienti].name, sizeof(newentry->nick)-1);
+                q2a_strncpy(newentry->nick, NAME(clienti), sizeof(newentry->nick)-1);
                 q2a_strcat(savecmd, "\"");
-                q2a_strcat(savecmd, proxyinfo[clienti].name);
+                q2a_strcat(savecmd, NAME(clienti));
                 q2a_strcat(savecmd, "\" ");
 
                 if (newentry->type == NICKRE) { // compile RE
@@ -930,8 +930,8 @@ void banRun(int startarg, edict_t *ent, int client) {
                     edict_t *enti = getEnt((clienti + 1));
                     if (checkIfBanned(enti, clienti)) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0, true);
-                        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", proxyinfo[clienti].name, currentBanMsg, IP(clienti));
-                        gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", proxyinfo[clienti].name, currentBanMsg);
+                        // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", NAME(clienti), currentBanMsg, IP(clienti));
+                        gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", NAME(clienti), currentBanMsg);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
                 }
@@ -1124,7 +1124,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
 
                 switch (checkentry->type) {
                     case NICKEQ:
-                        if (Q_stricmp(proxyinfo[client].name, checkentry->nick)) {
+                        if (Q_stricmp(NAME(client), checkentry->nick)) {
                             prevcheckentry = checkentry;
                             checkentry = checkentry->next;
                             continue;
@@ -1132,7 +1132,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                         break;
 
                     case NICKLIKE:
-                        if (!stringContains(proxyinfo[client].name, checkentry->nick)) {
+                        if (!stringContains(NAME(client), checkentry->nick)) {
                             prevcheckentry = checkentry;
                             checkentry = checkentry->next;
                             continue;
@@ -1140,7 +1140,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                         break;
 
                     case NICKRE:
-                        q2a_strncpy(strbuffer, proxyinfo[client].name, sizeof(strbuffer)-1);
+                        q2a_strncpy(strbuffer, NAME(client), sizeof(strbuffer)-1);
                         upperCase(strbuffer);
 
                         int len;
@@ -1152,7 +1152,7 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                         break;
 
                     case NICKBLANK:
-                        if (!isBlank(proxyinfo[client].name)) {
+                        if (!isBlank(NAME(client))) {
                             prevcheckentry = checkentry;
                             checkentry = checkentry->next;
                             continue;

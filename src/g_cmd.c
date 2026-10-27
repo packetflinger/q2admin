@@ -1815,7 +1815,7 @@ void dprintf_internal(char *fmt, ...) {
         if (maxclients) {
             for (i = 0; i < maxclients->value; i++) {
                 if (proxyinfo[i].inuse
-                        && startContains(cbuffer, proxyinfo[i].name)) {
+                        && startContains(cbuffer, NAME(i))) {
                     if (q2a_strstr(cbuffer, proxyinfo[i].lastcmd)) {
                         if (consolechat_disable) {
                             return;
@@ -1828,7 +1828,7 @@ void dprintf_internal(char *fmt, ...) {
             }
         }
     } else if (((proxyinfo[clienti].inuse
-            && !q2a_strstr(cbuffer, proxyinfo[clienti].name))
+            && !q2a_strstr(cbuffer, NAME(clienti)))
             || !q2a_strstr(cbuffer, proxyinfo[clienti].lastcmd))) {
         clienti = -1;
     } else if (consolechat_disable
@@ -1904,7 +1904,7 @@ void cprintf_internal(edict_t *ent, int printlevel, char *fmt, ...) {
         unsigned int i;
 
         for (i = 0; i < maxclients->value; i++) {
-            if (proxyinfo[i].inuse && startContains(cbuffer, proxyinfo[i].name)) {
+            if (proxyinfo[i].inuse && startContains(cbuffer, NAME(i))) {
                 if (q2a_strstr(cbuffer, proxyinfo[i].lastcmd)) {
                     if (consolechat_disable) {
                         return;
@@ -2040,7 +2040,7 @@ void bprintf_internal(int printlevel, char *fmt, ...) {
         unsigned int i;
 
         for (i = 0; i < maxclients->value; i++) {
-            if (proxyinfo[i].inuse && startContains(cbuffer, proxyinfo[i].name)) {
+            if (proxyinfo[i].inuse && startContains(cbuffer, NAME(i))) {
                 if (q2a_strstr(cbuffer, proxyinfo[i].lastcmd)) {
                     clienti = i;
                     break;
@@ -2435,23 +2435,23 @@ int getClientsFromArg(int client, edict_t *ent, char *cp, char **text) {
                 switch (like) {
                     case 0: // name
                         Q_strlcpy(strbuffer2, strbuffer, sizeof(strbuffer2));
-                        if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
+                        if (wildcardMatch(strbuffer2, NAME(clienti))) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
-                        } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+                        } else if (Q_stricmp(NAME(clienti), strbuffer) == 0) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
                         break;
 
                     case 1: // LIKE
-                        if (stringContains(proxyinfo[clienti].name, strbuffer)) {
+                        if (stringContains(NAME(clienti), strbuffer)) {
                             numfound++;
                             proxyinfo[clienti].clientcommand |= CCMD_SELECTED;
                         }
                         break;
                     case 2: // RE
-                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
+                        q2a_strcpy(strbuffer, NAME(clienti));
                         upperCase(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             numfound++;
@@ -2563,14 +2563,14 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                 switch (like) {
                     case 0: // name
                         Q_strlcpy(strbuffer2, strbuffer, sizeof(strbuffer2));
-                        if (wildcardMatch(strbuffer2, proxyinfo[clienti].name)) {
+                        if (wildcardMatch(strbuffer2, NAME(clienti))) {
                             foundclienti = clienti;
                             matchcount++;
                             if (matchcount > 1) {
                                 gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
                                 return NULL;
                             }
-                        } else if (Q_stricmp(proxyinfo[clienti].name, strbuffer) == 0) {
+                        } else if (Q_stricmp(NAME(clienti), strbuffer) == 0) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
                                 return NULL;
@@ -2579,7 +2579,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                         }
                         break;
                     case 1: // LIKE
-                        if (stringContains(proxyinfo[clienti].name, strbuffer)) {
+                        if (stringContains(NAME(clienti), strbuffer)) {
                             if (foundclienti != -1) {
                                 gi.cprintf(ent, PRINT_HIGH, "error: 2 or more player names matched\n");
                                 return NULL;
@@ -2588,7 +2588,7 @@ edict_t *getClientFromArg(int client, edict_t *ent, int *clientret, char *cp, ch
                         }
                         break;
                     case 2: // RE
-                        q2a_strcpy(strbuffer, proxyinfo[clienti].name);
+                        q2a_strcpy(strbuffer, NAME(clienti));
                         upperCase(strbuffer);
                         if (re_matchp(r, strbuffer, &matchlen) == 0) {
                             if (foundclienti != -1) {
@@ -2632,7 +2632,7 @@ bool sayPersonCmd(edict_t *ent, int client, char *args) {
 
         // check for banned chat words
         if (checkIfChatBanned(text)) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
+            gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", NAME(client), currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, false);
             return false;
@@ -2642,8 +2642,8 @@ bool sayPersonCmd(edict_t *ent, int client, char *args) {
                 tmptext,
                 sizeof(tmptext),
                 "(%s)(private message to: %s) %s\n",
-                proxyinfo[client].name,
-                proxyinfo[clienti].name,
+                NAME(client),
+                NAME(clienti),
                 text
         );
         cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
@@ -2653,7 +2653,7 @@ bool sayPersonCmd(edict_t *ent, int client, char *args) {
                 tmptext,
                 sizeof(tmptext),
                 "(%s)(private message) %s\n",
-                proxyinfo[client].name,
+                NAME(client),
                 text
         );
         cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
@@ -2688,7 +2688,7 @@ void sayPersonLowRun(int startarg, edict_t *ent, int client) {
         text[MAX_STRING_CHARS - 40] = 0;
 
         // for server console
-        Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", proxyinfo[clienti].name, text);
+        Q_snprintf(tmptext, sizeof(tmptext), "%s-> %s\n", NAME(clienti), text);
         cprintf_internal(NULL, PRINT_LOW, "%s", tmptext);
 
         // for client
@@ -2760,7 +2760,7 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
 
         // check for banned chat words
         if (checkIfChatBanned(text)) {
-            // gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, currentBanMsg);
+            // gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", NAME(client), currentBanMsg);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             logEvent(LT_CHATBAN, getEntOffset(ent) - 1, ent, text, 0, 0.0, true);
             return false;
@@ -2774,8 +2774,8 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
                         tmptext,
                         sizeof(tmptext),
                         "(%s)(private message to: %s) %s\n",
-                        proxyinfo[client].name,
-                        proxyinfo[clienti].name,
+                        NAME(client),
+                        NAME(clienti),
                         text
                 );
                 cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
@@ -2785,7 +2785,7 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
                         tmptext,
                         sizeof(tmptext),
                         "(%s)(private message) %s\n",
-                        proxyinfo[client].name,
+                        NAME(client),
                         text
                 );
                 cprintf_internal(enti, PRINT_CHAT, "%s", tmptext);
@@ -3408,7 +3408,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
     }
 
     if (disablecmds_enable && checkDisabledCommand(proxyinfo[client].lastcmd)) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabled command: %s\n", proxyinfo[client].name, proxyinfo[client].lastcmd);
+        gi.cprintf(NULL, PRINT_HIGH, "%s: Tried to run disabled command: %s\n", NAME(client), proxyinfo[client].lastcmd);
         logEvent(LT_DISABLECMD, getEntOffset(ent) - 1, ent, proxyinfo[client].lastcmd, 0, 0.0, true);
         return false;
     }
@@ -3451,15 +3451,15 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
             if (q2a_strstr(gi.args(), "BLOCKED_MODEL")) {
                 i = atoi(gi.argv(5));
                 if (i != proxyinfo[client].blocklist) {
-                    gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, i);
+                    gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), i);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 } else {
                     if (i < 0 || i >= MAX_BLOCK_MODELS) {
-                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, i);
+                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), i);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     } else {
                         if (q2a_strcmp(block_models[i].model_name, gi.argv(6))) {
-                            gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 256);
+                            gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 256);
                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                         } else {
                             proxyinfo[client].cmdlist |= 2;
@@ -3476,11 +3476,11 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     if (strcmp(gi.argv(6), serverip) == 0) {
                         proxyinfo[client].cmdlist |= 4;
                     } else {
-                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 1);
+                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 1);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else {
-                    gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, proxyinfo[client].pmod);
+                    gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), proxyinfo[client].pmod);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
                 return false;
@@ -3496,12 +3496,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         } else {
                             q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver)-1);
                             proxyinfo[client].gl_driver_changes++;
-                            gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", proxyinfo[client].name, gi.args());
+                            gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", NAME(client), gi.args());
                         }
                     } else {
                         q2a_strncpy(proxyinfo[client].gl_driver, gi.args(), sizeof(proxyinfo[client].gl_driver)-1);
                         proxyinfo[client].gl_driver_changes++;
-                        gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", proxyinfo[client].name, gi.args());
+                        gi.cprintf(NULL, PRINT_HIGH, "%s %s\n", NAME(client), gi.args());
                     }
 
                     if (gl_driver_max_changes) {
@@ -4202,7 +4202,7 @@ void stuffClientRun(int startarg, edict_t *ent, int client) {
             proxyinfo[clienti].stuffFile = fopen(buffer, "rt");
             if (proxyinfo[clienti].stuffFile) {
                 addCmdQueue(clienti, QCMD_STUFFCLIENT, 0, 0, 0);
-                gi.cprintf(ent, PRINT_HIGH, "Stuffing client %d (%s)\n", clienti, proxyinfo[clienti].name);
+                gi.cprintf(ent, PRINT_HIGH, "Stuffing client %d (%s)\n", clienti, NAME(clienti));
             } else {
                 gi.cprintf(ent, PRINT_HIGH, "Can't find stuff file\n");
             }
@@ -4266,7 +4266,7 @@ void sayGroupRun(int startarg, edict_t *ent, int client) {
             if (proxyinfo[clienti].clientcommand & CCMD_SELECTED) {
                 enti = getEnt((clienti + 1));
 
-                Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
+                Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", NAME(clienti), text);
                 cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
                 if (ent) {
                     cprintf_internal(ent, PRINT_CHAT, "%s", tmptext);
@@ -4302,7 +4302,7 @@ void sayPersonRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", proxyinfo[clienti].name, text);
+        Q_snprintf(tmptext, sizeof(tmptext), "(private message to: %s) %s\n", NAME(clienti), text);
         cprintf_internal(NULL, PRINT_CHAT, "%s", tmptext);
 
         if (ent) {
@@ -4337,7 +4337,7 @@ void ipRun(int startarg, edict_t *ent, int client) {
 
     // make sure the text doesn't overflow the internal buffer...
     if (enti) {
-        Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", proxyinfo[clienti].name, IP(clienti));
+        Q_snprintf(tmptext, sizeof(tmptext), "%s ip: %s\n", NAME(clienti), IP(clienti));
         cprintf_internal(ent, PRINT_HIGH, "%s", tmptext);
     } else {
         gi.cprintf(ent, PRINT_HIGH, "[sv] !ip %s\n", PLAYERSPEC);

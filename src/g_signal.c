@@ -342,7 +342,7 @@ void signaladdRun(int startarg, edict_t *ent, int client) {
 
     Q_printf(
         "%s manual signal adjusted by %d (now %d, score %d/%d)\n",
-        proxyinfo[clienti].name,
+        NAME(clienti),
         amount,
         proxyinfo[clienti].manual_signal_score,
         signalScore(clienti),
@@ -375,7 +375,7 @@ void signalsRun(int startarg, edict_t *ent, int client) {
             tmptext,
             sizeof(tmptext),
             "%s signals (score %d/%d): %s\n",
-            proxyinfo[clienti].name,
+            NAME(clienti),
             signalScore(clienti),
             signal_score_threshold,
             signalListString(clienti)

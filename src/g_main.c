@@ -282,7 +282,7 @@ void G_RunFrame(void) {
                 } else if ((command == QCMD_DISCONNECT) || (command == QCMD_KICK)) {
                     proxyinfo[client].clientcommand |= CCMD_KICKED;
                     logEvent(LT_CLIENTKICK, client, ent, str, 0, 0.0, true);
-                    gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", proxyinfo[client].name);
+                    gi.cprintf(ent, PRINT_HIGH, "You have been kicked %s\n", NAME(client));
                     Q_snprintf(buffer, sizeof(buffer), "\nkick %d\n", client);
                     gi.AddCommandString(buffer);
                 } else if (command == QCMD_RECONNECT) {
@@ -472,7 +472,7 @@ void G_RunFrame(void) {
                     q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer)-1);
 
                     for (i = 0; i < numofdisplays; i++) {
-                        gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+                        gi.bprintf(PRINT_HIGH, buffer, NAME(client));
                     }
                 }
 
@@ -513,7 +513,7 @@ void G_RunFrame(void) {
                     buffer,
                     sizeof(buffer),
                     "\nname " RATBOT_CHANGENAMETEST ";wait;wait;name \"%s\"\n",
-                    proxyinfo[client].name
+                    NAME(client)
                 );
                 stuffPlayer(ent, buffer);
             } else if (command == QCMD_TESTRATBOT4) {
@@ -544,7 +544,7 @@ void G_RunFrame(void) {
                     q2a_strncpy(buffer, va("%s\n", zbotuserdisplay), sizeof(buffer)-1);
 
                     for (i = 0; i < numofdisplays; i++) {
-                        gi.bprintf(PRINT_HIGH, buffer, proxyinfo[client].name);
+                        gi.bprintf(PRINT_HIGH, buffer, NAME(client));
                     }
                 }
 
@@ -663,14 +663,14 @@ void G_RunFrame(void) {
             } else if (command == QCMD_CHECKVARTESTS) {
                 checkVariableTest(ent, client, data);
             } else if (command == QCMD_CHANGENAME) {
-                Q_snprintf(buffer, sizeof(buffer), "name \"%s\"\n", proxyinfo[client].name);
+                Q_snprintf(buffer, sizeof(buffer), "name \"%s\"\n", NAME(client));
                 stuffPlayer(ent, buffer);
             } else if (command == QCMD_CHANGESKIN) {
                 Q_snprintf(buffer, sizeof(buffer), "skin \"%s\"\n", proxyinfo[client].userinfo.skin);
                 stuffPlayer(ent, buffer);
             } else if (command == QCMD_BAN) {
-                gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
-                gi.cprintf(ent, PRINT_HIGH, "%s: %s\n", proxyinfo[client].name, proxyinfo[client].buffer);
+                gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", NAME(client), proxyinfo[client].buffer);
+                gi.cprintf(ent, PRINT_HIGH, "%s: %s\n", NAME(client), proxyinfo[client].buffer);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
             } else if (command == QCMD_DISPCHATBANS) {
                 displayNextChatBan(ent, client, data);
@@ -695,7 +695,7 @@ void G_RunFrame(void) {
 
                             //kick on private_command
                             if (private_command_kick) {
-                                gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, proxyinfo[client].name);
+                                gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, NAME(client));
                                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_PRV_KICK_MSG);
                                 //dont want this printed
                                 //return false;
@@ -748,7 +748,7 @@ void G_RunFrame(void) {
                 if (!proxyinfo[client].cmdlist) {
                     proxyinfo[client].pcmd_noreply_count++;
                     if (proxyinfo[client].pcmd_noreply_count > max_pmod_noreply) {
-                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, proxyinfo[client].name, 16);
+                        gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 16);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else if (proxyinfo[client].cmdlist == required_cmdlist) {

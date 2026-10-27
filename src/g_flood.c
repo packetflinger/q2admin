@@ -396,7 +396,7 @@ bool checkForFlood(int client) {
         clearSignal(client, SIGNAL_CHATFLOOD);
     } else {
         if (proxyinfo[client].chatcount >= fi->chatFloodProtectNum) {
-            Q_snprintf(buffer, sizeof(buffer), chatFloodProtectMsg, proxyinfo[client].name);
+            Q_snprintf(buffer, sizeof(buffer), chatFloodProtectMsg, NAME(client));
             gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
             raiseSignal(client, SIGNAL_CHATFLOOD);
@@ -935,10 +935,10 @@ void muteRun(int startarg, edict_t *ent, int client) {
     // make sure the text doesn't overflow the internal buffer...
     if (enti && isdigit(*text) && (seconds = q2a_atoi(text)) >= 0) {
         if (seconds) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s has been muted for %d seconds.\n", proxyinfo[clienti].name, seconds);
+            gi.cprintf(NULL, PRINT_HIGH, "%s has been muted for %d seconds.\n", NAME(clienti), seconds);
 
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s has been muted for %d seconds.\n", proxyinfo[clienti].name, seconds);
+                gi.cprintf(ent, PRINT_HIGH, "%s has been muted for %d seconds.\n", NAME(clienti), seconds);
             }
 
             gi.cprintf(enti, PRINT_HIGH, "You have been muted for %d seconds.\n", seconds);
@@ -947,17 +947,17 @@ void muteRun(int startarg, edict_t *ent, int client) {
             proxyinfo[clienti].clientcommand &= ~CCMD_PCSILENCE;
             proxyinfo[clienti].clientcommand |= CCMD_CSILENCE;
         } else if (proxyinfo[clienti].clientcommand & (CCMD_CSILENCE | CCMD_PCSILENCE)) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s has been unmuted.\n", proxyinfo[clienti].name);
+            gi.cprintf(NULL, PRINT_HIGH, "%s has been unmuted.\n", NAME(clienti));
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s has been unmuted.\n", proxyinfo[clienti].name);
+                gi.cprintf(ent, PRINT_HIGH, "%s has been unmuted.\n", NAME(clienti));
             }
             gi.cprintf(enti, PRINT_HIGH, "You have been unmuted.\n");
             proxyinfo[clienti].clientcommand &= ~(CCMD_CSILENCE | CCMD_PCSILENCE);
         }
     } else if (Q_stricmp(text, "PERM") == 0) {
-        gi.cprintf(NULL, PRINT_HIGH, "%s has been muted.\n", proxyinfo[clienti].name);
+        gi.cprintf(NULL, PRINT_HIGH, "%s has been muted.\n", NAME(clienti));
         if (ent) {
-            gi.cprintf(ent, PRINT_HIGH, "%s has been muted.\n", proxyinfo[clienti].name);
+            gi.cprintf(ent, PRINT_HIGH, "%s has been muted.\n", NAME(clienti));
         }
         gi.cprintf(enti, PRINT_HIGH, "You have been muted.\n");
         proxyinfo[clienti].clientcommand |= CCMD_PCSILENCE;
@@ -1009,18 +1009,18 @@ void stifleRun(int startarg, edict_t *ent, int client) {
     // make sure the text doesn't overflow the internal buffer...
     if (enti && isdigit(*text) && (seconds = q2a_atoi(text)) >= 0) {
         if (seconds) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s is now stifled for %d seconds.\n", proxyinfo[clienti].name, seconds);
+            gi.cprintf(NULL, PRINT_HIGH, "%s is now stifled for %d seconds.\n", NAME(clienti), seconds);
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s is now stifled for %d seconds.\n", proxyinfo[clienti].name, seconds);
+                gi.cprintf(ent, PRINT_HIGH, "%s is now stifled for %d seconds.\n", NAME(clienti), seconds);
             }
             gi.cprintf(enti, PRINT_HIGH, "You are now stifled for %d seconds.\n", seconds);
             proxyinfo[clienti].clientcommand |= CCMD_STIFLED;
             proxyinfo[clienti].stifle_frame = 0; // next print will trigger
             proxyinfo[clienti].stifle_length = SECS_TO_FRAMES(seconds);
         } else if (proxyinfo[clienti].clientcommand & CCMD_STIFLED) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+            gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", NAME(clienti));
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+                gi.cprintf(ent, PRINT_HIGH, "%s has been unstifled.\n", NAME(clienti));
             }
             gi.cprintf(enti, PRINT_HIGH, "You have been unstifled.\n");
             proxyinfo[clienti].clientcommand &= ~CCMD_STIFLED;
@@ -1066,9 +1066,9 @@ void unstifleRun(int startarg, edict_t *ent, int client) {
 
     if (enti) {
         if (proxyinfo[clienti].clientcommand & CCMD_STIFLED) {
-            gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+            gi.cprintf(NULL, PRINT_HIGH, "%s has been unstifled.\n", NAME(clienti));
             if (ent) {
-                gi.cprintf(ent, PRINT_HIGH, "%s has been unstifled.\n", proxyinfo[clienti].name);
+                gi.cprintf(ent, PRINT_HIGH, "%s has been unstifled.\n", NAME(clienti));
             }
             gi.cprintf(enti, PRINT_HIGH, "You have been unstifled.\n");
             proxyinfo[clienti].clientcommand &= ~CCMD_STIFLED;
@@ -1152,18 +1152,18 @@ void clientchatfloodprotectRun(int startarg, edict_t *ent, int client) {
             proxyinfo[clienti].floodinfo.chatFloodProtectSec = chatFloodProtectSec;
             proxyinfo[clienti].floodinfo.chatFloodProtectSilence = chatFloodProtectSilence;
 
-            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect %d %d %d\n", proxyinfo[clienti].name, proxyinfo[clienti].floodinfo.chatFloodProtectNum, proxyinfo[clienti].floodinfo.chatFloodProtectSec, proxyinfo[clienti].floodinfo.chatFloodProtectSilence);
+            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect %d %d %d\n", NAME(clienti), proxyinfo[clienti].floodinfo.chatFloodProtectNum, proxyinfo[clienti].floodinfo.chatFloodProtectSec, proxyinfo[clienti].floodinfo.chatFloodProtectSilence);
             return;
         }
     } else if (enti && *text) {
         proxyinfo[clienti].floodinfo.chatFloodProtect = false;
-        gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect disabled\n", proxyinfo[clienti].name);
+        gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect disabled\n", NAME(clienti));
         return;
     } else if (enti) {
         if (proxyinfo[clienti].floodinfo.chatFloodProtect) {
-            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect %d %d %d\n", proxyinfo[clienti].name, proxyinfo[clienti].floodinfo.chatFloodProtectNum, proxyinfo[clienti].floodinfo.chatFloodProtectSec, proxyinfo[clienti].floodinfo.chatFloodProtectSilence);
+            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect %d %d %d\n", NAME(clienti), proxyinfo[clienti].floodinfo.chatFloodProtectNum, proxyinfo[clienti].floodinfo.chatFloodProtectSec, proxyinfo[clienti].floodinfo.chatFloodProtectSilence);
         } else {
-            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect disabled\n", proxyinfo[clienti].name);
+            gi.cprintf(ent, PRINT_HIGH, "%s clientchatfloodprotect disabled\n", NAME(clienti));
         }
         return;
     }
@@ -1384,7 +1384,7 @@ void chatStatsRun(int startarg, edict_t *ent, int client) {
     chat = &proxyinfo[clienti].chat_stats;
     miles = proxyinfo[clienti].chat_stats.distance_moved / WORLDUNITSPERMILE;
 
-    cprintf_internal(ent, PRINT_HIGH, "Chat stats for %s:\n", proxyinfo[clienti].name);
+    cprintf_internal(ent, PRINT_HIGH, "Chat stats for %s:\n", NAME(clienti));
     cprintf_internal(ent, PRINT_HIGH, "  words:        %.1f (decaying, %.0fs half-life)\n",
             chat->words, (float) CHATSTAT_HALFLIFE);
     cprintf_internal(ent, PRINT_HIGH, "  distance:     %.0f units (%.3f miles)\n",

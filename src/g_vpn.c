@@ -162,7 +162,7 @@ void vpnUsersRun(int startarg, edict_t *ent, int client) {
         }
 
         if (proxyinfo[i].vpn.state == VPN_POSITIVE) {
-            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", proxyinfo[i].name, net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num);
+            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", NAME(i), net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num);
         }
     }
 }

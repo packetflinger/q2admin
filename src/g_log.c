@@ -394,7 +394,7 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
 
             if (*format == 'n') {
                 if (ent) {
-                    cp = proxyinfo[client].name;
+                    cp = NAME(client);
                     while (*cp) {
                         *dest++ = *cp++;
                     }

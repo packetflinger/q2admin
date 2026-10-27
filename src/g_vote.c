@@ -680,7 +680,7 @@ void runVote(edict_t *ent, int client) {
         voteremindtimeout = ltime + clientRemindTimeout;
         proxyinfo[client].clientcommand |= (CCMD_VOTEYES | CCMD_VOTED);
         Q_snprintf(cmdvote, sizeof(cmdvote), "%s\n", votecmd);
-        Q_snprintf(votecaller, sizeof(votecaller), "%s\n", proxyinfo[client].name);
+        Q_snprintf(votecaller, sizeof(votecaller), "%s\n", NAME(client));
         displayVote();
     } else {
         gi.cprintf(ent, PRINT_HIGH, "Invalid vote command specified.\n");
