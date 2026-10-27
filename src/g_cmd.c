@@ -2836,7 +2836,7 @@ bool sayGroupCmd(edict_t *ent, int client, char *args) {
  * evaluates that client's score.
  */
 void proxyDetected(edict_t *ent, int client) {
-    proxyinfo[client].charindex = -6;
+    proxyinfo[client].charindex = ZR_PROXY;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     serverLogZBot(ent, client);
@@ -2896,7 +2896,7 @@ void proxyDetected(edict_t *ent, int client) {
  * else evaluates that client's score.
  */
 void ratbotDetected(edict_t *ent, int client) {
-    proxyinfo[client].charindex = -3;
+    proxyinfo[client].charindex = ZR_RATBOT;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     serverLogZBot(ent, client);
@@ -2960,7 +2960,7 @@ void ratbotDetected(edict_t *ent, int client) {
  * else evaluates that client's score.
  */
 void timescaleDetected(edict_t *ent, int client) {
-    proxyinfo[client].charindex = -5;
+    proxyinfo[client].charindex = ZR_TIMESCALE;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     serverLogZBot(ent, client);
@@ -3037,7 +3037,7 @@ void timescaleDetected(edict_t *ent, int client) {
 void hackDetected(edict_t *ent, int client, unsigned int signal) {
     proxyinfo_t *pi = &proxyinfo[client];
 
-    pi->charindex = -8;
+    pi->charindex = ZR_HACK;
     removeClientCommand(client, QCMD_TESTRATBOT2);
     removeClientCommand(client, QCMD_ZPROXYCHECK2);
     removeClientCommand(client, QCMD_TESTALIASCMD2);

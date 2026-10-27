@@ -270,7 +270,7 @@ void G_RunFrame(void) {
                             proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
                             proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                             addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUP, 0);
-                            proxyinfo[client].charindex = -1;
+                            proxyinfo[client].charindex = ZR_STARTUP_NOREPLY;
                             logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail", IW_STARTUPFAIL, 0.0, true);
                         }
                         break;
@@ -383,7 +383,7 @@ void G_RunFrame(void) {
                         proxyinfo[client].clientcommand &= ~CCMD_STARTUPTEST;
                         proxyinfo[client].clientcommand |= (CCMD_ZBOTDETECTED | CCMD_ZPROXYCHECK2);
                         addCmdQueue(client, QCMD_ZPROXYCHECK2, 1, IW_STARTUPTEST, 0);
-                        proxyinfo[client].charindex = -2;
+                        proxyinfo[client].charindex = ZR_STARTUP_NOREPLY2;
                         logEvent(LT_INTERNALWARN, client, ent, "Startup Init Fail 2", IW_STARTUPFAIL, 0.0, true);
                     }
                     // Outside the zbotdetect check, matching QCMD_STARTUP
@@ -531,7 +531,7 @@ void G_RunFrame(void) {
                         break;
                     }
 
-                    proxyinfo[client].charindex = -4;
+                    proxyinfo[client].charindex = ZR_RATBOT_NAME;
                     serverLogZBot(ent, client);
                 }
 

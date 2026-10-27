@@ -38,6 +38,32 @@ typedef struct {
 } logtypes_t;
 
 /**
+ * The "#e" value on an LT_ZBOT log line: which check decided the client was
+ * cheating.
+ *
+ * All negative, because the same field carries the zbot test-string index
+ * (0 and up) while nothing has been decided yet - proxyinfo_t.charindex is
+ * both, which is why the detections store their reason there and the log
+ * call just passes it along.
+ *
+ * The numbers are what has always been written to logs, so they are kept
+ * as they are rather than tidied into a run; ZR_USERINFO_SKON really does
+ * skip -10 to -13.
+ */
+typedef enum {
+    ZR_STARTUP_NOREPLY  = -1,   // handshake unanswered, QCMD_STARTUP
+    ZR_STARTUP_NOREPLY2 = -2,   // and again at the QCMD_STARTUPTEST retry
+    ZR_RATBOT           = -3,   // ratbotDetected()
+    ZR_RATBOT_NAME      = -4,   // ratbot name test
+    ZR_TIMESCALE        = -5,   // timescaleDetected()
+    ZR_PROXY            = -6,   // Nitro2 / BW-proxy / Xania
+    ZR_PITCHSPEED       = -7,   // cl_pitchspeed changed
+    ZR_HACK             = -8,   // hackDetected(), no more specific reason
+    ZR_ANGLESPEEDKEY    = -9,   // cl_anglespeedkey changed
+    ZR_USERINFO_SKON    = -14,  // \skon\ in userinfo, the zgh_frk signature
+} zbotreason_t;
+
+/**
  * Possible kinds of log entries
  */
 enum zb_logtypesenum {

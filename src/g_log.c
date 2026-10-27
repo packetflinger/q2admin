@@ -371,14 +371,16 @@ void loadLogList(void) {
  *   cloud disconnect: why the connection ended
  *   cloud error: the error description
  *
- * Hack detection types for #e
- *   50 to -2 = zbot detected
- *   -3 to -4 = ratbot detected
- *   -5       = timescale (speed)cheat detected
- *   -6       = Nitro2 / BW-proxy / Xania proxy detected
- *   -7       = cl_pitchspeed change detected
- *   -8       = generic hack detected
- *   -9       = cl_anglespeedkey change detected
+ * Hack detection types for #e, see zbotreason_t in g_log.h. 0 and up is
+ * the zbot test-string index rather than a detection.
+ *   -1, -2 = startup handshake unanswered
+ *   -3, -4 = ratbot detected
+ *   -5     = timescale (speed)cheat detected
+ *   -6     = Nitro2 / BW-proxy / Xania proxy detected
+ *   -7     = cl_pitchspeed change detected
+ *   -8     = generic hack detected
+ *   -9     = cl_anglespeedkey change detected
+ *   -14    = \skon\ in userinfo, the zgh_frk signature
  */
 void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float ret_time) {
     char *cp;

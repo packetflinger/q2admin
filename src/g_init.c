@@ -1897,7 +1897,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
     // zgh_frk check
     if (stringContains(userinfo, "\\skon\\")) {
         raiseSignal(client, SIGNAL_ZBOT_DETECTED);
-        logEvent(LT_ZBOT, client, ent, userinfo, -14, 0.0, true);
+        logEvent(LT_ZBOT, client, ent, userinfo, ZR_USERINFO_SKON, 0.0, true);
     }
 
     // Don't count excessive cl_maxfps changes as flooding if fpsfloodexempt is true.
@@ -2028,7 +2028,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // ingore changes to 150 because action quake2 generates them itself...
 
             if (proxyinfo[client].userinfo.cl_pitchspeed != 150) {
-                logEvent(LT_ZBOT, client, ent, NULL, -7, 0.0, true);
+                logEvent(LT_ZBOT, client, ent, NULL, ZR_PITCHSPEED, 0.0, true);
 
                 if (cl_pitchspeed_display) {
                     gi.bprintf(PRINT_HIGH, "%s changed cl_pitchspeed to %d\n", proxyinfo[client].name, newps);
@@ -2056,7 +2056,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // ingore changes to 1.5 because action quake2 generates them itself...
 
             if (proxyinfo[client].userinfo.cl_anglespeedkey != 1.5) {
-                logEvent(LT_ZBOT, client, ent, NULL, -9, 0.0, true);
+                logEvent(LT_ZBOT, client, ent, NULL, ZR_ANGLESPEEDKEY, 0.0, true);
 
                 if (cl_anglespeedkey_display) {
                     gi.bprintf(PRINT_HIGH, "%s changed cl_anglespeedkey to %g\n", proxyinfo[client].name, newas);
