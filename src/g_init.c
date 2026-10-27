@@ -1915,7 +1915,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             Q_snprintf(tmptext, sizeof(tmptext), "kick %d\n", client);
             gi.AddCommandString(tmptext);
         } else {
-            //enuf time passed, reset count
+            // enough time passed, reset count
             proxyinfo[client].userinfo.changed_count = 0;
             proxyinfo[client].userinfo.changed_start = ltime;
         }
