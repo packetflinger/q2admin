@@ -409,13 +409,12 @@ These run whether or not the mod accepted the player:
 
 - **Whois:** if `whois_active`, the player's address is matched to a whois
   record and their *last seen* time is updated.
-- **VPN lookup (vpnapi.io):** if `vpn_enable`, an HTTPS request is started in
-  the background.
-- **VPN lookup (IPLogs):** if `iplogs_enable`, a lookup is started, unless the
-  address is in `iplogs_ignorelist` or a cached result less than
-  `iplogs_cache_ttl` old exists.
+- **VPN lookup:** if `vpn_enable`, an HTTPS request to IPLogs is started in
+  the background, unless the address is in `vpn_ignorelist`. If a result less
+  than `vpn_cache_ttl` old is cached for the address, that's used straight
+  away instead, with the same effects as a fresh one.
 
-Both lookups finish on later frames ([Phase 5](#asynchronous-results-vpn-lookups)).
+A fresh lookup finishes on a later frame ([Phase 5](#asynchronous-results-vpn-lookups)).
 
 ### 11. Logging
 
@@ -982,22 +981,20 @@ timescale and frame-rate limits, and turning-speed monitoring.
 
 ### Asynchronous results: VPN lookups
 
-The HTTPS requests started in Phase 1 complete a few frames later, and their
-results are processed then:
+The HTTPS request started in Phase 1 completes a few frames later. IPLogs
+returns a verdict, a confidence score and the address's ASN, which are cached
+for `vpn_cache_ttl`. Then:
 
-- **vpnapi.io** marks the player as VPN-positive if the address is a VPN,
-  proxy, Tor exit or relay, and records the network and ASN. Then:
-  - the player is shown in the server console with their network and ASN;
-  - a positive result raises `vpn-detected` (40). That's below the default
-    threshold of 50, so a VPN alone doesn't remove anyone; it adds to the
-    player's score like any other suspicion;
-  - with `ip_limit_vpn` set, VPN players from the same ASN are counted and the
-    extra ones are disconnected with "Too many connections from the same VPN
-    provider".
-- **IPLogs** returns a confidence score and a verdict, which are cached. The
-  verdict decides the signal: `suspicious` raises `vpn-suspicious` (20),
+- the verdict decides the signal: `suspicious` raises `vpn-suspicious` (20),
   `vpn_likely` raises `vpn-likely` (30), and `vpn_detected` raises
-  `vpn-detected` (40). A clean verdict raises nothing.
+  `vpn-detected` (40). A clean verdict raises nothing. Even `vpn-detected` is
+  below the default threshold of 50, so a VPN alone doesn't remove anyone;
+  it adds to the player's score like any other suspicion;
+- a `vpn_likely` or `vpn_detected` verdict marks the player as on a VPN;
+- with `ip_limit_vpn` set, other VPN players from the same ASN are counted,
+  and if there are too many this one is disconnected with "Too many
+  connections from the same VPN provider";
+- the result is shown in the server console with the score, verdict and ASN.
 
 The VPN and ASN results also feed the second ban check, which runs when the
 version reply arrives.
@@ -1098,12 +1095,12 @@ even when the kick itself happens a second later.
    that rule's count drops by one.
 6. **Cleanup.** Any file being stuffed to the player is closed.
 7. **The record is wiped:** flags, admin and bypass logins, the job queue,
-   retry counters, probe deadlines, VPN and IPLogs results, the address,
+   retry counters, probe deadlines, the VPN result, the address,
    userinfo and msec state. The slot is ready for the next player.
 
 The player's whois record stays in memory and is saved to `whois.dat` when
-the whois data is written. Their IPLogs result stays in the cache for
-`iplogs_cache_ttl`, so a quick reconnect from the same address doesn't cost
+the whois data is written. Their VPN result stays in the cache for
+`vpn_cache_ttl`, so a quick reconnect from the same address doesn't cost
 another lookup.
 
 
@@ -1196,8 +1193,7 @@ job per frame) and with the client's ping.
 | Userinfo flood | More than 40 changes in 60 s | Kicked. |
 | `\skon\` in userinfo | Present | Kicked. |
 | Command queue | 45 pending jobs | Kicked. |
-| VPN (vpnapi.io) | Positive | `vpn-detected` (40); limited by `ip_limit_vpn`. |
-| VPN (IPLogs) | Verdict of `suspicious`, `vpn_likely` or `vpn_detected` | `vpn-suspicious`, `vpn-likely` or `vpn-detected`. |
+| VPN | Verdict of `suspicious`, `vpn_likely` or `vpn_detected` | `vpn-suspicious` (20), `vpn-likely` (30) or `vpn-detected` (40); `vpn_likely` and `vpn_detected` are limited by `ip_limit_vpn`. |
 | Disabled command | Used | Dropped and logged. |
 | Chat ban | Matched | Dropped, logged, and the player is told. |
 | Rcon password in a command | Present | Dropped and logged as an exploit. |

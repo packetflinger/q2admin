@@ -807,27 +807,6 @@ q2acmd_t q2aCommands[] = {
         true,
     },
     {
-        "iplogs_cache_ttl",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_NUMBER,
-        &iplogs_cache_ttl,
-        false,
-    },
-    {
-        "iplogs_enable",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_LOGICAL,
-        &iplogs_enable,
-        true,
-    },
-    {
-        "iplogs_ignorelist",
-        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &iplogs_ignorelist,
-        true,
-    },
-    {
         "kick",
         CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_COMMAND,
@@ -1711,10 +1690,24 @@ q2acmd_t q2aCommands[] = {
         vpnUsersRun,
     },
     {
-        "vpn_api_key",
+        "vpn_cache_probe",
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
-        CMDTYPE_STRING,
-        &vpn_api_key,
+        CMDTYPE_NUMBER,
+        &vpn_cache_probe,
+        false,
+    },
+    {
+        "vpn_cache_size",
+        CMDCTX_CFGFILE, // Only allocates memory at InitGame: can only be read from config
+        CMDTYPE_NUMBER,
+        &vpn_cache_size,
+        false,
+    },
+    {
+        "vpn_cache_ttl",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_NUMBER,
+        &vpn_cache_ttl,
         false,
     },
     {
@@ -1722,7 +1715,14 @@ q2acmd_t q2aCommands[] = {
         CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
         CMDTYPE_LOGICAL,
         &vpn_enable,
-        false,
+        true,
+    },
+    {
+        "vpn_ignorelist",
+        CMDCTX_CFGFILE | CMDCTX_CLIENTCONSOLE | CMDCTX_SERVERCONSOLE,
+        CMDTYPE_STRING,
+        &vpn_ignorelist,
+        true,
     },
     {
         "whois_active",

@@ -38,14 +38,13 @@ typedef struct {
 
 typedef enum {
     DL_NONE,
-    DL_VPNAPI,
-    DL_IPLOGS,
+    DL_VPN,
 } dltype_t;
 
 typedef struct download_s {
     edict_t     *initiator;
     dltype_t    type;
-    char        host[64];      // target host; empty = default to vpn_host (GET requests)
+    char        host[64];      // target host
     char        path[1024];
     bool        post;          // true = POST "body" as-is, false = GET
     char        body[1024];    // POST body, used when post == true
@@ -79,7 +78,6 @@ void httpHandleDownload(download_t *download, char *buff, int len, int code);
 size_t httpGetFile(generic_file_t *output, const char *url);
 void httpInit(void);
 bool httpQueueDownload(download_t *d);
-void httpResolveVPNServer(void);
 void httpRunDownloads(void);
 void httpShutdown(void);
 void httpStartDownload(dlhandle_t *dl);

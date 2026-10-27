@@ -76,6 +76,7 @@ void ShutdownGame(void) {
         whoisWriteFile();
         G_Free(whois_details);
     }
+    vpnCacheFree();
     if (runmode) {
         profile_start(1);
         logEvent(LT_SERVEREND, 0, NULL, NULL, 0, 0.0, true);
@@ -153,7 +154,7 @@ bool startupAttemptsUsed(int client) {
  *    handling - then enforces that client's response deadlines
  *    (checkClientDeadlines) if enforce_deadlines is set
  *  - drives non-blocking HTTP downloads forward (httpRunDownloads),
- *    which is what actually makes progress on the VPN/IPLogs API checks
+ *    which is what actually makes progress on the VPN API checks
  *    queued elsewhere
  *  - as an optimization, framesperprocess can skip q2admin's own
  *    per-client work entirely on most frames, forwarding straight to the

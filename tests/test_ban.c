@@ -77,6 +77,14 @@ int main(void) {
     CHECK_STR(banMatchReason(b),
               "any name, ASN AS13335");
 
+    SECTION("asn rules match the bare number the VPN check stores");
+    CHECK(asnMatches("as7843", "7843"));
+    CHECK(asnMatches("AS7843", "7843"));
+    CHECK(asnMatches("AS7843", "AS7843"));
+    CHECK(!asnMatches("as7843", "78430"));
+    CHECK(!asnMatches("as7843", "843"));
+    CHECK(!asnMatches("as7843", ""));
+
     SECTION("version, by match type");
     b = rule(NICKALL);
     b->vtype = VERSION_EQUALS;

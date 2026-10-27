@@ -17,15 +17,65 @@
 
 #include "g_local.h"
 
-int iplogs_cache_ttl = 86400; // 1 day, overridden via q2admin.cfg
+int vpn_cache_probe = 8;     // overridden via q2admin.cfg
+int vpn_cache_size  = 1024;  // overridden via q2admin.cfg, only read at server start
+int vpn_cache_ttl   = 86400; // 1 day, overridden via q2admin.cfg
 
-static iplogs_cache_entry_t iplogs_cache[IPLOGS_CACHE_SIZE]; // zero-initialized (all unused) by the loader
+static vpn_cache_entry_t *vpn_cache;    // allocated by vpnCacheInit(), NULL if disabled
+static unsigned int vpn_cache_slots;    // size vpn_cache was allocated with
+
+/**
+ * Allocates the VPN result cache with vpn_cache_size slots. The size is
+ * fixed from then on: changing vpn_cache_size later only takes effect at
+ * the next server start, the same as whois_active. A size of 0 or less
+ * leaves the cache disabled, so every connect does a live lookup.
+ *
+ * Called from InitGame() (g_init.c), after the config files are read.
+ */
+void vpnCacheInit(void) {
+    vpnCacheFree();
+    if (vpn_cache_size <= 0) {
+        return;
+    }
+    vpn_cache_slots = (unsigned int)vpn_cache_size;
+    vpn_cache = G_Malloc(vpn_cache_slots * sizeof(vpn_cache_entry_t));
+    q2a_memset(vpn_cache, 0, vpn_cache_slots * sizeof(vpn_cache_entry_t));
+}
+
+/**
+ * Frees the VPN result cache, if there is one.
+ *
+ * Called from ShutdownGame() (g_main.c), and from vpnCacheInit() in case
+ * it's ever called twice.
+ */
+void vpnCacheFree(void) {
+    if (vpn_cache) {
+        G_Free(vpn_cache);
+        vpn_cache = NULL;
+    }
+    vpn_cache_slots = 0;
+}
+
+/**
+ * How many slots past an address' home slot to search, from
+ * vpn_cache_probe. It can be changed at any time, so it's kept between 1
+ * and the number of slots here rather than when it's set.
+ */
+static unsigned int vpnCacheProbeLimit(void) {
+    if (vpn_cache_probe < 1) {
+        return 1;
+    }
+    if ((unsigned int)vpn_cache_probe > vpn_cache_slots) {
+        return vpn_cache_slots;
+    }
+    return (unsigned int)vpn_cache_probe;
+}
 
 /**
  * Fast FNV-1a hash over an address' raw bytes. Only the base address
- * (not port) is hashed, since that's all IPLogsCacheGet/Set key on.
+ * (not port) is hashed, since that's all vpnCacheGet/Set key on.
  */
-static unsigned int IPLogsCacheHash(netadr_t *addr) {
+static unsigned int vpnCacheHash(netadr_t *addr) {
     unsigned int h = 2166136261u;
     int len = (addr->type == NA_IP6) ? IP6_LEN : IP4_LEN;
 
@@ -37,15 +87,21 @@ static unsigned int IPLogsCacheHash(netadr_t *addr) {
 }
 
 /**
- * Looks up the cached IPLogs result for an address. Returns false if
- * there's no entry within the probe window, or the entry has expired
- * (freeing the slot for reuse in that case).
+ * Looks up the cached VPN check result for an address. Returns false if
+ * the cache is disabled, there's no entry within the probe window, or the
+ * entry has expired (freeing the slot for reuse in that case).
  */
-bool IPLogsCacheGet(netadr_t *addr, iplogsvpn_t *out) {
-    unsigned int idx = IPLogsCacheHash(addr) & (IPLOGS_CACHE_SIZE - 1);
+bool vpnCacheGet(netadr_t *addr, vpn_t *out) {
+    unsigned int idx, limit;
 
-    for (int probe = 0; probe < IPLOGS_CACHE_PROBE; probe++) {
-        iplogs_cache_entry_t *e = &iplogs_cache[(idx + probe) & (IPLOGS_CACHE_SIZE - 1)];
+    if (!vpn_cache) {
+        return false;
+    }
+    idx = vpnCacheHash(addr) % vpn_cache_slots;
+    limit = vpnCacheProbeLimit();
+
+    for (unsigned int probe = 0; probe < limit; probe++) {
+        vpn_cache_entry_t *e = &vpn_cache[(idx + probe) % vpn_cache_slots];
 
         if (!e->used) {
             return false; // empty slot ends the chain, nothing further was ever inserted here
@@ -63,17 +119,24 @@ bool IPLogsCacheGet(netadr_t *addr, iplogsvpn_t *out) {
 }
 
 /**
- * Stores/updates the cached IPLogs result for an address, valid for
- * iplogs_cache_ttl seconds. Reuses a matching, empty, or expired slot
+ * Stores/updates the cached VPN check result for an address, valid for
+ * vpn_cache_ttl seconds. Reuses a matching, empty, or expired slot
  * within the probe window if one is found; otherwise evicts whichever
- * slot in that window expires soonest.
+ * slot in that window expires soonest. Does nothing if the cache is
+ * disabled.
  */
-void IPLogsCacheSet(netadr_t *addr, const iplogsvpn_t *result) {
-    unsigned int idx = IPLogsCacheHash(addr) & (IPLOGS_CACHE_SIZE - 1);
-    iplogs_cache_entry_t *victim = NULL;
+void vpnCacheSet(netadr_t *addr, const vpn_t *result) {
+    unsigned int idx, limit;
+    vpn_cache_entry_t *victim = NULL;
 
-    for (int probe = 0; probe < IPLOGS_CACHE_PROBE; probe++) {
-        iplogs_cache_entry_t *e = &iplogs_cache[(idx + probe) & (IPLOGS_CACHE_SIZE - 1)];
+    if (!vpn_cache) {
+        return;
+    }
+    idx = vpnCacheHash(addr) % vpn_cache_slots;
+    limit = vpnCacheProbeLimit();
+
+    for (unsigned int probe = 0; probe < limit; probe++) {
+        vpn_cache_entry_t *e = &vpn_cache[(idx + probe) % vpn_cache_slots];
 
         if (!e->used || time(NULL) >= e->expires || NET_IsEqualBaseAdr(&e->addr, addr)) {
             victim = e;
@@ -86,6 +149,6 @@ void IPLogsCacheSet(netadr_t *addr, const iplogsvpn_t *result) {
 
     victim->used = true;
     victim->addr = *addr;
-    victim->expires = time(NULL) + iplogs_cache_ttl;
+    victim->expires = time(NULL) + vpn_cache_ttl;
     victim->result = *result;
 }

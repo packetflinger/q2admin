@@ -21,11 +21,7 @@ dlhandle_t downloads[MAX_DOWNLOADS];
 
 static CURLM                *multi = NULL;
 static unsigned             handleCount = 0;
-static char                 otdm_api_ip[16];
-static char                 hostHeader[64];
-static struct curl_slist    *http_header_slist;
 static struct curl_slist    *post_header_slist;
-static time_t               last_dns_lookup;
 
 /**
  * Hands a finished request back to whoever asked for it, by invoking the
@@ -72,7 +68,7 @@ void httpHandleDownload(download_t *download, char *buff, int len, int code) {
  *
  * d: the download_t whose requests to cancel.
  *
- * Called from VPNCancelLookups() (g_vpn.c) whenever a player slot is
+ * Called from vpnCancelLookup() (g_vpn.c) whenever a player slot is
  * cleared, on disconnect and before ClientConnect() reuses it.
  */
 void httpCancelDownloads(download_t *d) {
@@ -178,8 +174,8 @@ oversize:
  * a dedicated server generally isn't watching.
  *
  * Only CURLINFO_TEXT (curl's own commentary) is printed; the raw header
- * and body payloads are ignored, which keeps credentials such as the
- * vpnapi.io API key out of the log.
+ * and body payloads are ignored, which keeps request and response bodies
+ * out of the log.
  *
  * c:    the curl handle, unused here.
  * type: what kind of information this is; anything but CURLINFO_TEXT is
@@ -209,43 +205,6 @@ int curlDebug(CURL *c, curl_infotype type, char *data, size_t size, void * ptr) 
 }
 
 /**
- * Resolves the VPN API hostname to an address and caches it, re-resolving
- * only if the last lookup was over a day ago. gethostbyname() blocks, so
- * the point of caching was to keep a DNS round trip off the server frame
- * on every lookup while still picking up DNS changes eventually.
- *
- * Takes no parameters; reads the vpn_host setting and updates the
- * module's cached address and timestamp. Returns nothing - failure is
- * reported to the console and leaves the cached address empty.
- *
- * Currently unreachable: nothing calls it, and nothing reads the address
- * it caches either. Requests are built from the hostname directly (see
- * httpStartDownload()) and libcurl does its own resolution and caching,
- * so this is a leftover from before that was the case.
- */
-void httpResolveVPNServer(void) {
-    if (!http_enable) {
-        return;
-    }
-
-    //re-resolve if its been more than one day since we last did it
-    if (time(NULL) - last_dns_lookup > 86400) {
-        gi.cprintf(NULL, PRINT_HIGH, "Resolving VPN API server %s -> ", vpn_host);
-        struct hostent  *h;
-        h = gethostbyname(vpn_host);
-
-        if (!h) {
-            otdm_api_ip[0] = '\0';
-            gi.dprintf ("WARNING: Could not resolve VPN API server '%s'. HTTP functions unavailable.\n", vpn_host);
-            return;
-        }
-        time(&last_dns_lookup);
-        Q_strncpy(otdm_api_ip, inet_ntoa (*(struct in_addr *)h->h_addr_list[0]), sizeof(otdm_api_ip)-1);
-        gi.cprintf(NULL, PRINT_HIGH, "%s\n", otdm_api_ip);
-    }
-}
-
-/**
  * Actually starts a download by adding it to the curl multi handle.
  *
  * Builds the URL, applies every curl option the request needs and hands
@@ -256,9 +215,9 @@ void httpResolveVPNServer(void) {
  * registers the transfer and lets httpRunDownloads() advance it a
  * little each frame.
  *
- * Both request shapes go through here. A GET targets vpn_host with the
- * path as-is; a POST overrides the host from the download_t and sends
- * its body as JSON. The easy handle is reused across requests when the
+ * Both request shapes go through here, always to the host and path set
+ * on the download_t. A POST sends its body as JSON; a GET sends no body.
+ * The easy handle is reused across requests when the
  * slot already has one, since curl handles are relatively expensive to
  * create and hold connection state worth keeping.
  *
@@ -281,16 +240,15 @@ void httpStartDownload(dlhandle_t *dl) {
         dl->curl = curl_easy_init();
     }
 
-    // GET format: https://vpnapi.io/api/<ipaddress>?key=<apikey>
-    // POST format: https://<dl->handle->host><dl->handle->path>, body = dl->handle->body
-    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", dl->handle->host[0] ? dl->handle->host : vpn_host, dl->filePath);
+    // https://<dl->handle->host><dl->handle->path>, POST body = dl->handle->body
+    snprintf(dl->URL, sizeof(dl->URL), "https://%s%s", dl->handle->host, dl->filePath);
 
     if (dl->handle->post) {
         curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, post_header_slist);
         curl_easy_setopt(dl->curl, CURLOPT_POST, 1L);
         curl_easy_setopt(dl->curl, CURLOPT_COPYPOSTFIELDS, dl->handle->body);
     } else {
-        curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, http_header_slist);
+        curl_easy_setopt(dl->curl, CURLOPT_HTTPHEADER, NULL);
         curl_easy_setopt(dl->curl, CURLOPT_HTTPGET, 1L);
     }
     curl_easy_setopt(dl->curl, CURLOPT_ENCODING, "");
@@ -333,10 +291,9 @@ void httpStartDownload(dlhandle_t *dl) {
 /**
  * Brings up the HTTP layer: initialises libcurl, creates the multi
  * handle every asynchronous transfer is registered against, and
- * pre-builds the two header lists requests reuse - a Host header for the
- * VPN API and a JSON content type for POSTs. Building those once here
- * rather than per request avoids rebuilding an identical list on every
- * lookup.
+ * pre-builds the header list POST requests reuse (a JSON content type).
+ * Building it once here rather than per request avoids rebuilding an
+ * identical list on every lookup.
  *
  * Takes no parameters. Returns nothing; reports the libcurl version to
  * the console so the log records which one is actually in use.
@@ -352,22 +309,20 @@ void httpStartDownload(dlhandle_t *dl) {
 void httpInit(void) {
     curl_global_init(CURL_GLOBAL_NOTHING);
     multi = curl_multi_init();
-    snprintf(hostHeader, sizeof(hostHeader), "Host: %s", vpn_host);
-    http_header_slist = curl_slist_append(http_header_slist, hostHeader);
     post_header_slist = curl_slist_append(post_header_slist, "Content-Type: application/json");
     gi.dprintf("%s initialized.\n", curl_version());
 }
 
 /**
- * Tears down everything httpInit() set up - the multi handle, both
- * header lists and libcurl itself - and is written to be safe to call
+ * Tears down everything httpInit() set up - the multi handle, the
+ * header list and libcurl itself - and is written to be safe to call
  * more than once, clearing the multi handle as it goes.
  *
  * Takes no parameters. Returns nothing.
  *
  * Currently unreachable: nothing calls it. ShutdownGame() (g_main.c)
  * calls curl_global_cleanup() directly instead, so on the way down the
- * multi handle and the two header lists are never freed. Harmless in
+ * multi handle and the header list are never freed. Harmless in
  * practice, since the process is exiting anyway, but it does mean this
  * is the intended teardown path and isn't wired up.
  */
@@ -376,7 +331,6 @@ void httpShutdown(void) {
         curl_multi_cleanup(multi);
         multi = NULL;
     }
-    curl_slist_free_all(http_header_slist);
     curl_slist_free_all(post_header_slist);
     curl_global_cleanup();
 }
@@ -454,7 +408,6 @@ static void httpFinishDownload(void) {
                 curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &responseCode);
                 if (responseCode == 404) {
                     httpHandleDownload(dl->handle, NULL, 0, responseCode);
-                    //FinishVPNLookup(dl->handle, NULL, 0, responseCode, )
                     gi.dprintf ("HTTP: %s: 404 File Not Found\n", dl->URL);
                     curl_multi_remove_handle (multi, dl->curl);
                     dl->inuse = false;
@@ -514,8 +467,7 @@ static void httpFinishDownload(void) {
  * all MAX_DOWNLOADS slots are busy. A false return means onFinish will
  * never be called, so callers that track pending state need to undo it.
  *
- * Called from the VPN lookup paths in g_vpn.c - the vpnapi.io GET and
- * the IPLogs POST - as a player connects.
+ * Called from vpnLookupStatus() (g_vpn.c) as a player connects.
  */
 bool httpQueueDownload(download_t *d) {
     unsigned    i;

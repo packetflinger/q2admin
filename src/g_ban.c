@@ -1058,6 +1058,33 @@ char *banMatchReason(const baninfo_t *entry) {
 }
 
 /**
+ * Whether a ban rule's ASN matches a player's. The VPN check stores the
+ * player's ASN as just the number ("7843"), while ban rules are written
+ * with an "AS" prefix ("as7843"), so the prefix is skipped on both sides
+ * before comparing.
+ *
+ * rule:   the ASN from the ban rule.
+ * player: the player's ASN from the VPN check, empty if not known.
+ *
+ * Returns true if both name the same ASN. An unknown player ASN never
+ * matches.
+ *
+ * Called from checkBanList() below.
+ */
+bool asnMatches(const char *rule, const char *player) {
+    if (!player[0]) {
+        return false;
+    }
+    if (startContains((char *)rule, "AS")) {
+        rule += 2;
+    }
+    if (startContains((char *)player, "AS")) {
+        player += 2;
+    }
+    return Q_stricmp((char *)rule, (char *)player) == 0;
+}
+
+/**
  * Check if a particular player is allowlisted or denylisted.
  *
  * Returns `true` to deny or `false` to allow, only looking at either all the
@@ -1170,13 +1197,13 @@ bantype_t checkBanList(edict_t *ent, int client, bool denylisted) {
                         continue;
                     }
                 }
-                if (checkentry->vpn && !proxyinfo[client].vpn.is_vpn) {
+                if (checkentry->vpn && !isVPN(client)) {
                     prevcheckentry = checkentry;
                     checkentry = checkentry->next;
                     continue;
                 }
                 if (checkentry->asn[0] != 0) {
-                    if (Q_stricmp(checkentry->asn, proxyinfo[client].auton_sys_num) != 0) {
+                    if (!asnMatches(checkentry->asn, proxyinfo[client].vpn.asn)) {
                         prevcheckentry = checkentry;
                         checkentry = checkentry->next;
                         continue;

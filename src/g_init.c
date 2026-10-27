@@ -139,8 +139,6 @@ bool http_verifyssl                     = false;
 int  hz                                 = 10;
 int  ip_limit                           = 0;
 int  ip_limit_vpn                       = 0;
-bool iplogs_enable                      = false;
-char iplogs_ignorelist[1024]            = "";
 int lframenum;
 bool lockDownServer                     = false;
 char lockoutmsg[256]                    = "Server is currently locked";
@@ -212,8 +210,8 @@ int UserinfoChangeTime                  = 60;
 int UserinfoChangeCount                 = 40;
 char version[256];
 bool vote_enable                        = true;
-char vpn_api_key[33]                    = "";
 bool vpn_enable                         = false;
+char vpn_ignorelist[1024]               = "";
 bool zbotdetect                         = true;
 char motdFilename[256];
 char zbotuserdisplay[256];
@@ -447,7 +445,7 @@ char *FindIpAddressInUserInfo(char *userinfo, bool *userInfoOverflow) {
  * server-lifetime state gets allocated and prepared:
  *
  *  - brings up libcurl globally (curl_global_init), since the various
- *    HTTP-backed features (VPN/IPLogs checks, cloud reporting) all
+ *    HTTP-backed features (VPN checks, cloud reporting) all
  *    depend on it and it must only be done once
  *  - detects which optional engine features are available (g_features/
  *    sv_features), and if the engine supports a variable server tick
@@ -629,6 +627,8 @@ void InitGame(void) {
         whoisReadFile();
     }
 
+    vpnCacheInit();
+
     profile_stop(1, "q2admin->InitGame", 0, NULL);
     httpInit();
     cloudInit();
@@ -786,7 +786,7 @@ void SubstituteEntities(char *newents, char *oldents) {
  *    shouldn't carry over stale
  *  - frees and reloads every admin-config list that can vary per level
  *    (bans, lrcon, flood, votes, disabled entities, checkvars, the MOTD,
- *    the IPLogs ignorelist), since maps can have their own overrides
+ *    the VPN ignorelist), since maps can have their own overrides
  *  - re-randomizes the zbot-detection test strings/chars for this level,
  *    so a cheat client can't hardcode a fixed value across level changes
  *  - if spawnentities_enable, loads this map's optional
@@ -1018,7 +1018,7 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     readVoteLists();
     readDisableLists();
     readCheckVarLists();
-    IPLogsBuildIgnorelist();
+    vpnBuildIgnorelist();
 
     // exec the map cfg file...
     Q_snprintf(gmapname, sizeof(gmapname), "%s", mapname);
@@ -1467,9 +1467,9 @@ bool ClientConnect(edict_t *ent, char *ui) {
     // always clear out just in case there isn't any clients (therefore runframe doesn't get called)
     expireReconnectEntries();
 
-    // The slot's VPN/IPLogs request state is about to be zeroed, so drop
+    // The slot's VPN request state is about to be zeroed, so drop
     // any lookup a previous occupant left running first.
-    VPNCancelLookups(client);
+    vpnCancelLookup(client);
     q2a_memset(&proxyinfo[client], 0, sizeof(proxyinfo_t));
     proxyinfo[client].ent = ent;
     proxyinfo[client].enteredgame = ltime;
@@ -1529,7 +1529,6 @@ bool ClientConnect(edict_t *ent, char *ui) {
         raiseSignal(client, SIGNAL_SKIN_OVERFLOW);
         Info_SetValueForKey(ui, "skin", "female/jezebel");
         q2a_strcpy(skinname, "female/jezebel");
-
     }
 
     q2a_strncpy(proxyinfo[client].userinfo.skin, skinname, sizeof(proxyinfo[client].userinfo.skin) - 1);
@@ -1616,7 +1615,6 @@ bool ClientConnect(edict_t *ent, char *ui) {
             }
         }
 
-
         if (doConnect) {
             profile_start(2);
             // When q2admin requested the extra userinfo feature on the mod's
@@ -1648,11 +1646,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
 
     // the MVD dummy's loopback address isn't worth an API lookup
     if (vpn_enable && !mvddummy) {
-        LookupVPNStatus(ent);
-    }
-
-    if (iplogs_enable && !mvddummy) {
-        IPLogsCheckVPN(ent);
+        vpnLookupStatus(ent);
     }
 
     if (ret) {
@@ -2087,7 +2081,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
  * counterpart to ClientBegin()/ClientConnect(): where those (re)arm a
  * client's per-connection proxyinfo state, this is where it all gets torn
  * back down so the slot is a clean slate for whoever connects next -
- * admin/bypass levels, queued proxy commands, VPN/IPLogs results,
+ * admin/bypass levels, queued proxy commands, VPN results,
  * address, userinfo, msec tracking, ban usage count, and any open
  * !stuff file handle.
  *
@@ -2136,7 +2130,7 @@ void ClientDisconnect(edict_t *ent) {
 
     // A lookup that finishes after this point would land on whoever takes
     // the slot next.
-    VPNCancelLookups(client);
+    vpnCancelLookup(client);
 
     if (!(proxyinfo[client].clientcommand & BANCHECK)) {
         profile_start(2);
@@ -2212,7 +2206,6 @@ void ClientDisconnect(edict_t *ent) {
     proxyinfo[client].userid = -1;
 
     q2a_memset(&proxyinfo[client].vpn, 0, sizeof(vpn_t));
-    q2a_memset(&proxyinfo[client].iplogs, 0, sizeof(iplogsvpn_t));
     q2a_memset(&proxyinfo[client].address, 0, sizeof(netadr_t));
     q2a_memset(&proxyinfo[client].msec, 0, sizeof(player_msec_t));
     q2a_memset(&proxyinfo[client].userinfo, 0, sizeof(userinfo_t));

@@ -17,17 +17,18 @@
 
 #pragma once
 
-#define IPLOGS_CACHE_SIZE    1024   // slots; must be a power of 2
-#define IPLOGS_CACHE_PROBE   8      // max linear-probe distance before an insert evicts
-
 typedef struct {
     bool        used;
     netadr_t    addr;      // base address this entry is keyed on (port ignored)
     time_t      expires;   // absolute time this entry stops being valid
-    iplogsvpn_t result;
-} iplogs_cache_entry_t;
+    vpn_t result;
+} vpn_cache_entry_t;
 
-extern int iplogs_cache_ttl;   // seconds a cached IPLogs result stays valid
+extern int vpn_cache_probe; // max linear-probe distance before an insert evicts
+extern int vpn_cache_size;  // slots, only read at server start, 0 disables the cache
+extern int vpn_cache_ttl;   // seconds a cached VPN check result stays valid
 
-bool IPLogsCacheGet(netadr_t *addr, iplogsvpn_t *out);
-void IPLogsCacheSet(netadr_t *addr, const iplogsvpn_t *result);
+void vpnCacheFree(void);
+bool vpnCacheGet(netadr_t *addr, vpn_t *out);
+void vpnCacheInit(void);
+void vpnCacheSet(netadr_t *addr, const vpn_t *result);

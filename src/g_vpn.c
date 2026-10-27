@@ -17,32 +17,130 @@
 
 #include "g_local.h"
 
-char vpn_host[50] = VPNAPIHOST;
+static netadr_t vpn_ignorelist_ranges[VPN_IGNORELIST_MAXRANGES];
+static int      vpn_ignorelist_count = 0;
 
 /**
- * Cancels any VPN (vpnapi.io) or IPLogs lookup still running for a player
- * slot. Both lookups keep their request state inside the slot, so this must
- * run before the slot is cleared for someone else - otherwise the lookup
- * finishes into zeroed memory and crashes the server, or reports its result
- * against whoever has the slot by then.
+ * Cancels the VPN lookup still running for a player slot, if any. The
+ * lookup keeps its request state inside the slot, so this must run before
+ * the slot is cleared for someone else - otherwise the lookup finishes into
+ * zeroed memory and crashes the server, or reports its result against
+ * whoever has the slot by then.
  *
  * Called from ClientConnect() before it wipes the slot, and from
  * ClientDisconnect().
  */
-void VPNCancelLookups(int client) {
+void vpnCancelLookup(int client) {
     if (!VALIDCLIENT(client)) {
         return;
     }
-    httpCancelDownloads(&proxyinfo[client].dl);
-    httpCancelDownloads(&proxyinfo[client].iplogs_dl);
+    httpCancelDownloads(&proxyinfo[client].vpn_dl);
 }
 
 /**
- * Initiates a lookup for the VPN status of a player edict using CURL. This is
- * a non-blocking call that will finish on a later framerun.
+ * Parses the space/comma separated CIDR ranges in vpn_ignorelist into
+ * vpn_ignorelist_ranges, so vpnIsIgnorelisted() can compare against
+ * pre-parsed netadr_t's instead of re-parsing the setting on every connect.
+ * Called from SpawnEntities() so the list is rebuilt on every map change,
+ * picking up any changes to the setting.
  */
-void LookupVPNStatus(edict_t *ent) {
-    char *request;
+void vpnBuildIgnorelist(void) {
+    char list[sizeof(vpn_ignorelist)];
+    char *saveptr, *token;
+
+    vpn_ignorelist_count = 0;
+
+    if (!vpn_ignorelist[0]) {
+        return;
+    }
+
+    Q_strlcpy(list, vpn_ignorelist, sizeof(list));
+
+    for (token = strtok_r(list, " ,", &saveptr);
+         token && vpn_ignorelist_count < VPN_IGNORELIST_MAXRANGES;
+         token = strtok_r(NULL, " ,", &saveptr)) {
+        vpn_ignorelist_ranges[vpn_ignorelist_count++] = net_parseIPAddressMask(token);
+    }
+
+    if (q2a_developer) {
+        Q_printf("compiled %d CIDR ranges in VPN ignorelist\n", vpn_ignorelist_count);
+    }
+}
+
+/**
+ * Whether a network address falls within one of the pre-parsed
+ * vpn_ignorelist_ranges. Ignorelisted addresses skip the VPN check
+ * entirely; these are for IPs we know aren't VPNs or don't care to waste
+ * resources checking (wallfly and friends).
+ */
+static bool vpnIsIgnorelisted(netadr_t *addr) {
+    for (int i = 0; i < vpn_ignorelist_count; i++) {
+        if (net_contains(&vpn_ignorelist_ranges[i], addr)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Acts on a finished VPN check, whether it just came back from IPLogs or
+ * was found in the cache: raises the signal matching the verdict, enforces
+ * ip_limit_vpn and logs the result.
+ *
+ * A VPN alone doesn't remove anyone: each verdict adds to the player's
+ * signal score like any other suspicion, and only combined with other
+ * signals (or a raised weight) crosses the threshold. "IP VPN" ban rules
+ * still refuse VPN users outright.
+ *
+ * client: the player the result belongs to.
+ * cached: true if the result came from the cache, only used for the log.
+ *
+ * Called from vpnLookupStatus() for a cached result and from
+ * vpnFinishLookup() for a fresh one.
+ */
+static void vpnApplyResult(int client, bool cached) {
+    vpn_t *v = &proxyinfo[client].vpn;
+
+    if (Q_stricmp(v->verdict, "suspicious") == 0) {
+        raiseSignal(client, SIGNAL_VPN_SUSPICIOUS);
+    } else if (Q_stricmp(v->verdict, "vpn_likely") == 0) {
+        raiseSignal(client, SIGNAL_VPN_LIKEY);
+    } else if (Q_stricmp(v->verdict, "vpn_detected") == 0) {
+        raiseSignal(client, SIGNAL_VPN_DETECTED);
+    }
+
+    // Count the other VPN players on the same network (ASN), this one
+    // included, and remove this one if that's over the limit.
+    if (ip_limit_vpn > 0 && v->state == VPN_POSITIVE && v->asn[0]) {
+        int sameasn = 1;
+        for (int j = 0; j < (int)maxclients->value; j++) {
+            if (!proxyinfo[j].inuse || j == client || !isVPN(j)) {
+                continue;
+            }
+            if (Q_stricmp(proxyinfo[j].vpn.asn, v->asn) == 0) {
+                sameasn++;
+            }
+        }
+        if (sameasn > ip_limit_vpn) {
+            Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same VPN provider\n");
+            gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "%s", buffer);
+            addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
+        }
+    }
+
+    Q_printf("%s[%s] vpn check%s: score=%.2f verdict=%s asn=%s%s\n",
+        NAME(client), IP(client), (cached ? " (cached)" : ""), v->score, v->verdict, v->asn,
+        (v->state == VPN_POSITIVE ? " (VPN)" : ""));
+}
+
+/**
+ * Initiates a lookup for the VPN status of a player edict by POSTing their
+ * IP address to IPLogs using CURL. This is a non-blocking call that will
+ * finish on a later framerun. A result cached for the address within the
+ * last vpn_cache_ttl seconds is used instead of a new lookup.
+ */
+void vpnLookupStatus(edict_t *ent) {
+    download_t *dl;
     proxyinfo_t *pi;
     char *addr;
 
@@ -51,92 +149,106 @@ void LookupVPNStatus(edict_t *ent) {
         return;
     }
     pi = &proxyinfo[i];
+    addr = net_addressToString(&pi->address, false, false, false);
+
+    if (vpnIsIgnorelisted(&pi->address)) {
+        if (q2a_developer) {
+            Q_printf("skipping VPN check for %s, ignorelisted\n", addr);
+        }
+        return;
+    }
 
     // already checking or already checked
     if (pi->vpn.state >= VPN_CHECKING) {
         return;
     }
 
-    addr = net_addressToString(&pi->address, false, false, false);
-    request = va("/api/%s?key=%s", addr, vpn_api_key);
-    proxyinfo[i].vpn.state = VPN_CHECKING;
-    proxyinfo[i].dl.initiator = ent;
-    proxyinfo[i].dl.onFinish = FinishVPNLookup;
-    Q_strncpy(pi->dl.path, request, sizeof(pi->dl.path)-1);
+    // Network is cached, use that entry instead of doing a live lookup
+    if (vpnCacheGet(&pi->address, &pi->vpn)) {
+        vpnApplyResult(i, true);
+        return;
+    }
 
-    httpQueueDownload(&proxyinfo[i].dl);
-}
+    dl = &pi->vpn_dl;
+    dl->initiator = ent;
+    dl->type = DL_VPN;
+    dl->onFinish = vpnFinishLookup;
+    dl->post = true;
+    Q_strlcpy(dl->host, VPN_API_HOST, sizeof(dl->host));
+    Q_strlcpy(dl->path, VPN_API_PATH, sizeof(dl->path));
+    Q_snprintf(dl->body, sizeof(dl->body), "{\"ip\":\"%s\"}", addr);
 
-/**
- * Callback when CURL finishes download. Parse resulting JSON
- */
-void FinishVPNLookup(download_t *download, int code, byte *buff, int len) {
-    vpn_t *v;
-    json_t mem[32];
-    const json_t *root, *security, *net;
-    int i = getEntOffset(download->initiator) - 1;
+    pi->vpn.state = VPN_CHECKING;
 
-    if (buff) {
-        v = &proxyinfo[i].vpn;
-        root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
-        if (!root) {
-            gi.dprintf("json parsing error\n");
-            return;
-        }
+    Q_printf("checking %s for proxy/vpn\n", addr);
 
-        security = json_getProperty(root, "security");
-        if (security) {
-            const char *vpn_val = json_getPropertyValue(security, "vpn");
-            const char *proxy_val = json_getPropertyValue(security, "proxy");
-            const char *tor_val = json_getPropertyValue(security, "tor");
-            const char *relay_val = json_getPropertyValue(security, "relay");
-            v->is_vpn = vpn_val && Q_stricmp((char *)vpn_val, "true") == 0;
-            v->is_proxy = proxy_val && Q_stricmp((char *)proxy_val, "true") == 0;
-            v->is_tor = tor_val && Q_stricmp((char *)tor_val, "true") == 0;
-            v->is_relay = relay_val && Q_stricmp((char *)relay_val, "true") == 0;
-            // A VPN alone doesn't remove anyone: it adds to the player's
-            // signal score like any other suspicion, and only combined with
-            // other signals (or a raised vpn-detected weight) crosses the
-            // threshold. "IP VPN" ban rules still refuse VPN users outright.
-            if (v->is_vpn || v->is_proxy || v->is_tor || v->is_relay) {
-                v->state = VPN_POSITIVE;
-                raiseSignal(i, SIGNAL_VPN_DETECTED);
-            }
-        }
-        net = json_getProperty(root, "network");
-        if (net) {
-            const char *network_val = json_getPropertyValue(net, "network");
-            const char *asn_val = json_getPropertyValue(net, "autonomous_system_number");
-            if (network_val) {
-                proxyinfo[i].network = net_parseIPAddressMask(network_val);
-            }
-            if (asn_val) {
-                q2a_strncpy(proxyinfo[i].auton_sys_num, asn_val, sizeof(proxyinfo[i].auton_sys_num)-1);
-            }
-        }
-
-        if (ip_limit_vpn > 0 && proxyinfo[i].vpn.state == VPN_POSITIVE) {
-            int sameasn = 1;
-            for (int j = 0; j < (int)maxclients->value; j++) {
-               if (!proxyinfo[j].inuse || i == j) {
-                   continue;
-               }
-               if (Q_stricmp(proxyinfo[j].auton_sys_num, proxyinfo[i].auton_sys_num) == 0) {
-                   sameasn++;
-               }
-           }
-           if (sameasn > ip_limit_vpn) {
-               Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same VPN provider\n");
-               gi.cprintf(proxyinfo[i].ent, PRINT_HIGH, "%s", buffer);
-               addCmdQueue(i, QCMD_DISCONNECT, 1, 0, buffer);
-           }
-        }
-        gi.cprintf(NULL, PRINT_HIGH, "%s %s %s%s\n", NAME(i), net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num, (isVPN(i) ? " (VPN)" : ""));
+    // A refused request never calls vpnFinishLookup(), so undo the pending
+    // state or the player is stuck as checking and never retried.
+    if (!httpQueueDownload(dl)) {
+        pi->vpn.state = VPN_UNKNOWN;
     }
 }
 
 /**
- * Whether the client is coming from a VPN connection or not.
+ * Callback when CURL finishes the IPLogs download. Parses the resulting
+ * JSON, caches it and acts on it. A verdict of vpn_likely or vpn_detected
+ * marks the player as on a VPN.
+ */
+void vpnFinishLookup(download_t *download, int code, byte *buff, int len) {
+    vpn_t *v;
+    json_t mem[128];
+    const json_t *root, *prop, *ip_info;
+    const char *verdict, *asn;
+    int i = getEntOffset(download->initiator) - 1;
+
+    v = &proxyinfo[i].vpn;
+    if (!buff) {
+        v->state = VPN_UNKNOWN;
+        return;
+    }
+
+    root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
+    if (!root) {
+        Q_printf("vpn check: json parsing error\n");
+        v->state = VPN_UNKNOWN;
+        return;
+    }
+
+    verdict = json_getPropertyValue(root, "verdict");
+    if (verdict) {
+        Q_strlcpy(v->verdict, verdict, sizeof(v->verdict));
+    }
+
+    prop = json_getProperty(root, "score");
+    if (prop) {
+        v->score = json_getReal(prop);
+    }
+
+    prop = json_getProperty(root, "confidence");
+    if (prop) {
+        v->confidence = json_getReal(prop);
+    }
+
+    ip_info = json_getProperty(root, "ip_info");
+    if (ip_info) {
+        asn = json_getPropertyValue(ip_info, "asn");
+        if (asn) {
+            Q_strlcpy(v->asn, asn, sizeof(v->asn));
+        }
+    }
+
+    if (Q_stricmp(v->verdict, "vpn_likely") == 0 || Q_stricmp(v->verdict, "vpn_detected") == 0) {
+        v->state = VPN_POSITIVE;
+    } else {
+        v->state = VPN_NEGATIVE;
+    }
+    vpnCacheSet(&proxyinfo[i].address, v);
+    vpnApplyResult(i, false);
+}
+
+/**
+ * Whether the client is coming from a VPN connection or not, meaning the
+ * check's verdict was vpn_likely or vpn_detected.
  */
 bool isVPN(int clientnum) {
     if (!VALIDCLIENT(clientnum)) {
@@ -161,201 +273,9 @@ void vpnUsersRun(int startarg, edict_t *ent, int client) {
             continue;
         }
 
-        if (proxyinfo[i].vpn.state == VPN_POSITIVE) {
-            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s]\n", NAME(i), net_addressToString(&proxyinfo[i].network, false, false, true), proxyinfo[i].auton_sys_num);
+        if (isVPN(i)) {
+            gi.cprintf(NULL, PRINT_HIGH, "  %s [%s - %s - %s]\n", NAME(i), IP(i),
+                proxyinfo[i].vpn.asn, proxyinfo[i].vpn.verdict);
         }
     }
-}
-
-/**
- * A second, independent VPN/proxy check against the IPLogs API
- * (https://iplogs.com/docs). This is a public endpoint that requires no
- * API key, so unlike LookupVPNStatus() above there's nothing to configure
- * beyond enabling it.
- */
-
-static netadr_t iplogs_ignorelist_ranges[IPLOGS_IGNORELIST_MAXRANGES];
-static int      iplogs_ignorelist_count = 0;
-
-/**
- * Parses the space/comma separated CIDR ranges in iplogs_ignorelist into
- * iplogs_ignorelist_ranges, so IPLogsIsIgnorelisted() can compare against
- * pre-parsed netadr_t's instead of re-parsing the cvar on every connect.
- * Called from SpawnEntities() so the list is rebuilt on every map change,
- * picking up any changes to the cvar.
- */
-void IPLogsBuildIgnorelist(void) {
-    char list[sizeof(iplogs_ignorelist)];
-    char *saveptr, *token;
-
-    iplogs_ignorelist_count = 0;
-
-    if (!iplogs_ignorelist[0]) {
-        return;
-    }
-
-    Q_strncpy(list, iplogs_ignorelist, sizeof(list)-1);
-    list[sizeof(list)-1] = '\0';
-
-    for (token = strtok_r(list, " ,", &saveptr);
-         token && iplogs_ignorelist_count < IPLOGS_IGNORELIST_MAXRANGES;
-         token = strtok_r(NULL, " ,", &saveptr)) {
-        iplogs_ignorelist_ranges[iplogs_ignorelist_count++] = net_parseIPAddressMask(token);
-    }
-
-    if (q2a_developer) {
-        Q_printf("compiled %d CIDR ranges in VPN ignorelist\n", iplogs_ignorelist_count);
-    }
-}
-
-/**
- * Whether a network address falls within one of the pre-parsed
- * iplogs_ignorelist_ranges. Ignorelisted addresses skip the IPLogs check
- * entirely; these are for IPs we know aren't VPNs or don't care to waste
- * resources checking (wallfly and friends).
- */
-static bool IPLogsIsIgnorelisted(netadr_t *addr) {
-    for (int i = 0; i < iplogs_ignorelist_count; i++) {
-        if (net_contains(&iplogs_ignorelist_ranges[i], addr)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
- * Initiates a lookup for the VPN status of a player edict by POSTing their
- * IP address to IPLogs using CURL. This is a non-blocking call that will
- * finish on a later framerun.
- */
-void IPLogsCheckVPN(edict_t *ent) {
-    download_t *dl;
-    proxyinfo_t *pi;
-    char *addr;
-
-    int i = getEntOffset(ent) - 1;
-    if (!iplogs_enable) {
-        return;
-    }
-    pi = &proxyinfo[i];
-    addr = net_addressToString(&pi->address, false, false, false);
-
-    if (IPLogsIsIgnorelisted(&pi->address)) {
-        if (q2a_developer) {
-            Q_printf("skipping VPN check for %s, ignorelisted\n", addr);
-        }
-        return;
-    }
-
-    // already checking or already checked
-    if (pi->iplogs.state >= IPLOGS_CHECKING) {
-        return;
-    }
-
-    // Network is cached, use that entry instead of doing a live lookup
-    if (IPLogsCacheGet(&pi->address, &pi->iplogs)) {
-        if (pi->iplogs.verdict[0]) {
-            if (Q_stricmp(pi->iplogs.verdict, "suspicious") == 0) {
-                Q_printf("verdict: %s\n", pi->iplogs.verdict);
-                raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
-            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_likely") == 0) {
-                raiseSignal(i, SIGNAL_VPN_LIKEY);
-            } else if (Q_stricmp(pi->iplogs.verdict, "vpn_detected") == 0) {
-                raiseSignal(i, SIGNAL_VPN_DETECTED);
-            }
-        }
-        Q_printf("%s[%s] vpn check (cached): score=%.2f verdict=%s asn=%s%s\n",
-            NAME(i), addr, pi->iplogs.score, pi->iplogs.verdict, pi->iplogs.asn, (pi->iplogs.is_vpn ? " (VPN)" : ""));
-        return;
-    }
-
-    dl = &pi->iplogs_dl;
-    dl->initiator = ent;
-    dl->type = DL_IPLOGS;
-    dl->onFinish = IPLogsFinishCheck;
-    dl->post = true;
-    Q_strncpy(dl->host, IPLOGS_HOST, sizeof(dl->host)-1);
-    Q_strncpy(dl->path, IPLOGS_PATH, sizeof(dl->path)-1);
-    Q_snprintf(dl->body, sizeof(dl->body), "{\"ip\":\"%s\"}", addr);
-
-    pi->iplogs.state = IPLOGS_CHECKING;
-
-    Q_printf("checking %s for proxy/vpn\n", addr);
-    httpQueueDownload(dl);
-}
-
-/**
- * Callback when CURL finishes the IPLogs download. Parse resulting JSON.
- */
-void IPLogsFinishCheck(download_t *download, int code, byte *buff, int len) {
-    iplogsvpn_t *v;
-    json_t mem[128];
-    const json_t *root, *prop, *ip_info;
-    const char *verdict, *asn;
-    int i = getEntOffset(download->initiator) - 1;
-
-    if (!buff) {
-        proxyinfo[i].iplogs.state = IPLOGS_UNKNOWN;
-        return;
-    }
-
-    v = &proxyinfo[i].iplogs;
-    root = json_create((char *)buff, mem, sizeof(mem)/sizeof(*mem));
-    if (!root) {
-        Q_printf("iplogs: json parsing error\n");
-        return;
-    }
-
-    prop = json_getProperty(root, "is_vpn");
-    if (prop) {
-        v->is_vpn = json_getBoolean(prop);
-    }
-
-    verdict = json_getPropertyValue(root, "verdict");
-    if (verdict) {
-        q2a_strncpy(v->verdict, verdict, sizeof(v->verdict)-1);
-        if (Q_stricmp(v->verdict, "suspicious") == 0) {
-            raiseSignal(i, SIGNAL_VPN_SUSPICIOUS);
-        } else if (Q_stricmp(v->verdict, "vpn_likely") == 0) {
-            raiseSignal(i, SIGNAL_VPN_LIKEY);
-        } else if (Q_stricmp(v->verdict, "vpn_detected") == 0) {
-            raiseSignal(i, SIGNAL_VPN_DETECTED);
-        }
-    }
-
-    prop = json_getProperty(root, "score");
-    if (prop) {
-        v->score = json_getReal(prop);
-    }
-
-    prop = json_getProperty(root, "confidence");
-    if (prop) {
-        v->confidence = json_getReal(prop);
-    }
-
-    ip_info = json_getProperty(root, "ip_info");
-    if (ip_info) {
-        asn = json_getPropertyValue(ip_info, "asn");
-        if (asn) {
-            q2a_strncpy(v->asn, asn, sizeof(v->asn)-1);
-        }
-    }
-
-    v->state = v->is_vpn ? IPLOGS_VPN : IPLOGS_CLEAN;
-    IPLogsCacheSet(&proxyinfo[i].address, v);
-
-    Q_printf("%s[%s] vpn check: score=%.2f verdict=%s asn=%s%s\n", NAME(i), IP(i), v->score, v->verdict, v->asn, (v->is_vpn ? " (VPN)" : ""));
-}
-
-/**
- * Whether the client is coming from a VPN connection or not, per IPLogs.
- */
-bool isIPLogsVPN(int clientnum) {
-    if (!VALIDCLIENT(clientnum)) {
-        return false;
-    }
-    if (!iplogs_enable) {
-        return false;
-    }
-    return proxyinfo[clientnum].iplogs.state == IPLOGS_VPN;
 }

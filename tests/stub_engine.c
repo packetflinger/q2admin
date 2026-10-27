@@ -119,6 +119,14 @@ int signalScore(int client) {
 }
 
 /**
+ * Same test as the real one in g_vpn.c, minus the vpn_enable check, so a
+ * test can mark a player as on a VPN by setting vpn.state.
+ */
+bool isVPN(int client) {
+    return proxyinfo[client].vpn.state == VPN_POSITIVE;
+}
+
+/**
  * One fixed definition, so the "#w" format has something deterministic to
  * print. Linking the real g_signal.o instead would clash with this and with
  * raiseSignal() above.

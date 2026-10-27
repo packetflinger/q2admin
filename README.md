@@ -345,9 +345,9 @@ some decay over time. The built-in signals are listed below. A weight of
 | `msec-overrun` | 20 | used more msec than allowed |
 | `msec-underrun` | 20 | used less msec than required |
 | `impulse-sent` | 10 per impulse | sent a flagged impulse |
-| `vpn-suspicious` | 20 | VPN check was 25–50% sure |
-| `vpn-likely` | 30 | VPN check was 50–75% sure |
-| `vpn-detected` | 40 | vpnapi.io reported a VPN, or IPLogs was 75–100% sure |
+| `vpn-suspicious` | 20 | VPN check verdict was `suspicious` |
+| `vpn-likely` | 30 | VPN check verdict was `vpn_likely` |
+| `vpn-detected` | 40 | VPN check verdict was `vpn_detected` |
 | `wonky-userinfo` | 15 | a standard userinfo key is missing |
 | `protocol-downgrade` | 10 | client connected with an older protocol than its engine supports |
 | `admin-adjustment` | set per player | an admin used `signaladd` |
@@ -480,21 +480,30 @@ whether it belongs to a VPN or hosting provider.
 VPN. Knowing who is on one lets you add weight to their signal score, ban
 VPNs entirely, or limit how many can join.
 
-**How it works.** Two independent lookup services are available. Both run in
-the background, so a slow lookup never stalls the server:
+**How it works.** With `vpn_enable` on, each connecting player's address is
+sent to the [IPLogs](https://iplogs.com/docs) API. No API key is needed, but
+it does need `http_enable`. The lookup runs in the background, so a slow
+reply never stalls the server, though a player can be in the game for a few
+seconds before it arrives.
 
-- **vpnapi.io** (`vpn_enable`): needs a free API key. It reports whether the
-  address is a VPN, proxy, Tor exit or relay, and which network (ASN) it
-  belongs to. A positive result raises the `vpn-detected` signal.
-- **IPLogs** (`iplogs_enable`): no key needed. It returns a confidence score,
-  which raises the `vpn-suspicious`, `vpn-likely` or `vpn-detected` signal.
-  Results are cached per address for `iplogs_cache_ttl` seconds, and
-  addresses in `iplogs_ignorelist` are never checked.
+IPLogs returns a verdict and the network (ASN) the address belongs to. The
+verdict raises a signal:
 
-Both need `http_enable`. The vpnapi.io results drive `ip_limit_vpn`, which
-limits how many VPN players can connect from the same provider (ASN)
-separately from the per-address `ip_limit`. The `IP VPN` and `ASN`
-[ban rules](#banning) also use those results.
+| Verdict | Signal |
+| --- | --- |
+| `clean` | none |
+| `suspicious` | `vpn-suspicious` |
+| `vpn_likely` | `vpn-likely` |
+| `vpn_detected` | `vpn-detected` |
+
+A player with a `vpn_likely` or `vpn_detected` verdict counts as on a VPN.
+That's what the `IP VPN` [ban rule](#banning), `ip_limit_vpn` and
+`vpnusers` go by. `ip_limit_vpn` limits how many VPN players can connect from
+the same provider (ASN), separately from the per-address `ip_limit`. The
+`ASN` ban rule matches every checked player's ASN, VPN or not.
+
+Results are cached per address for `vpn_cache_ttl` seconds, and addresses in
+`vpn_ignorelist` are never checked.
 
 A VPN on its own doesn't remove anyone: `vpn-detected` is worth 40 points,
 below the default `signal_score_threshold` of 50, so it only removes a player
@@ -507,13 +516,12 @@ rule, which also lets you show them a message.
 ```
 http_enable "yes"
 vpn_enable "yes"
-vpn_api_key "your-key-from-vpnapi.io"
-iplogs_enable "yes"
-iplogs_ignorelist "192.0.2.0/24, 2001:db8::/32"
+vpn_ignorelist "192.0.2.0/24, 2001:db8::/32"
 ip_limit_vpn "2"
 ```
 
-`sv !vpnusers` lists everyone currently connected through a VPN.
+`sv !vpnusers` lists everyone currently connected through a VPN, with their
+IP address, ASN and verdict.
 
 ### Connection limits and server lockdown
 
@@ -1121,11 +1129,8 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `impulsestokickon` | list | all impulses | Comma-separated impulses that count as bot control, for example `169, 170, 171, 172, 173, 174, 175`. Each one raises the `impulse-sent` signal. |
 | `inverted_command1` – `inverted_command4` | string | empty | Private probe commands that a genuine client should *not* answer. |
 | `ip_limit` | number | 0 | Maximum players from one IP address, VPN or not. 0 means unlimited. Negative values are rejected. |
-| `ip_limit_vpn` | number | 0 | Maximum VPN players from the same provider (ASN), separate from `ip_limit`. Needs `vpn_enable`. 0 means unlimited. Negative values are rejected. |
+| `ip_limit_vpn` | number | 0 | Maximum VPN players (a `vpn_likely` or `vpn_detected` verdict) from the same provider (ASN), separate from `ip_limit`. Needs `vpn_enable`. 0 means unlimited. Negative values are rejected. |
 | `ipbanning_enable` | bool | yes | Enable IP-based ban rules. |
-| `iplogs_cache_ttl` | number | 86400 | Seconds an IPLogs result is cached for each IP address. |
-| `iplogs_enable` | bool | no | Run the IPLogs VPN check on connect. |
-| `iplogs_ignorelist` | string | empty | CIDR ranges exempt from the IPLogs check, separated by spaces or commas. |
 | `kickonnamechange` | bool | no | Kick players who change to a banned name, instead of just refusing the change. |
 | `lock` | bool | no | Refuse new connections. Players who leave while the server is locked can still rejoin under the same name. **Console only**; can't be set in a config file. |
 | `lockoutmsg` | string | `Server is currently locked` | Message shown while the server is locked. |
@@ -1196,8 +1201,11 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `votecountnovotes` | bool | yes | `yes`: votes pass on yes ÷ all players. `no`: players who didn't vote are left out of the total. |
 | `voteminclients` | number | 0 | Players needed before a vote can be proposed. |
 | `votepasspercent` | number | 50 | Percentage of yes votes needed to pass. |
-| `vpn_api_key` | string | empty | vpnapi.io API key. |
-| `vpn_enable` | bool | no | Run the vpnapi.io VPN check on connect. |
+| `vpn_cache_probe` | number | 8 | How many neighbouring cache slots are searched for an address before the oldest entry among them is replaced. Higher means fewer early evictions but slower lookups. Values below 1 count as 1. |
+| `vpn_cache_size` | number | 1024 | Number of IP addresses the VPN check result cache holds. Config file only, read at server start. 0 disables the cache. |
+| `vpn_cache_ttl` | number | 86400 | Seconds a VPN check result is cached for each IP address. |
+| `vpn_enable` | bool | no | Run the VPN check (IPLogs) on connect. Needs `http_enable`. |
+| `vpn_ignorelist` | string | empty | CIDR ranges exempt from the VPN check, separated by spaces or commas. |
 | `whois_active` | number | 0 | Number of whois records to keep. 0 disables whois. **cfg only.** |
 | `zbc_enable` | bool | yes | Enable aim jitter detection. |
 | `zbc_jittermax` | number | 4 | Jitter hits within `zbc_jittertime` before a player counts as a bot user. |
@@ -1306,7 +1314,8 @@ sv !chat_stats claire
 ```
 
 #### `vpnusers` (console only)
-List players connected through a VPN.
+List players connected through a VPN (a `vpn_likely` or `vpn_detected`
+verdict), with their IP address, ASN and verdict.
 ```
 sv !vpnusers
 ```
@@ -1804,7 +1813,7 @@ option is explained in the files themselves and in the
 
 | Library | Used for |
 | --- | --- |
-| **libcurl** | HTTP(S) downloads: VPN lookups (vpnapi.io and IPLogs), remote ban lists, `INCLUDE:` URLs and the anti-cheat hash lists. |
+| **libcurl** | HTTP(S) downloads: VPN lookups (IPLogs), remote ban lists, `INCLUDE:` URLs and the anti-cheat hash lists. |
 | **OpenSSL** (libssl, libcrypto) | HTTPS for libcurl, plus RSA authentication and AES encryption for the Cloud Admin connection. |
 | **zlib** | Compression support needed by libcurl and OpenSSL. |
 | **SQLite** | Reserved for local IP-context (VPN/ASN) lookups. It's linked in, but nothing in the code calls it yet. |

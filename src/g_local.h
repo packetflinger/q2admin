@@ -189,18 +189,14 @@ typedef struct {
     int next_report;                // unused, remove later
     int stifle_frame;               // frames
     int stifle_length;              // frames
-    download_t dl;
-    vpn_t vpn;                      // vpn status for player
-    download_t iplogs_dl;           // download handle for IPLogs VPN check
-    iplogsvpn_t iplogs;             // IPLogs VPN check status for player
+    download_t vpn_dl;              // download handle for the VPN check
+    vpn_t vpn;                      // VPN check status for player
     netadr_t address;               // player's IP address (IPv4 or IPv6)
-    netadr_t network;               // address' parent CIDR range
-    char auton_sys_num[10];         // the ASN announcing this network
     char address_str[135];          // unused, remove later
     char version_test[6];           // random chars to force sending version
     float version_deadline;         // must respond by this ltime
     char client_version[MAX_VERSION_CHARS];   // build string
-    chatstats_t chat_stats;               // tracking annoying chat behavior
+    chatstats_t chat_stats;         // tracking annoying chat behavior
     freeze_t freeze;                // used to freeze a player in place
     userinfo_t userinfo;
     float alias_deadline;           // how long to wait for alias reply

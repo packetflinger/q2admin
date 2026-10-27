@@ -89,7 +89,7 @@ json_t const* json_getProperty( json_t const* obj, char const* property ) {
   *         or array - those have no scalar value to return, so descend
   *         with json_getProperty() instead.
   * Called from the API response parsers in g_vpn.c for reading string
-  * fields out of the vpnapi.io and IPLogs replies. */
+  * fields out of the IPLogs VPN check replies. */
 char const* json_getPropertyValue( json_t const* obj, char const* property ) {
 	json_t const* field = json_getProperty( obj, property );
 	if ( !field ) return 0;
@@ -158,7 +158,7 @@ json_t const* json_createWithPool( char *str, jsonPool_t *pool ) {
   *         small - the two are indistinguishable, so a parse failure on
   *         good input is worth suspecting as an undersized mem.
   * Called from the HTTP response handlers in g_vpn.c, which parse the
-  * vpnapi.io and IPLogs replies out of a stack buffer. */
+  * IPLogs VPN check replies out of a stack buffer. */
 json_t const* json_create( char* str, json_t mem[], unsigned int qty ) {
     jsonStaticPool_t spool;
     spool.mem = mem;

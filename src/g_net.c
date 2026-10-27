@@ -289,12 +289,12 @@ netadr_t net_parseIPAddressBase(const char *ip) {
 /**
  * Parse a basic string IP address with or without a CIDR mask.
  *
- * Callers feed this ban file entries, config tokens and the "network" field
- * from the IPLogs API response, so the length is checked before copying and
- * both the address and the mask width are validated before anything is
- * stored. An out-of-range mask is rejected rather than clamped: it means a
- * malformed entry, and silently widening or narrowing a ban would be worse
- * than ignoring it.
+ * Callers feed this ban file entries and config tokens (including the VPN
+ * ignorelist), so the length is checked before copying and both the
+ * address and the mask width are validated before anything is stored. An
+ * out-of-range mask is rejected rather than clamped: it means a malformed
+ * entry, and silently widening or narrowing a ban would be worse than
+ * ignoring it.
  *
  * On failure the returned address is zeroed at NA_UNSPECIFIED, which
  * net_contains() never matches, so a bad entry is simply inert.
