@@ -21,16 +21,92 @@
 cloud_t cloud;
 
 /**
- * Sets up the cloud admin connection.
+ * Frees the backend address list from the last DNS lookup and clears both
+ * pointers into it. cloud.addr points somewhere inside cloud.addr_list, so
+ * the list has to be freed from its head rather than through cloud.addr.
+ *
+ * Takes no parameters and returns nothing. Safe to call when there's no
+ * list.
+ *
+ * Called from cloudResetState(), cloudShutdown() and cloudParseError().
+ */
+static void cloudFreeAddress(void) {
+    if (cloud.addr_list) {
+        freeaddrinfo(cloud.addr_list);
+    }
+    cloud.addr_list = NULL;
+    cloud.addr = NULL;
+}
+
+/**
+ * Clears all connection state, ready for a fresh start, and releases what
+ * the last connection held: its socket, resolved address, cipher contexts
+ * and RSA keys. Without that, every reconnect would leak them.
+ *
+ * The map name, player slot count and game port are kept. SpawnEntities()
+ * only sets them on a map change, so losing them here would send an empty
+ * hello (port 0, no slots) until the next map.
+ *
+ * Takes no parameters and returns nothing. Leaves the state at
+ * CLOUD_STATE_DISABLED.
+ *
+ * Called from cloudInit(), and from cloudRun() for "sv !cloud disconnect"
+ * and "sv !cloud reconnect".
+ */
+static void cloudResetState(void) {
+    cloud_connection_t *c = &cloud.connection;
+    char mapname[sizeof(cloud.mapname)];
+    uint8_t maxclients = cloud.maxclients;
+    uint16_t port = cloud.port;
+
+    q2a_memcpy(mapname, cloud.mapname, sizeof(mapname));
+
+    // cloudDisconnect() only closes connected sockets, not one still
+    // connecting
+    if (cloud.state == CLOUD_STATE_CONNECTING) {
+        closesocket(c->socket);
+    }
+
+    cloudFreeAddress();
+    EVP_CIPHER_CTX_free(c->e_ctx);
+    EVP_CIPHER_CTX_free(c->d_ctx);
+    EVP_PKEY_free(c->public_key);
+    EVP_PKEY_free(c->private_key);
+    EVP_PKEY_free(c->server_key);
+
+    q2a_memset(&cloud, 0, sizeof(cloud));
+
+    q2a_memcpy(cloud.mapname, mapname, sizeof(cloud.mapname));
+    cloud.maxclients = maxclients;
+    cloud.port = port;
+}
+
+/**
+ * Sets up the Cloud Admin connection: reads q2a_cloud.cfg, resets all
+ * connection state, loads the RSA keys and starts a background DNS lookup
+ * for the backend's address. The connection itself isn't opened here.
+ * cloudFrame() does that a few seconds later, once the lookup has had time
+ * to finish, so a slow DNS server never holds up server start.
+ *
+ * Leaves the state at CLOUD_STATE_DISABLED (so cloudFrame() does nothing)
+ * if Cloud Admin is turned off in the config, the keys can't be loaded, or
+ * cloud_addr or cloud_port isn't set. Does nothing at all if Cloud Admin is
+ * already running (any state but CLOUD_STATE_DISABLED).
+ *
+ * Takes no parameters and returns nothing; fills the global cloud.
+ *
+ * Called from InitGame() (g_init.c) at server start, and from cloudRun()
+ * for "sv !cloud connect" and "sv !cloud reconnect".
  */
 void cloudInit() {
-    if (cloud.connection.socket) {
+    if (cloud.state != CLOUD_STATE_DISABLED) {
+        cloudPrintf("already running, use \"sv !cloud reconnect\" to restart\n");
         return;
     }
 
     cloudReadConfigFile();
 
-    q2a_memset(&cloud, 0, sizeof(cloud));
+    cloudResetState();
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
     
     if (!cloud_config.enabled) {
@@ -66,7 +142,18 @@ void cloudInit() {
 }
 
 /**
- * Load config from disk. First load from q2 folder, then the mod folder.
+ * Loads the Cloud Admin settings from configfile_cloud (q2a_cloud.cfg by
+ * default, renamed with the q2a_cloudfile cvar). The file uses the same
+ * option "value" format as q2admin.cfg and goes through the same parser,
+ * readCfgFile().
+ *
+ * The copy in the mod directory is read first and the one in the Quake 2
+ * root directory second, so where a setting is in both, the root one wins.
+ * That's the reverse of q2admin.cfg, which readCfgFiles() reads root first.
+ *
+ * Takes no parameters and returns nothing; fills cloud_config.
+ *
+ * Called from cloudInit().
  */
 void cloudReadConfigFile() {
     Q_snprintf(buffer, sizeof(buffer), "%s/%s", moddir, configfile_cloud->string);
@@ -75,11 +162,24 @@ void cloudReadConfigFile() {
 }
 
 /**
- * getaddrinfo's returns a linked-list of struct addrinfo. Figure out which
- * result is the one we want (IPv6/IPv4)
+ * Picks the backend address to connect to from getaddrinfo()'s results.
+ * A name can resolve to several IPv4 and IPv6 addresses, so this takes the
+ * first of each family and chooses between them using the cloud_dns
+ * setting: a string of up to two characters, "4" and/or "6", in order of
+ * preference ("64" means IPv6 if there is one, otherwise IPv4). An empty
+ * setting is treated as "64".
+ *
+ * a: the list getaddrinfo() returned.
+ *
+ * Returns the chosen entry, which still belongs to that list, or NULL if a
+ * is NULL or no address of a preferred family was found.
+ *
+ * Called from cloudLookupAddress().
  */
 static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
-    static struct addrinfo *v4, *v6;
+    // Not static: each lookup has to choose from its own results, not keep
+    // pointers into an earlier list that has since been freed.
+    struct addrinfo *v4 = NULL, *v6 = NULL;
 
     if (!a) {
         return NULL;
@@ -117,16 +217,27 @@ static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
 
 
 /**
- * Do a DNS lookup for remote server. This is done in a dedicated thread to
- * prevent blocking. Otherwise the server (and all current players) will
- * freeze in place when new players connect until their PTR record is resolved.
+ * Resolves the backend's host name (cloud_addr) and port into cloud.addr,
+ * ready for cloudConnect(). The whole result list is kept in
+ * cloud.addr_list so cloudFreeAddress() can free it later. It runs on its own thread, started by
+ * cloudInit(), because getaddrinfo() blocks: on the game thread a slow DNS
+ * server would freeze the whole server, and every player on it, until the
+ * lookup finished.
+ *
+ * Sets the state to CLOUD_STATE_DISCONNECTED on success, so cloudFrame()
+ * starts connecting, or CLOUD_STATE_DISABLED if the name doesn't resolve
+ * or has no address of a family cloud_dns allows. Also copies the feature
+ * flags from cloud_config into cloud.flags.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Started from cloudInit() through cloudStartThread().
  */
 void cloudLookupAddress(void) {
     char str_address[40];
-    struct addrinfo hints, *res = 0;
+    struct addrinfo hints, *res = NULL;
 
     q2a_memset(&hints, 0, sizeof(hints));
-    q2a_memset(&res, 0, sizeof(res));
 
     hints.ai_family         = AF_UNSPEC;     // either v6 or v4
     hints.ai_socktype       = SOCK_STREAM;   // TCP
@@ -141,20 +252,20 @@ void cloudLookupAddress(void) {
         cloud.state = CLOUD_STATE_DISABLED;
         return;
     } else {
-        q2a_memset(&cloud.addr, 0, sizeof(struct addrinfo));
-
         // getaddrinfo can return multiple mixed v4/v6 results
-        cloud.addr = cloudSelectAddrinfo(res);
+        struct addrinfo *chosen = cloudSelectAddrinfo(res);
 
-        if (!cloud.addr) {
+        if (!chosen) {
+            freeaddrinfo(res);
             cloud.state = CLOUD_STATE_DISABLED;
             cloudDPrintf("problems resolving server address, disabling\n");
             return;
         }
 
-        if (res->ai_family == AF_INET6) {
-            cloud.connection.ipv6 = true;
-        }
+        // Keep the head of the list too; it's what freeaddrinfo() needs.
+        cloud.addr_list = res;
+        cloud.addr = chosen;
+        cloud.connection.ipv6 = (cloud.addr->ai_family == AF_INET6);
 
         if (cloud.addr->ai_family == AF_INET6) {
             q2a_inet_ntop(
@@ -180,7 +291,17 @@ void cloudLookupAddress(void) {
 }
 
 /**
- * Only DNS lookups use this
+ * Runs func on a new detached thread, using CreateThread() on Windows and
+ * pthreads everywhere else. Only the DNS lookup uses it, so a slow lookup
+ * can't stall the game thread.
+ *
+ * func: the function to run. It's called with no arguments.
+ * arg:  not used; func always gets NULL.
+ *
+ * Returns nothing. A thread that fails to start isn't reported, so the
+ * connection just never gets past the lookup.
+ *
+ * Called from cloudInit() to run cloudLookupAddress().
  */
 void cloudStartThread(void *func, void *arg) {
 #if _WIN32
@@ -193,7 +314,15 @@ void cloudStartThread(void *func, void *arg) {
 }
 
 /**
- * Output to the q2 server console (if flags agree)
+ * Prints str and a newline to the server console, but only when the debug
+ * flag (CFL_DEBUG) is set in cloud_flags.
+ *
+ * str: the text to print.
+ *
+ * Returns nothing.
+ *
+ * Nothing calls this at the moment; cloudDPrintf() does the same job with
+ * printf-style formatting.
  */
 void cloudDebugPrint(char *str) {
     if (!CFL(DEBUG)) {
@@ -203,9 +332,20 @@ void cloudDebugPrint(char *str) {
 }
 
 /**
- * Periodically ping the server to know if the connection is still open. I'm
- * not 100% sure this is necessary. TCP has built-in mechanisms for maintaining
- * a connection if when no data is flowing.
+ * Sends the backend a CMD_PING every PING_FREQ_SECS seconds while
+ * connected, so a connection that has silently died gets noticed. The
+ * backend answers with SCMD_PONG (see cloudParsePong()). If a ping is still
+ * unanswered when the next one is due, it counts as a miss, and after
+ * PING_MISS_MAX misses the connection is treated as lost and
+ * cloudPeerDisconnected() starts a reconnect.
+ *
+ * TCP keepalives could do much the same, but they're off by default and
+ * can take hours to notice a dead link, so this keeps the check in our
+ * hands.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudFrame() once the connection is trusted.
  */
 void cloudPing(void) {
     if (cloud.state < CLOUD_STATE_CONNECTED) {
@@ -236,9 +376,21 @@ void cloudPing(void) {
 }
 
 /**
- * Run once per server frame. The default tick rate is 10hz or once every 0.1
- * seconds, but servers like q2pro support variable framerates (divisible by 10
- * up to 60), so this could run much more frequently.
+ * Drives the Cloud Admin connection, once per server frame. Depending on
+ * the state it sends anything queued and reads and acts on anything
+ * received, pings the backend, checks whether a connection in progress
+ * has finished, or starts a new connection attempt. Everything is
+ * non-blocking, so each step either finishes straight away or is picked up
+ * again on a later frame.
+ *
+ * The frame counter, cloud.frame_number, is advanced here and is the
+ * clock all the connection's timers use. Servers can run faster than the
+ * default 10 frames a second (q2pro goes up to 60), so timers are worked
+ * out with SECS_TO_FRAMES() rather than assumed.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from G_RunFrame() (g_main.c), right after the mod's own frame.
  */
 void cloudFrame(void) {
     cloud.frame_number++;
@@ -266,7 +418,15 @@ void cloudFrame(void) {
 }
 
 /**
- * Local q2 server is shutting down, inform the backend too
+ * Tells the backend this server is going away (CMD_QUIT), closes the
+ * connection and frees the resolved address. CMD_QUIT is sent directly
+ * rather than left in the queue, because there won't be another frame to
+ * send it.
+ *
+ * Takes no parameters and returns nothing. Does nothing if Cloud Admin is
+ * disabled.
+ *
+ * Called from ShutdownGame() (g_main.c).
  */
 void cloudShutdown(void) {
     if (cloud.state == CLOUD_STATE_DISABLED) {
@@ -277,11 +437,20 @@ void cloudShutdown(void) {
     cloudWriteByte(CMD_QUIT);
     cloudSendMessages();
     cloudDisconnect();
-    freeaddrinfo(cloud.addr);
+    cloudFreeAddress();
 }
 
 /**
- * TCP connection was broken, reset local state in preparation for reconnecting
+ * Closes the connection from this end and sets the state back to
+ * CLOUD_STATE_DISCONNECTED, logging the disconnect. A deliberate close,
+ * unlike cloudPeerDisconnected(), so no reconnect is scheduled; cloudFrame()
+ * will reconnect once cloud.connect_retry_frame passes, unless the caller
+ * disables Cloud Admin or resets the state first.
+ *
+ * Takes no parameters and returns nothing. Does nothing if not connected.
+ *
+ * Called from cloudShutdown() and from cloudRun() for "sv !cloud
+ * disconnect" and "sv !cloud reconnect".
  */
 void cloudDisconnect(void) {
     if (cloud.state < CLOUD_STATE_CONNECTED) {
@@ -293,9 +462,20 @@ void cloudDisconnect(void) {
 }
 
 /**
- * Get the frame number at which we should try another connection. Increase the
- * interval as attempts increase without a connection. The longer the
- * connection is inactive, the more infrequently it tries to reconnect.
+ * Works out when to try connecting again after a failed attempt. The wait
+ * grows with the number of failures in a row: every 10 seconds for the
+ * first 12 attempts (about 2 minutes), then every 30 seconds, every minute
+ * from the 20th attempt and every 2 minutes from the 50th. A backend that's
+ * down for a while isn't hammered, but a short outage is still recovered
+ * from quickly.
+ *
+ * Takes no parameters.
+ *
+ * Returns the frame number (on the cloud.frame_number clock) of the next
+ * attempt.
+ *
+ * Called from cloudConnect() when a socket can't be created, and from
+ * cloudCheckConnection() when a connection attempt fails.
  */
 static uint32_t cloudNextConnectFrame(void) {
     if (cloud.connection_attempts < 12) {  // 2 minutes
@@ -310,12 +490,32 @@ static uint32_t cloudNextConnectFrame(void) {
 }
 
 /**
- * Make the connection to the backend
+ * Starts a non-blocking TCP connection to the backend, once
+ * cloud.connect_retry_frame has passed. Both message queues are emptied
+ * first, so nothing left over from an earlier connection is sent or
+ * parsed. The socket is put in non-blocking mode so connect() returns
+ * straight away instead of stalling the server until the backend answers.
+ * The state is set to CLOUD_STATE_CONNECTING, and cloudCheckConnection()
+ * finds out on a later frame whether the connection completed.
+ *
+ * Nothing happens until the DNS lookup has filled cloud.addr. If the
+ * socket can't be created, the error is logged and the next attempt is
+ * scheduled with cloudNextConnectFrame(). If it can't be made
+ * non-blocking, it's closed and tried again in 30 seconds.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudFrame() while the state is CLOUD_STATE_DISCONNECTED.
  */
 void cloudConnect(void) {
     int flags, ret;
 
     if (cloud.frame_number < cloud.connect_retry_frame) {
+        return;
+    }
+
+    // the DNS lookup thread hasn't finished yet
+    if (!cloud.addr) {
         return;
     }
 
@@ -353,8 +553,13 @@ void cloudConnect(void) {
         cloudPrintf("error setting socket to non-blocking: (%d) %s\n", errno, strerror(errno));
         logEvent(LT_CLOUDERROR, 0, NULL,
             va("cannot set socket non-blocking: %s", strerror(errno)), errno, 0.0, false);
+        errno = 0;
+        // A blocking connect() would freeze the server until the backend
+        // answers, so give up on this attempt instead.
+        closesocket(cloud.connection.socket);
         cloud.state = CLOUD_STATE_DISCONNECTED;
         cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
+        return;
     }
     errno = 0;
     ret = connect(cloud.connection.socket, cloud.addr->ai_addr, cloud.addr->ai_addrlen);
@@ -373,14 +578,28 @@ void cloudConnect(void) {
 }
 
 /**
- * Check to see if the connection initiated by cloudConnect() has finished
+ * Checks, without waiting, whether the connection cloudConnect() started
+ * has finished. select() says when the socket is writable; on Linux the
+ * socket's pending error (SO_ERROR) is checked as well, because a socket
+ * whose connection failed also shows up as writable. getpeername() then
+ * confirms a peer is really there.
+ *
+ * Once connected, the state becomes CLOUD_STATE_CONNECTED, the first ping
+ * is scheduled and cloudSayHello() starts the handshake. If select() fails,
+ * the attempt failed (Linux) or there's no peer, the socket is closed and
+ * another attempt is scheduled. If the connection simply hasn't finished yet, nothing changes
+ * and the check runs again next frame.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudFrame() while the state is CLOUD_STATE_CONNECTING.
  */
 void cloudCheckConnection(void) {
     cloud_connection_t *c;
     uint32_t ret;
     bool connected = false;
     struct sockaddr_storage addr;
-    socklen_t len;
+    socklen_t len = sizeof(addr);
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
 
@@ -396,13 +615,21 @@ void cloudCheckConnection(void) {
     if (ret) {
 
 #ifdef LINUX
-        uint32_t number;
-        socklen_t len;
+        int number = 0;
+        socklen_t optlen = sizeof(number);
 
-        len = sizeof(number);
-        getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &len);
+        getsockopt(c->socket, SOL_SOCKET, SO_ERROR, &number, &optlen);
         if (number == 0) {
             connected = true;
+        } else {
+            // the connection attempt failed (refused, unreachable...)
+            cloudPrintf("connection failed: %s\n", strerror(number));
+            logEvent(LT_CLOUDERROR, 0, NULL,
+                va("connection failed: %s", strerror(number)), number, 0.0, false);
+            closesocket(c->socket);
+            cloud.state = CLOUD_STATE_DISCONNECTED;
+            cloud.connect_retry_frame = cloudNextConnectFrame();
+            return;
         }
 #else
         if (FD_ISSET(c->socket, &c->set_w)) {
@@ -425,9 +652,7 @@ void cloudCheckConnection(void) {
     // we need to make sure it's actually connected
     if (connected) {
         errno = 0;
-        getpeername(c->socket, (struct sockaddr *)&addr, &len);
-
-        if (errno) {
+        if (getpeername(c->socket, (struct sockaddr *)&addr, &len) == -1) {
             // Snapshot errno before logEvent, which writes to a file and can
             // clobber it.
             int err = errno;
@@ -447,7 +672,26 @@ void cloudCheckConnection(void) {
 }
 
 /**
- * Send the contents of our outgoing buffer to the server
+ * Sends as much of the outgoing queue (cloud.queue_out) as the socket will
+ * take right now, without waiting. Messages are built up in the queue by
+ * the cloudWrite*() functions during a frame and sent here in one go.
+ * Whatever is sent is removed from the front of the queue, and anything
+ * the socket couldn't take stays for the next frame.
+ *
+ * Once the connection is trusted and encryption is on, the queue is
+ * encrypted with the session key just before sending. queue_out.encrypted
+ * counts the ciphertext still waiting at the front, so after a partial
+ * send the rest goes out as it is, and anything queued since waits until
+ * it has gone and is then encrypted in its turn.
+ *
+ * If the backend has closed its end (EPIPE), cloudPeerDisconnected()
+ * handles the lost connection.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudFrame() every frame while connected, and directly from
+ * cloudShutdown() and cloudVerifyServerAuth() when a message can't wait
+ * for the next frame.
  */
 void cloudSendMessages(void) {
     if (cloud.state < CLOUD_STATE_CONNECTING) {
@@ -458,16 +702,20 @@ void cloudSendMessages(void) {
         return;
     }
 
-    uint32_t ret;
+    int ret;
+    size_t len;
+    bool encrypt;
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
     cloud_connection_t *c;
-    message_queue_t *q, e;
+    message_queue_t *q;
+    static byte cipher[QUEUE_SIZE];
 
     c = &cloud.connection;
     q = &cloud.queue_out;
+    encrypt = c->encrypted && c->have_keys && cloud.state == CLOUD_STATE_TRUSTED;
 
-    while (true) {
+    while (q->length) {
         FD_ZERO(&c->set_w);
         FD_SET(c->socket, &c->set_w);
 
@@ -476,50 +724,79 @@ void cloudSendMessages(void) {
         if (ret == -1) {
             perror("send select");
             errno = 0;
+            break;
         }
 
-        // socket write buffer is ready, send
-        if (ret) {
-            if (c->encrypted && c->have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
-                q2a_memset(&e, 0, sizeof(message_queue_t));
-                e.length = cryptoSymmetricEncrypt(e.data, q->data, q->length);
-                q2a_memset(q, 0, sizeof(message_queue_t));
-                q2a_memcpy(q->data, e.data, e.length);
-                q->length = e.length;
-            }
-            ret = send(c->socket, (const char *) q->data, q->length, 0);
-            if (ret == -1) {
-                if (errno == EPIPE) {
-                    gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
-                    cloudPeerDisconnected();
-                    errno = 0;
-                    break;
-                }
-                perror("send error");
-                errno = 0;
-            } else {
-                // shift off the data we just sent
-                q2a_memmove(q->data, q->data + ret, q->length - ret);
-                q->length -= ret;
-            }
-        } else {
+        // socket write buffer is full, try again next frame
+        if (ret == 0) {
             break;
         }
-        // processed the whole queue, we're done for now
-        if (!q->length) {
+
+        // Encrypt the queue only once all earlier ciphertext has gone. If
+        // send() takes just part of it, the rest is already encrypted and
+        // must go out as it is; encrypting it again would garble it. The
+        // writes stop at QUEUE_WRITE_MAX, so the padding always fits.
+        if (encrypt && !q->encrypted) {
+            len = cryptoSymmetricEncrypt(cipher, q->data, q->length);
+            if (len == 0 || len > QUEUE_SIZE) {
+                cloudDPrintf("encryption failed, dropping %" PRIz " bytes\n", q->length);
+                q->length = 0;
+                break;
+            }
+            q2a_memcpy(q->data, cipher, len);
+            q->length = len;
+            q->encrypted = len;
+        }
+
+        // When encrypting, anything queued after the ciphertext is still
+        // plain text and waits for the next pass.
+        len = encrypt ? q->encrypted : q->length;
+        ret = send(c->socket, (const char *) q->data, len, 0);
+        if (ret == -1) {
+            if (errno == EPIPE) {
+                gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
+                cloudPeerDisconnected();
+            } else {
+                perror("send error");
+            }
+            errno = 0;
             break;
+        }
+
+        // shift off the data we just sent
+        q2a_memmove(q->data, q->data + ret, q->length - ret);
+        q->length -= ret;
+        if (encrypt) {
+            q->encrypted -= ret;
         }
     }
 }
 
 /**
- * Accept any incoming messages from the server
+ * Reads everything the backend has sent so far into the incoming queue
+ * (cloud.queue_in), without waiting, then hands it to cloudParseMessage().
+ * Reading stops when there's nothing more waiting or the queue is full;
+ * anything left stays in the socket for the next frame.
+ *
+ * Once the connection is trusted and encryption is on, each chunk read is
+ * decrypted with the session key as it arrives. Each chunk is assumed to
+ * hold whole encrypted messages; the protocol has no framing to tell
+ * otherwise.
+ *
+ * The backend closing the connection, or a read error, is handled by
+ * cloudPeerDisconnected().
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudFrame() every frame while connected.
  */
 void cloudReadMessages(void) {
-    uint32_t ret;
+    int ret;
+    size_t declen;
     byte temp_iv[DIGEST_LEN];
     struct timeval tv;
-    message_queue_t *in, dec;
+    message_queue_t *in;
+    static byte dec[QUEUE_SIZE];
 
     if (cloud.state < CLOUD_STATE_CONNECTING) {
         return;
@@ -564,20 +841,33 @@ void cloudReadMessages(void) {
                     cloudPeerDisconnected();
                     return;
                 }
+                // interrupted before anything was read, try again
                 errno = 0;
+                continue;
+            }
+
+            // Decrypt if necessary. Only what this recv() just added is
+            // decrypted; anything before it in the queue is already plain
+            // text from an earlier pass round this loop.
+            if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
+                byte *chunk = in->data + in->length;
+                bool newiv = ret >= AES_IV_LEN;
+
+                if (newiv) {
+                    q2a_memcpy(temp_iv, chunk, AES_IV_LEN);
+                }
+                declen = cryptoSymmetricDecrypt(dec, chunk, ret);
+                if (declen > (size_t) ret) {
+                    declen = 0;
+                }
+                q2a_memset(chunk, 0, ret);
+                q2a_memcpy(chunk, dec, declen);
+                ret = (int) declen;
+                if (newiv) {
+                    q2a_memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
+                }
             }
             in->length += ret;
-
-            // decrypt if necessary
-            if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
-                q2a_memcpy(temp_iv, in->data, AES_IV_LEN);
-                q2a_memset(&dec, 0, sizeof(message_queue_t));
-                dec.length = cryptoSymmetricDecrypt(dec.data, in->data, in->length);
-                q2a_memset(in->data, 0, in->length);
-                q2a_memcpy(in->data, dec.data, dec.length);
-                in->length = dec.length;
-                q2a_memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
-            }
         } else {
             // no data has been sent to read
             break;
@@ -587,7 +877,16 @@ void cloudReadMessages(void) {
 }
 
 /**
- * The server has let us know we are trusted.
+ * Marks the connection as trusted, after the backend has confirmed this
+ * server passed authentication (SCMD_TRUSTED). From here on, game events
+ * are sent, backend commands are accepted, and traffic is encrypted if
+ * encryption is on. This is also when the connection is logged as made,
+ * rather than when the socket opened, because it isn't usable until now.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudParseMessage() on SCMD_TRUSTED, which then sends the
+ * current map and player list.
  */
 void cloudTrusted(void) {
     cloudDPrintf("connection trusted\n");
@@ -602,7 +901,15 @@ void cloudTrusted(void) {
 }
 
 /**
- * Parse a newly received message and act accordingly
+ * Works through everything in the incoming queue, one command at a time.
+ * Each command starts with a byte saying what it is (an SCMD_* value),
+ * followed by its own data, which the matching handler reads. Unknown
+ * command bytes are skipped. Parsing stops if a handler reads past the end
+ * of the data received. The queue is emptied afterwards.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudReadMessages() after each read.
  */
 void cloudParseMessage(void) {
     message_queue_t *msg = &cloud.queue_in;
@@ -616,7 +923,8 @@ void cloudParseMessage(void) {
         return;
     }
 
-    while (msg->index < msg->length) {
+    msg->overrun = false;
+    while (msg->index < msg->length && !msg->overrun) {
         cmd = cloudReadByte();
         switch (cmd) {
         case SCMD_PONG:
@@ -651,12 +959,31 @@ void cloudParseMessage(void) {
         }
     }
 
+    if (msg->overrun) {
+        cloudDPrintf("message from backend was cut short, ignored the rest\n");
+    }
+
     // reset queue back to zero
     q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
 }
 
 /**
- * Is a a digital signature valid?
+ * Checks an RSA signature: whether MsgHash is a valid SHA-256 signature
+ * of Msg made with the private key matching rsa.
+ *
+ * rsa:        the signer's public key. Ownership passes to an EVP_PKEY made
+ *             here, so the caller mustn't free it.
+ * MsgHash:    the signature to check.
+ * MsgHashLen: length of MsgHash.
+ * Msg:        the message that was signed.
+ * MsgLen:     length of Msg.
+ * Authentic:  set to true if the signature is valid, false otherwise.
+ *
+ * Returns true if the check could be carried out (whatever its answer, which
+ * is in Authentic), or false if OpenSSL failed.
+ *
+ * Nothing calls this at the moment; the handshake proves identity with
+ * encrypted challenges instead (see cloudVerifyServerAuth()).
  */
 bool RSAVerifySignature( RSA* rsa,
                          unsigned char* MsgHash,
@@ -694,12 +1021,31 @@ bool RSAVerifySignature( RSA* rsa,
 }
 
 /**
- * Authenticate the backend
+ * Handles the backend's answer to our hello (SCMD_HELLOACK), the middle of
+ * the handshake that proves each side is who it says it is. The answer is
+ * encrypted with this server's public key, so only we can read it. Inside
+ * are:
  *
- * 1. Decrypt the nonce sent back from the server and check if it matches
- * 2. If the encryption is requested, parse the AES 128 key and IV
- * 3. Read the plaintext nonce from the server, encrypt and send back
- *    to auth the client
+ * 1. A hash of the random challenge we sent in cloudSayHello(). Only the
+ *    real backend could have decrypted that challenge, so a matching hash
+ *    proves the backend's identity.
+ * 2. A random challenge from the backend, which we hash and send back
+ *    encrypted with the backend's public key (CMD_AUTH), proving our
+ *    identity in turn.
+ * 3. When encryption is on, the AES session key and IV used for all
+ *    traffic after this.
+ *
+ * On a mismatch the failure is logged, and after AUTH_FAIL_LIMIT failures
+ * in a row Cloud Admin is disabled rather than retrying forever against a
+ * backend that can't prove itself.
+ *
+ * Takes no parameters; reads the answer from the incoming queue.
+ *
+ * Returns true if the backend was authenticated and our answer was sent,
+ * false if its answer was cut short, too large or too small, couldn't be
+ * decrypted or didn't match.
+ *
+ * Called from cloudParseMessage() on SCMD_HELLOACK.
  */
 bool cloudVerifyServerAuth(void) {
     cloud_connection_t *c = &cloud.connection;
@@ -722,10 +1068,24 @@ bool cloudVerifyServerAuth(void) {
         return false;
     }
     cloudReadData(response, resp_len);
+    if (cloud.queue_in.overrun) {
+        cloudDPrintf("server auth response cut short, dropping\n");
+        return false;
+    }
     q2a_memset(response_plain, 0, sizeof(response_plain));
-    dec_len = cryptoPrivateDecrypt(response_plain, response, sizeof(response));
+    dec_len = cryptoPrivateDecrypt(response_plain, response, resp_len);
     if (dec_len == 0) {
         cloudDPrintf("zero bytes decrypted for server authentication\n");
+        return false;
+    }
+
+    // make sure every part read below was actually sent
+    size_t needed = DIGEST_LEN + CHALLENGE_LEN;
+    if (cloud_config.encryption) {
+        needed += AESKEY_LEN + AES_IV_LEN;
+    }
+    if (dec_len < needed) {
+        cloudDPrintf("server auth response too short (%" PRIz " bytes), dropping\n", dec_len);
         return false;
     }
 
@@ -750,9 +1110,13 @@ bool cloudVerifyServerAuth(void) {
 
         c->have_keys = true;
 
-        // reuse encrypt/decrypt contexts
-        c->e_ctx = EVP_CIPHER_CTX_new();
-        c->d_ctx = EVP_CIPHER_CTX_new();
+        // reuse encrypt/decrypt contexts, creating them the first time
+        if (!c->e_ctx) {
+            c->e_ctx = EVP_CIPHER_CTX_new();
+        }
+        if (!c->d_ctx) {
+            c->d_ctx = EVP_CIPHER_CTX_new();
+        }
     }
 
     // to compare with what server sent back to us
@@ -798,10 +1162,16 @@ bool cloudVerifyServerAuth(void) {
 }
 
 /**
- * Server sent over a command. It unconditionally executes any command the
- * backend sends over. Generally this is a bad, but since we can't get here
- * unless the connection is authenticated, it's probably safe enough. Maybe
- * add some sanity checks later.
+ * Runs a console command sent by the backend (SCMD_COMMAND), exactly as
+ * if it had been typed at the server console. That's how the backend
+ * manages the server remotely. Commands are only accepted once the
+ * connection is trusted, which is the only check: whatever a trusted
+ * backend sends is run.
+ *
+ * Takes no parameters and returns nothing; reads the command from the
+ * incoming queue.
+ *
+ * Called from cloudParseMessage() on SCMD_COMMAND.
  */
 void cloudParseCommand(void) {
     char *cmd;
@@ -810,11 +1180,21 @@ void cloudParseCommand(void) {
         return;
     }
     cmd = cloudReadString();
+    // a command cut short could do something other than what was sent
+    if (cloud.queue_in.overrun) {
+        return;
+    }
     gi.AddCommandString(cmd);
 }
 
 /**
- * Backend responded to our PING
+ * Handles the backend's answer to a ping (SCMD_PONG): clears the
+ * outstanding ping and the missed-ping count, so cloudPing() knows the
+ * connection is alive.
+ *
+ * Takes no parameters and returns nothing.
+ *
+ * Called from cloudParseMessage() on SCMD_PONG.
  */
 void cloudParsePong(void) {
     cloud.ping.waiting = false;
@@ -822,20 +1202,42 @@ void cloudParsePong(void) {
 }
 
 /**
- * The server sent us new symmetric encryption keys, parse them and
- * start using them
+ * Replaces the AES session key and IV with new ones from the backend
+ * (SCMD_KEY). Changing keys now and then limits how much traffic is ever
+ * encrypted with any one key. They take effect from the next message sent
+ * or received.
+ *
+ * Takes no parameters and returns nothing; reads the key and IV from the
+ * incoming queue.
+ *
+ * Called from cloudParseMessage() on SCMD_KEY.
  */
 void cloudRotateKeys(void) {
     cloud_connection_t *c;
+    byte key[AESKEY_LEN], iv[AESBLOCK_LEN];
     c = &cloud.connection;
 
-    cloudReadData(c->session_key, AESKEY_LEN);
-    cloudReadData(c->initial_value, AESBLOCK_LEN);
+    // read into temporaries so a short message can't leave half a key
+    cloudReadData(key, sizeof(key));
+    cloudReadData(iv, sizeof(iv));
+    if (cloud.queue_in.overrun) {
+        return;
+    }
+    q2a_memcpy(c->session_key, key, sizeof(key));
+    q2a_memcpy(c->initial_value, iv, sizeof(iv));
 }
 
 /**
- * There was a sudden disconnection mid-stream. Reconnect after an appropriate
- * delay.
+ * Cleans up after the connection was lost unexpectedly: the backend closed
+ * it, a read or send failed, or too many pings went unanswered. The
+ * socket is closed, the session keys are wiped, the disconnect is logged
+ * and counted, and a reconnect is scheduled for 10 seconds plus a random
+ * extra delay. The random part keeps many servers that lost the same
+ * backend at once from all reconnecting at the same moment.
+ *
+ * Takes no parameters and returns nothing. Does nothing if not connected.
+ *
+ * Called from cloudPing(), cloudSendMessages() and cloudReadMessages().
  */
 void cloudPeerDisconnected(void) {
     uint8_t secs;
@@ -872,9 +1274,16 @@ void cloudPeerDisconnected(void) {
 }
 
 /**
- * Send info about all the players connected. First send the number of players
- * to follow, then for each: the player id followed by the userinfo and finally
- * the version string for the client the player is using.
+ * Queues a CMD_PLAYERLIST message describing every connected player, so
+ * the backend has a full picture of the server. It holds the number of
+ * players, then for each one their slot number, raw userinfo string and
+ * client version string.
+ *
+ * Takes no parameters and returns nothing. Does nothing unless the
+ * connection is trusted.
+ *
+ * Called from cloudParseMessage(): right after the connection becomes
+ * trusted, and whenever the backend asks for it (SCMD_GETPLAYERS).
  */
 void cloudPlayerList(void) {
     uint8_t count, i;
@@ -902,12 +1311,19 @@ void cloudPlayerList(void) {
 }
 
 /**
- * Immediately after connecting, we have to say hi, giving the server our
- * information. Once the server acknowledges we can start sending game data.
+ * Queues the first message of the handshake (CMD_HELLO), sent as soon as
+ * the connection opens. It tells the backend who this server is: its
+ * UUID, q2admin revision, game port, player slots and whether it wants
+ * encryption. It ends with a random challenge encrypted with the
+ * backend's public key. Only the real backend can decrypt it, and its
+ * reply is checked by cloudVerifyServerAuth().
  *
- * The last section of data is a random nonce. The server will encrypt this
- * and send it back to us. We then decrypt and check if it matches, if so,
- * the server is who we think it is and is considered trusted.
+ * The challenge is kept in cloud.connection.cl_nonce for that check.
+ *
+ * Takes no parameters and returns nothing. Does nothing if the connection
+ * is already trusted.
+ *
+ * Called from cloudCheckConnection() once the connection completes.
  */
 void cloudSayHello(void) {
     if (cloud.state == CLOUD_STATE_TRUSTED) {
@@ -933,7 +1349,17 @@ void cloudSayHello(void) {
 }
 
 /**
- * The server replied negatively to something
+ * Handles an error reported by the backend (SCMD_ERROR). The message holds
+ * the player it's about (-1 if none), an error number and a text reason.
+ * The error is logged, and the reason is shown to that player if they're
+ * still connected, otherwise on the server console. Error numbers 200 and
+ * above are fatal: the connection is closed and Cloud Admin is disabled
+ * until it's started again by hand.
+ *
+ * Takes no parameters and returns nothing; reads the error from the
+ * incoming queue.
+ *
+ * Called from cloudParseMessage() on SCMD_ERROR.
  */
 void cloudParseError(void) {
     int client_id;
@@ -948,6 +1374,9 @@ void cloudParseError(void) {
     client_id = (int8_t) cloudReadByte();
     reason_id = cloudReadByte();
     reason = cloudReadString();
+    if (cloud.queue_in.overrun) {
+        return;
+    }
 
     logEvent(LT_CLOUDERROR, 0, NULL, reason ? reason : "", reason_id, 0.0, false);
 
@@ -964,7 +1393,8 @@ void cloudParseError(void) {
     if (reason_id >= 200) {
         closesocket(cloud.connection.socket);
         cloud.state = CLOUD_STATE_DISABLED;
-        freeaddrinfo(cloud.addr);
+        cloud.connection.have_keys = false;
+        cloudFreeAddress();
         logEvent(LT_CLOUDDISCONNECT, 0, NULL,
             va("disabled by server: %s", reason ? reason : ""),
             cloud.disconnect_count, 0.0, false);
@@ -972,8 +1402,17 @@ void cloudParseError(void) {
 }
 
 /**
- * q2pro uses "net_port" while most other servers use "port". This
- * returns the value regardless.
+ * Finds the UDP port this game server is listening on. Most servers keep
+ * it in the "port" cvar, but q2pro uses "net_port", so both are checked,
+ * falling back to the Quake 2 default of 27910.
+ *
+ * Takes no parameters.
+ *
+ * Returns the port number.
+ *
+ * Called from SpawnEntities() (g_init.c) to fill cloud.port, which is sent
+ * in the hello, and from expandOutPortNum() (g_log.c) for "%p" in log file
+ * names.
  */
 uint16_t getport(void) {
     static cvar_t *port;
@@ -994,18 +1433,65 @@ uint16_t getport(void) {
 }
 
 /**
- * Read a single byte from the message buffer
+ * Checks there are at least n more bytes of received data to read. If not,
+ * the incoming queue is marked as overrun and its position moved to the
+ * end, so the read returns zeros instead of going past the data received,
+ * and cloudParseMessage() stops. Handlers check queue_in.overrun before
+ * acting on what they read, so a message cut short is ignored rather than
+ * half-applied.
+ *
+ * n: how many bytes the caller is about to read.
+ *
+ * Returns true if they're all there.
+ *
+ * Called from the cloudRead*() functions.
+ */
+static bool cloudReadAvailable(size_t n) {
+    message_queue_t *q = &cloud.queue_in;
+
+    if (q->index > q->length || n > q->length - q->index) {
+        q->index = q->length;
+        q->overrun = true;
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Reads one byte from the incoming queue and moves past it. This and the
+ * other cloudRead*() functions are how the message handlers take their
+ * data apart.
+ *
+ * Takes no parameters.
+ *
+ * Returns the byte, or 0 if there's no more data (see
+ * cloudReadAvailable()).
+ *
+ * Called from the message handlers, from cloudParseMessage() for each
+ * command byte, and from cloudReadString().
  */
 uint8_t cloudReadByte(void) {
+    if (!cloudReadAvailable(1)) {
+        return 0;
+    }
     unsigned char b = cloud.queue_in.data[cloud.queue_in.index++];
     return b & 0xff;
 }
 
 /**
- * Write a single byte to the message buffer
+ * Adds one byte to the outgoing queue. This and the other cloudWrite*()
+ * functions are how outgoing messages are built; cloudSendMessages() sends
+ * the queue on the next frame.
+ *
+ * b: the byte to add.
+ *
+ * Returns nothing. If the queue is full (QUEUE_WRITE_MAX, which leaves room
+ * for encryption padding), the byte is dropped with a debug message.
+ *
+ * Called throughout this file wherever a message is built.
  */
 void cloudWriteByte(uint8_t b) {
-    if (cloud.queue_out.length >= QUEUE_SIZE) {
+    if (cloud.queue_out.length >= QUEUE_WRITE_MAX) {
         cloudDPrintf("outgoing queue full, dropping byte\n");
         return;
     }
@@ -1013,20 +1499,38 @@ void cloudWriteByte(uint8_t b) {
 }
 
 /**
- * Read a short (2 bytes) from the message buffer
+ * Reads a 2-byte number from the incoming queue and moves past it.
+ * Numbers on the wire are little-endian (low byte first).
+ *
+ * Takes no parameters.
+ *
+ * Returns the number, or 0 if fewer than 2 bytes are left.
+ *
+ * Called from cloudVerifyServerAuth() for the length of the backend's
+ * answer.
  */
 uint16_t cloudReadShort(void) {
     message_queue_t *q = &cloud.queue_in;
+    if (!cloudReadAvailable(2)) {
+        return 0;
+    }
     int s = q->data[q->index] + (q->data[q->index + 1] << 8);
     q->index += 2;
     return s & 0xffff;
 }
 
 /**
- * Write 2 bytes to the message buffer
+ * Adds a 2-byte number to the outgoing queue, little-endian (low byte
+ * first).
+ *
+ * s: the number to add.
+ *
+ * Returns nothing. If there isn't room for both bytes, neither is added.
+ *
+ * Called from cloudSayHello() and cloudVerifyServerAuth().
  */
 void cloudWriteShort(uint16_t s) {
-    if (cloud.queue_out.length + 2 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + 2 > QUEUE_WRITE_MAX) {
         cloudDPrintf("outgoing queue full, dropping short\n");
         return;
     }
@@ -1035,10 +1539,20 @@ void cloudWriteShort(uint16_t s) {
 }
 
 /**
- * Read 4 bytes from the message buffer
+ * Reads a 4-byte number from the incoming queue, little-endian, and moves
+ * past it.
+ *
+ * Takes no parameters.
+ *
+ * Returns the number, or 0 if fewer than 4 bytes are left.
+ *
+ * Nothing calls this at the moment; it's here to match cloudWriteLong().
  */
 int32_t cloudReadLong(void) {
     message_queue_t *q = &cloud.queue_in;
+    if (!cloudReadAvailable(4)) {
+        return 0;
+    }
     int num = q->data[q->index] + (q->data[q->index + 1] << 8) +
             (q->data[q->index + 2] << 16) + (q->data[q->index + 3] << 24);
     q->index += 4;
@@ -1046,10 +1560,17 @@ int32_t cloudReadLong(void) {
 }
 
 /**
- * Write 4 bytes (long) to the message buffer
+ * Adds a 4-byte number to the outgoing queue, little-endian (low byte
+ * first).
+ *
+ * i: the number to add.
+ *
+ * Returns nothing. If there isn't room for all 4 bytes, none are added.
+ *
+ * Called from cloudSayHello().
  */
 void cloudWriteLong(uint32_t i) {
-    if (cloud.queue_out.length + 4 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + 4 > QUEUE_WRITE_MAX) {
         cloudDPrintf("outgoing queue full, dropping long\n");
         return;
     }
@@ -1060,7 +1581,17 @@ void cloudWriteLong(uint32_t i) {
 }
 
 /**
- * Write an arbitrary amount of data from the message buffer
+ * Adds a block of raw bytes to the outgoing queue, such as an encrypted
+ * challenge. Unlike cloudWriteString(), no terminator or length is added,
+ * so the reader has to know the size already.
+ *
+ * data:   the bytes to add.
+ * length: how many bytes.
+ *
+ * Returns nothing. Bytes that don't fit are dropped one by one, so a block
+ * can be cut short if the queue fills up.
+ *
+ * Called from cloudSayHello() and cloudVerifyServerAuth().
  */
 void cloudWriteData(const void *data, size_t length) {
     uint32_t i;
@@ -1070,7 +1601,21 @@ void cloudWriteData(const void *data, size_t length) {
 }
 
 /**
- * Read a null terminated string from the buffer
+ * Reads a NUL-terminated string from the incoming queue and moves past it.
+ * Reading stops at the end of the received data, or after
+ * MAX_STRING_CHARS - 1 characters, so a string cut short or never
+ * terminated can't overrun either buffer. A string that's too long is
+ * truncated and the rest skipped; one with no terminator before the end of
+ * the data marks the queue as overrun (see cloudReadAvailable()). The top bit of each character is
+ * cleared, which turns Quake 2's highlighted text into plain text.
+ *
+ * Takes no parameters.
+ *
+ * Returns the string in a static buffer, which the next call overwrites.
+ * Copy it if it has to be kept.
+ *
+ * Called from the handlers for backend commands, errors and messages to
+ * players.
  */
 char *cloudReadString(void) {
     static char str[MAX_STRING_CHARS];
@@ -1096,12 +1641,40 @@ char *cloudReadString(void) {
     }
     if (terminated) {
         cloudReadByte(); // consume the actual NUL terminator
+    } else if (q->index >= q->length) {
+        // ran out of data before the terminator: the message was cut short
+        q->overrun = true;
+    } else {
+        // Too long for str[]. Skip the rest of it, or it would be parsed as
+        // the next command.
+        while (q->index < q->length && q->data[q->index] != 0) {
+            q->index++;
+        }
+        if (q->index < q->length) {
+            q->index++;
+        } else {
+            q->overrun = true;
+        }
     }
     return str;
 }
 
 
-// printf-ish
+/**
+ * Formats a string printf-style and adds it to the outgoing queue,
+ * followed by a NUL terminator. Text longer than MAX_MSG_LEN - 1
+ * characters is cut short.
+ *
+ * fmt: printf-style format.
+ * ...: values for fmt.
+ *
+ * Returns nothing. If the whole string won't fit in the queue, an empty
+ * string (just the terminator) is added instead, so the reader still finds
+ * a string where it expects one.
+ *
+ * Called wherever a message includes text: player info, chat, map names
+ * and player commands.
+ */
 void cloudWriteString(const char *fmt, ...) {
     
     uint16_t i;
@@ -1126,7 +1699,7 @@ void cloudWriteString(const char *fmt, ...) {
     // shared outgoing queue's actual capacity. Checked as addition, never
     // subtraction, so it can't underflow if cloud.queue_out.length is ever
     // unexpectedly large.
-    if (cloud.queue_out.length + len + 1 > QUEUE_SIZE) {
+    if (cloud.queue_out.length + len + 1 > QUEUE_WRITE_MAX) {
         cloudWriteByte(0);
         return;
     }
@@ -1139,21 +1712,40 @@ void cloudWriteString(const char *fmt, ...) {
 }
 
 /**
- * Read an arbitrary amount of data from the message buffer
+ * Copies a block of raw bytes from the incoming queue and moves past it,
+ * the reverse of cloudWriteData().
+ *
+ * out: where to copy the bytes. Must hold at least len bytes.
+ * len: how many bytes to copy.
+ *
+ * Returns nothing. If fewer than len bytes are left, out is zero-filled
+ * instead.
+ *
+ * Called from cloudVerifyServerAuth() and cloudRotateKeys().
  */
 void cloudReadData(void *out, size_t len) {
+    if (!cloudReadAvailable(len)) {
+        q2a_memset(out, 0, len);
+        return;
+    }
     q2a_memcpy(out, &(cloud.queue_in.data[cloud.queue_in.index]), len);
     cloud.queue_in.index += len;
 }
 
 
 /**
- * Report when a player connects. The Cloud Admin server will make decisions
- * based on information like VPN status and client version string, so this
- * data needs to be available before sending this message.
+ * Tells the backend a player has joined (CMD_CONNECT), with their slot
+ * number, raw userinfo and client version string. The backend makes
+ * decisions from things like the client version, so this is sent only
+ * once that's known.
  *
- * Called from doClientCommand() upon receiving the client version string. This
- * can be delayed slightly, so we can't call this from ClientConnect() or even
+ * ent: the player who joined.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from doClientCommand() (g_cmd.c) when the client's version reply
+ * arrives and the player has passed the ban checks. That reply can take a
+ * moment, which is why this isn't sent from ClientConnect() or
  * ClientBegin().
  */
 void cloudPlayerConnect(edict_t *ent) {
@@ -1169,7 +1761,13 @@ void cloudPlayerConnect(edict_t *ent) {
 }
 
 /**
- * Called when a player disconnects
+ * Tells the backend a player has left (CMD_DISCONNECT), by slot number.
+ *
+ * ent: the player who left.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from ClientDisconnect() (g_init.c).
  */
 void cloudPlayerDisconnect(edict_t *ent) {
     int8_t cl = getEntOffset(ent) - 1;
@@ -1182,8 +1780,19 @@ void cloudPlayerDisconnect(edict_t *ent) {
 }
 
 /**
- * Called for every broadcast print (bprintf), but only
- * on dedicated servers
+ * Forwards a line of server output, such as chat or frag messages, to the
+ * backend (CMD_PRINT), so it can be followed remotely. Only sent when the
+ * chat flag (CFL_CHAT) is set in cloud_flags.
+ *
+ * level: the print level the text was printed at (PRINT_CHAT and so on).
+ * text:  the text.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from bprintf_internal() for broadcast prints, and from
+ * cprintf_internal() for prints to the server console (both g_cmd.c).
+ * Only a dedicated server's console prints arrive there, so this only
+ * happens on dedicated servers.
  */
 void cloudPrint(uint8_t level, char *text) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1198,7 +1807,17 @@ void cloudPrint(uint8_t level, char *text) {
 }
 
 /**
- * Called when a player issues the teleport command
+ * Passes a player's teleport request to the backend (a CMD_COMMAND with
+ * CMD_COMMAND_TELEPORT). The backend knows the other servers, so it
+ * answers with either the list of servers or the address to go to. Only
+ * sent when the teleport flag (CFL_TELEPORT) is set in cloud_flags.
+ *
+ * client_id: slot number of the player asking.
+ * location:  the destination they gave, or empty to ask for the list.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from Cmd_Teleport_f() once it has checked the request.
  */
 void cloudTeleport(uint8_t client_id, char *location) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1214,8 +1833,17 @@ void cloudTeleport(uint8_t client_id, char *location) {
 }
 
 /**
- * Called when a player changes part of their userinfo.
- * ex: name, skin, gender, rate, etc
+ * Tells the backend a player's userinfo has changed (CMD_PLAYERUPDATE),
+ * for example their name, skin or rate, sending their slot number, raw
+ * userinfo and client version string.
+ *
+ * cl: slot number of the player.
+ * ui: their new userinfo. Not used; proxyinfo[cl].userinfo.raw, which the
+ *     caller has just updated, is sent instead.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from ClientUserinfoChanged() (g_init.c).
  */
 void cloudPlayerUpdate(uint8_t cl, const char *ui) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1228,7 +1856,17 @@ void cloudPlayerUpdate(uint8_t cl, const char *ui) {
 }
 
 /**
- * Called when a player issues the invite command
+ * Passes a player's invite to the backend (a CMD_COMMAND with
+ * CMD_COMMAND_INVITE), which advertises it to players on other servers to
+ * get them to join this one. Only sent when the invite flag (CFL_INVITE) is
+ * set in cloud_flags.
+ *
+ * cl:   slot number of the player sending the invite.
+ * text: an optional message to go with it.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from Cmd_Invite_f().
  */
 void cloudInvite(uint8_t cl, const char *text) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1244,7 +1882,17 @@ void cloudInvite(uint8_t cl, const char *text) {
 }
 
 /**
- * Called when a player issues the whois command
+ * Passes a player's whois lookup to the backend (a CMD_COMMAND with
+ * CMD_COMMAND_WHOIS), which can look a name up across every server it
+ * knows. Only sent when the whois flag (CFL_WHOIS) is set in cloud_flags.
+ *
+ * cl:   slot number of the player asking.
+ * name: the name to look up.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Nothing calls this at the moment; "whois" is answered locally by
+ * g_whois.c.
  */
 void cloudWhois(uint8_t cl, const char *name) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1260,7 +1908,17 @@ void cloudWhois(uint8_t cl, const char *name) {
 }
 
 /**
- * Called when a player dies
+ * Tells the backend one player killed another (CMD_FRAG), for stats. Only
+ * sent when the frags flag (CFL_FRAGS) is set in cloud_flags.
+ *
+ * victim:   slot number of the player killed.
+ * attacker: slot number of the killer.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Nothing calls this at the moment. Frags only reach the backend as text,
+ * through cloudPrint(); the note in bprintf_internal() (g_cmd.c) explains
+ * why working out who killed whom is hard from there.
  */
 void cloudFrag(uint8_t victim, uint8_t attacker) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1275,7 +1933,14 @@ void cloudFrag(uint8_t victim, uint8_t attacker) {
 }
 
 /**
- * Called when the map changes
+ * Tells the backend which map the server is now on (CMD_MAP).
+ *
+ * mapname: the map's name.
+ *
+ * Returns nothing. Does nothing unless the connection is trusted.
+ *
+ * Called from SpawnEntities() (g_init.c) on each map change, and from
+ * cloudParseMessage() right after the connection becomes trusted.
  */
 void cloudMap(const char *mapname) {
     if (cloud.state < CLOUD_STATE_TRUSTED) {
@@ -1287,7 +1952,15 @@ void cloudMap(const char *mapname) {
 
 
 /**
- * Write something to a client
+ * Prints a message from the backend to one player (SCMD_SAYCLIENT), for
+ * example the answer to their teleport request. The message holds the
+ * player's slot number, the print level and the text. An out-of-range slot
+ * number or an empty slot is ignored.
+ *
+ * Takes no parameters and returns nothing; reads the message from the
+ * incoming queue.
+ *
+ * Called from cloudParseMessage() on SCMD_SAYCLIENT.
  */
 void cloudSayClient(void) {
     uint8_t client_id;
@@ -1301,6 +1974,9 @@ void cloudSayClient(void) {
     client_id = cloudReadByte();
     level = cloudReadByte();
     string = cloudReadString();
+    if (cloud.queue_in.overrun) {
+        return;
+    }
     if (client_id >= cloud.maxclients) {
         return;
     }
@@ -1312,7 +1988,16 @@ void cloudSayClient(void) {
 }
 
 /**
- * Say something to everyone on the server
+ * Prints a message from the backend to every player (SCMD_SAYALL). The
+ * message holds the print level and the text. Each player is printed to
+ * separately rather than with a broadcast. A broadcast also goes to the
+ * server console, which cloudPrint() forwards to the backend, so the
+ * message would be sent straight back.
+ *
+ * Takes no parameters and returns nothing; reads the message from the
+ * incoming queue.
+ *
+ * Called from cloudParseMessage() on SCMD_SAYALL.
  */
 void cloudSayAll(void) {
     uint8_t i, level;
@@ -1323,18 +2008,17 @@ void cloudSayAll(void) {
     }
     level = cloudReadByte();
     string = cloudReadString();
+    if (cloud.queue_in.overrun) {
+        return;
+    }
     for (i=0; i<cloud.maxclients; i++) {
         if (!proxyinfo[i].inuse) {
             continue;
         }
 
-        /**
-         * This way we send directly to the clients and
-         * not to the dedicated server console triggering
-         * a print to be sent back to the q2a server.
-         *
-         * Using gi.bprintf() instead would cause that.
-         */
+        // Print to each client directly rather than with gi.bprintf(),
+        // which would also print to the server console and so send the
+        // message straight back to the backend through cloudPrint().
         gi.cprintf(
                 proxyinfo[i].ent,
                 level,
@@ -1345,7 +2029,16 @@ void cloudSayAll(void) {
 }
 
 /**
- * Format a string time_spec based on a quantity of frames
+ * Formats a number of seconds as "hh:mm:ss", with "1 day, " or "N days, "
+ * in front once it reaches a day, for "sv !cloud status".
+ *
+ * out:  where to write the text. Not bounds checked; it needs room for
+ *       the day count plus 20 characters, and callers use 25 bytes.
+ * secs: the number of seconds.
+ *
+ * Returns nothing.
+ *
+ * Called from cloudRun().
  */
 static void secsToTime(char *out, uint32_t secs) {
     uint32_t    days = 0,
@@ -1375,12 +2068,30 @@ static void secsToTime(char *out, uint32_t secs) {
 }
 
 /**
- * Put the current IP address and ports of the connected cloud admin server into dst
+ * Gets the address and ports of the backend connection for display, the
+ * address in brackets ("[192.0.2.1]" or "[2001:db8::1]").
  *
- * dst needs to be at least INET6_ADDRSTRLEN in size
+ * remoteip:   where to write the address.
+ * size:       size of remoteip. INET6_ADDRSTRLEN + 2 always fits.
+ * remoteport: set to the backend's port.
+ * localport:  set to this end's port, or 0 if it can't be found.
+ *
+ * Returns nothing.
+ *
+ * Called from cloudRun() for "sv !cloud status".
  */
-void cloudGetIP(char *remoteip, int *remoteport, int *localport) {
+static void cloudGetIP(char *remoteip, size_t size, int *remoteport, int *localport) {
     char addr[INET6_ADDRSTRLEN];
+    struct sockaddr_storage local;
+    socklen_t len = sizeof(local);
+
+    // the lookup thread hasn't finished, or the address was freed
+    if (!cloud.addr) {
+        Q_snprintf(remoteip, size, "[unknown]");
+        *remoteport = cloud_config.port;
+        *localport = 0;
+        return;
+    }
 
     if (cloud.addr->ai_family == AF_INET6) {
         q2a_inet_ntop(
@@ -1398,19 +2109,43 @@ void cloudGetIP(char *remoteip, int *remoteport, int *localport) {
         );
     }
 
-    Q_snprintf(remoteip, sizeof(remoteip), "[%s]", addr);
-    *localport = (int)((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port;
-    remoteport = &cloud_config.port;
+    Q_snprintf(remoteip, size, "[%s]", addr);
+
+    // The port is at the same place in both address families. It's stored
+    // in network byte order, so it has to be converted to be readable.
+    *remoteport = ntohs(((struct sockaddr_in *) cloud.addr->ai_addr)->sin_port);
+
+    *localport = 0;
+    if (getsockname(cloud.connection.socket, (struct sockaddr *) &local, &len) == 0) {
+        *localport = ntohs(((struct sockaddr_in *) &local)->sin_port);
+    }
 }
 
 /**
- * Main command runner for "sv !cloud <cmd>" server command
+ * Runs the "sv !cloud <command>" console command:
+ *
+ * status:     shows the backend's address, this server's UUID, the
+ *             connection state and, once trusted, whether traffic is
+ *             encrypted and how long it has been connected.
+ * connect:    starts Cloud Admin, as at server start.
+ * disconnect: closes the connection and resets the connection state,
+ *             keeping the map name, slot count and port.
+ * reconnect:  disconnect, then connect.
+ *
+ * startarg: index of the command word among the arguments.
+ * ent:      who to print to, NULL for the server console.
+ * client:   not used.
+ *
+ * Returns nothing. Prints the usage if no command is given; an unknown one
+ * does nothing.
+ *
+ * Called through the "cloud" entry in q2aCommands[] (g_cmd.c).
  */
 void cloudRun(int startarg, edict_t *ent, int client) {
     char *command;
     bool connected;
     char connected_time[25];
-    char connected_ip[INET6_ADDRSTRLEN];
+    char connected_ip[INET6_ADDRSTRLEN + 2];   // room for the brackets
     int local_port;
     int remote_port;
 
@@ -1425,8 +2160,9 @@ void cloudRun(int startarg, edict_t *ent, int client) {
     if (Q_stricmp(command, "status") == 0) {
         gi.cprintf(ent, PRINT_HIGH, "[cloud admin status]\n");
         if (connected) {
-            cloudGetIP(connected_ip, &remote_port, &local_port);
-            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, cloud_config.port));
+            cloudGetIP(connected_ip, sizeof(connected_ip), &remote_port, &local_port);
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "connected to:", va("%s:%d", connected_ip, remote_port));
+            gi.cprintf(ent, PRINT_HIGH, "%-20s%d\n", "local port:", local_port);
         } else {
             gi.cprintf(ent, PRINT_HIGH, "%-20s%s\n", "host:", va("%s:%d", cloud_config.address, cloud_config.port));
         }
@@ -1446,9 +2182,11 @@ void cloudRun(int startarg, edict_t *ent, int client) {
         return;
     }
 
+    // cloudResetState() rather than wiping cloud outright, so the map name,
+    // slot count and port set by SpawnEntities() survive for the next hello.
     if (Q_stricmp(command, "reconnect") == 0) {
         cloudDisconnect();
-        q2a_memset(&cloud, 0, sizeof(cloud_t));
+        cloudResetState();
         cloudPrintf("disconnected\n");
         cloudInit();
         return;
@@ -1456,7 +2194,7 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 
     if (Q_stricmp(command, "disconnect") == 0) {
         cloudDisconnect();
-        q2a_memset(&cloud, 0, sizeof(cloud_t));
+        cloudResetState();
         cloudPrintf("disconnected\n");
         return;
     }
@@ -1468,7 +2206,15 @@ void cloudRun(int startarg, edict_t *ent, int client) {
 }
 
 /**
- * Printf something to the server console prepended with [cloud]
+ * Prints a printf-style message to the server console with "[cloud] " in
+ * front, so Cloud Admin messages are easy to pick out.
+ *
+ * fmt: printf-style format.
+ * ...: values for fmt.
+ *
+ * Returns nothing.
+ *
+ * Called throughout this file for messages an admin should always see.
  */
 void cloudPrintf(char *fmt, ...) {
     char cbuffer[8192];
@@ -1483,8 +2229,17 @@ void cloudPrintf(char *fmt, ...) {
 }
 
 /**
- * Debug printing to the server console/log. Only outputs
- * if the debug flag is set
+ * The debug version of cloudPrintf(): prints a "[cloud] " message to the
+ * server console only when the debug flag (CFL_DEBUG) is set in
+ * cloud_flags. Used for detail that helps when setting up or
+ * troubleshooting the connection but would clutter the console otherwise.
+ *
+ * fmt: printf-style format.
+ * ...: values for fmt.
+ *
+ * Returns nothing.
+ *
+ * Called throughout this file.
  */
 void cloudDPrintf(char *fmt, ...) {
     char cbuffer[8192];
@@ -1502,9 +2257,19 @@ void cloudDPrintf(char *fmt, ...) {
 }
 
 /**
- * A player issued the teleport command. The gameserver will send the request
- * to the connected CloudAdmin server to find either the current list of
- * available servers or the address of the server requested.
+ * Handles a player's teleport command (named by cloud_cmd_teleport). The
+ * request goes to the backend, which answers with either the list of
+ * servers or the address of the one asked for. The player is told instead
+ * if the backend isn't connected, teleport isn't enabled in cloud_flags,
+ * or the destination is longer than TELE_NAME_MAX characters.
+ *
+ * ent: the player who used the command.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (g_cmd.c). The command's name is set in
+ * the config and needn't start with "!", which is why it isn't in
+ * q2aCommands[].
  */
 void Cmd_Teleport_f(edict_t *ent) {
     if (!CLOUD_OK) {
@@ -1523,7 +2288,17 @@ void Cmd_Teleport_f(edict_t *ent) {
 }
 
 /**
+ * Handles a player's invite command (named by cloud_cmd_invite). The
+ * invite, with any text the player added, goes to the backend to be shown
+ * to players on other servers. The player is told instead if the backend
+ * isn't connected or invite isn't enabled in cloud_flags.
  *
+ * ent: the player who used the command.
+ *
+ * Returns nothing.
+ *
+ * Called from doClientCommand() (g_cmd.c), for the same reason as
+ * Cmd_Teleport_f().
  */
 void Cmd_Invite_f(edict_t *ent) {
     if (!CLOUD_OK) {

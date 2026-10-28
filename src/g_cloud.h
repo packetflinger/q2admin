@@ -43,6 +43,10 @@
 
 #define QUEUE_SIZE      0x55FF
 
+// Most the cloudWrite*() functions will fill the outgoing queue to. The gap
+// leaves room for the block of padding encryption can add.
+#define QUEUE_WRITE_MAX (QUEUE_SIZE - AESBLOCK_LEN)
+
 #define CA_FRAME        (cloud.frame_number)
 
 // arg in seconds
@@ -96,6 +100,8 @@ typedef struct {
     byte      data[QUEUE_SIZE];
     size_t    length;
     uint32_t  index;                 // for reading
+    size_t    encrypted;             // outgoing: bytes at the front already encrypted
+    bool      overrun;               // incoming: a read went past the data received
 } message_queue_t;
 
 /**
@@ -161,7 +167,8 @@ typedef struct {
     uint32_t connection_attempts;
     uint32_t disconnect_count;
     uint32_t connected_frame;        // the frame when we connected
-    struct addrinfo *addr;
+    struct addrinfo *addr;           // the address chosen from addr_list
+    struct addrinfo *addr_list;      // everything getaddrinfo() returned, for freeaddrinfo()
     uint32_t flags;
     uint32_t frame_number;
     char mapname[32];
