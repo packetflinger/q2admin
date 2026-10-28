@@ -20,6 +20,9 @@
 
 cloud_t cloud;
 
+static bool cloudStartLookup(void);
+static void cloudAbandonLookup(void);
+
 /**
  * Frees the backend address list from the last DNS lookup and clears both
  * pointers into it. cloud.addr points somewhere inside cloud.addr_list, so
@@ -41,7 +44,9 @@ static void cloudFreeAddress(void) {
 /**
  * Clears all connection state, ready for a fresh start, and releases what
  * the last connection held: its socket, resolved address, cipher contexts
- * and RSA keys. Without that, every reconnect would leak them.
+ * and RSA keys. Without that, every reconnect would leak them. A DNS
+ * lookup still running is abandoned, so it can't apply its result after
+ * the reset.
  *
  * The map name, player slot count and game port are kept. SpawnEntities()
  * only sets them on a map change, so losing them here would send an empty
@@ -67,6 +72,7 @@ static void cloudResetState(void) {
         closesocket(c->socket);
     }
 
+    cloudAbandonLookup();
     cloudFreeAddress();
     EVP_CIPHER_CTX_free(c->e_ctx);
     EVP_CIPHER_CTX_free(c->d_ctx);
@@ -89,8 +95,8 @@ static void cloudResetState(void) {
  * to finish, so a slow DNS server never holds up server start.
  *
  * Leaves the state at CLOUD_STATE_DISABLED (so cloudFrame() does nothing)
- * if Cloud Admin is turned off in the config, the keys can't be loaded, or
- * cloud_addr or cloud_port isn't set. Does nothing at all if Cloud Admin is
+ * if Cloud Admin is turned off in the config, the keys can't be loaded,
+ * cloud_addr or cloud_port isn't set, or the lookup thread can't start. Does nothing at all if Cloud Admin is
  * already running (any state but CLOUD_STATE_DISABLED).
  *
  * Takes no parameters and returns nothing; fills the global cloud.
@@ -108,6 +114,10 @@ void cloudInit() {
 
     cloudResetState();
     maxclients = gi.cvar("maxclients", "64", CVAR_LATCH);
+
+    // Set before anything else, so the debug messages below show up when
+    // the debug flag is on.
+    cloud.flags = cloud_config.flags;
     
     if (!cloud_config.enabled) {
         gi.cprintf(NULL, PRINT_HIGH, "Cloud Admin is disabled in your config.\n");
@@ -135,7 +145,11 @@ void cloudInit() {
         return;
     }
 
-    cloudStartThread(&cloudLookupAddress, NULL);
+    if (!cloudStartLookup()) {
+        cloudPrintf("couldn't start the DNS lookup, disabling\n");
+        cloud.state = CLOUD_STATE_DISABLED;
+        return;
+    }
 
     // delay connection by a few seconds
     cloud.connect_retry_frame = FUTURE_CA_FRAME(5);
@@ -174,7 +188,7 @@ void cloudReadConfigFile() {
  * Returns the chosen entry, which still belongs to that list, or NULL if a
  * is NULL or no address of a preferred family was found.
  *
- * Called from cloudLookupAddress().
+ * Called from cloudFinishLookup().
  */
 static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
     // Not static: each lookup has to choose from its own results, not keep
@@ -217,100 +231,207 @@ static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
 
 
 /**
- * Resolves the backend's host name (cloud_addr) and port into cloud.addr,
- * ready for cloudConnect(). The whole result list is kept in
- * cloud.addr_list so cloudFreeAddress() can free it later. It runs on its own thread, started by
- * cloudInit(), because getaddrinfo() blocks: on the game thread a slow DNS
- * server would freeze the whole server, and every player on it, until the
- * lookup finished.
+ * Looks up the backend's address on its own thread, because getaddrinfo()
+ * blocks: on the game thread a slow DNS server would freeze the whole
+ * server, and every player on it, until the lookup finished.
  *
- * Sets the state to CLOUD_STATE_DISCONNECTED on success, so cloudFrame()
- * starts connecting, or CLOUD_STATE_DISABLED if the name doesn't resolve
- * or has no address of a family cloud_dns allows. Also copies the feature
- * flags from cloud_config into cloud.flags.
+ * It works only on its cloud_lookup_t, never on cloud or cloud_config, and
+ * prints nothing (gi.cprintf() isn't safe off the game thread). When it's
+ * done it marks the lookup CLOUD_LOOKUP_DONE for cloudFinishLookup() to
+ * pick up. If the game thread has abandoned the lookup in the meantime
+ * (see cloudAbandonLookup()), nobody else will free it, so this does.
  *
- * Takes no parameters and returns nothing.
+ * arg: the cloud_lookup_t to fill.
  *
- * Started from cloudInit() through cloudStartThread().
+ * Returns NULL.
+ *
+ * Started from cloudStartLookup().
  */
-void cloudLookupAddress(void) {
-    char str_address[40];
-    struct addrinfo hints, *res = NULL;
+static void *cloudLookupThread(void *arg) {
+    cloud_lookup_t *l = arg;
+    struct addrinfo hints;
 
     q2a_memset(&hints, 0, sizeof(hints));
-
     hints.ai_family         = AF_UNSPEC;     // either v6 or v4
     hints.ai_socktype       = SOCK_STREAM;   // TCP
     hints.ai_protocol       = 0;
     hints.ai_flags          = AI_ADDRCONFIG; // only for v6 addresses
 
-    errno = 0;
+    l->res = NULL;
+    l->err = getaddrinfo(l->address, l->port, &hints, &l->res);
 
-    int err = getaddrinfo(cloud_config.address, va("%d",cloud_config.port), &hints, &res);
-    if (err != 0) {
-        cloudDPrintf("DNS error\n");
-        cloud.state = CLOUD_STATE_DISABLED;
-        return;
-    } else {
-        // getaddrinfo can return multiple mixed v4/v6 results
-        struct addrinfo *chosen = cloudSelectAddrinfo(res);
-
-        if (!chosen) {
-            freeaddrinfo(res);
-            cloud.state = CLOUD_STATE_DISABLED;
-            cloudDPrintf("problems resolving server address, disabling\n");
-            return;
+    // Publish the result. If the lookup was abandoned first, the game
+    // thread has already let go of it and it's ours to free.
+    if (__atomic_exchange_n(&l->status, CLOUD_LOOKUP_DONE, __ATOMIC_ACQ_REL) == CLOUD_LOOKUP_ABANDONED) {
+        if (l->res) {
+            freeaddrinfo(l->res);
         }
-
-        // Keep the head of the list too; it's what freeaddrinfo() needs.
-        cloud.addr_list = res;
-        cloud.addr = chosen;
-        cloud.connection.ipv6 = (cloud.addr->ai_family == AF_INET6);
-
-        if (cloud.addr->ai_family == AF_INET6) {
-            q2a_inet_ntop(
-                    cloud.addr->ai_family,
-                    &((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
-                    str_address,
-                    sizeof(str_address)
-            );
-        } else {
-            q2a_inet_ntop(
-                    cloud.addr->ai_family,
-                    &((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
-                    str_address,
-                    sizeof(str_address)
-            );
-        }
-
-        cloudDPrintf("server resolved to %s\n", str_address);
+        free(l);
     }
+    return NULL;
+}
 
-    cloud.flags = cloud_config.flags;
-    cloud.state = CLOUD_STATE_DISCONNECTED;
+#ifdef _WIN32
+/**
+ * Adapts cloudLookupThread() to the signature CreateThread() expects.
+ * Casting it instead would mix up calling conventions on 32-bit Windows
+ * and unbalance the thread's stack when it returns.
+ *
+ * arg: the cloud_lookup_t to fill.
+ *
+ * Returns 0.
+ *
+ * Started from cloudStartLookup().
+ */
+static DWORD WINAPI cloudLookupThreadWin(LPVOID arg) {
+    cloudLookupThread(arg);
+    return 0;
+}
+#endif
+
+/**
+ * Starts a background lookup of cloud_addr and cloud_port, using
+ * CreateThread() on Windows and pthreads everywhere else. The address and
+ * port are copied into the lookup first, so the thread never reads
+ * cloud_config, which "sv !cloud connect" can reload while it runs.
+ *
+ * Takes no parameters.
+ *
+ * Returns true if the thread started, in which case cloud.lookup is set
+ * and cloudFinishLookup() collects the result; false if it couldn't.
+ *
+ * Called from cloudInit().
+ */
+static bool cloudStartLookup(void) {
+    cloud_lookup_t *l = calloc(1, sizeof(*l));
+
+    if (!l) {
+        return false;
+    }
+    Q_strlcpy(l->address, cloud_config.address, sizeof(l->address));
+    Q_snprintf(l->port, sizeof(l->port), "%d", cloud_config.port);
+    l->status = CLOUD_LOOKUP_PENDING;
+
+#ifdef _WIN32
+    HANDLE thread = CreateThread(NULL, 0, cloudLookupThreadWin, l, 0, NULL);
+    if (!thread) {
+        free(l);
+        return false;
+    }
+    CloseHandle(thread);
+#else
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, cloudLookupThread, l) != 0) {
+        free(l);
+        return false;
+    }
+    // nothing waits for it, so let its resources go when it finishes
+    pthread_detach(thread);
+#endif
+
+    cloud.lookup = l;
+    return true;
 }
 
 /**
- * Runs func on a new detached thread, using CreateThread() on Windows and
- * pthreads everywhere else. Only the DNS lookup uses it, so a slow lookup
- * can't stall the game thread.
+ * Lets go of the lookup in progress, if any, when its result is no longer
+ * wanted: on disconnect, reconnect or shutdown. A lookup can't be
+ * cancelled, so if it's still running it's marked abandoned and the
+ * thread frees it when getaddrinfo() returns. If it had already finished,
+ * it's freed here. Either way its result is never applied, so it can't
+ * reconnect after a disconnect or overwrite a newer lookup's address.
  *
- * func: the function to run. It's called with no arguments.
- * arg:  not used; func always gets NULL.
+ * Takes no parameters and returns nothing.
  *
- * Returns nothing. A thread that fails to start isn't reported, so the
- * connection just never gets past the lookup.
- *
- * Called from cloudInit() to run cloudLookupAddress().
+ * Called from cloudResetState() and cloudShutdown().
  */
-void cloudStartThread(void *func, void *arg) {
-#if _WIN32
-    DWORD tid;
-    CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE) func, 0, 0, &tid);
-#else
-    pthread_t dnsthread;
-    pthread_create(&dnsthread, 0, func, 0);
-#endif
+static void cloudAbandonLookup(void) {
+    cloud_lookup_t *l = cloud.lookup;
+
+    if (!l) {
+        return;
+    }
+    cloud.lookup = NULL;
+
+    if (__atomic_exchange_n(&l->status, CLOUD_LOOKUP_ABANDONED, __ATOMIC_ACQ_REL) == CLOUD_LOOKUP_DONE) {
+        if (l->res) {
+            freeaddrinfo(l->res);
+        }
+        free(l);
+    }
+}
+
+/**
+ * Collects the result of the background lookup once it has finished, on
+ * the game thread, and fills cloud.addr from it, ready for cloudConnect().
+ * The whole result list is kept in cloud.addr_list so cloudFreeAddress()
+ * can free it later.
+ *
+ * Sets the state to CLOUD_STATE_DISABLED if the name doesn't resolve or
+ * has no address of a family cloud_dns allows. Otherwise the state stays
+ * CLOUD_STATE_DISCONNECTED and cloudFrame() starts connecting.
+ *
+ * Takes no parameters and returns nothing. Does nothing if no lookup is
+ * running or it hasn't finished yet.
+ *
+ * Called from cloudFrame() every frame.
+ */
+static void cloudFinishLookup(void) {
+    cloud_lookup_t *l = cloud.lookup;
+    struct addrinfo *res, *chosen;
+    char str_address[INET6_ADDRSTRLEN];
+    int err;
+
+    if (!l || __atomic_load_n(&l->status, __ATOMIC_ACQUIRE) != CLOUD_LOOKUP_DONE) {
+        return;
+    }
+    cloud.lookup = NULL;
+    err = l->err;
+    res = l->res;
+    free(l);
+
+    if (err != 0) {
+        if (res) {
+            freeaddrinfo(res);
+        }
+        cloudDPrintf("DNS error looking up %s (%d), disabling\n", cloud_config.address, err);
+        cloud.state = CLOUD_STATE_DISABLED;
+        return;
+    }
+
+    // getaddrinfo can return multiple mixed v4/v6 results
+    chosen = cloudSelectAddrinfo(res);
+    if (!chosen) {
+        if (res) {
+            freeaddrinfo(res);
+        }
+        cloud.state = CLOUD_STATE_DISABLED;
+        cloudDPrintf("problems resolving server address, disabling\n");
+        return;
+    }
+
+    // Keep the head of the list too; it's what freeaddrinfo() needs.
+    cloud.addr_list = res;
+    cloud.addr = chosen;
+    cloud.connection.ipv6 = (cloud.addr->ai_family == AF_INET6);
+
+    if (cloud.addr->ai_family == AF_INET6) {
+        q2a_inet_ntop(
+                cloud.addr->ai_family,
+                &((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
+                str_address,
+                sizeof(str_address)
+        );
+    } else {
+        q2a_inet_ntop(
+                cloud.addr->ai_family,
+                &((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
+                str_address,
+                sizeof(str_address)
+        );
+    }
+
+    cloudDPrintf("server resolved to %s\n", str_address);
 }
 
 /**
@@ -376,7 +497,8 @@ void cloudPing(void) {
 }
 
 /**
- * Drives the Cloud Admin connection, once per server frame. Depending on
+ * Drives the Cloud Admin connection, once per server frame. It collects
+ * the result of the DNS lookup once that finishes. Depending on
  * the state it sends anything queued and reads and acts on anything
  * received, pings the backend, checks whether a connection in progress
  * has finished, or starts a new connection attempt. Everything is
@@ -397,6 +519,8 @@ void cloudFrame(void) {
     if (cloud.state == CLOUD_STATE_DISABLED) {
         return;
     }
+
+    cloudFinishLookup();
 
     if (cloud.state >= CLOUD_STATE_CONNECTED) {
         cloudSendMessages();
@@ -437,6 +561,7 @@ void cloudShutdown(void) {
     cloudWriteByte(CMD_QUIT);
     cloudSendMessages();
     cloudDisconnect();
+    cloudAbandonLookup();
     cloudFreeAddress();
 }
 
@@ -514,7 +639,7 @@ void cloudConnect(void) {
         return;
     }
 
-    // the DNS lookup thread hasn't finished yet
+    // the DNS lookup hasn't finished yet
     if (!cloud.addr) {
         return;
     }

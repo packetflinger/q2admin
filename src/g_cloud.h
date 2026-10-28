@@ -158,6 +158,29 @@ typedef struct {
 } cloud_connection_t;
 
 /**
+ * Where a background DNS lookup is up to. Changed only with atomic
+ * operations, because the lookup thread and the game thread both change it.
+ */
+typedef enum {
+    CLOUD_LOOKUP_PENDING,            // the thread is still looking up
+    CLOUD_LOOKUP_DONE,               // finished, waiting for the game thread
+    CLOUD_LOOKUP_ABANDONED           // no longer wanted, the thread frees it
+} cloud_lookup_status_t;
+
+/**
+ * Hands a DNS lookup between the game thread and the lookup thread. The
+ * thread only ever touches this, never cloud or cloud_config, so nothing
+ * the game thread does while a lookup runs can race with it.
+ */
+typedef struct {
+    int status;                      // a cloud_lookup_status_t
+    char address[256];               // copy of cloud_addr
+    char port[8];                    // cloud_port as text
+    int err;                         // getaddrinfo()'s return value
+    struct addrinfo *res;            // getaddrinfo()'s results
+} cloud_lookup_t;
+
+/**
  * Holds all info and state about the cloud admin connection
  */
 typedef struct {
@@ -169,6 +192,7 @@ typedef struct {
     uint32_t connected_frame;        // the frame when we connected
     struct addrinfo *addr;           // the address chosen from addr_list
     struct addrinfo *addr_list;      // everything getaddrinfo() returned, for freeaddrinfo()
+    cloud_lookup_t *lookup;          // the DNS lookup in progress, if any
     uint32_t flags;
     uint32_t frame_number;
     char mapname[32];
@@ -283,8 +307,6 @@ void        cloudParseCommand(void);
 void        cloudPeerDisconnected(void);
 void        cloudPing(void);
 void        cloudPlayerList(void);
-void        cloudLookupAddress(void);
-void        cloudStartThread(void *func, void *arg);
 void        cloudSayHello(void);
 void        cloudParsePong(void);
 void        cloudParseError(void);
