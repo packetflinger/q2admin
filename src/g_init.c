@@ -1037,7 +1037,6 @@ void SpawnEntities(char *mapname, char *entities, char *spawnpoint) {
     cloud.maxclients = (int) maxclients->value;
     q2a_strncpy(cloud.mapname, mapname, sizeof(cloud.mapname)-1);
     cloud.port = getport();
-    cloud.frame_number = 0;
 
     if (cloud.state == CLOUD_STATE_TRUSTED) {
         cloudMap(mapname);
