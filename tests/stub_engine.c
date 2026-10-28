@@ -99,7 +99,8 @@ void addCmdQueue(int client, byte command, float timeout, unsigned long data,
     (void)client; (void)command; (void)timeout; (void)data; (void)str;
 }
 
-uint16_t getport(void) {
+// Weak, so test_cloud can link the real one from g_cloud.o instead.
+__attribute__((weak)) uint16_t getport(void) {
     return 27910;
 }
 

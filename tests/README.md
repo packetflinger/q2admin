@@ -46,9 +46,12 @@ CHECK(stub_signals_for(1) & SIGNAL_PROTOCOL_DOWNGRADE);
   `getClientFromArg()` and a fuller `gi`, and its `raiseSignal()` and
   `signalScore()` would clash with the stubs here - swap them out if you link
   it.
-- **Not worth faking:** `ClientThink()`, the Cloud Admin socket code, and
-  anything calling `ge_mod->*`. Those need a live engine and a real mod; test
-  them on a server.
+- **Cloud Admin:** `test_cloud.c` drives the real send and receive code over
+  a socket pair, with the test playing the backend. It links `g_cloud.o` and
+  `g_crypto.o` through its own rule in the Makefile, so other tests don't
+  have to. The connecting and handshake code still needs a real backend.
+- **Not worth faking:** `ClientThink()` and anything calling `ge_mod->*`.
+  Those need a live engine and a real mod; test them on a server.
 
 ## Gotcha
 

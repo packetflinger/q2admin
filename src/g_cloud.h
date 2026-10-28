@@ -43,9 +43,35 @@
 
 #define QUEUE_SIZE      0x55FF
 
+/**
+ * Framing. Everything sent over the connection, in both directions and
+ * from the very first byte, is a series of frames:
+ *
+ *     length   4 bytes, little-endian: how many payload bytes follow
+ *     payload  length bytes
+ *
+ * The payload is one or more whole commands (a command byte and its
+ * data), as before. Once the connection is trusted and encryption is on,
+ * the payload is the AES-128-CBC ciphertext of those commands instead;
+ * the length is never encrypted and counts the ciphertext. Each frame is
+ * encrypted and decrypted on its own, and a command never spans frames.
+ *
+ * TCP delivers a stream, not messages, so without the length a receiver
+ * can't tell where one batch of commands (or one block of ciphertext)
+ * ends: a single recv() can return part of one, or several at once.
+ *
+ * A frame's payload can be at most CLOUD_FRAME_MAX bytes. A receiver that
+ * gets a longer length treats it as a protocol error and drops the
+ * connection, since it can't find the next frame. An empty frame is
+ * allowed and ignored.
+ */
+#define CLOUD_FRAME_HEADER  4
+#define CLOUD_FRAME_MAX     (QUEUE_SIZE - CLOUD_FRAME_HEADER)
+
 // Most the cloudWrite*() functions will fill the outgoing queue to. The gap
-// leaves room for the block of padding encryption can add.
-#define QUEUE_WRITE_MAX (QUEUE_SIZE - AESBLOCK_LEN)
+// leaves room for the frame header and the block of padding encryption can
+// add, so a full queue still makes a frame within CLOUD_FRAME_MAX.
+#define QUEUE_WRITE_MAX (QUEUE_SIZE - CLOUD_FRAME_HEADER - AESBLOCK_LEN)
 
 #define CA_FRAME        (cloud.frame_number)
 
@@ -100,7 +126,7 @@ typedef struct {
     byte      data[QUEUE_SIZE];
     size_t    length;
     uint32_t  index;                 // for reading
-    size_t    encrypted;             // outgoing: bytes at the front already encrypted
+    size_t    framed;                // outgoing: bytes at the front already framed (and encrypted)
     bool      overrun;               // incoming: a read went past the data received
 } message_queue_t;
 
@@ -200,6 +226,7 @@ typedef struct {
     uint16_t port;
     message_queue_t queue_out;       // messages outgoing to central server
     message_queue_t queue_in;        // messages incoming from central server
+    message_queue_t queue_recv;      // raw bytes received, not yet a whole frame
     cloud_ping_t ping;
 } cloud_t;
 

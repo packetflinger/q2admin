@@ -646,6 +646,7 @@ void cloudConnect(void) {
 
     q2a_memset(&cloud.queue_out, 0, sizeof(message_queue_t));
     q2a_memset(&cloud.queue_in, 0, sizeof(message_queue_t));
+    q2a_memset(&cloud.queue_recv, 0, sizeof(message_queue_t));
 
     cloud.state = CLOUD_STATE_CONNECTING;
     cloud.connection_attempts++;
@@ -797,17 +798,62 @@ void cloudCheckConnection(void) {
 }
 
 /**
+ * Turns everything in the outgoing queue into one frame (see
+ * CLOUD_FRAME_HEADER in g_cloud.h): encrypts it if encryption is in use,
+ * then puts its length in front. The frame replaces the queue's contents
+ * and queue_out.framed is set to its size.
+ *
+ * encrypt: whether to encrypt the payload with the session key.
+ *
+ * Returns true if the frame was made, false if encryption failed, in which
+ * case the queue is emptied, since its contents can't be sent.
+ *
+ * Called from cloudSendMessages().
+ */
+static bool cloudFrameQueue(bool encrypt) {
+    message_queue_t *q = &cloud.queue_out;
+    static byte frame[QUEUE_SIZE + AESBLOCK_LEN];
+    size_t len;
+
+    // The writes stop at QUEUE_WRITE_MAX, so the header and any padding
+    // always fit.
+    if (encrypt) {
+        len = cryptoSymmetricEncrypt(frame + CLOUD_FRAME_HEADER, q->data, q->length);
+        if (len == 0 || len > CLOUD_FRAME_MAX) {
+            cloudDPrintf("encryption failed, dropping %" PRIz " bytes\n", q->length);
+            q->length = 0;
+            q->framed = 0;
+            return false;
+        }
+    } else {
+        len = q->length;
+        q2a_memcpy(frame + CLOUD_FRAME_HEADER, q->data, len);
+    }
+
+    frame[0] = len & 0xff;
+    frame[1] = (len >> 8) & 0xff;
+    frame[2] = (len >> 16) & 0xff;
+    frame[3] = (len >> 24) & 0xff;
+
+    q->length = CLOUD_FRAME_HEADER + len;
+    q->framed = q->length;
+    q2a_memcpy(q->data, frame, q->length);
+    return true;
+}
+
+/**
  * Sends as much of the outgoing queue (cloud.queue_out) as the socket will
  * take right now, without waiting. Messages are built up in the queue by
  * the cloudWrite*() functions during a frame and sent here in one go.
  * Whatever is sent is removed from the front of the queue, and anything
  * the socket couldn't take stays for the next frame.
  *
- * Once the connection is trusted and encryption is on, the queue is
- * encrypted with the session key just before sending. queue_out.encrypted
- * counts the ciphertext still waiting at the front, so after a partial
- * send the rest goes out as it is, and anything queued since waits until
- * it has gone and is then encrypted in its turn.
+ * Before sending, the queue is made into a frame with its length in front
+ * (see cloudFrameQueue()), encrypted with the session key once the
+ * connection is trusted and encryption is on. queue_out.framed counts the
+ * part of the frame still waiting at the front, so after a partial send
+ * the rest goes out as it is, and anything queued since waits until it has
+ * gone and then becomes the next frame.
  *
  * If the backend has closed its end (EPIPE), cloudPeerDisconnected()
  * handles the lost connection.
@@ -828,13 +874,11 @@ void cloudSendMessages(void) {
     }
 
     int ret;
-    size_t len;
     bool encrypt;
     struct timeval tv;
     tv.tv_sec = tv.tv_usec = 0;
     cloud_connection_t *c;
     message_queue_t *q;
-    static byte cipher[QUEUE_SIZE];
 
     c = &cloud.connection;
     q = &cloud.queue_out;
@@ -857,26 +901,15 @@ void cloudSendMessages(void) {
             break;
         }
 
-        // Encrypt the queue only once all earlier ciphertext has gone. If
-        // send() takes just part of it, the rest is already encrypted and
-        // must go out as it is; encrypting it again would garble it. The
-        // writes stop at QUEUE_WRITE_MAX, so the padding always fits.
-        if (encrypt && !q->encrypted) {
-            len = cryptoSymmetricEncrypt(cipher, q->data, q->length);
-            if (len == 0 || len > QUEUE_SIZE) {
-                cloudDPrintf("encryption failed, dropping %" PRIz " bytes\n", q->length);
-                q->length = 0;
-                break;
-            }
-            q2a_memcpy(q->data, cipher, len);
-            q->length = len;
-            q->encrypted = len;
+        // Frame the queue only once the last frame has all gone. If send()
+        // takes just part of a frame, the rest must go out as it is;
+        // framing or encrypting it again would garble it.
+        if (!q->framed && !cloudFrameQueue(encrypt)) {
+            break;
         }
 
-        // When encrypting, anything queued after the ciphertext is still
-        // plain text and waits for the next pass.
-        len = encrypt ? q->encrypted : q->length;
-        ret = send(c->socket, (const char *) q->data, len, 0);
+        // anything queued after the frame waits for the next pass
+        ret = send(c->socket, (const char *) q->data, q->framed, 0);
         if (ret == -1) {
             if (errno == EPIPE) {
                 gi.cprintf(NULL, PRINT_HIGH, "Remote side disconnected\n");
@@ -891,22 +924,113 @@ void cloudSendMessages(void) {
         // shift off the data we just sent
         q2a_memmove(q->data, q->data + ret, q->length - ret);
         q->length -= ret;
-        if (encrypt) {
-            q->encrypted -= ret;
-        }
+        q->framed -= ret;
     }
 }
 
 /**
- * Reads everything the backend has sent so far into the incoming queue
- * (cloud.queue_in), without waiting, then hands it to cloudParseMessage().
- * Reading stops when there's nothing more waiting or the queue is full;
- * anything left stays in the socket for the next frame.
+ * Handles one whole frame from the backend: decrypts its payload if
+ * encryption is in use, puts the commands in the incoming queue
+ * (cloud.queue_in) and has cloudParseMessage() act on them.
  *
- * Once the connection is trusted and encryption is on, each chunk read is
- * decrypted with the session key as it arrives. Each chunk is assumed to
- * hold whole encrypted messages; the protocol has no framing to tell
- * otherwise.
+ * Frames are handled one at a time, so whether a frame is encrypted is
+ * decided after the frames before it have been acted on. That matters
+ * for the frame after SCMD_TRUSTED, which is the first encrypted one,
+ * even when both arrive in the same recv().
+ *
+ * After decrypting, the first ciphertext block becomes the IV, as it did
+ * before frames were added.
+ *
+ * payload: the frame's payload.
+ * len:     its length, at most CLOUD_FRAME_MAX.
+ *
+ * Returns nothing.
+ *
+ * Called from cloudReadFrames().
+ */
+static void cloudParseFrame(byte *payload, size_t len) {
+    message_queue_t *in = &cloud.queue_in;
+    static byte dec[QUEUE_SIZE + AESBLOCK_LEN];
+    size_t declen;
+
+    q2a_memset(in, 0, sizeof(message_queue_t));
+
+    if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
+        declen = cryptoSymmetricDecrypt(dec, payload, len);
+        if (declen > len) {
+            declen = 0;
+        }
+        q2a_memcpy(in->data, dec, declen);
+        in->length = declen;
+        if (len >= AES_IV_LEN) {
+            q2a_memcpy(cloud.connection.initial_value, payload, AES_IV_LEN);
+        }
+    } else {
+        q2a_memcpy(in->data, payload, len);
+        in->length = len;
+    }
+
+    cloudParseMessage();
+}
+
+/**
+ * Takes every whole frame out of the raw receive buffer (cloud.queue_recv)
+ * and handles it with cloudParseFrame(). A frame that has only partly
+ * arrived is left at the front of the buffer until the rest comes. A
+ * frame longer than CLOUD_FRAME_MAX is a protocol error: there's no way to
+ * find the next frame after it, so the connection is dropped.
+ *
+ * Takes no parameters.
+ *
+ * Returns false if the connection was dropped or closed while handling
+ * the frames, so the caller should stop reading; true otherwise.
+ *
+ * Called from cloudReadMessages() after each recv().
+ */
+static bool cloudReadFrames(void) {
+    message_queue_t *raw = &cloud.queue_recv;
+    size_t offset = 0;
+    size_t len;
+    byte *p;
+
+    while (raw->length - offset >= CLOUD_FRAME_HEADER) {
+        p = raw->data + offset;
+        len = p[0] | (p[1] << 8) | (p[2] << 16) | ((size_t) p[3] << 24);
+
+        if (len > CLOUD_FRAME_MAX) {
+            cloudPrintf("bad frame from backend (%" PRIz " bytes), dropping connection\n", len);
+            logEvent(LT_CLOUDERROR, 0, NULL,
+                va("bad frame length %" PRIz, len), (int) len, 0.0, false);
+            cloudPeerDisconnected();
+            return false;
+        }
+
+        // the rest of this frame hasn't arrived yet
+        if (raw->length - offset - CLOUD_FRAME_HEADER < len) {
+            break;
+        }
+
+        cloudParseFrame(p + CLOUD_FRAME_HEADER, len);
+        offset += CLOUD_FRAME_HEADER + len;
+
+        // a fatal error from the backend closes the connection
+        if (cloud.state < CLOUD_STATE_CONNECTED) {
+            return false;
+        }
+    }
+
+    // keep the partial frame, if any, at the front for next time
+    q2a_memmove(raw->data, raw->data + offset, raw->length - offset);
+    raw->length -= offset;
+    return true;
+}
+
+/**
+ * Reads everything the backend has sent so far, without waiting, into the
+ * raw receive buffer (cloud.queue_recv), and handles each whole frame as
+ * soon as it has arrived (see cloudReadFrames()). Part of a frame stays in
+ * the buffer until the rest arrives on a later read. Reading stops when
+ * there's nothing more waiting.
  *
  * The backend closing the connection, or a read error, is handled by
  * cloudPeerDisconnected().
@@ -917,18 +1041,15 @@ void cloudSendMessages(void) {
  */
 void cloudReadMessages(void) {
     int ret;
-    size_t declen;
-    byte temp_iv[DIGEST_LEN];
     struct timeval tv;
-    message_queue_t *in;
-    static byte dec[QUEUE_SIZE];
+    message_queue_t *raw;
 
     if (cloud.state < CLOUD_STATE_CONNECTING) {
         return;
     }
 
     tv.tv_sec = tv.tv_usec = 0;
-    in = &cloud.queue_in;
+    raw = &cloud.queue_recv;
 
     while (true) {
         FD_ZERO(&cloud.connection.set_r);
@@ -944,61 +1065,44 @@ void cloudReadMessages(void) {
                 return;
             }
             errno = 0;
+            continue;
         }
 
-        // socket read buffer has data waiting in it
-        if (ret) {
-            if (in->length >= QUEUE_SIZE - 1) {
-                // already full - stop reading until cloudParseMessage() has
-                // drained some of it, instead of overflowing in->data[]
-                break;
-            }
-            ret = recv(cloud.connection.socket, (char *) in->data + in->length,
-                    (QUEUE_SIZE - 1) - in->length, 0);
+        // no data has been sent to read
+        if (ret == 0) {
+            break;
+        }
 
-            if (ret == 0) {
+        // Can't happen: a frame is at most QUEUE_SIZE bytes with its
+        // header, and whole frames are taken out after every read. Checked
+        // anyway rather than overflowing raw->data[].
+        if (raw->length >= QUEUE_SIZE) {
+            break;
+        }
+
+        ret = recv(cloud.connection.socket, (char *) raw->data + raw->length,
+                QUEUE_SIZE - raw->length, 0);
+
+        if (ret == 0) {
+            cloudPeerDisconnected();
+            return;
+        }
+        if (ret == -1) {
+            if (errno != EINTR) {
+                perror("recv");
                 cloudPeerDisconnected();
                 return;
             }
-            if (ret == -1) {
-                if (errno != EINTR) {
-                    perror("recv");
-                    cloudPeerDisconnected();
-                    return;
-                }
-                // interrupted before anything was read, try again
-                errno = 0;
-                continue;
-            }
+            // interrupted before anything was read, try again
+            errno = 0;
+            continue;
+        }
+        raw->length += ret;
 
-            // Decrypt if necessary. Only what this recv() just added is
-            // decrypted; anything before it in the queue is already plain
-            // text from an earlier pass round this loop.
-            if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
-                byte *chunk = in->data + in->length;
-                bool newiv = ret >= AES_IV_LEN;
-
-                if (newiv) {
-                    q2a_memcpy(temp_iv, chunk, AES_IV_LEN);
-                }
-                declen = cryptoSymmetricDecrypt(dec, chunk, ret);
-                if (declen > (size_t) ret) {
-                    declen = 0;
-                }
-                q2a_memset(chunk, 0, ret);
-                q2a_memcpy(chunk, dec, declen);
-                ret = (int) declen;
-                if (newiv) {
-                    q2a_memcpy(cloud.connection.initial_value, temp_iv, AES_IV_LEN);
-                }
-            }
-            in->length += ret;
-        } else {
-            // no data has been sent to read
-            break;
+        if (!cloudReadFrames()) {
+            return;
         }
     }
-    cloudParseMessage();
 }
 
 /**
@@ -1026,7 +1130,8 @@ void cloudTrusted(void) {
 }
 
 /**
- * Works through everything in the incoming queue, one command at a time.
+ * Works through the commands from one frame in the incoming queue, one
+ * command at a time.
  * Each command starts with a byte saying what it is (an SCMD_* value),
  * followed by its own data, which the matching handler reads. Unknown
  * command bytes are skipped. Parsing stops if a handler reads past the end
@@ -1034,7 +1139,7 @@ void cloudTrusted(void) {
  *
  * Takes no parameters and returns nothing.
  *
- * Called from cloudReadMessages() after each read.
+ * Called from cloudParseFrame() for each frame received.
  */
 void cloudParseMessage(void) {
     message_queue_t *msg = &cloud.queue_in;
@@ -1362,7 +1467,8 @@ void cloudRotateKeys(void) {
  *
  * Takes no parameters and returns nothing. Does nothing if not connected.
  *
- * Called from cloudPing(), cloudSendMessages() and cloudReadMessages().
+ * Called from cloudPing(), cloudSendMessages(), cloudReadMessages() and
+ * cloudReadFrames().
  */
 void cloudPeerDisconnected(void) {
     uint8_t secs;

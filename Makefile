@@ -340,3 +340,10 @@ $(BUILDDIR)/stub_engine.o: $(TESTDIR)/stub_engine.c $(HEADERS) $(TESTHEADERS) | 
 $(BUILDDIR)/test_%: $(TESTDIR)/test_%.c $(TESTOBJS) $(HEADERS) $(TESTHEADERS) | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $< $(TESTOBJS) $(LIBS)
+
+# The cloud test also needs the Cloud Admin code itself.
+CLOUDTESTOBJS := $(BUILDDIR)/g_cloud.o $(BUILDDIR)/g_crypto.o
+
+$(BUILDDIR)/test_cloud: $(TESTDIR)/test_cloud.c $(TESTOBJS) $(CLOUDTESTOBJS) $(HEADERS) $(TESTHEADERS) | $(BUILDDIR)
+	$(E) [CC] $@
+	$(Q)$(CC) $(CFLAGS) -I$(SRCDIR) -I$(TESTDIR) -o $@ $< $(TESTOBJS) $(CLOUDTESTOBJS) $(LIBS)
