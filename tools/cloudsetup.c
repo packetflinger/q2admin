@@ -59,7 +59,7 @@
 #define KEY_BITS            2048
 
 #define DEFAULT_KEY_NAME    "q2admin"
-#define DEFAULT_KEY_URL     "https://cloud.q2admin.net/public-server.pem"
+#define DEFAULT_KEY_URL     "https://cloud.q2admin.net/public.pem"
 #define DEFAULT_SERVER_KEY  "server.pem"
 #define DEFAULT_ADDRESS     "cloud.q2admin.net"
 #define DEFAULT_PORT        "9988"
