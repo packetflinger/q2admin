@@ -24,8 +24,8 @@
  * On the key encoding: the keys are RSA, because the handshake encrypts a
  * challenge with the peer's public key and only RSA can do that. But they
  * are written with PEM_write_PrivateKey()/PEM_write_PUBKEY() rather than
- * the RSA-specific calls src/genkeys.c uses, so the files are PKCS#8 and
- * SubjectPublicKeyInfo:
+ * the RSA-specific PEM_write_RSAPrivateKey()/PEM_write_RSAPublicKey(), so
+ * the files are PKCS#8 and SubjectPublicKeyInfo:
  *
  *     -----BEGIN PRIVATE KEY-----      not  BEGIN RSA PRIVATE KEY
  *     -----BEGIN PUBLIC KEY-----       not  BEGIN RSA PUBLIC KEY

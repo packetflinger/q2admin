@@ -1769,8 +1769,9 @@ Useful targets:
 - `make` builds the library.
 - `make strip` strips debug symbols from it.
 - `make clean` deletes the build directory for the current architecture.
-- `make genkeys` builds `build-<cpu>/genkeys`, a small tool that generates
-  Cloud Admin keys.
+- `make cloudsetup` builds `build-<cpu>/cloudsetup`, a wizard that generates
+  the Cloud Admin key pair, fetches the Cloud Admin server's public key and
+  writes a filled-in `q2a_cloud.cfg`.
 
 The library is named `game<cpu>-q2admin-r<revision>~<commit>.<ext>`, for
 example `build-x86_64/gamex86_64-q2admin-r1211~0633d58.so`. Rename it, or set

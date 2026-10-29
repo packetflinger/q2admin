@@ -17,7 +17,6 @@
 
 #pragma once
 
-void cryptoGenKeyPair(int bits);
 bool cryptoLoadKeys(void);
 void cryptoMessageDigest(byte *dest, byte *src, size_t src_len);
 size_t cryptoPrivateDecrypt(byte *dest, byte *src, int src_len);

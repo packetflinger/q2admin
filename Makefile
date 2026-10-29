@@ -234,7 +234,7 @@ all: $(OUTPUT)
 
 default: all
 
-.PHONY: all default clean strip genkeys cloudsetup example-cfg
+.PHONY: all default clean strip cloudsetup example-cfg
 
 # Define V=1 to show command line.
 ifdef V
@@ -272,12 +272,6 @@ clean:
 strip: $(OUTPUT)
 	$(E) [STRIP] $(OUTPUT)
 	$(Q)$(STRIP) $(OUTPUT)
-
-genkeys: $(BUILDDIR)/genkeys
-
-$(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
-	$(E) [CC] $@
-	$(Q)$(CC) -o $@ $< -lcrypto
 
 # The Cloud Admin onboarding wizard. Links the bundled OpenSSL and libcurl
 # through $(CFLAGS)/$(LIBS) rather than whatever the build host has: macOS

@@ -18,59 +18,6 @@
 #include "g_local.h"
 
 /**
- * Generates an RSA keypair and writes both halves to PEM files in the
- * working directory, named public-<timestamp>.pem and
- * private-<timestamp>.pem.
- *
- * Every server talking to the cloud admin backend needs its own keypair
- * - the private key proves the server's identity during the handshake
- * and decrypts what the backend sends back (see cryptoPrivateDecrypt()), and
- * the public half is what the backend is given to identify it by. The
- * timestamp in the filenames keeps a new pair from silently overwriting
- * one already in use.
- *
- * bits: key size to generate, e.g. 2048.
- *
- * Returns nothing.
- *
- * Currently unreachable from the mod: nothing calls it. Key generation
- * is done by the standalone `genkeys` tool instead (genkeys.c, built by
- * `make genkeys`), which carries its own copy of this code - so the two
- * are duplicates that can drift apart.
- *
- * Note the file handles aren't checked, so a directory that can't be
- * written to gives a NULL FILE* straight to the PEM writers.
- */
-void cryptoGenKeyPair(int bits) {
-    FILE *fp;
-    RSA *rsa;
-    BIGNUM *e;
-    time_t seconds;
-    char filename[64];
-
-    time(&seconds);
-
-    rsa = RSA_new();
-    e = BN_new();
-
-    BN_set_word(e, RSA_F4);
-    RSA_generate_key_ex(rsa, bits, e, NULL);
-
-    snprintf(filename, sizeof(filename), "public-%ld.pem", seconds);
-    fp = fopen(filename, "wb");
-    PEM_write_RSAPublicKey(fp, rsa);
-    fclose(fp);
-
-    snprintf(filename, sizeof(filename), "private-%ld.pem", seconds);
-    fp = fopen(filename, "wb");
-    PEM_write_RSAPrivateKey(fp, rsa, NULL, NULL, 0, NULL, NULL);
-    fclose(fp);
-
-    BN_free(e);
-    RSA_free(rsa);
-}
-
-/**
  * Read public and private keys from filesystem into RSA structures
  *
  * Loads the three keys the cloud connection needs, all from moddir and
