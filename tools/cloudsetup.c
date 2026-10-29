@@ -21,18 +21,6 @@
  * in with the answers. Everything lands in the current directory, for the
  * operator to copy into their mod directory.
  *
- * On the key encoding: the keys are RSA, because the handshake encrypts a
- * challenge with the peer's public key and only RSA can do that. But they
- * are written with PEM_write_PrivateKey()/PEM_write_PUBKEY() rather than
- * the RSA-specific PEM_write_RSAPrivateKey()/PEM_write_RSAPublicKey(), so
- * the files are PKCS#8 and SubjectPublicKeyInfo:
- *
- *     -----BEGIN PRIVATE KEY-----      not  BEGIN RSA PRIVATE KEY
- *     -----BEGIN PUBLIC KEY-----       not  BEGIN RSA PUBLIC KEY
- *
- * cryptoLoadKeys() already reads both with the generic PEM_read_PrivateKey
- * and PEM_read_PUBKEY, so nothing in the game library needs changing.
- *
  * Build: make cloudsetup
  * Usage: cloudsetup        (asks everything, writes into the cwd)
  */
@@ -58,7 +46,7 @@
 // size builds a config that cannot complete a handshake.
 #define KEY_BITS            2048
 
-#define DEFAULT_KEY_NAME    "q2admin"
+#define DEFAULT_KEY_NAME    "q2a"
 #define DEFAULT_KEY_URL     "https://cloud.q2admin.net/public.pem"
 #define DEFAULT_SERVER_KEY  "server.pem"
 #define DEFAULT_ADDRESS     "cloud.q2admin.net"
@@ -134,19 +122,59 @@ static bool promptYesNo(const char *question, bool def) {
     }
 }
 
+// Files moved aside this run, reported again at the end so they do not
+// scroll past unnoticed. Only four files are ever written.
+static char backups[8][MAXINPUT * 2];
+static int backupCount;
+
 /**
- * Whether it is alright to write path, asking first if something is already
- * there. Overwriting a private key that a server is using would cut that
- * server off from Cloud Admin, so the default is to keep it.
+ * Moves an existing file out of the way so it can be written freshly.
+ *
+ * Nothing is ever overwritten and nothing is ever deleted: the old file is
+ * renamed to <name>.<unix timestamp> and kept. Overwriting a private key
+ * that a server is already using would cut that server off from Cloud
+ * Admin with no way back, and asking first is not much better - the wrong
+ * answer to a prompt destroys the key just as thoroughly.
+ *
+ * Returns false only if the old file could not be moved, in which case the
+ * caller must not write, because writing would destroy it.
  */
-static bool mayWrite(const char *path) {
-    char question[MAXINPUT + 64];
+static bool backupExisting(const char *path) {
+    char backup[MAXINPUT * 2];
+    time_t now;
+    int n;
 
     if (access(path, F_OK) != 0) {
         return true;
     }
-    snprintf(question, sizeof(question), "  %s already exists, overwrite it?", path);
-    return promptYesNo(question, false);
+
+    time(&now);
+    snprintf(backup, sizeof(backup), "%s.%ld", path, (long)now);
+
+    // A second run in the same second would otherwise rename over the
+    // backup the first one just made, which is the data loss this is here
+    // to prevent.
+    for (n = 1; access(backup, F_OK) == 0; n++) {
+        if (n > 99) {
+            fprintf(stderr, "  too many backups of %s already, move some"
+                            " out of the way\n", path);
+            return false;
+        }
+        snprintf(backup, sizeof(backup), "%s.%ld-%d", path, (long)now, n);
+    }
+
+    if (rename(path, backup) != 0) {
+        fprintf(stderr, "  could not move %s aside: %s\n", path, strerror(errno));
+        fprintf(stderr, "  not writing it, so the original is left alone\n");
+        return false;
+    }
+
+    printf("  %s already existed, kept the old one as %s\n", path, backup);
+    if (backupCount < (int)(sizeof(backups) / sizeof(backups[0]))) {
+        snprintf(backups[backupCount], sizeof(backups[0]), "%s", backup);
+        backupCount++;
+    }
+    return true;
 }
 
 /**
@@ -474,9 +502,7 @@ int main(void) {
     snprintf(privKey, sizeof(privKey), "%s-private.pem", keyName);
     snprintf(pubKey, sizeof(pubKey), "%s-public.pem", keyName);
 
-    if (!mayWrite(privKey) || !mayWrite(pubKey)) {
-        printf("\n   keeping the existing keys, nothing written. Re-run with a"
-               " different base name to make a new pair.\n");
+    if (!backupExisting(privKey) || !backupExisting(pubKey)) {
         return 1;
     }
     if (!generateKeyPair(privKey, pubKey)) {
@@ -487,9 +513,10 @@ int main(void) {
     printf("\n2. Cloud Admin server public key\n\n");
     prompt("   URL to download it from", DEFAULT_KEY_URL, keyUrl, sizeof(keyUrl));
     snprintf(serverKey, sizeof(serverKey), "%s", DEFAULT_SERVER_KEY);
-    if (!mayWrite(serverKey)) {
-        printf("\n   keeping the existing %s\n", serverKey);
-    } else if (!downloadServerKey(keyUrl, serverKey)) {
+    if (!backupExisting(serverKey)) {
+        return 1;
+    }
+    if (!downloadServerKey(keyUrl, serverKey)) {
         printf("\n   Without the server's public key q2admin cannot verify the"
                " Cloud Admin\n   server. Download %s by hand, save it as %s"
                " here, and re-run.\n", keyUrl, serverKey);
@@ -530,14 +557,23 @@ int main(void) {
 
     // --- 5. write it out ---
     printf("\n5. Writing the config\n\n");
-    if (!mayWrite(CONFIG_FILE)) {
-        printf("\n   keeping the existing %s. The keys are still written.\n",
-               CONFIG_FILE);
+    if (!backupExisting(CONFIG_FILE)) {
         return 1;
     }
     if (!writeConfig(CONFIG_FILE, address, port, encryption, privKey, pubKey,
                      serverKey, uuid, dns, teleport, invite)) {
         return 1;
+    }
+
+    if (backupCount) {
+        int i;
+
+        printf("\nNothing was overwritten. %d file%s already here, kept as:\n\n",
+               backupCount, backupCount == 1 ? " was" : "s were");
+        for (i = 0; i < backupCount; i++) {
+            printf("    %s\n", backups[i]);
+        }
+        printf("\nDelete those once you are happy with the new ones.\n");
     }
 
     printf("\nDone. Copy these into your q2 mod directory, next to the other\n"
