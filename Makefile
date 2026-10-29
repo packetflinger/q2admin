@@ -75,9 +75,13 @@ else
 endif
 
 ifdef CONFIG_MACOS
-    LDFLAGS += -framework CoreFoundation \
-               -framework CoreServices \
-               -framework SystemConfiguration
+    # Needed by the bundled libcurl. Kept in its own variable because the
+    # tools in tools/ need them too, and cannot take LDFLAGS as a whole:
+    # that carries -shared, which an executable must not have.
+    FRAMEWORKS := -framework CoreFoundation \
+                  -framework CoreServices \
+                  -framework SystemConfiguration
+    LDFLAGS += $(FRAMEWORKS)
 endif
 
 ifdef CONFIG_WINDOWS
@@ -230,7 +234,7 @@ all: $(OUTPUT)
 
 default: all
 
-.PHONY: all default clean strip genkeys example-cfg
+.PHONY: all default clean strip genkeys cloudsetup example-cfg
 
 # Define V=1 to show command line.
 ifdef V
@@ -274,6 +278,15 @@ genkeys: $(BUILDDIR)/genkeys
 $(BUILDDIR)/genkeys: $(SRCDIR)/genkeys.c | $(BUILDDIR)
 	$(E) [CC] $@
 	$(Q)$(CC) -o $@ $< -lcrypto
+
+# The Cloud Admin onboarding wizard. Links the bundled OpenSSL and libcurl
+# through $(CFLAGS)/$(LIBS) rather than whatever the build host has: macOS
+# ships LibreSSL as -lcrypto, which cannot write PKCS#8 for every algorithm.
+cloudsetup: $(BUILDDIR)/cloudsetup
+
+$(BUILDDIR)/cloudsetup: tools/cloudsetup.c | $(BUILDDIR)
+	$(E) [CC] $@
+	$(Q)$(CC) $(CFLAGS) -o $@ $< $(LIBS) $(FRAMEWORKS)
 
 # config/example.cfg lists the config options an operator is likely to
 # change - the ones whose q2aCommands[] entry sets "common" - with the default
