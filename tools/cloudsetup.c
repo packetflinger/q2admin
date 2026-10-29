@@ -22,7 +22,8 @@
  * operator to copy into their mod directory.
  *
  * Build: make cloudsetup
- * Usage: cloudsetup        (asks everything, writes into the cwd)
+ * Usage: cloudsetup [--no-tls-check]   (asks everything, writes into the cwd)
+ *        cloudsetup --help
  */
 
 #include <ctype.h>
@@ -57,6 +58,37 @@
 #define WEBSITE             "https://cloud.q2admin.net"
 
 #define MAXINPUT            256
+
+// Set by --no-tls-check. Turns off certificate verification on the server
+// key download, for the case where an operator is stuck behind a broken
+// CA store and would otherwise have to fetch the file by hand.
+static bool noTlsCheck;
+
+/**
+ * Explains what the tool does before the operator commits to answering a
+ * screenful of prompts, and lists the files it is going to leave behind.
+ */
+static void usage(const char *name) {
+    printf("usage: %s [--no-tls-check]\n"
+           "\n"
+           "Onboards this game server to Cloud Admin. Asks a short series of\n"
+           "questions, then writes into the current directory:\n"
+           "\n"
+           "  <name>-private.pem   this server's private key, keep it secret\n"
+           "  <name>-public.pem    its public key, upload it to %s\n"
+           "  %-20s the Cloud Admin server's public key, downloaded\n"
+           "  %-20s the config, filled in with the answers\n"
+           "\n"
+           "Existing files of those names are kept, renamed with a timestamp.\n"
+           "Copy the four files into the q2 mod directory when it is done.\n"
+           "\n"
+           "  --no-tls-check   download the Cloud Admin server's public key\n"
+           "                   without verifying the HTTPS certificate. Only\n"
+           "                   for a host whose CA store is broken: the key\n"
+           "                   could be substituted in transit.\n"
+           "  -h, --help       this message\n",
+           name, WEBSITE, DEFAULT_SERVER_KEY, CONFIG_FILE);
+}
 
 /**
  * Asks a question, offering a default the operator can take by pressing
@@ -291,7 +323,9 @@ static void useSystemCertificates(CURL *curl) {
  * Certificate verification is left on. This downloads something the server
  * is then trusted to authenticate itself with, so fetching it over a
  * connection nobody checked would undo the point of having a key at all.
- * If verification fails the error says so rather than retrying without it.
+ * If verification fails the error says so rather than retrying without it;
+ * --no-tls-check is there for the operator who decides to take that risk
+ * knowingly, and says so loudly when it is used.
  *
  * The result has to parse as a public key before it is kept: a captive
  * portal or a 404 page will download perfectly happily otherwise, and the
@@ -322,9 +356,16 @@ static bool downloadServerKey(const char *url, const char *path) {
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    useSystemCertificates(curl);
+    if (noTlsCheck) {
+        printf("  WARNING: certificate checking is off, anyone on the path"
+               " could have\n           substituted this key.\n");
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    } else {
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+        useSystemCertificates(curl);
+    }
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "q2admin-cloudsetup");
 
@@ -337,7 +378,8 @@ static bool downloadServerKey(const char *url, const char *path) {
         if (res == CURLE_PEER_FAILED_VERIFICATION || res == CURLE_SSL_CACERT) {
             fprintf(stderr, "  the certificate could not be verified. Point"
                             " CURL_CA_BUNDLE at a CA bundle and try again,"
-                            " or fetch the file by hand.\n");
+                            " fetch the file by hand, or re-run with"
+                            " --no-tls-check to download it unverified.\n");
         }
         curl_easy_cleanup(curl);
         unlink(path);
@@ -483,12 +525,26 @@ static void checkUuid(const char *uuid) {
     }
 }
 
-int main(void) {
+int main(int argc, char **argv) {
     char keyName[MAXINPUT], privKey[MAXINPUT + 16], pubKey[MAXINPUT + 16];
     char keyUrl[MAXINPUT], serverKey[MAXINPUT];
     char uuid[MAXINPUT], address[MAXINPUT], port[MAXINPUT];
     char dns[MAXINPUT], teleport[MAXINPUT], invite[MAXINPUT];
     bool encryption;
+    int i;
+
+    for (i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "--no-tls-check")) {
+            noTlsCheck = true;
+        } else if (!strcmp(argv[i], "-h") || !strcmp(argv[i], "--help")) {
+            usage(argv[0]);
+            return 0;
+        } else {
+            fprintf(stderr, "%s: unknown option %s\n", argv[0], argv[i]);
+            fprintf(stderr, "try %s --help\n", argv[0]);
+            return 1;
+        }
+    }
 
     printf("\nq2admin Cloud Admin setup\n"
            "=========================\n"

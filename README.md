@@ -1771,7 +1771,10 @@ Useful targets:
 - `make clean` deletes the build directory for the current architecture.
 - `make cloudsetup` builds `build-<cpu>/cloudsetup`, a wizard that generates
   the Cloud Admin key pair, fetches the Cloud Admin server's public key and
-  writes a filled-in `q2a_cloud.cfg`.
+  writes a filled-in `q2a_cloud.cfg`. Pass `--no-tls-check` to download that
+  key without verifying the HTTPS certificate, for a host whose CA store is
+  broken; it means the key could have been substituted in transit, so prefer
+  pointing `CURL_CA_BUNDLE` at a working bundle instead.
 
 The library is named `game<cpu>-q2admin-r<revision>~<commit>.<ext>`, for
 example `build-x86_64/gamex86_64-q2admin-r1211~0633d58.so`. Rename it, or set
