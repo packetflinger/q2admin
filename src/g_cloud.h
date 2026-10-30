@@ -158,7 +158,6 @@ typedef enum {
  */
 typedef struct {
     uint32_t socket;
-    bool ipv6;                       // is this a v6 connection?
     bool trusted;                    // is the server trusted?
     bool encrypted;                  // should we encrypt?
     bool have_keys;                  // do we have the shared keys?
@@ -216,7 +215,8 @@ typedef struct {
     uint32_t connection_attempts;
     uint32_t disconnect_count;
     uint32_t connected_frame;        // the frame when we connected
-    struct addrinfo *addr;           // the address chosen from addr_list
+    struct addrinfo *addr;           // the address being tried, from addr_list
+    struct addrinfo *addr_alt;       // the other family's address, tried if addr won't connect
     struct addrinfo *addr_list;      // everything getaddrinfo() returned, for freeaddrinfo()
     cloud_lookup_t *lookup;          // the DNS lookup in progress, if any
     uint32_t flags;

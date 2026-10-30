@@ -1083,7 +1083,7 @@ quoted text; **triple** is `"<count> <seconds> <silence>"` (or
 | `cloud_cmd_seen` | string | `!seen` | Player command to find when a player was last seen (not implemented yet). Not settable in-game. |
 | `cloud_cmd_teleport` | string | `!teleport` | Player command to move to another server. Not settable in-game. |
 | `cloud_cmd_whois` | string | `!whois` | Player command to look up aliases across servers (not implemented yet). Not settable in-game. |
-| `cloud_dns` | string | `64` | Address lookup preference: `64` = IPv6 then IPv4, `46` = IPv4 then IPv6, `4` or `6` = only that family. Not settable in-game. |
+| `cloud_dns` | string | `64` | Address preference: `64` = IPv6 then IPv4, `46` = IPv4 then IPv6, `4` or `6` = only that family. When the name resolves to both families, a failed connection attempt retries against the other one, so a blocked or unrouted IPv6 path recovers on its own. Not settable in-game. |
 | `cloud_enabled` | bool | no | Connect to a Cloud Admin server. |
 | `cloud_encryption` | bool | yes | Encrypt Cloud Admin traffic. |
 | `cloud_flags` | number | 4095 | Bitmask of Cloud Admin features: 1 = frags, 2 = chat, 4 = teleport, 8 = invite, 16 = find, 32 = whois, 1024 = debug. Not settable in-game. |

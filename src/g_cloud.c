@@ -24,9 +24,10 @@ static bool cloudStartLookup(void);
 static void cloudAbandonLookup(void);
 
 /**
- * Frees the backend address list from the last DNS lookup and clears both
- * pointers into it. cloud.addr points somewhere inside cloud.addr_list, so
- * the list has to be freed from its head rather than through cloud.addr.
+ * Frees the backend address list from the last DNS lookup and clears every
+ * pointer into it. cloud.addr and cloud.addr_alt both point somewhere
+ * inside cloud.addr_list, so the list has to be freed from its head rather
+ * than through either of them.
  *
  * Takes no parameters and returns nothing. Safe to call when there's no
  * list.
@@ -39,6 +40,7 @@ static void cloudFreeAddress(void) {
     }
     cloud.addr_list = NULL;
     cloud.addr = NULL;
+    cloud.addr_alt = NULL;
 }
 
 /**
@@ -176,24 +178,60 @@ void cloudReadConfigFile() {
 }
 
 /**
+ * Writes an addrinfo's IP address into out as text, without the port.
+ *
+ * a: the address to format.
+ * out: where to write it.
+ * size: how big out is; INET6_ADDRSTRLEN is always enough.
+ *
+ * Returns out, so the result can be passed straight to a printf argument.
+ *
+ * Called from cloudFinishLookup() and cloudFailoverAddress().
+ */
+static const char *cloudAddressToString(struct addrinfo *a, char *out, size_t size) {
+    const void *src;
+
+    if (a->ai_family == AF_INET6) {
+        src = &((struct sockaddr_in6 *) a->ai_addr)->sin6_addr;
+    } else {
+        src = &((struct sockaddr_in *) a->ai_addr)->sin_addr;
+    }
+
+    if (!q2a_inet_ntop(a->ai_family, src, out, (socklen_t) size)) {
+        Q_strlcpy(out, "(unprintable)", size);
+    }
+    return out;
+}
+
+/**
  * Picks the backend address to connect to from getaddrinfo()'s results.
  * A name can resolve to several IPv4 and IPv6 addresses, so this takes the
- * first of each family and chooses between them using the cloud_dns
- * setting: a string of up to two characters, "4" and/or "6", in order of
- * preference ("64" means IPv6 if there is one, otherwise IPv4). An empty
- * setting is treated as "64".
+ * first of each family and orders them by the cloud_dns setting: a string
+ * of up to two characters, "4" and/or "6", in order of preference ("64"
+ * means IPv6 first, then IPv4). An empty setting is treated as "64".
+ *
+ * Both are reported, not just the winner. One address being chosen is no
+ * guarantee it can be reached, and the loser is what cloudFailoverAddress()
+ * switches to when it can't. A single-family setting ("4" or "6") has no
+ * loser to report, which is the point of writing it that way.
  *
  * a: the list getaddrinfo() returned.
+ * alt: set to the less preferred family's address, or NULL if there isn't
+ *      one. Never left uninitialised.
  *
  * Returns the chosen entry, which still belongs to that list, or NULL if a
  * is NULL or no address of a preferred family was found.
  *
  * Called from cloudFinishLookup().
  */
-static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
+static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a, struct addrinfo **alt) {
     // Not static: each lookup has to choose from its own results, not keep
     // pointers into an earlier list that has since been freed.
     struct addrinfo *v4 = NULL, *v6 = NULL;
+    struct addrinfo *chosen = NULL, *pick;
+    int i;
+
+    *alt = NULL;
 
     if (!a) {
         return NULL;
@@ -215,18 +253,30 @@ static struct addrinfo *cloudSelectAddrinfo(struct addrinfo *a) {
         }
     }
 
-    // select one based on preference
-    if (cloud_config.dns[0] == '6' && v6) {
-        return v6;
-    } else if (cloud_config.dns[0] == '4' && v4) {
-        return v4;
-    } else if (cloud_config.dns[1] == '6' && v6) {
-        return v6;
-    } else if (cloud_config.dns[1] == '4' && v4) {
-        return v4;
+    // cloud_dns already lists the families in preference order, so walk it
+    // and take whichever of them the lookup actually turned up. The first
+    // hit is the one to connect to, the second is the fallback.
+    for (i = 0; i < (int) sizeof(cloud_config.dns) - 1 && cloud_config.dns[i]; i++) {
+        if (cloud_config.dns[i] == '6') {
+            pick = v6;
+        } else if (cloud_config.dns[i] == '4') {
+            pick = v4;
+        } else {
+            continue;
+        }
+
+        if (!pick) {
+            continue;
+        }
+        if (!chosen) {
+            chosen = pick;
+        } else if (pick != chosen) {
+            *alt = pick;
+            break;
+        }
     }
 
-    return NULL;
+    return chosen;
 }
 
 
@@ -378,7 +428,7 @@ static void cloudAbandonLookup(void) {
  */
 static void cloudFinishLookup(void) {
     cloud_lookup_t *l = cloud.lookup;
-    struct addrinfo *res, *chosen;
+    struct addrinfo *res, *chosen, *alt;
     char str_address[INET6_ADDRSTRLEN];
     int err;
 
@@ -400,7 +450,7 @@ static void cloudFinishLookup(void) {
     }
 
     // getaddrinfo can return multiple mixed v4/v6 results
-    chosen = cloudSelectAddrinfo(res);
+    chosen = cloudSelectAddrinfo(res, &alt);
     if (!chosen) {
         if (res) {
             freeaddrinfo(res);
@@ -413,25 +463,50 @@ static void cloudFinishLookup(void) {
     // Keep the head of the list too; it's what freeaddrinfo() needs.
     cloud.addr_list = res;
     cloud.addr = chosen;
-    cloud.connection.ipv6 = (cloud.addr->ai_family == AF_INET6);
+    cloud.addr_alt = alt;
 
-    if (cloud.addr->ai_family == AF_INET6) {
-        q2a_inet_ntop(
-                cloud.addr->ai_family,
-                &((struct sockaddr_in6 *) cloud.addr->ai_addr)->sin6_addr,
-                str_address,
-                sizeof(str_address)
-        );
-    } else {
-        q2a_inet_ntop(
-                cloud.addr->ai_family,
-                &((struct sockaddr_in *) cloud.addr->ai_addr)->sin_addr,
-                str_address,
-                sizeof(str_address)
-        );
+    cloudDPrintf("server resolved to %s\n",
+            cloudAddressToString(cloud.addr, str_address, sizeof(str_address)));
+    if (cloud.addr_alt) {
+        cloudDPrintf("falling back to %s if that doesn't answer\n",
+                cloudAddressToString(cloud.addr_alt, str_address, sizeof(str_address)));
+    }
+}
+
+/**
+ * Swaps to the other address family after a failed connection attempt.
+ *
+ * A name can resolve to an address of each family, but only one of them is
+ * tried per attempt, and being chosen is no guarantee of being reachable:
+ * a host with no IPv6 route, or a firewall dropping IPv6 on the way out,
+ * leaves the preferred address failing every time while the other one
+ * would have connected on the first try. Retrying the same address forever
+ * never recovers from that, so each failure moves to the other address and
+ * the next failure moves back. Whichever one answers is the one left in
+ * use, which is also why there's no "preferred" address to swap back to:
+ * going back to a dead address on every round would waste every other
+ * attempt.
+ *
+ * Takes no parameters and returns nothing. Does nothing when the name
+ * resolved to only one usable address, which includes every literal IP and
+ * any cloud_dns naming a single family.
+ *
+ * Called from cloudConnect() and cloudCheckConnection() when an attempt
+ * fails.
+ */
+static void cloudFailoverAddress(void) {
+    struct addrinfo *other = cloud.addr_alt;
+    char str_address[INET6_ADDRSTRLEN];
+
+    if (!other) {
+        return;
     }
 
-    cloudDPrintf("server resolved to %s\n", str_address);
+    cloud.addr_alt = cloud.addr;
+    cloud.addr = other;
+
+    cloudPrintf("trying %s next\n",
+            cloudAddressToString(other, str_address, sizeof(str_address)));
 }
 
 /**
@@ -661,6 +736,9 @@ void cloudConnect(void) {
         logEvent(LT_CLOUDERROR, 0, NULL,
             va("cannot create socket: %s", strerror(errno)), errno, 0.0, false);
         errno = 0;
+        // A host with no IPv6 support at all fails here rather than at
+        // connect(), so this needs the fallback as much as the rest.
+        cloudFailoverAddress();
         cloud.connect_retry_frame = cloudNextConnectFrame();
         return;
     }
@@ -754,6 +832,7 @@ void cloudCheckConnection(void) {
                 va("connection failed: %s", strerror(number)), number, 0.0, false);
             closesocket(c->socket);
             cloud.state = CLOUD_STATE_DISCONNECTED;
+            cloudFailoverAddress();
             cloud.connect_retry_frame = cloudNextConnectFrame();
             return;
         }
@@ -784,6 +863,7 @@ void cloudCheckConnection(void) {
             int err = errno;
             logEvent(LT_CLOUDERROR, 0, NULL,
                 va("peer not connected: %s", strerror(err)), err, 0.0, false);
+            cloudFailoverAddress();
             cloud.connect_retry_frame = FUTURE_CA_FRAME(30);
             cloud.state = CLOUD_STATE_DISCONNECTED;
             closesocket(c->socket);
