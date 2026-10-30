@@ -52,9 +52,23 @@
  *
  * The payload is one or more whole commands (a command byte and its
  * data), as before. Once the connection is trusted and encryption is on,
- * the payload is the AES-128-CBC ciphertext of those commands instead;
- * the length is never encrypted and counts the ciphertext. Each frame is
- * encrypted and decrypted on its own, and a command never spans frames.
+ * the payload is those commands sealed with AES-128-GCM instead: the
+ * ciphertext, then a GCM_TAG_LEN-byte tag. The length is never encrypted
+ * and counts the ciphertext and tag. Each frame is sealed and opened on its
+ * own, and a command never spans frames.
+ *
+ * Every frame gets its own GCM nonce, built as NIST SP 800-38D section
+ * 8.2.1 describes (the same way as TLS 1.3 and SSH): 4 bytes for the
+ * direction (CLOUD_DIR_*), then a 64-bit count of the frames already sent
+ * that way under the current key, both big-endian. The nonce is never
+ * sent; TCP keeps frames in order, so both ends count them. That way a
+ * nonce can never repeat under one key, which GCM depends on. Both
+ * directions share one key, and the direction keeps their nonces apart. A
+ * new key (the handshake, or SCMD_KEY) starts the count at zero again.
+ *
+ * A frame that fails to open (altered, replayed, out of order or under the
+ * wrong key) drops the connection: once the counts disagree, nothing after
+ * it would open either.
  *
  * TCP delivers a stream, not messages, so without the length a receiver
  * can't tell where one batch of commands (or one block of ciphertext)
@@ -69,9 +83,10 @@
 #define CLOUD_FRAME_MAX     (QUEUE_SIZE - CLOUD_FRAME_HEADER)
 
 // Most the cloudWrite*() functions will fill the outgoing queue to. The gap
-// leaves room for the frame header and the block of padding encryption can
-// add, so a full queue still makes a frame within CLOUD_FRAME_MAX.
-#define QUEUE_WRITE_MAX (QUEUE_SIZE - CLOUD_FRAME_HEADER - AESBLOCK_LEN)
+// leaves room for the frame header and the tag encryption adds, so a full
+// queue still makes a frame within CLOUD_FRAME_MAX. One more byte is kept
+// back for CMD_KEYACK, which can't be dropped (see cloudRotateKeys()).
+#define QUEUE_WRITE_MAX (QUEUE_SIZE - CLOUD_FRAME_HEADER - GCM_TAG_LEN - 1)
 
 #define CA_FRAME        (cloud.frame_number)
 
@@ -99,8 +114,10 @@
 #define RSA_LEN         256          // bytes, 2048 bits
 #define CHALLENGE_LEN   16           // bytes
 #define AESKEY_LEN      16           // bytes, 128 bits
-#define AESBLOCK_LEN    16           // bytes, 128 bits
-#define AES_IV_LEN      16
+#define GCM_NONCE_LEN   12           // bytes, 96 bits, the size GCM is made for
+#define GCM_TAG_LEN     16           // bytes, 128 bits, on the end of every encrypted frame
+#define CLOUD_DIR_TO_BACKEND   1     // GCM nonce prefix for frames we send
+#define CLOUD_DIR_TO_FRONTEND  2     // and for frames the backend sends
 #define AUTH_FAIL_LIMIT 3            // stop trying after
 #define DIGEST_LEN      (SHA256_DIGEST_LENGTH)
 
@@ -167,8 +184,14 @@ typedef struct {
     // auth and encryption stuff
     byte cl_nonce[CHALLENGE_LEN];    // random data
     byte sv_nonce[CHALLENGE_LEN];    // random data
-    byte session_key[AESKEY_LEN];    // shared encryption key (128bit)
-    byte initial_value[AES_IV_LEN];  // CBC IV is 16 bytes
+    // AES-128-GCM session keys, one per direction. They start out the same
+    // and only differ for a moment during a key rotation (SCMD_KEY).
+    byte send_key[AESKEY_LEN];       // seals frames we send
+    uint64_t send_count;             // frames sealed with send_key so far
+    byte recv_key[AESKEY_LEN];       // opens frames the backend sends
+    uint64_t recv_count;             // frames opened with recv_key so far
+    byte next_send_key[AESKEY_LEN];  // replaces send_key after the CMD_KEYACK frame
+    bool send_key_pending;           // next_send_key is waiting to take over
 
     EVP_PKEY *public_key;            // our public key
     EVP_PKEY *private_key;           // our private key
@@ -247,7 +270,8 @@ typedef enum {
     CMD_FRAG,                        // someone fragged someone else
     CMD_MAP,                         // map changed
     CMD_PING,
-    CMD_AUTH
+    CMD_AUTH,
+    CMD_KEYACK                       // switched to the key from SCMD_KEY
 } cloud_client_cmd_t;
 
 /**

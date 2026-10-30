@@ -270,100 +270,163 @@ void cryptoLogRSAErrors() {
 }
 
 /**
- * Encrypt a buffer using 128bit AES
+ * Builds the GCM nonce for one frame: the direction (CLOUD_DIR_*) in the
+ * first 4 bytes, then how many frames have already gone that way under the
+ * current key, both big-endian. See the framing comment in g_cloud.h for
+ * why that never repeats. The backend (crypto.Stream) builds it the same
+ * way.
  *
- * This is called automatically from RA_SendMessages() if we're
- * set to encrypt traffic in the config
+ * nonce:     GCM_NONCE_LEN bytes to fill in.
+ * direction: CLOUD_DIR_TO_BACKEND or CLOUD_DIR_TO_FRONTEND.
+ * count:     frames already sealed in that direction with this key.
  *
- * Bulk traffic uses AES rather than RSA because RSA can only encrypt
- * less than a key's worth of data and is far too slow for a per-frame
- * message stream. The session key and IV this uses were handed over
- * during the RSA handshake (see cryptoPrivateDecrypt()), which is the point
- * of that handshake: establish a shared secret, then switch to fast
- * symmetric crypto for everything after.
- *
- * dest:    buffer to receive the ciphertext. Not bounds checked, and CBC
- *          output can exceed the input by up to a block, so it needs
- *          headroom beyond src_len.
- * src:     the plaintext.
- * src_len: length of src.
- *
- * Returns the ciphertext length, counting both the streamed output and
- * the final padded block.
- *
- * Called from the cloud message pump in g_cloud.c, on each queued
- * outbound message when encryption is enabled.
- *
- * Two things to be aware of: the guard is written `!(c || c->e_ctx)`,
- * and since c is the address of a static struct and so never NULL, it's
- * always false - a missing cipher context isn't actually caught. And the
- * cipher is re-initialised with the same IV for every message rather
- * than a fresh one, which under CBC means identical plaintext encrypts
- * to identical ciphertext across messages.
+ * Returns nothing.
  */
-size_t cryptoSymmetricEncrypt(byte *dest, byte *src, size_t src_len) {
-    cloud_connection_t *c = &cloud.connection;
-    int dest_len = 0;
-    int written = 0;
-
-    if (!(c || c->e_ctx)) {
-        return 0;
+static void cryptoGCMNonce(byte *nonce, uint32_t direction, uint64_t count) {
+    for (int i = 0; i < 4; i++) {
+        nonce[i] = (direction >> (24 - 8 * i)) & 0xff;
     }
-
-    EVP_EncryptInit_ex(c->e_ctx, EVP_aes_128_cbc(), NULL, (const unsigned char *)c->session_key, (const unsigned char *)c->initial_value);
-    EVP_EncryptUpdate(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len, (const unsigned char *)src, src_len);
-    written += dest_len;
-
-    EVP_EncryptFinal_ex(c->e_ctx, (unsigned char *)(dest + dest_len), &dest_len);
-    written += dest_len;
-
-    return written;
+    for (int i = 0; i < 8; i++) {
+        nonce[4 + i] = (count >> (56 - 8 * i)) & 0xff;
+    }
 }
 
 /**
- * Decrypt a buffer using 128 bit AES
+ * Seals one frame's payload with AES-128-GCM: encrypts it and adds the
+ * GCM_TAG_LEN-byte tag on the end. Doesn't touch the connection state, so
+ * the tests can also seal frames the way the backend does.
  *
- * Called automatically from RA_ReadMessages() if we're
- * set to encrypt traffic in the config
+ * ctx:       cipher context to use.
+ * key:       AESKEY_LEN-byte key.
+ * direction: which way the frame goes (CLOUD_DIR_*).
+ * count:     frames already sealed that way with this key.
+ * dest:      receives the ciphertext and tag, src_len + GCM_TAG_LEN bytes.
+ *            Not bounds checked.
+ * dest_len:  set to how many bytes were written to dest.
+ * src:       the plaintext.
+ * src_len:   its length.
  *
- * The inbound counterpart to cryptoSymmetricEncrypt(), using the same
- * session key and IV agreed during the handshake, so anything the
- * backend sends over the established channel is readable only by this
- * server.
- *
- * dest:    buffer to receive the plaintext. Not bounds checked.
- * src:     the ciphertext.
- * src_len: length of src.
- *
- * Returns the plaintext length, counting both the streamed output and
- * the final block.
- *
- * Called from the cloud message pump in g_cloud.c, on each inbound
- * message when encryption is enabled.
- *
- * Carries the same two caveats as the encrypt side: the `!(c || c->d_ctx)`
- * guard can never fire, and the fixed IV is reused for every message.
- * Note also that a failure of the final block - which is where CBC
- * padding is validated, and so where tampered or truncated ciphertext
- * would be caught - isn't checked, so a corrupt message is reported the
- * same as a good one.
+ * Returns true if the frame was sealed, false if OpenSSL failed.
  */
-size_t cryptoSymmetricDecrypt(byte *dest, byte *src, size_t src_len) {
-    cloud_connection_t *c = &cloud.connection;
-    int dest_len = 0;
-    int written = 0;
+bool cryptoGCMSeal(EVP_CIPHER_CTX *ctx, const byte *key, uint32_t direction, uint64_t count,
+        byte *dest, size_t *dest_len, const byte *src, size_t src_len) {
+    byte nonce[GCM_NONCE_LEN];
+    int len = 0, final = 0;
 
-    if (!(c || c->d_ctx)) {
-        return 0;
+    if (!ctx || src_len > INT_MAX) {
+        return false;
     }
-    EVP_DecryptInit_ex(c->d_ctx, EVP_aes_128_cbc(), NULL, (const unsigned char *)c->session_key, (const unsigned char *)c->initial_value);
-    EVP_DecryptUpdate(c->d_ctx, (unsigned char *)(dest + dest_len), &dest_len, (const unsigned char *)src, src_len);
-    written += dest_len;
+    cryptoGCMNonce(nonce, direction, count);
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL) != 1 ||
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, GCM_NONCE_LEN, NULL) != 1 ||
+        EVP_EncryptInit_ex(ctx, NULL, NULL, key, nonce) != 1 ||
+        EVP_EncryptUpdate(ctx, dest, &len, src, (int) src_len) != 1 ||
+        EVP_EncryptFinal_ex(ctx, dest + len, &final) != 1 ||
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, GCM_TAG_LEN, dest + len + final) != 1) {
+        return false;
+    }
+    *dest_len = (size_t) (len + final) + GCM_TAG_LEN;
+    return true;
+}
 
-    EVP_DecryptFinal_ex(c->d_ctx, (unsigned char *)(dest + dest_len), &dest_len);
-    written += dest_len;
+/**
+ * Opens one frame sealed by cryptoGCMSeal() (or the backend): checks the
+ * tag and decrypts. Nothing is trusted unless this returns true; a frame
+ * that was altered, or sealed with a different key, direction or count,
+ * fails.
+ *
+ * ctx:       cipher context to use.
+ * key:       AESKEY_LEN-byte key.
+ * direction: which way the frame came (CLOUD_DIR_*).
+ * count:     frames already opened that way with this key.
+ * dest:      receives the plaintext, src_len - GCM_TAG_LEN bytes. Not
+ *            bounds checked.
+ * dest_len:  set to how many bytes were written to dest.
+ * src:       the ciphertext and tag.
+ * src_len:   their length, at least GCM_TAG_LEN.
+ *
+ * Returns true if the frame opened, false if it didn't.
+ */
+bool cryptoGCMOpen(EVP_CIPHER_CTX *ctx, const byte *key, uint32_t direction, uint64_t count,
+        byte *dest, size_t *dest_len, const byte *src, size_t src_len) {
+    byte nonce[GCM_NONCE_LEN];
+    byte tag[GCM_TAG_LEN];
+    int len = 0, final = 0;
+    size_t ct_len;
 
-    return written;
+    if (!ctx || src_len < GCM_TAG_LEN || src_len > INT_MAX) {
+        return false;
+    }
+    ct_len = src_len - GCM_TAG_LEN;
+    q2a_memcpy(tag, src + ct_len, GCM_TAG_LEN);
+    cryptoGCMNonce(nonce, direction, count);
+    if (EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL) != 1 ||
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, GCM_NONCE_LEN, NULL) != 1 ||
+        EVP_DecryptInit_ex(ctx, NULL, NULL, key, nonce) != 1 ||
+        EVP_DecryptUpdate(ctx, dest, &len, src, (int) ct_len) != 1 ||
+        EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, GCM_TAG_LEN, tag) != 1 ||
+        EVP_DecryptFinal_ex(ctx, dest + len, &final) != 1) {
+        return false;
+    }
+    *dest_len = (size_t) (len + final);
+    return true;
+}
+
+/**
+ * Seals a frame we're about to send, with the connection's send key and
+ * the next nonce in the to-backend direction.
+ *
+ * dest:     receives the ciphertext and tag, src_len + GCM_TAG_LEN bytes.
+ * dest_len: set to their length.
+ * src:      the frame's payload.
+ * src_len:  its length.
+ *
+ * Returns true if the frame was sealed. False means it can't be sent: the
+ * backend will expect this nonce on the next frame, so the connection
+ * can't go on.
+ *
+ * Called from cloudFrameQueue() (g_cloud.c).
+ */
+bool cryptoSymmetricEncrypt(byte *dest, size_t *dest_len, const byte *src, size_t src_len) {
+    cloud_connection_t *c = &cloud.connection;
+
+    if (c->send_count == UINT64_MAX) {
+        return false;
+    }
+    if (!cryptoGCMSeal(c->e_ctx, c->send_key, CLOUD_DIR_TO_BACKEND, c->send_count,
+            dest, dest_len, src, src_len)) {
+        return false;
+    }
+    c->send_count++;
+    return true;
+}
+
+/**
+ * Opens a frame from the backend, with the connection's receive key and the
+ * next nonce in the to-frontend direction.
+ *
+ * dest:     receives the plaintext, src_len - GCM_TAG_LEN bytes.
+ * dest_len: set to its length.
+ * src:      the frame's payload.
+ * src_len:  its length.
+ *
+ * Returns true if the frame opened. False means it can't be trusted, and
+ * the counts no longer agree, so the connection can't go on.
+ *
+ * Called from cloudParseFrame() (g_cloud.c).
+ */
+bool cryptoSymmetricDecrypt(byte *dest, size_t *dest_len, const byte *src, size_t src_len) {
+    cloud_connection_t *c = &cloud.connection;
+
+    if (c->recv_count == UINT64_MAX) {
+        return false;
+    }
+    if (!cryptoGCMOpen(c->d_ctx, c->recv_key, CLOUD_DIR_TO_FRONTEND, c->recv_count,
+            dest, dest_len, src, src_len)) {
+        return false;
+    }
+    c->recv_count++;
+    return true;
 }
 
 /**

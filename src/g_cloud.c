@@ -879,31 +879,44 @@ void cloudCheckConnection(void) {
 
 /**
  * Turns everything in the outgoing queue into one frame (see
- * CLOUD_FRAME_HEADER in g_cloud.h): encrypts it if encryption is in use,
- * then puts its length in front. The frame replaces the queue's contents
- * and queue_out.framed is set to its size.
+ * CLOUD_FRAME_HEADER in g_cloud.h): seals it if encryption is in use, then
+ * puts its length in front. The frame replaces the queue's contents and
+ * queue_out.framed is set to its size.
  *
- * encrypt: whether to encrypt the payload with the session key.
+ * If a key rotation is waiting (send_key_pending), this frame holds the
+ * CMD_KEYACK, so it's sealed with the old key and every frame after it
+ * with the new one. That's the point the backend switches at too.
  *
- * Returns true if the frame was made, false if encryption failed, in which
- * case the queue is emptied, since its contents can't be sent.
+ * encrypt: whether to seal the payload with the session key.
+ *
+ * Returns true if the frame was made. False if sealing failed: the queue is
+ * emptied, since its contents can't be sent, and the connection is dropped,
+ * since the backend would expect this frame's nonce on the next one.
  *
  * Called from cloudSendMessages().
  */
 static bool cloudFrameQueue(bool encrypt) {
     message_queue_t *q = &cloud.queue_out;
-    static byte frame[QUEUE_SIZE + AESBLOCK_LEN];
+    cloud_connection_t *c = &cloud.connection;
+    static byte frame[QUEUE_SIZE + GCM_TAG_LEN];
     size_t len;
 
-    // The writes stop at QUEUE_WRITE_MAX, so the header and any padding
-    // always fit.
+    // The writes stop at QUEUE_WRITE_MAX, so the header and the tag always
+    // fit.
     if (encrypt) {
-        len = cryptoSymmetricEncrypt(frame + CLOUD_FRAME_HEADER, q->data, q->length);
-        if (len == 0 || len > CLOUD_FRAME_MAX) {
-            cloudDPrintf("encryption failed, dropping %" PRIz " bytes\n", q->length);
+        if (!cryptoSymmetricEncrypt(frame + CLOUD_FRAME_HEADER, &len, q->data, q->length) ||
+            len > CLOUD_FRAME_MAX) {
+            cloudPrintf("encryption failed, dropping connection\n");
             q->length = 0;
             q->framed = 0;
+            cloudPeerDisconnected();
             return false;
+        }
+        if (c->send_key_pending) {
+            q2a_memcpy(c->send_key, c->next_send_key, sizeof(c->send_key));
+            q2a_memset(c->next_send_key, 0, sizeof(c->next_send_key));
+            c->send_count = 0;
+            c->send_key_pending = false;
         }
     } else {
         len = q->length;
@@ -1009,17 +1022,18 @@ void cloudSendMessages(void) {
 }
 
 /**
- * Handles one whole frame from the backend: decrypts its payload if
+ * Handles one whole frame from the backend: opens its payload if
  * encryption is in use, puts the commands in the incoming queue
  * (cloud.queue_in) and has cloudParseMessage() act on them.
  *
- * Frames are handled one at a time, so whether a frame is encrypted is
- * decided after the frames before it have been acted on. That matters
- * for the frame after SCMD_TRUSTED, which is the first encrypted one,
- * even when both arrive in the same recv().
+ * Frames are handled one at a time, so whether a frame is encrypted, and
+ * with which key, is decided after the frames before it have been acted
+ * on. That matters for the frame after SCMD_TRUSTED, which is the first
+ * encrypted one, and the frame after SCMD_KEY, which is the first under the
+ * new key, even when both arrive in the same recv().
  *
- * After decrypting, the first ciphertext block becomes the IV, as it did
- * before frames were added.
+ * A frame that doesn't open drops the connection (see the framing comment
+ * in g_cloud.h).
  *
  * payload: the frame's payload.
  * len:     its length, at most CLOUD_FRAME_MAX.
@@ -1030,21 +1044,20 @@ void cloudSendMessages(void) {
  */
 static void cloudParseFrame(byte *payload, size_t len) {
     message_queue_t *in = &cloud.queue_in;
-    static byte dec[QUEUE_SIZE + AESBLOCK_LEN];
+    static byte dec[QUEUE_SIZE];
     size_t declen;
 
     q2a_memset(in, 0, sizeof(message_queue_t));
 
     if (cloud.connection.encrypted && cloud.connection.have_keys && cloud.state == CLOUD_STATE_TRUSTED) {
-        declen = cryptoSymmetricDecrypt(dec, payload, len);
-        if (declen > len) {
-            declen = 0;
+        if (!cryptoSymmetricDecrypt(dec, &declen, payload, len)) {
+            cloudPrintf("bad encrypted frame from backend, dropping connection\n");
+            logEvent(LT_CLOUDERROR, 0, NULL, "bad encrypted frame", (int) len, 0.0, false);
+            cloudPeerDisconnected();
+            return;
         }
         q2a_memcpy(in->data, dec, declen);
         in->length = declen;
-        if (len >= AES_IV_LEN) {
-            q2a_memcpy(cloud.connection.initial_value, payload, AES_IV_LEN);
-        }
     } else {
         q2a_memcpy(in->data, payload, len);
         in->length = len;
@@ -1342,8 +1355,9 @@ bool RSAVerifySignature( RSA* rsa,
  * 2. A random challenge from the backend, which we hash and send back
  *    encrypted with the backend's public key (CMD_AUTH), proving our
  *    identity in turn.
- * 3. When encryption is on, the AES session key and IV used for all
- *    traffic after this.
+ * 3. When encryption is on, the AES-128-GCM session key used for all
+ *    traffic after this. GCM nonces come from counting frames, so there's
+ *    no IV to send; both directions start counting at zero.
  *
  * On a mismatch the failure is logged, and after AUTH_FAIL_LIMIT failures
  * in a row Cloud Admin is disabled rather than retrying forever against a
@@ -1392,7 +1406,7 @@ bool cloudVerifyServerAuth(void) {
     // make sure every part read below was actually sent
     size_t needed = DIGEST_LEN + CHALLENGE_LEN;
     if (cloud_config.encryption) {
-        needed += AESKEY_LEN + AES_IV_LEN;
+        needed += AESKEY_LEN;
     }
     if (dec_len < needed) {
         cloudDPrintf("server auth response too short (%" PRIz " bytes), dropping\n", dec_len);
@@ -1411,12 +1425,13 @@ bool cloudVerifyServerAuth(void) {
 
     // transit will be encrypted so the keys will be next in the buffer
     if (cloud_config.encryption) {
-        q2a_memset(c->session_key, 0, sizeof(c->session_key));
-        q2a_memcpy(c->session_key, response_plain + offset, sizeof(c->session_key));
-        offset += sizeof(c->session_key);
-
-        q2a_memset(c->initial_value, 0, sizeof(c->initial_value));
-        q2a_memcpy(c->initial_value, response_plain + offset, sizeof(c->initial_value));
+        q2a_memcpy(c->send_key, response_plain + offset, sizeof(c->send_key));
+        q2a_memcpy(c->recv_key, response_plain + offset, sizeof(c->recv_key));
+        offset += sizeof(c->send_key);
+        c->send_count = 0;
+        c->recv_count = 0;
+        q2a_memset(c->next_send_key, 0, sizeof(c->next_send_key));
+        c->send_key_pending = false;
 
         c->have_keys = true;
 
@@ -1512,29 +1527,55 @@ void cloudParsePong(void) {
 }
 
 /**
- * Replaces the AES session key and IV with new ones from the backend
- * (SCMD_KEY). Changing keys now and then limits how much traffic is ever
- * encrypted with any one key. They take effect from the next message sent
- * or received.
+ * Replaces the AES session key with a new one from the backend (SCMD_KEY).
+ * Changing keys now and then limits how much traffic is ever encrypted
+ * with any one key.
  *
- * Takes no parameters and returns nothing; reads the key and IV from the
- * incoming queue.
+ * Frames can be on their way in both directions while this happens, so
+ * each direction switches at a point both ends agree on (the same handover
+ * TLS 1.3 uses for KeyUpdate):
+ *  - from the backend: it seals everything after the SCMD_KEY frame with
+ *    the new key, so we open everything after this frame with it.
+ *  - to the backend: we answer with CMD_KEYACK, seal the frame holding it
+ *    with the old key and everything after with the new one (see
+ *    cloudFrameQueue()). The backend switches when it reads the ack.
+ * Either way, the frame count starts again at zero under the new key.
+ *
+ * Takes no parameters and returns nothing; reads the key from the incoming
+ * queue.
  *
  * Called from cloudParseMessage() on SCMD_KEY.
  */
 void cloudRotateKeys(void) {
     cloud_connection_t *c;
-    byte key[AESKEY_LEN], iv[AESBLOCK_LEN];
+    message_queue_t *q;
+    byte key[AESKEY_LEN];
     c = &cloud.connection;
+    q = &cloud.queue_out;
 
-    // read into temporaries so a short message can't leave half a key
+    // read into a temporary so a short message can't leave half a key
     cloudReadData(key, sizeof(key));
-    cloudReadData(iv, sizeof(iv));
     if (cloud.queue_in.overrun) {
         return;
     }
-    q2a_memcpy(c->session_key, key, sizeof(key));
-    q2a_memcpy(c->initial_value, iv, sizeof(iv));
+    // The backend waits for our ack before rotating again, so two at once
+    // means the ends disagree about the keys.
+    if (c->send_key_pending || !c->have_keys) {
+        cloudPrintf("unexpected key rotation, dropping connection\n");
+        cloudPeerDisconnected();
+        return;
+    }
+
+    q2a_memcpy(c->recv_key, key, sizeof(key));
+    c->recv_count = 0;
+
+    // Written directly, past QUEUE_WRITE_MAX if need be (it keeps a byte
+    // back for this): if the ack were dropped, we'd switch keys and the
+    // backend wouldn't.
+    q->data[q->length++] = CMD_KEYACK;
+    q2a_memcpy(c->next_send_key, key, sizeof(key));
+    c->send_key_pending = true;
+    q2a_memset(key, 0, sizeof(key));
 }
 
 /**
@@ -1572,8 +1613,10 @@ void cloudPeerDisconnected(void) {
     FD_CLR(cloud.connection.socket, &cloud.connection.set_w);
     FD_CLR(cloud.connection.socket, &cloud.connection.set_e);
 
-    q2a_memset(&cloud.connection.session_key[0], 0, AESKEY_LEN);
-    q2a_memset(&cloud.connection.initial_value[0], 0, AESBLOCK_LEN);
+    q2a_memset(cloud.connection.send_key, 0, sizeof(cloud.connection.send_key));
+    q2a_memset(cloud.connection.recv_key, 0, sizeof(cloud.connection.recv_key));
+    q2a_memset(cloud.connection.next_send_key, 0, sizeof(cloud.connection.next_send_key));
+    cloud.connection.send_key_pending = false;
 
     // try reconnecting a reasonably random amount of time later
     srand((unsigned) time(NULL));

@@ -184,48 +184,217 @@ static void use_encryption(void) {
     cloud_connection_t *c = &cloud.connection;
 
     for (int i = 0; i < AESKEY_LEN; i++) {
-        c->session_key[i] = (byte) (i * 7 + 1);
+        c->send_key[i] = (byte) (i * 7 + 1);
     }
-    for (int i = 0; i < AES_IV_LEN; i++) {
-        c->initial_value[i] = (byte) (i * 13 + 5);
-    }
+    q2a_memcpy(c->recv_key, c->send_key, AESKEY_LEN);
     c->encrypted = true;
     c->have_keys = true;
     c->e_ctx = EVP_CIPHER_CTX_new();
     c->d_ctx = EVP_CIPHER_CTX_new();
 }
 
+static void stop_encryption(void) {
+    EVP_CIPHER_CTX_free(cloud.connection.e_ctx);
+    EVP_CIPHER_CTX_free(cloud.connection.d_ctx);
+}
+
+/**
+ * Seals payload the way the backend does, frame number count under key,
+ * and frames it into out. Returns the frame's total size.
+ */
+static size_t backend_frame(byte *out, const byte *key, uint64_t count, const void *payload, size_t len) {
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    size_t sealed = 0;
+
+    CHECK(cryptoGCMSeal(ctx, key, CLOUD_DIR_TO_FRONTEND, count, out + 4, &sealed, payload, len));
+    EVP_CIPHER_CTX_free(ctx);
+    out[0] = sealed & 0xff;
+    out[1] = (sealed >> 8) & 0xff;
+    out[2] = (sealed >> 16) & 0xff;
+    out[3] = (sealed >> 24) & 0xff;
+    return sealed + 4;
+}
+
+/**
+ * Opens a frame q2admin sent, as the backend would, frame number count
+ * under key. Returns true if it opened; the plaintext goes in out.
+ */
+static bool backend_open(byte *out, size_t *out_len, const byte *key, uint64_t count, const byte *frame, size_t len) {
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    bool ok = cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_BACKEND, count, out, out_len, frame + 4, len - 4);
+    EVP_CIPHER_CTX_free(ctx);
+    return ok;
+}
+
+/**
+ * The same key, direction, count and plaintext as the backend's
+ * TestStreamVectors (crypto/crypto_test.go), which pins its output to
+ * these bytes too. If both pass, the two ends seal frames identically.
+ */
+static void test_gcm_vectors(void) {
+    static const byte to_backend[] = {
+        0x0e, 0x50, 0xb9, 0xc6, 0xd4, 0x47, 0x63, 0x97, 0x35, 0xbc, 0xed,
+        0xdc, 0xe5, 0x4f, 0x8f, 0x92, 0xdc, 0xb6, 0x78, 0xcf, 0xa4,
+    };
+    static const byte to_frontend[] = {
+        0x16, 0x21, 0x99, 0xa0, 0x16, 0x5b, 0x30, 0xe8, 0x2d, 0x28, 0x7f,
+        0x8f, 0x55, 0xbe, 0x06, 0x7d, 0xa6, 0xc6, 0x97, 0xf5, 0x9d,
+    };
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    byte key[AESKEY_LEN], out[64];
+    size_t len = 0;
+
+    for (int i = 0; i < AESKEY_LEN; i++) {
+        key[i] = (byte) (i * 7 + 1);
+    }
+
+    SECTION("GCM frames match the backend's, both directions");
+    CHECK(cryptoGCMSeal(ctx, key, CLOUD_DIR_TO_BACKEND, 5, out, &len, (const byte *) "q2dm1", 5));
+    CHECK_INT(len, sizeof(to_backend));
+    CHECK(memcmp(out, to_backend, sizeof(to_backend)) == 0);
+    CHECK(cryptoGCMSeal(ctx, key, CLOUD_DIR_TO_FRONTEND, 5, out, &len, (const byte *) "q2dm1", 5));
+    CHECK_INT(len, sizeof(to_frontend));
+    CHECK(memcmp(out, to_frontend, sizeof(to_frontend)) == 0);
+
+    SECTION("a frame from the backend opens");
+    CHECK(cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_FRONTEND, 5, out, &len, to_frontend, sizeof(to_frontend)));
+    CHECK_INT(len, 5);
+    CHECK(memcmp(out, "q2dm1", 5) == 0);
+
+    SECTION("but not with the wrong count, direction or a changed byte");
+    CHECK(!cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_FRONTEND, 4, out, &len, to_frontend, sizeof(to_frontend)));
+    CHECK(!cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_BACKEND, 5, out, &len, to_frontend, sizeof(to_frontend)));
+    q2a_memcpy(out, to_frontend, sizeof(to_frontend));
+    out[0] ^= 1;
+    CHECK(!cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_FRONTEND, 5, out + 32, &len, out, sizeof(to_frontend)));
+    CHECK(!cryptoGCMOpen(ctx, key, CLOUD_DIR_TO_FRONTEND, 5, out, &len, to_frontend, GCM_TAG_LEN - 1));
+
+    EVP_CIPHER_CTX_free(ctx);
+}
+
 static void test_encrypted_frames(void) {
-    byte sent[256];
-    size_t n, len;
+    byte sent[256], frame[256], plain[256];
+    size_t n, len, plain_len;
+    const byte *key;
 
     connect_pair(CLOUD_STATE_TRUSTED);
     use_encryption();
+    key = cloud.connection.send_key;
 
-    SECTION("an encrypted frame's length counts the ciphertext");
-    cloudWriteByte(SCMD_PONG);
+    SECTION("an encrypted frame's length counts the ciphertext and tag");
+    cloudWriteByte(CMD_PING);
     cloudSendMessages();
     n = backend_recv(sent, sizeof(sent));
     len = sent[0] | (sent[1] << 8) | (sent[2] << 16) | (sent[3] << 24);
-    CHECK_INT(n, 4 + AESBLOCK_LEN);
-    CHECK_INT(len, AESBLOCK_LEN);
-    CHECK(sent[4] != SCMD_PONG || sent[5] != 0);
+    CHECK_INT(n, 4 + 1 + GCM_TAG_LEN);
+    CHECK_INT(len, 1 + GCM_TAG_LEN);
 
-    // The payload is a valid encrypted SCMD_PONG, so sending the frame back
-    // shows the receiving side decrypts it. Split it mid-ciphertext: before
-    // framing, each half would have been decrypted on its own.
-    SECTION("an encrypted frame split across reads decrypts once whole");
+    SECTION("the backend can open each frame, in order");
+    CHECK(backend_open(plain, &plain_len, key, 0, sent, n));
+    CHECK_INT(plain_len, 1);
+    CHECK_INT(plain[0], CMD_PING);
+    cloudWriteByte(CMD_PING);
+    cloudSendMessages();
+    n = backend_recv(sent, sizeof(sent));
+    CHECK(!backend_open(plain, &plain_len, key, 0, sent, n));
+    CHECK(backend_open(plain, &plain_len, key, 1, sent, n));
+
+    // Split it mid-ciphertext: before framing, each half would have been
+    // decrypted on its own.
+    SECTION("a frame from the backend split across reads opens once whole");
+    n = backend_frame(frame, key, 0, (byte[]) {SCMD_PONG}, 1);
     cloud.ping.waiting = true;
-    backend_send(sent, 4 + 5);
+    backend_send(frame, 4 + 5);
     cloudReadMessages();
     CHECK(cloud.ping.waiting);
-    backend_send(sent + 9, n - 9);
+    backend_send(frame + 9, n - 9);
+    cloudReadMessages();
+    CHECK(!cloud.ping.waiting);
+    CHECK_INT(cloud.state, CLOUD_STATE_TRUSTED);
+    CHECK_INT(cloud.connection.recv_count, 1);
+
+    SECTION("a replayed frame drops the connection instead of being parsed");
+    cloud.ping.waiting = true;
+    backend_send(frame, n);
+    cloudReadMessages();
+    CHECK(cloud.ping.waiting);
+    CHECK_INT(cloud.state, CLOUD_STATE_DISCONNECTED);
+
+    stop_encryption();
+    disconnect_pair();
+}
+
+/**
+ * The race that garbled map names under CBC: the backend sends a new key
+ * while our frames under the old one are on their way. Each direction has
+ * to switch exactly where the other end does.
+ */
+static void test_key_rotation(void) {
+    byte old_key[AESKEY_LEN], new_key[AESKEY_LEN];
+    byte msg[1 + AESKEY_LEN];
+    byte frame[256], sent[256], plain[256];
+    size_t n, plain_len;
+
+    connect_pair(CLOUD_STATE_TRUSTED);
+    use_encryption();
+    q2a_memcpy(old_key, cloud.connection.send_key, AESKEY_LEN);
+    for (int i = 0; i < AESKEY_LEN; i++) {
+        new_key[i] = (byte) (0xa0 + i);
+    }
+
+    // q2admin has queued something under the old key when SCMD_KEY arrives
+    cloudWriteByte(CMD_PING);
+    msg[0] = SCMD_KEY;
+    q2a_memcpy(msg + 1, new_key, AESKEY_LEN);
+    n = backend_frame(frame, old_key, 0, msg, sizeof(msg));
+    backend_send(frame, n);
+    cloudReadMessages();
+    CHECK_INT(cloud.state, CLOUD_STATE_TRUSTED);
+
+    SECTION("frames from the backend after SCMD_KEY open with the new key");
+    cloud.ping.waiting = true;
+    n = backend_frame(frame, new_key, 0, (byte[]) {SCMD_PONG}, 1);
+    backend_send(frame, n);
     cloudReadMessages();
     CHECK(!cloud.ping.waiting);
     CHECK_INT(cloud.state, CLOUD_STATE_TRUSTED);
 
-    EVP_CIPHER_CTX_free(cloud.connection.e_ctx);
-    EVP_CIPHER_CTX_free(cloud.connection.d_ctx);
+    SECTION("the ack goes in the last frame under the old key");
+    cloudSendMessages();
+    n = backend_recv(sent, sizeof(sent));
+    CHECK(backend_open(plain, &plain_len, old_key, 0, sent, n));
+    CHECK_INT(plain_len, 2);
+    CHECK_INT(plain[0], CMD_PING);
+    CHECK_INT(plain[1], CMD_KEYACK);
+
+    SECTION("and the frames after it use the new key, counting from zero");
+    cloudWriteByte(CMD_PING);
+    cloudSendMessages();
+    n = backend_recv(sent, sizeof(sent));
+    CHECK(backend_open(plain, &plain_len, new_key, 0, sent, n));
+    CHECK(!cloud.connection.send_key_pending);
+
+    SECTION("the ack isn't lost when the queue is full");
+    msg[0] = SCMD_KEY;
+    for (int i = 0; i < AESKEY_LEN; i++) {
+        msg[1 + i] = (byte) (0x50 + i);
+    }
+    while (cloud.queue_out.length < QUEUE_WRITE_MAX) {
+        cloudWriteByte(CMD_PING);
+    }
+    n = backend_frame(frame, new_key, 1, msg, sizeof(msg));
+    backend_send(frame, n);
+    cloudReadMessages();
+    CHECK_INT(cloud.queue_out.length, QUEUE_WRITE_MAX + 1);
+    CHECK_INT(cloud.queue_out.data[QUEUE_WRITE_MAX], CMD_KEYACK);
+
+    SECTION("a second SCMD_KEY before ours is acked drops the connection");
+    n = backend_frame(frame, msg + 1, 0, msg, sizeof(msg));
+    backend_send(frame, n);
+    cloudReadMessages();
+    CHECK_INT(cloud.state, CLOUD_STATE_DISCONNECTED);
+
+    stop_encryption();
     disconnect_pair();
 }
 
@@ -270,7 +439,9 @@ int main(void) {
 
     test_send_frames();
     test_receive_frames();
+    test_gcm_vectors();
     test_encrypted_frames();
+    test_key_rotation();
     test_partial_send();
 
     return test_summary();
