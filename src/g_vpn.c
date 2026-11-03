@@ -124,6 +124,7 @@ static void vpnApplyResult(int client, bool cached) {
         if (sameasn > ip_limit_vpn) {
             Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same VPN provider\n");
             gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "%s", buffer);
+            logEvent(LT_INTERNALWARN, client, proxyinfo[client].ent, "over the connection limit for one VPN provider", 0, 0.0, true);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
         }
     }

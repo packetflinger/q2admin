@@ -1726,6 +1726,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
             Q_snprintf(NAME(client), sizeof(NAME(client)), "%s", oldname);
             gi.cprintf(ent, PRINT_HIGH, "%s\n", currentBanMsg);
             if (kickOnNameChange) {
+                logEvent(LT_INTERNALWARN, client, ent, "name change when not allowed", 0, 0.0, true);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
             } else {
                 addCmdQueue(client, QCMD_CHANGENAME, 0, 0, 0);
@@ -1747,6 +1748,7 @@ bool checkForNameChange(int client, edict_t *ent, char *userinfo) {
                         gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                         if (nameChangeFloodProtectSilence == 0) {
+                            logEvent(LT_INTERNALWARN, client, ent, "changed name too many times", 0, 0.0, true);
                             addCmdQueue(client, QCMD_DISCONNECT, 0, 0, nameChangeFloodProtectMsg);
                         } else {
                             proxyinfo[client].userinfo.namechangetimeout = ltime + nameChangeFloodProtectSilence;
@@ -1816,6 +1818,7 @@ bool checkForSkinChange(int client, edict_t *ent, char *userinfo) {
                     gi.bprintf(PRINT_HIGH, "%s\n", buffer);
 
                     if (skinChangeFloodProtectSilence == 0) {
+                        logEvent(LT_INTERNALWARN, client, ent, "changed skin too many times", 0, 0.0, true);
                         addCmdQueue(client, QCMD_DISCONNECT, 0, 0, skinChangeFloodProtectMsg);
                     } else {
                         proxyinfo[client].userinfo.skinchangetimeout = ltime + skinChangeFloodProtectSilence;
@@ -1955,6 +1958,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
                 gi.cprintf(ent, PRINT_HIGH, PRV_KICK_MSG, NAME(client));
             }
 
+            logEvent(LT_INTERNALWARN, client, ent, "cl_timescale set to 0", 0, 0.0, true);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, timescaleuserdisplay);
         } else {
             if (timescaledetect) {
@@ -1985,7 +1989,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
             // make bprintf read arguments that were never passed. The va()
             // below is fine, that string is the kick reason, not a format.
             gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, NAME(client));
-
+            logEvent(LT_INTERNALWARN, client, ent, "cl_maxfps set to 0", 0, 0.0, true);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, va(PRV_KICK_MSG, NAME(client)));
         } else {
             if (maxfpsallowed) {
@@ -2033,6 +2037,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
                 if (cl_pitchspeed_kick) {
                     gi.cprintf(ent, PRINT_HIGH, "%s\n", cl_pitchspeed_kickmsg);
 
+                    logEvent(LT_INTERNALWARN, client, ent, "changed cl_pitchspeed", 0, 0.0, true);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, cl_pitchspeed_kickmsg);
                 }
             }
@@ -2061,6 +2066,7 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
                 if (cl_anglespeedkey_kick) {
                     gi.cprintf(ent, PRINT_HIGH, "%s\n", cl_anglespeedkey_kickmsg);
 
+                    logEvent(LT_INTERNALWARN, client, ent, "changed cl_anglespeedkey", 0, 0.0, true);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, cl_anglespeedkey_kickmsg);
                 }
             }
@@ -2330,6 +2336,7 @@ void ClientBegin(edict_t *ent) {
         if (sameaddr > ip_limit) {
             Q_snprintf(buffer, sizeof(buffer), "Too many connections from the same IP address\n");
             gi.cprintf(ent, PRINT_HIGH, "%s", buffer);
+            logEvent(LT_INTERNALWARN, client, ent, "over the connection limit for one IP address", 0, 0.0, true);
             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, buffer);
         }
     }
@@ -2342,8 +2349,10 @@ void ClientBegin(edict_t *ent) {
         addCmdQueue(client, QCMD_RECONNECT, 1, 0, NULL);
     } else if (proxyinfo[client].clientcommand & CCMD_BANNED) {
         gi.cprintf(ent, PRINT_HIGH, "\n*****\n%s\n*****\n\n", proxyinfo[client].buffer);
+        logEvent(LT_INTERNALWARN, client, ent, "flagged as banned (CCMD_BANNED)", 0, 0.0, true);
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
     } else if (proxyinfo[client].clientcommand & CCMD_KICKED) {
+        logEvent(LT_INTERNALWARN, client, ent, "flagged to be kicked (CCMD_KICKED)", 0, 0.0, true);
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Kicked.");
     } else if (proxyinfo[client].mvddummy) {
         // Q2Pro's MVD dummy is created by the server itself and, by default

@@ -675,6 +675,7 @@ void G_RunFrame(void) {
             } else if (command == QCMD_BAN) {
                 gi.cprintf(NULL, PRINT_HIGH, "%s: %s\n", NAME(client), proxyinfo[client].buffer);
                 gi.cprintf(ent, PRINT_HIGH, "%s: %s\n", NAME(client), proxyinfo[client].buffer);
+                logEvent(LT_INTERNALWARN, client, ent, "a queued ban came due (QCMD_BAN)", 0, 0.0, true);
                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, proxyinfo[client].buffer);
             } else if (command == QCMD_DISPCHATBANS) {
                 displayNextChatBan(ent, client, data);
@@ -700,6 +701,7 @@ void G_RunFrame(void) {
                             //kick on private_command
                             if (private_command_kick) {
                                 gi.bprintf(PRINT_HIGH, PRV_KICK_MSG, NAME(client));
+                                logEvent(LT_INTERNALWARN, client, ent, "wrong reply to a private command probe", 0, 0.0, true);
                                 addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_PRV_KICK_MSG);
                                 //dont want this printed
                                 //return false;
@@ -753,12 +755,14 @@ void G_RunFrame(void) {
                     proxyinfo[client].pcmd_noreply_count++;
                     if (proxyinfo[client].pcmd_noreply_count > max_pmod_noreply) {
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 16);
+                        logEvent(LT_INTERNALWARN, client, ent, "no reply to the client mod probe", 0, 0.0, true);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else if (proxyinfo[client].cmdlist == required_cmdlist) {
                     //all 3 checks came thru fine
                     proxyinfo[client].done_server_and_blocklist = 1;
                 } else {
+                    logEvent(LT_INTERNALWARN, client, ent, "incomplete reply to the client mod probe", 0, 0.0, true);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
             } else if (command == QCMD_EXECMAPCFG) {

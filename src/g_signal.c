@@ -197,6 +197,7 @@ void evaluateSignalScore(int client) {
     if (score >= signal_score_threshold) {
         proxyinfo[client].clientcommand |= CCMD_KICKED;
         gi.cprintf(proxyinfo[client].ent, PRINT_HIGH, "You exceeded the server's signal threshold (%d/%d)\n", score, signal_score_threshold);
+        logEvent(LT_INTERNALWARN, client, proxyinfo[client].ent, "signal score reached the removal threshold", 0, 0.0, true);
         addCmdQueue(client, QCMD_DISCONNECT, 1, 0,
             va("%s tripped the signal threshold (score %d/%d): %s", NAME(client), score, signal_score_threshold, signalListString(client))
         );
