@@ -328,6 +328,26 @@ void loadLogList(void) {
 }
 
 /**
+ * Appends what fits of src to dest and returns the new write position. end
+ * points at the last byte of the caller's buffer, which is kept back for the
+ * terminator, so every replacement below is free to run long without anyone
+ * checking the room first.
+ *
+ * Newlines are dropped rather than copied: a log line is one line, and both
+ * ctime() and a player-supplied string can carry one.
+ */
+static char *logAppend(char *dest, char *end, const char *src) {
+    while (*src && dest < end) {
+        if (*src != '\n') {
+            *dest++ = *src++;
+        } else {
+            src++;
+        }
+    }
+    return dest;
+}
+
+/**
  * Substitute any macro characters for their value and write the final log line
  * to the `dest` pointer.
  *
@@ -357,6 +377,7 @@ void loadLogList(void) {
  *   #m = message
  *
  * Context->value for #m:
+ *   connect: the userinfo for the incoming player
  *   impulses: the impulse message
  *   name change: the old name
  *   skin change: the old skin
@@ -382,22 +403,21 @@ void loadLogList(void) {
  *   -9     = cl_anglespeedkey change detected
  *   -14    = \skon\ in userinfo, the zgh_frk signature
  */
-void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float ret_time) {
-    char *cp;
+void convertToLogLine(char *dest, size_t size, char *format, int client, edict_t *ent, char *message, int number, float ret_time) {
     char num[32];   // scratch for numeric replacements, see note below
+    char *end = dest + size - 1;    // the terminator's byte, never written to here
     time_t ltimetemp;
 	struct tm *timeinfo;
 
-    while (*format) {
+    // Stopping on a full line rather than carrying on with the rest of the
+    // format: every write below this point has at least one byte of room.
+    while (*format && dest < end) {
         if (*format == '#') {
             format++;
 
             if (*format == 'n') {
                 if (ent) {
-                    cp = NAME(client);
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, NAME(client));
                 }
             } else if (*format == 'p') {
                 if (ent) {
@@ -407,67 +427,39 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                     // silently truncated. Numeric replacements go through num
                     // and are copied out like every other replacement here.
                     Q_snprintf(num, sizeof(num), "%d", ent->client->ping);
-                    cp = num;
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, num);
                 }
             } else if (*format == 'i') {
                 if (ent) {
-                    cp = IP(client);
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, IP(client));
                 }
             } else if (*format == 'r') {
                 if (ent) {
                     Q_snprintf(num, sizeof(num), "%d", proxyinfo[client].userinfo.rate);
-                    cp = num;
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, num);
                 }
             } else if (*format == 's') {
                 if (ent) {
-                    cp = proxyinfo[client].userinfo.skin;
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, proxyinfo[client].userinfo.skin);
                 }
             } else if (*format == 't') {	// long format
                 time(&ltimetemp);
                 q2a_strncpy(buffer, ctime(&ltimetemp), sizeof(buffer)-1);
 
-                cp = buffer;
-                while (*cp && *cp != '\n') {
-                    *dest++ = *cp++;
-                }
+                dest = logAppend(dest, end, buffer);
             } else if (*format == 'T') {	// short format
                 time(&ltimetemp);
                 timeinfo = localtime(&ltimetemp);
                 strftime(buffer,15,"%Y%m%d%H%M%S", timeinfo);
 
-                cp = buffer;
-                while (*cp && *cp != '\n') {
-                    *dest++ = *cp++;
-                }
+                dest = logAppend(dest, end, buffer);
             } else if (*format == 'm') {
                 if (message) {
-                    cp = message;
-                    while (*cp) {
-                        if (*cp != '\n') {
-                            *dest++ = *cp++;
-                        } else {
-                            cp++;
-                        }
-                    }
+                    dest = logAppend(dest, end, message);
                 }
             } else if (*format == 'e') {
                 Q_snprintf(num, sizeof(num), "%d", number);
-                cp = num;
-                while (*cp) {
-                    *dest++ = *cp++;
-                }
+                dest = logAppend(dest, end, num);
             } else if (*format == 'f') {
                 // %g would switch to scientific notation once the exponent
                 // drops below -4, so a fast function logs as "4.1e-06" while
@@ -476,27 +468,14 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 // resolves down to a microsecond, which is finer than clock()
                 // ticks on any platform this runs on.
                 Q_snprintf(num, sizeof(num), "%.6f", ret_time);
-                cp = num;
-                while (*cp) {
-                    *dest++ = *cp++;
-                }
+                dest = logAppend(dest, end, num);
             } else if (*format == 'w') {
                 // The signal log types pass the signal's bit as the number, so
                 // the name it goes by can be resolved from that. Any other log
                 // type has no signal to resolve and expands to nothing.
                 signal_def_t *s = findSignalDefFromID(number);
                 if (s) {
-                    // Its own pointer, not the shared cp: the name is a
-                    // const char * and cp is assigned writable buffers
-                    // everywhere else in this function.
-                    const char *name = s->name;
-                    while (*name) {
-                        if (*name != '\n') {
-                            *dest++ = *name++;
-                        } else {
-                            name++;
-                        }
-                    }
+                    dest = logAppend(dest, end, s->name);
                 }
             } else if (*format == 'x') {
                 // Guarded on ent like the other client replacements: a
@@ -504,22 +483,16 @@ void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *
                 // report whoever happens to occupy slot 0 rather than nothing.
                 if (ent) {
                     Q_snprintf(num, sizeof(num), "%d", signalScore(client));
-                    cp = num;
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, num);
                 }
             } else if (*format == 'X') {
                 if (ent) {
                     Q_snprintf(num, sizeof(num), "%d/%d", signalScore(client), signal_score_threshold);
-                    cp = num;
-                    while (*cp) {
-                        *dest++ = *cp++;
-                    }
+                    dest = logAppend(dest, end, num);
                 }
             } else {
                 *dest++ = '#';
-                if (*format) {
+                if (*format && dest < end) {
                     *dest++ = *format;
                 }
             }
@@ -566,7 +539,7 @@ void logEvent(enum zb_logtypesenum ltype, int client, edict_t *ent, char *messag
     char logline[4096];
 
     if (logtypes[(int) ltype].log) {
-        convertToLogLine(logline, logtypes[(int) ltype].format, client, ent, message, number, ret_time);
+        convertToLogLine(logline, sizeof(logline), logtypes[(int) ltype].format, client, ent, message, number, ret_time);
 
         // each logtype can be linked to multiple log files
         for (unsigned int i = 0, logfile = 0x1; i < MAXLOGS; i++, logfile <<= 1) {

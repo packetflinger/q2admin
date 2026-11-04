@@ -1652,7 +1652,7 @@ bool ClientConnect(edict_t *ent, char *ui) {
     }
 
     if (ret) {
-        logEvent(LT_CLIENTCONNECT, client, ent, NULL, 0, 0.0, true);
+        logEvent(LT_CLIENTCONNECT, client, ent, userinfo, 0, 0.0, true);
 
         if (userInfoOverflow) {
             Q_printf("%s: WARNING: userinfo overflowed (%s)\n", NAME(client), IP(client));
