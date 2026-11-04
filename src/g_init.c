@@ -1889,6 +1889,8 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
 
     client = getEntOffset(ent) - 1;
 
+    // Every time fov changes (zooming) this function is called which can spam
+    // the logs with these msgs
     logEvent(LT_CLIENTUSERINFO, client, ent, userinfo, 0, 0.0, false);
 
     checkMVDImposter(client, userinfo);
