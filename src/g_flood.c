@@ -402,6 +402,7 @@ bool checkForFlood(int client) {
             raiseSignal(client, SIGNAL_CHATFLOOD);
 
             if (fi->chatFloodProtectSilence == 0) {
+                logEvent(LT_INTERNALWARN, client, proxyinfo[client].ent, "flooded the chat", 0, 0.0, true);
                 addCmdQueue(client, QCMD_DISCONNECT, 0, 0, chatFloodProtectMsg);
             } else if (fi->chatFloodProtectSilence < 0) {
                 proxyinfo[client].clientcommand |= CCMD_PCSILENCE;

@@ -94,6 +94,12 @@ static void usage(const char *name) {
  * Asks a question, offering a default the operator can take by pressing
  * enter. The answer is trimmed of the trailing newline and of surrounding
  * spaces, since a pasted value often brings one along.
+ *
+ * out may be the same buffer as def, which is how the key file questions
+ * offer the name already generated as their default. Taking the default
+ * then has nothing to copy: out already holds it. Copying anyway would
+ * mean snprintf() reading and writing one buffer at once, which is
+ * undefined and really does empty it on some C libraries.
  */
 static void prompt(const char *question, const char *def, char *out, size_t size) {
     char line[MAXINPUT];
@@ -129,7 +135,9 @@ static void prompt(const char *question, const char *def, char *out, size_t size
             return;
         }
         if (def) {
-            snprintf(out, size, "%s", def);
+            if (out != def) {
+                snprintf(out, size, "%s", def);
+            }
             return;
         }
         printf("  this one has no default, please answer it\n");

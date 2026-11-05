@@ -3187,6 +3187,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                     res = checkBanList(ent, client, true); // denies next
                     if (res == BT_DENYLISTED) {
                         gi.cprintf(ent, PRINT_HIGH, "\n*** %s ***\n\n", currentBanMsg);
+                        logEvent(LT_INTERNALWARN, client, ent, "denylisted once their client version was known", 0, 0.0, true);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                         return false;
                     }
@@ -3505,14 +3506,17 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                 i = atoi(gi.argv(5));
                 if (i != proxyinfo[client].blocklist) {
                     gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), i);
+                    logEvent(LT_INTERNALWARN, client, ent, "blocked model count does not match the server", 0, 0.0, true);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 } else {
                     if (i < 0 || i >= MAX_BLOCK_MODELS) {
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), i);
+                        logEvent(LT_INTERNALWARN, client, ent, "blocked model index out of range", 0, 0.0, true);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     } else {
                         if (q2a_strcmp(block_models[i].model_name, gi.argv(6))) {
                             gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 256);
+                            logEvent(LT_INTERNALWARN, client, ent, "blocked model name does not match the server", 0, 0.0, true);
                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                         } else {
                             proxyinfo[client].cmdlist |= 2;
@@ -3530,10 +3534,12 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
                         proxyinfo[client].cmdlist |= 4;
                     } else {
                         gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), 1);
+                        logEvent(LT_INTERNALWARN, client, ent, "reported a server IP this server does not have", 0, 0.0, true);
                         addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                     }
                 } else {
                     gi.bprintf(PRINT_HIGH, MOD_KICK_MSG, NAME(client), proxyinfo[client].pmod);
+                    logEvent(LT_INTERNALWARN, client, ent, "reported a server IP that changed mid-session", 0, 0.0, true);
                     addCmdQueue(client, QCMD_DISCONNECT, 1, 0, Q2A_MOD_KICK_MSG);
                 }
                 return false;
@@ -3559,6 +3565,7 @@ bool doClientCommand(edict_t *ent, int client, bool *checkforfloodafter) {
 
                     if (gl_driver_max_changes) {
                         if (proxyinfo[client].gl_driver_changes > gl_driver_max_changes) {
+                            logEvent(LT_INTERNALWARN, client, ent, "changed gl_driver too many times", 0, 0.0, true);
                             addCmdQueue(client, QCMD_DISCONNECT, 1, 0, "Too many gl_driver changes.");
                         }
                     }

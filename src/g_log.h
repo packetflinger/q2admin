@@ -102,7 +102,7 @@ enum zb_logtypesenum {
 };
 
 void clearlogfileRun(int startarg, edict_t *ent, int client);
-void convertToLogLine(char *dest, char *format, int client, edict_t *ent, char *message, int number, float number2);
+void convertToLogLine(char *dest, size_t size, char *format, int client, edict_t *ent, char *message, int number, float number2);
 void displayLogEventListCont(edict_t *ent, int client, long logevent, bool onetimeonly);
 void displayLogFileCont(edict_t *ent, int client, long logfilereadpos);
 void displayLogFileListCont(edict_t *ent, int client, long logfilenum);

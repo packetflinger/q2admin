@@ -926,6 +926,7 @@ void banRun(int startarg, edict_t *ent, int client) {
                         logEvent(LT_BAN, clienti, enti, currentBanMsg, 0, 0.0, true);
                         // gi.cprintf(NULL, PRINT_HIGH, "%s: %s (IP = %s)\n", NAME(clienti), currentBanMsg, IP(clienti));
                         gi.cprintf(enti, PRINT_HIGH, "%s: %s\n", NAME(clienti), currentBanMsg);
+                        logEvent(LT_INTERNALWARN, clienti, enti, "matched a ban added while they were connected", 0, 0.0, true);
                         addCmdQueue(clienti, QCMD_DISCONNECT, 1, 0, currentBanMsg);
                     }
                 }
