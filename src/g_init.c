@@ -2067,7 +2067,15 @@ void ClientUserinfoChanged(edict_t *ent, char *userinfo) {
         }
     }
 
+    // The engine only puts "ip" in the userinfo it passes to ClientConnect(),
+    // not in later changes, so carry it over. Without it, CloudAdmin loses
+    // the player's address the next time it gets the player list.
+    char ip[MAX_INFO_KEY];
+    Q_strlcpy(ip, Info_ValueForKey(proxyinfo[client].userinfo.raw, "ip"), sizeof(ip));
     q2a_strncpy(proxyinfo[client].userinfo.raw, userinfo, sizeof(proxyinfo[client].userinfo.raw)-1);
+    if (ip[0] && !Info_ValueForKey(proxyinfo[client].userinfo.raw, "ip")[0]) {
+        Info_SetValueForKey(proxyinfo[client].userinfo.raw, "ip", ip);
+    }
 
     proxyinfo[client].next_report = 0;
 
